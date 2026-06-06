@@ -3,6 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}librika.in is the next-generation SaaS Library Management System for educational institutions. Secure, streamlined, and globally accessible.{% endblock %}">
+    <meta name="keywords" content="Library Management System, SaaS, School Software, Digital Library, librika.in">
+    <meta name="author" content="librika.in">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://librika.in/">
+    <meta property="og:title" content="{% block og_title %}librika.in - Modern Library Management SaaS{% endblock %}">
+    <meta property="og:description" content="Manage your school's library effortlessly with our secure, streamlined platform.">
+    <meta property="og:image" content="https://librika.in/static/logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://librika.in/">
+    <meta property="twitter:title" content="librika.in - Modern Library Management SaaS">
+    <meta property="twitter:description" content="Manage your school's library effortlessly with our secure, streamlined platform.">
+    <meta property="twitter:image" content="https://librika.in/static/logo.png">
+
+    <link rel="canonical" href="{{ request.url }}">
+    
     <script>
         window.onerror = function(message, source, lineno, colno, error) {
             fetch('/api/log-error', {

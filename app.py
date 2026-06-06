@@ -375,6 +375,26 @@ def exit_demo():
     session.clear()
     return redirect('/?clear_demo=1')
 
+@app.route('/robots.txt')
+def robots():
+    content = "User-agent: *\nDisallow: /admin/\nDisallow: /super-admin/\nDisallow: /student/\nDisallow: /billing/\nAllow: /\n\nSitemap: https://librika.in/sitemap.xml"
+    return Response(content, mimetype="text/plain")
+
+@app.route('/sitemap.xml')
+def sitemap():
+    import datetime
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+    content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://librika.in/</loc>
+    <lastmod>{today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>"""
+    return Response(content, mimetype="application/xml")
+
 @app.route('/')
 def index():
     if 'user_id' in session and not session.get('is_demo'):
