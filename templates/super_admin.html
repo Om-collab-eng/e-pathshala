@@ -23,6 +23,7 @@
         <button class="btn-alt tab-btn" onclick="switchTab('users')">Users</button>
         <button class="btn-alt tab-btn" onclick="switchTab('catalog')">Catalog</button>
         <button class="btn-alt tab-btn" onclick="switchTab('transactions')">Transactions</button>
+        <button class="btn-alt tab-btn" onclick="switchTab('billing')" style="border-color: #4ade80; color: #4ade80;">Revenue</button>
     </div>
 
     <main id="tab-overview" class="tab-content" style="display: block;">
@@ -286,6 +287,56 @@
                                 {% else %}
                                 <span class="badge" style="background: rgba(255,255,255,0.1);">Active</span>
                                 {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <main id="tab-billing" class="tab-content" style="display: none;">
+        <!-- Dashboard Overview Statistics -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="glass-panel" style="text-align: center; padding: 1.5rem; border-color: #4ade80;">
+                <div style="font-size: 2.5rem; color: #4ade80; font-weight: 800;">₹{{ "%.2f"|format(stats.mrr) }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-mid); text-transform: uppercase;">Est. Monthly Revenue (MRR)</div>
+            </div>
+            <div class="glass-panel" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; color: var(--text-high); font-weight: 800;">₹{{ "%.2f"|format(stats.total_revenue) }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-mid); text-transform: uppercase;">Total Processed Revenue</div>
+            </div>
+            <div class="glass-panel" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; color: var(--accent-secondary); font-weight: 800;">{{ stats.active_subs }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-mid); text-transform: uppercase;">Active Subscriptions</div>
+            </div>
+        </div>
+
+        <div class="glow-box">
+            <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Recent Payments</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>School Code</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in recent_payments %}
+                        <tr>
+                            <td data-label="Transaction ID" style="font-family: monospace; color: var(--text-low);">{{ p.gateway_txn_id }}</td>
+                            <td data-label="School Code" style="font-family: monospace; color: var(--accent-primary);">{{ p.school_code }}</td>
+                            <td data-label="Amount" style="font-weight: bold;">₹{{ "%.2f"|format(p.amount) }}</td>
+                            <td data-label="Method">{{ p.method }}</td>
+                            <td data-label="Date">{{ p.created_at[:10] }}</td>
+                            <td data-label="Status">
+                                <span class="badge {{ 'badge-success' if p.status == 'success' else 'badge-error' }}">{{ p.status | upper }}</span>
                             </td>
                         </tr>
                         {% endfor %}

@@ -585,6 +585,16 @@ def super_admin_panel():
     recent_logs = conn.execute('SELECT * FROM logs ORDER BY created_at DESC LIMIT 50').fetchall()
     pending_requests = conn.execute('SELECT * FROM pending_requests WHERE status = "Pending"').fetchall()
     
+    # Billing Stats
+    revenue_mrr = conn.execute('SELECT SUM(p.monthly_price) FROM subscriptions s JOIN plans p ON s.plan_id = p.id WHERE s.status="active" AND p.id != "plan_free"').fetchone()[0] or 0
+    total_revenue = conn.execute('SELECT SUM(amount) FROM payments WHERE status="success"').fetchone()[0] or 0
+    active_subs = conn.execute('SELECT COUNT(*) FROM subscriptions WHERE status="active"').fetchone()[0] or 0
+    recent_payments = conn.execute('SELECT p.*, i.school_code FROM payments p JOIN invoices i ON p.invoice_id = i.id ORDER BY p.created_at DESC LIMIT 50').fetchall()
+    
+    stats['mrr'] = revenue_mrr
+    stats['total_revenue'] = total_revenue
+    stats['active_subs'] = active_subs
+    
     conn.close()
     return render_template('super_admin.html', 
                            stats=stats, 
@@ -593,7 +603,8 @@ def super_admin_panel():
                            books=books, 
                            transactions=transactions,
                            logs=recent_logs,
-                           pending_requests=pending_requests)
+                           pending_requests=pending_requests,
+                           recent_payments=recent_payments)
 
 import csv
 from flask import Response
