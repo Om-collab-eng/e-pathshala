@@ -4,7 +4,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background: rgba(15, 15, 20, 0.9);
+    background: var(--bg-main);
+    opacity: 0.95;
     backdrop-filter: blur(10px);
     position: sticky;
     top: 0;
@@ -39,7 +40,7 @@
 }
 
 .saas-section.darker {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-card);
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     max-width: 100%;
@@ -53,7 +54,7 @@
 .saas-section h2 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, #fff, #9ca3af);
+    background: linear-gradient(135deg, var(--text-high), var(--text-low));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -74,14 +75,14 @@
     align-items: center;
     text-align: center;
     padding: 8rem 2rem 4rem;
-    background: radial-gradient(circle at top, rgba(99, 102, 241, 0.15) 0%, rgba(15, 15, 20, 0) 50%);
+    background: radial-gradient(circle at top, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
 }
 
 .saas-hero h1 {
     font-size: 4rem;
     line-height: 1.2;
     margin-bottom: 1.5rem;
-    background: linear-gradient(135deg, #fff, var(--accent-primary));
+    background: linear-gradient(135deg, var(--text-high), var(--accent-primary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -95,7 +96,7 @@
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 2rem;
@@ -201,7 +202,7 @@
     font-size: 2.5rem;
     font-weight: 800;
     margin: 1.5rem 0;
-    color: white;
+    color: var(--text-high);
 }
 
 .pricing-card ul {
@@ -226,7 +227,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 3rem;
-    opacity: 0.6;
+    opacity: 1;
 }
 
 /* Testimonials */
@@ -237,7 +238,7 @@
 }
 
 .testimonial-card {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 2rem;
@@ -248,7 +249,7 @@
 
 /* Footer */
 .saas-footer {
-    background: #0a0a0c;
+    background: var(--bg-main);
     border-top: 1px solid var(--border);
     padding: 4rem 2rem;
     margin-top: 4rem;
@@ -264,7 +265,7 @@
 }
 
 .footer-column h4 {
-    color: white;
+    color: var(--text-high);
     margin-bottom: 1.5rem;
 }
 

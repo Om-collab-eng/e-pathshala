@@ -5,6 +5,22 @@
 {% block head %}
 <link rel="stylesheet" href="/static/landing.css">
 <style>
+    /* Force Light Theme */
+    :root {
+        --bg-main: #ffffff;
+        --bg-card: #f8fafc;
+        --bg-input: #f1f5f9;
+        --border: #e2e8f0;
+        --text-high: #0f172a;
+        --text-mid: #475569;
+        --text-low: #64748b;
+        --accent-primary: #4f46e5;
+    }
+    body {
+        background-color: var(--bg-main) !important;
+        color: var(--text-high) !important;
+    }
+    
     /* Desktop Nav Links */
     @media (min-width: 769px) {
         .saas-nav-links.desktop-only { display: flex !important; }
@@ -42,10 +58,7 @@
         Unify physical inventory, digital E-Books, student engagement, and publisher royalties into a single, intelligent SaaS platform.
     </p>
     
-    <div style="margin-top: 1rem; margin-bottom: 2rem; background: var(--bg-card); padding: 0.5rem; border-radius: 50px; border: 1px solid var(--border); display: flex; max-width: 600px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <input type="text" placeholder="Search the global catalog (e.g. 'Physics 101')..." style="flex-grow: 1; background: transparent; border: none; padding: 1rem 1.5rem; color: white; outline: none; font-size: 1rem;">
-        <button class="btn-neon" style="border-radius: 40px; padding: 0.8rem 2rem;" onclick="window.location.href='/demo-mode'">Search</button>
-    </div>
+
 
     <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
         <a href="/demo-mode" class="btn-neon" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Start Free Trial</a>
@@ -231,9 +244,9 @@
         <div class="pricing-card popular">
             <div class="pricing-badge">MOST POPULAR</div>
             <h3>Professional Plan</h3>
-            <div class="price">₹7,999<span style="font-size: 1rem; color: white;">/mo</span></div>
+            <div class="price">₹7,999<span style="font-size: 1rem; color: var(--text-mid);">/mo</span></div>
             <ul>
-                <li style="color: white; font-weight: bold;">Includes Everything in Basic</li>
+                <li style="color: var(--text-high); font-weight: bold;">Includes Everything in Basic</li>
                 <li>Digital E-Library Access</li>
                 <li>AI Features & OCR</li>
                 <li>Advanced Analytics</li>
@@ -322,7 +335,7 @@
         <div class="footer-column">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;">
                 <img src="/static/logo.png" alt="Logo" style="height: 30px; border-radius: 6px;">
-                <span style="font-weight: 800; font-size: 1.2rem; color: white;">E-Pathshala</span>
+                <span style="font-weight: 800; font-size: 1.2rem; color: var(--text-high);">E-Pathshala</span>
             </div>
             <p style="color: var(--text-mid); font-size: 0.9rem; line-height: 1.6;">
                 The operating system for modern educational institutions. Bridging the gap between physical books and digital learning.
