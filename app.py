@@ -12,6 +12,7 @@ import json
 import google.generativeai as genai
 from PIL import Image
 from data_routes import data_bp
+from billing_routes import billing_bp
 import barcode
 from barcode.writer import ImageWriter
 
@@ -24,6 +25,7 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 app.permanent_session_lifetime = timedelta(days=30)
 app.register_blueprint(data_bp, url_prefix='/data')
+app.register_blueprint(billing_bp)
 SUPER_ADMIN_PASS = "MASTER_99" # Hard admin password for global access
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -493,6 +495,12 @@ def register():
                 if not school and school_code != "DEFAULT":
                     return f"Error: School Code '{school_code}' not found.", 404
                 
+                from billing import get_school_subscription
+                sub = get_school_subscription(school_code)
+                student_count = conn.execute('SELECT COUNT(*) FROM users WHERE role="student" AND school_code=?', (school_code,)).fetchone()[0]
+                if student_count >= sub['max_students']:
+                    return f"Registration Blocked: This institution has reached its student limit on the {sub['plan_name']} plan.", 403
+                
                 conn.execute('INSERT INTO users (phone, password, role, school_code, name) VALUES (?,?,?,?,?)',
                              (phone, password, 'student', school_code, name))
             else:
@@ -949,6 +957,14 @@ def add_book():
     if 'manage_books' not in session.get('permissions', []): return redirect('/admin')
     s_code = session.get('school_code')
     if request.method == 'POST':
+        from billing import get_school_subscription
+        sub = get_school_subscription(s_code)
+        conn = get_db_connection()
+        book_count = conn.execute('SELECT COUNT(*) FROM books WHERE school_code=?', (s_code,)).fetchone()[0]
+        if book_count >= sub['max_books']:
+            flash(f"Upgrade Required: Your {sub['plan_name']} plan allows {sub['max_books']} books.", "error")
+            return redirect('/billing')
+        conn.close()
         title = request.form.get('title')
         author = request.form.get('author')
         genre = request.form.get('genre')

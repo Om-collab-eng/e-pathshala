@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Billing & Subscriptions - librika.in{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Billing & Subscription</h1>
+    <p style="color: var(--text-mid); font-size: 1.1rem;">Manage your SaaS plan and view invoices.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
+    <!-- Current Plan -->
+    <div class="glow-box" style="padding: 2rem; background: var(--bg-card); border-radius: 12px;">
+        <h2 style="margin-bottom: 1rem; color: var(--text-high);">Current Plan: <span style="color: var(--accent-primary);">{{ sub.plan_name }}</span></h2>
+        <p style="color: var(--text-mid); margin-bottom: 0.5rem;"><strong>Status:</strong> <span style="color: #4ade80;">{{ sub.status | upper }}</span></p>
+        <p style="color: var(--text-mid); margin-bottom: 0.5rem;"><strong>Renews:</strong> {{ sub.current_period_end }}</p>
+        
+        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Usage Limits</h3>
+            <div style="margin-bottom: 1rem;">
+                <p style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                    <span>Students</span>
+                    <span>{{ students_count }} / {{ sub.max_students }}</span>
+                </p>
+                <div style="width: 100%; height: 6px; background: var(--bg-dark); border-radius: 3px; overflow: hidden;">
+                    <div style="width: {{ (students_count / sub.max_students * 100) | int }}%; height: 100%; background: var(--accent-primary);"></div>
+                </div>
+            </div>
+            <div>
+                <p style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                    <span>Books</span>
+                    <span>{{ books_count }} / {{ sub.max_books }}</span>
+                </p>
+                <div style="width: 100%; height: 6px; background: var(--bg-dark); border-radius: 3px; overflow: hidden;">
+                    <div style="width: {{ (books_count / sub.max_books * 100) | int }}%; height: 100%; background: var(--accent-secondary);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upgrade Path -->
+    <div class="glow-box" style="padding: 2rem; background: var(--bg-card); border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <h2 style="margin-bottom: 1rem; color: var(--text-high);">Upgrade & Unlock</h2>
+            <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Need more capacity? Upgrade your plan to instantly unlock advanced features, unlimited API access, and higher student limits.</p>
+        </div>
+        <button class="btn-neon" onclick="document.getElementById('plansModal').style.display='flex';" style="width: 100%; padding: 1rem; font-size: 1.1rem;">View Upgrade Options</button>
+    </div>
+</div>
+
+<!-- Invoices Table -->
+<h2 style="margin-bottom: 1.5rem;">Billing History</h2>
+<div class="table-container" style="background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: var(--bg-dark); border-bottom: 1px solid var(--border);">
+                <th style="padding: 1rem;">Date</th>
+                <th style="padding: 1rem;">Invoice ID</th>
+                <th style="padding: 1rem;">Amount</th>
+                <th style="padding: 1rem;">Status</th>
+                <th style="padding: 1rem;">Download</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in invoices %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 1rem;">{{ inv.created_at[:10] }}</td>
+                <td style="padding: 1rem; font-family: monospace;">{{ inv.id }}</td>
+                <td style="padding: 1rem;">Rs. {{ "%.2f"|format(inv.total) }}</td>
+                <td style="padding: 1rem;"><span style="color: #4ade80;">{{ inv.status | upper }}</span></td>
+                <td style="padding: 1rem;">
+                    {% if inv.pdf_url %}
+                    <a href="{{ inv.pdf_url }}" download class="btn-alt" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">PDF</a>
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-mid);">No invoices found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Plans Modal -->
+<div id="plansModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 2000;">
+    <div class="modal-content glow-box" style="max-width: 900px; width: 100%; background: var(--bg-card); padding: 2.5rem; position: relative;">
+        <span onclick="document.getElementById('plansModal').style.display='none'" style="position: absolute; right: 20px; top: 20px; cursor: pointer; font-size: 1.5rem; color: var(--text-mid);">&times;</span>
+        <h2 style="text-align: center; margin-bottom: 0.5rem; font-size: 2.5rem;">Select a Plan</h2>
+        <p style="text-align: center; color: var(--text-mid); margin-bottom: 2.5rem;">Scale your institution securely.</p>
+        
+        <div style="display: flex; justify-content: center; margin-bottom: 2rem;">
+            <div style="background: var(--bg-dark); border-radius: 8px; padding: 0.25rem;">
+                <button class="btn-alt" style="background: var(--accent-primary); border-color: transparent; color: white;" id="toggleMonthly" onclick="setBilling('monthly')">Monthly</button>
+                <button class="btn-alt" style="border-color: transparent;" id="toggleAnnual" onclick="setBilling('annual')">Annually (-20%)</button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+            {% for plan in plans %}
+            {% if plan.id != 'plan_free' %}
+            <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; transition: border-color 0.3s;" class="plan-card">
+                <h3 style="color: var(--text-high); margin-bottom: 0.5rem; font-size: 1.25rem;">{{ plan.name }}</h3>
+                <div style="font-size: 2rem; font-weight: bold; color: var(--accent-primary); margin-bottom: 1.5rem;">
+                    <span class="price-monthly">Rs. {{ plan.monthly_price }}<span style="font-size: 1rem; color: var(--text-mid); font-weight: normal;">/mo</span></span>
+                    <span class="price-annual" style="display: none;">Rs. {{ plan.annual_price }}<span style="font-size: 1rem; color: var(--text-mid); font-weight: normal;">/yr</span></span>
+                </div>
+                
+                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-mid); font-size: 0.95rem;">
+                    <li style="margin-bottom: 0.5rem;">✅ Up to {{ plan.max_students }} Students</li>
+                    <li style="margin-bottom: 0.5rem;">✅ Up to {{ plan.max_books }} Books</li>
+                    {% set features = json.loads(plan.features_json) %}
+                    {% if features.analytics %}<li style="margin-bottom: 0.5rem;">✅ Advanced Analytics</li>{% endif %}
+                    {% if features.api %}<li style="margin-bottom: 0.5rem;">✅ API Access</li>{% endif %}
+                    {% if features.multi_branch %}<li style="margin-bottom: 0.5rem;">✅ Multi-Branch Sync</li>{% endif %}
+                </ul>
+                
+                <form action="/billing/checkout" method="POST">
+                    <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                    <input type="hidden" name="billing_cycle" value="monthly" class="billing-cycle-input">
+                    <button type="submit" class="btn-alt" style="width: 100%;">Select {{ plan.name }}</button>
+                </form>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function setBilling(cycle) {
+        document.querySelectorAll('.billing-cycle-input').forEach(inp => inp.value = cycle);
+        
+        if(cycle === 'annual') {
+            document.getElementById('toggleAnnual').style.background = 'var(--accent-primary)';
+            document.getElementById('toggleAnnual').style.color = 'white';
+            document.getElementById('toggleMonthly').style.background = 'transparent';
+            document.getElementById('toggleMonthly').style.color = 'var(--text-mid)';
+            
+            document.querySelectorAll('.price-monthly').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.price-annual').forEach(el => el.style.display = 'block');
+        } else {
+            document.getElementById('toggleMonthly').style.background = 'var(--accent-primary)';
+            document.getElementById('toggleMonthly').style.color = 'white';
+            document.getElementById('toggleAnnual').style.background = 'transparent';
+            document.getElementById('toggleAnnual').style.color = 'var(--text-mid)';
+            
+            document.querySelectorAll('.price-monthly').forEach(el => el.style.display = 'block');
+            document.querySelectorAll('.price-annual').forEach(el => el.style.display = 'none');
+        }
+    }
+</script>
+{% endblock %}

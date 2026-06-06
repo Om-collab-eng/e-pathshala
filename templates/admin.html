@@ -11,6 +11,7 @@
         </div>
         <div style="display: flex; gap: 12px; align-items: center;">
             <button class="btn-alt" onclick="openModal('dataHubModal')" style="border-color: var(--accent-success); color: var(--accent-success);">Data Hub</button>
+            <a href="/billing" class="btn-alt" style="border-color: #4ade80; color: #4ade80;">💳 Billing & Plan</a>
             <a href="/admin/settings" class="btn-alt" style="border-color: var(--accent-primary); color: var(--accent-primary);">Settings</a>
             {% if 'manage_books' in session.get('permissions', []) %}
             <a href="/admin/scanner" class="btn-neon" style="width: auto; background: linear-gradient(135deg, var(--accent-primary), #d946ef);">✨ Smart Scan</a>
