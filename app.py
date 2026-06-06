@@ -199,7 +199,7 @@ def init_db():
                         ('users', 'school_code'), ('books', 'school_code'), ('transactions', 'school_code'),
                         ('pending_requests', 'phone'), ('pending_requests', 'password'),
                         ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'),
-                        ('schools', 'status'), ('users', 'status'), ('users', 'is_banned')]:
+                        ('schools', 'status'), ('users', 'status'), ('users', 'is_banned'), ('users', 'permissions')]:
         try:
             conn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
         except sqlite3.OperationalError:
@@ -292,7 +292,7 @@ def init_db():
     # Run migrations on Demo DB
     for table, col in [('users', 'session_token'), ('users', 'admission_no'), ('users', 'class'), ('users', 'school_code'),
                        ('books', 'school_code'), ('transactions', 'school_code'),
-                       ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'), ('users', 'is_banned')]:
+                       ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'), ('users', 'is_banned'), ('users', 'permissions')]:
         try:
             dconn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
         except sqlite3.OperationalError:
@@ -311,6 +311,10 @@ def init_db():
     
     # Ensure all demo users have school_code = 'DEMO'
     dconn.execute('UPDATE users SET school_code = "DEMO" WHERE school_code IS NULL')
+    
+    # Ensure demo admin has all permissions
+    dconn.execute('UPDATE users SET permissions = \'["manage_books", "manage_students", "manage_transactions", "approve_content"]\' WHERE role = "admin" AND (permissions IS NULL OR permissions = "[]")')
+    
     dconn.commit()
     dconn.close()
 
