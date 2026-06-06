@@ -1,401 +1,368 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome - librika.in{% endblock %}
+{% block title %}E-Pathshala - EdTech & E-Library SaaS Platform{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/landing.css">
+<style>
+    /* Desktop Nav Links */
+    @media (min-width: 769px) {
+        .saas-nav-links.desktop-only { display: flex !important; }
+    }
+    @media (max-width: 768px) {
+        .saas-nav-links.desktop-only { display: none !important; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- Removed top navbar -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "librika.in",
-  "operatingSystem": "Web",
-  "applicationCategory": "BusinessApplication",
-  "description": "The next generation of library systems. Secure, streamlined, and globally accessible for schools and educational institutions.",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "INR"
-  }
-}
-</script>
+<!-- Navbar -->
+<nav class="saas-navbar">
+    <div style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="window.scrollTo(0,0)">
+        <img src="/static/logo.png" alt="E-Pathshala Logo" style="height: 40px; border-radius: 8px;">
+        <span style="font-weight: 800; font-size: 1.4rem; letter-spacing: 1px;">E-Pathshala</span>
+    </div>
+    <div class="saas-nav-links desktop-only" style="display: none;">
+        <a href="#features">Features</a>
+        <a href="#solutions">Solutions</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#publishers">Publishers</a>
+        <a href="#resources">Resources</a>
+    </div>
+    <div class="saas-nav-links" style="display: flex; gap: 1rem;">
+        <a href="/login" style="font-weight: 600; padding: 0.5rem 1rem;">Login</a>
+        <a href="/demo-mode" class="btn-neon" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">Free Trial</a>
+    </div>
+</nav>
 
-<div class="hero">
-    <div id="homeSection">
-        <img src="/static/logo.png" alt="librika.in Logo" style="height: 120px; width: auto; margin-bottom: 1.5rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(249, 115, 22, 0.2);">
-        <h1>Welcome to<br>librika.in</h1>
-        <p style="font-size: 1.2rem; color: var(--text-mid); margin-bottom: 3rem;">
-            The next generation of library systems. Secure, streamlined, and globally accessible.
-        </p>
-        <a href="/login" class="btn-neon" style="width: auto; padding: 1.2rem 3rem; font-size: 1.1rem;">Sign In</a>
-        
-        <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.95rem;">
-            <a href="#" style="color: var(--text-mid); text-decoration: none; transition: color 0.3s;" onclick="switchTab('home')">Home</a>
-            <a href="#" style="color: var(--text-mid); text-decoration: none; transition: color 0.3s;" onclick="switchTab('about')">About</a>
-            <a href="#" style="color: var(--text-mid); text-decoration: none; transition: color 0.3s;" onclick="switchTab('contact')">Contact</a>
-        </div>
+<!-- Hero Section -->
+<section class="saas-hero">
+    <h1>The Ultimate Operating System<br>for Modern Libraries & Schools</h1>
+    <p class="subtitle" style="font-size: 1.3rem;">
+        Unify physical inventory, digital E-Books, student engagement, and publisher royalties into a single, intelligent SaaS platform.
+    </p>
+    
+    <div style="margin-top: 1rem; margin-bottom: 2rem; background: var(--bg-card); padding: 0.5rem; border-radius: 50px; border: 1px solid var(--border); display: flex; max-width: 600px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <input type="text" placeholder="Search the global catalog (e.g. 'Physics 101')..." style="flex-grow: 1; background: transparent; border: none; padding: 1rem 1.5rem; color: white; outline: none; font-size: 1rem;">
+        <button class="btn-neon" style="border-radius: 40px; padding: 0.8rem 2rem;" onclick="window.location.href='/demo-mode'">Search</button>
     </div>
 
-    <div id="aboutSection" style="display: none; text-align: left; max-width: 800px; margin: 0 auto;">
-        <h2 style="font-size: 3rem; margin-bottom: 1.5rem; text-align: center;">Academic Excellence.</h2>
-        <p style="font-size: 1.1rem; color: var(--text-mid); line-height: 1.8; margin-bottom: 1.5rem; text-align: center;">
-            librika.in was designed to bridge the gap between physical inventory and digital tracking. 
-            Providing real-time insights, automated barcode systems, and professional management tools.
-        </p>
-        <div style="font-size: 1.1rem; color: var(--text-mid); line-height: 1.8; background: var(--bg-card); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
-            <h3 style="color: var(--text-high); margin-bottom: 1rem;">Core Features & Functions:</h3>
-            <ul style="list-style-type: none; padding: 0; display: flex; flex-direction: column; gap: 1rem;">
-                <li>✅ <strong>Automated Cataloging:</strong> Instant AI-powered barcode scanning and book data extraction.</li>
-                <li>✅ <strong>Digital Circulation:</strong> Seamless check-in and check-out tracking for students and staff.</li>
-                <li>✅ <strong>Smart Analytics:</strong> Real-time dashboards monitoring overdue books and reading trends.</li>
-                <li>✅ <strong>E-Library Integration:</strong> Direct access to digital PDFs and media content alongside physical books.</li>
-                <li>✅ <strong>Role-Based Access:</strong> Dedicated secure portals for Super Admins, Librarians, and Students.</li>
+    <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
+        <a href="/demo-mode" class="btn-neon" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Start Free Trial</a>
+        <a href="#demo-search" class="btn-alt" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-color: var(--text-mid); color: var(--text-high);">Book a Demo</a>
+    </div>
+
+    <!-- Platform Stats -->
+    <div class="stats-grid" style="margin-top: 5rem; width: 100%; max-width: 1000px;">
+        <div class="stat-card">
+            <div class="stat-number">500+</div>
+            <div style="color: var(--text-mid); font-weight: 600; text-transform: uppercase;">Schools</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">2M+</div>
+            <div style="color: var(--text-mid); font-weight: 600; text-transform: uppercase;">Students</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">5M+</div>
+            <div style="color: var(--text-mid); font-weight: 600; text-transform: uppercase;">Books Issued</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">50K+</div>
+            <div style="color: var(--text-mid); font-weight: 600; text-transform: uppercase;">E-Books</div>
+        </div>
+    </div>
+</section>
+
+<!-- Feature Sections -->
+<section id="features" class="saas-section darker">
+    <h2>Everything You Need. All In One Place.</h2>
+    <p class="subtitle">A comprehensive suite designed for Librarians, Students, and Admins.</p>
+
+    <div class="feature-bento">
+        <!-- Physical -->
+        <div class="feature-card">
+            <h3>📚 Physical Library</h3>
+            <ul>
+                <li>Barcode & ISBN Management</li>
+                <li>One-Click Issue & Return</li>
+                <li>Fine & Penalty Tracking</li>
+                <li>Lost Book Tracking</li>
+                <li>Advanced Inventory Sync</li>
+            </ul>
+        </div>
+        <!-- Digital -->
+        <div class="feature-card">
+            <h3>💻 Digital E-Library</h3>
+            <ul>
+                <li>PDF, EPUB, & Audiobooks</li>
+                <li>Online Reading Hub</li>
+                <li>Offline Downloads</li>
+                <li>Reading History & Bookmarks</li>
+                <li>Progress Tracking</li>
+            </ul>
+        </div>
+        <!-- Student -->
+        <div class="feature-card">
+            <h3>🎓 Student Hub</h3>
+            <ul>
+                <li>Personal Dashboard</li>
+                <li>Wishlists & Reading Goals</li>
+                <li>Reviews & Ratings</li>
+                <li>Achievement Badges</li>
+                <li>AI Recommendations</li>
+            </ul>
+        </div>
+        <!-- Admin -->
+        <div class="feature-card">
+            <h3>⚙️ Super Admin & Librarian</h3>
+            <ul>
+                <li>Multi-School Management</li>
+                <li>Global Analytics Dashboard</li>
+                <li>Subscription & Revenue</li>
+                <li>Member Moderation</li>
+                <li>Automated Reports</li>
             </ul>
         </div>
     </div>
+</section>
 
-    <div id="contactSection" style="display: none; max-width: 600px; margin: 0 auto;">
-        <h2 style="font-size: 3rem; margin-bottom: 1.5rem;">Get in Touch.</h2>
-        <p style="font-size: 1.1rem; color: var(--text-mid); margin-bottom: 2rem;">
-            Need assistance, have specific requirements, or want to deploy librika.in at your institution? We're here to help! Reach out to us directly or open the help desk below.
-        </p>
-        <div style="text-align: left; background: var(--bg-card); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
-            <h3 style="margin-bottom: 1rem; color: var(--text-high);">Contact Information</h3>
-            <p style="margin-bottom: 1rem; color: var(--text-mid);">
-                <strong>📧 Email:</strong><br>
-                <a href="mailto:ayushmangupta003@gmail.com" style="color: var(--accent-primary); text-decoration: none;">ayushmangupta003@gmail.com</a><br>
-                <a href="mailto:guptaashish123@gmail.com" style="color: var(--accent-primary); text-decoration: none;">guptaashish123@gmail.com</a>
-            </p>
-            <p style="color: var(--text-mid);">
-                <strong>📞 Phone:</strong><br>
-                +91 9354713610<br>
-                +91 8527198907
-            </p>
-        </div>
-    </div>
-</div>
-
-<!-- Chat Interface -->
-<div class="chat-trigger" onclick="toggleChat()">
-    💬 Help Desk
-</div>
-
-<div class="chat-panel" id="chatPanel">
-    <h3 style="margin-bottom: 1.5rem;">Support Assistant</h3>
+<!-- Marketplace & Ecosystem -->
+<section id="publishers" class="saas-section">
+    <h2>E-Publishing Marketplace</h2>
+    <p class="subtitle">Empowering authors and publishers to distribute digital content directly to millions of students worldwide.</p>
     
-    <div id="chatOptions">
-        <div class="chat-option" onclick="startDemo()">
-            <strong>1. Want Demo</strong>
-            <p style="font-size: 0.75rem; color: var(--text-low); margin: 0;">Try the system live (5s tour)</p>
+    <div class="feature-bento" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+        <div class="feature-card" style="border-color: var(--accent-primary);">
+            <h3 style="color: var(--accent-primary);">✍️ For Authors</h3>
+            <p style="color: var(--text-mid); margin-bottom: 1.5rem; line-height: 1.6;">Self-publish your work globally. Get instant feedback from students, track your sales, and manage royalties from your dedicated dashboard.</p>
+            <ul>
+                <li>Upload PDF/EPUB Formats</li>
+                <li>Author Profiles & Rankings</li>
+                <li>Royalty Tracking Dashboard</li>
+                <li>Real-Time Sales Analytics</li>
+            </ul>
+            <button class="btn-alt" style="margin-top: 2rem; width: 100%;" onclick="window.location.href='/login'">Join as Author</button>
         </div>
-        <div class="chat-option" onclick="showPrompt('create_school')">
-            <strong>2. Request librika.in</strong>
-            <p style="font-size: 0.75rem; color: var(--text-low); margin: 0;">Setup your institution hub</p>
+        
+        <div class="feature-card" style="border-color: #d946ef;">
+            <h3 style="color: #d946ef;">🏢 For Publishers</h3>
+            <p style="color: var(--text-mid); margin-bottom: 1.5rem; line-height: 1.6;">Verify your organization, bulk upload your entire catalog, and securely distribute educational materials directly to institutional networks.</p>
+            <ul>
+                <li>Verified Publisher Badge</li>
+                <li>Bulk Book Uploads</li>
+                <li>Distribution Management</li>
+                <li>Institutional Licensing</li>
+            </ul>
+            <button class="btn-alt" style="margin-top: 2rem; width: 100%; border-color: #d946ef; color: #d946ef;" onclick="window.location.href='/login'">Register Organization</button>
         </div>
-        <div class="chat-option" onclick="showPrompt('creds')">
-            <strong>3. Change Credentials</strong>
-            <p style="font-size: 0.75rem; color: var(--text-low); margin: 0;">Update library login info</p>
+    </div>
+</section>
+
+<!-- AI & Community -->
+<section class="saas-section darker">
+    <h2>Powered by Next-Gen AI</h2>
+    <p class="subtitle">We use advanced machine learning to personalize education and secure the ecosystem.</p>
+    
+    <div class="feature-bento">
+        <div class="feature-card">
+            <h3>🤖 AI Intelligence</h3>
+            <ul>
+                <li>Smart Book Recommendations</li>
+                <li>OCR Cover Scanning</li>
+                <li>Automated Categorization</li>
+                <li>AI Content Moderation</li>
+                <li>Trending Analytics</li>
+            </ul>
+        </div>
+        <div class="feature-card">
+            <h3>🌍 Global Community</h3>
+            <ul>
+                <li>Global Book Reviews</li>
+                <li>Reading Clubs & Challenges</li>
+                <li>Student Discussions</li>
+                <li>Global Leaderboards</li>
+                <li>Monthly Awards</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section id="solutions" class="saas-section">
+    <h2>Why Schools Choose E-Pathshala</h2>
+    <div class="logo-cloud">
+        <div style="font-size: 2rem; font-weight: 800; color: white;">Multi-Tenant</div>
+        <div style="font-size: 2rem; font-weight: 800; color: white;">Data Isolated</div>
+        <div style="font-size: 2rem; font-weight: 800; color: white;">100% Cloud</div>
+        <div style="font-size: 2rem; font-weight: 800; color: white;">Mobile First</div>
+    </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing" class="saas-section darker">
+    <h2>Transparent, Scalable Pricing</h2>
+    <p class="subtitle">Plans designed for institutions of all sizes.</p>
+    
+    <div class="pricing-grid">
+        <div class="pricing-card">
+            <h3>Free Plan</h3>
+            <div class="price">₹0<span style="font-size: 1rem; color: var(--text-mid);">/mo</span></div>
+            <ul>
+                <li>Up to 100 Students</li>
+                <li>Up to 500 Books</li>
+                <li>Basic Issue/Return</li>
+                <li>Community Support</li>
+            </ul>
+            <a href="/demo-mode" class="btn-alt">Get Started</a>
+        </div>
+        
+        <div class="pricing-card">
+            <h3>Basic Plan</h3>
+            <div class="price">₹2,999<span style="font-size: 1rem; color: var(--text-mid);">/mo</span></div>
+            <ul>
+                <li>Single School License</li>
+                <li>Full Physical Library</li>
+                <li>Unlimited Students</li>
+                <li>Email Support</li>
+            </ul>
+            <a href="/demo-mode" class="btn-alt">Start Basic</a>
+        </div>
+        
+        <div class="pricing-card popular">
+            <div class="pricing-badge">MOST POPULAR</div>
+            <h3>Professional Plan</h3>
+            <div class="price">₹7,999<span style="font-size: 1rem; color: white;">/mo</span></div>
+            <ul>
+                <li style="color: white; font-weight: bold;">Includes Everything in Basic</li>
+                <li>Digital E-Library Access</li>
+                <li>AI Features & OCR</li>
+                <li>Advanced Analytics</li>
+                <li>Priority Support</li>
+            </ul>
+            <a href="/demo-mode" class="btn-neon" style="width: 100%;">Start Professional</a>
+        </div>
+        
+        <div class="pricing-card">
+            <h3>Enterprise</h3>
+            <div class="price">Custom</div>
+            <ul>
+                <li>Multi-Branch Sync</li>
+                <li>Custom Branding</li>
+                <li>API Access</li>
+                <li>Dedicated Success Manager</li>
+            </ul>
+            <a href="#contact" class="btn-alt">Contact Sales</a>
+        </div>
+    </div>
+</section>
+
+<!-- Mobile & Integrations -->
+<section class="saas-section">
+    <h2>Seamless Integrations & Mobile Apps</h2>
+    <p class="subtitle">Connect your existing tools and access the library anywhere.</p>
+    
+    <div class="feature-bento">
+        <div class="feature-card">
+            <h3>📱 Cross-Platform Apps</h3>
+            <ul>
+                <li>Native Android App</li>
+                <li>Native iOS App</li>
+                <li>Dedicated Student App</li>
+                <li>Librarian Scanning App</li>
+                <li>Push Notifications & Offline Read</li>
+            </ul>
+        </div>
+        <div class="feature-card">
+            <h3>🔗 System Integrations</h3>
+            <ul>
+                <li>Google Workspace SSO</li>
+                <li>Microsoft 365 Auth</li>
+                <li>Razorpay / Stripe Payments</li>
+                <li>WhatsApp & SMS Gateway</li>
+                <li>Firebase Analytics</li>
+            </ul>
+        </div>
+        <div class="feature-card">
+            <h3>🛡️ Enterprise Security</h3>
+            <ul>
+                <li>Role-Based Access Control</li>
+                <li>Strict Data Isolation</li>
+                <li>Automated Audit Logs</li>
+                <li>Daily Encrypted Backups</li>
+                <li>GDPR Compliant</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="saas-section darker">
+    <h2>Trusted by Educators Worldwide</h2>
+    <p class="subtitle">See how E-Pathshala is transforming institutions.</p>
+    
+    <div class="testimonial-grid">
+        <div class="testimonial-card">
+            <p>"E-Pathshala completely revolutionized how our library operates. The AI OCR scanning saved us hundreds of hours of manual entry."</p>
+            <div style="margin-top: 1rem; color: white; font-weight: bold; font-style: normal;">— Dr. S. Sharma, Principal</div>
+        </div>
+        <div class="testimonial-card">
+            <p>"The digital marketplace allowed our students to access premium e-books instantly. The student engagement analytics are a game changer."</p>
+            <div style="margin-top: 1rem; color: white; font-weight: bold; font-style: normal;">— M. Patel, Head Librarian</div>
+        </div>
+        <div class="testimonial-card">
+            <p>"As an independent author, the royalty tracking is seamless. I published my physics notes and reached 50,000 students in a month."</p>
+            <div style="margin-top: 1rem; color: white; font-weight: bold; font-style: normal;">— R. Kumar, Verified Publisher</div>
+        </div>
+    </div>
+</section>
+
+<!-- Mega Footer -->
+<footer class="saas-footer" id="contact">
+    <div class="footer-grid">
+        <div class="footer-column">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;">
+                <img src="/static/logo.png" alt="Logo" style="height: 30px; border-radius: 6px;">
+                <span style="font-weight: 800; font-size: 1.2rem; color: white;">E-Pathshala</span>
+            </div>
+            <p style="color: var(--text-mid); font-size: 0.9rem; line-height: 1.6;">
+                The operating system for modern educational institutions. Bridging the gap between physical books and digital learning.
+            </p>
+            <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-mid);">
+                📧 support@epathshala.in<br>
+                📞 +91 9354713610
+            </div>
+        </div>
+        
+        <div class="footer-column">
+            <h4>Product</h4>
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#solutions">Solutions</a>
+            <a href="/login">Student Portal</a>
+            <a href="/demo-mode">Try Demo</a>
+        </div>
+        
+        <div class="footer-column">
+            <h4>Ecosystem</h4>
+            <a href="#publishers">Publishers</a>
+            <a href="#publishers">Authors</a>
+            <a href="#resources">API Documentation</a>
+            <a href="#resources">Integrations</a>
+        </div>
+        
+        <div class="footer-column" id="resources">
+            <h4>Resources & Legal</h4>
+            <a href="#help">Help Center</a>
+            <a href="#blog">Blog & Case Studies</a>
+            <a href="#privacy">Privacy Policy</a>
+            <a href="#terms">Terms & Conditions</a>
+            <a href="#refunds">Refund Policy</a>
         </div>
     </div>
     
-    <div id="chatResponse" style="display: none;">
-        <p id="responseText" style="font-size: 0.85rem; margin-bottom: 1.5rem;"></p>
-        <div id="chatInputs"></div>
-        <button class="btn-alt" onclick="resetChat()" style="margin-top: 1rem;">Back to Options</button>
+    <div style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-low); font-size: 0.85rem;">
+        &copy; 2026 E-Pathshala Platform. All rights reserved. Built for global education.
     </div>
-</div>
+</footer>
 
-
-<!-- Demo Overlay -->
-<div id="demoOverlay">
-    <div style="text-align: center;">
-        <h1 id="demoStep">System Initialization...</h1>
-        <p id="demoDesc" style="color: var(--text-mid);">Optimizing internal logic for demonstration.</p>
-        <div style="width: 200px; height: 4px; background: var(--bg-card); margin: 2rem auto; border-radius: 2px;">
-            <div id="demoProgress" style="width: 0%; height: 100%; background: var(--accent-primary); border-radius: 2px; transition: width 0.1s linear;"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Image Captcha Overlay -->
-<div id="captchaOverlay" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 2000;">
-    <div class="modal-content glow-box" style="max-width: 500px; width: 100%; text-align: center;">
-        <h2 id="captchaTitle" style="margin-bottom: 10px;">Security Verification</h2>
-        <p id="captchaStatus" style="color: var(--text-mid); font-size: 0.9rem; margin-bottom: 20px;">Round 1 of 3</p>
-        
-        <div id="captchaImages" style="display: flex; justify-content: center; gap: 15px; font-size: 3rem; margin-bottom: 20px;">
-            <!-- Emojis injected here -->
-        </div>
-        
-        <p id="captchaQuestion" style="font-weight: 600; margin-bottom: 15px;"></p>
-        
-        <div id="captchaOptions" style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- Buttons injected here -->
-        </div>
-
-        <div id="captchaLock" style="display: none; color: var(--accent-error); font-weight: 600; margin-top: 20px;">
-            Verification Failed. Try again in <span id="captchaTimer">30</span>s.
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    function switchTab(tab) {
-        // Toggle tabs
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        // Toggle sections
-        ['home', 'about', 'contact'].forEach(s => {
-            document.getElementById(s + 'Section').style.display = (s === tab ? 'block' : 'none');
-        });
-    }
-
-    function toggleChat() {
-        const panel = document.getElementById('chatPanel');
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function resetChat() {
-        document.getElementById('chatOptions').style.display = 'block';
-        document.getElementById('chatResponse').style.display = 'none';
-        document.getElementById('chatInputs').innerHTML = '';
-    }
-
-    // Check for clear_demo flag to wipe sandbox stickiness
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('clear_demo')) {
-        localStorage.removeItem('demo_active');
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    function showPrompt(type) {
-        document.getElementById('chatOptions').style.display = 'none';
-        document.getElementById('chatResponse').style.display = 'block';
-        const inputs = document.getElementById('chatInputs');
-        const text = document.getElementById('responseText');
-
-        if (type === 'creds') {
-            text.innerText = "To update Librarian credentials, please verify your identity.";
-            inputs.innerHTML = `
-                <input type="password" id="sCode" placeholder="School Code" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <input type="text" id="newName" placeholder="New Librarian Name" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <input type="password" id="newPass" placeholder="New School Code" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <button class="btn-neon" onclick="processAction('creds')">Update Credentials</button>
-            `;
-        } else if (type === 'create_school') {
-            text.innerText = "Request a dedicated library hub for your institution.";
-            
-            inputs.innerHTML = `
-                <input type="text" id="lName" placeholder="Librarian Name" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <input type="text" id="sName" placeholder="School Name" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <input type="text" id="reqCode" placeholder="School Code (Optional)" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <input type="email" id="reqEmail" placeholder="Gmail" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                    <input type="number" id="bQty" placeholder="How many books" class="btn-alt" style="width: 50%; text-align: left;">
-                    <input type="number" id="sQty" placeholder="No. of students" class="btn-alt" style="width: 50%; text-align: left;">
-                </div>
-                <button id="reqSubmitBtn" class="btn-neon" onclick="startCaptchaFlow()">Submit for Review</button>
-            `;
-        }
- else if (type === 'code') {
-            text.innerText = "Enter your current and new School Code.";
-            inputs.innerHTML = `
-                <input type="password" id="oldCode" placeholder="Old School Code" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <input type="password" id="newCode" placeholder="New School Code" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
-                <button class="btn-neon" onclick="processAction('code')">Update Security Code</button>
-            `;
-        }
-    }
-
-
-    async function processAction(action) {
-        let payload = { action_type: action };
-        
-        if (action === 'creds') {
-            payload.sCode = document.getElementById('sCode').value;
-            payload.newName = document.getElementById('newName').value;
-            payload.newPass = document.getElementById('newPass').value;
-        } else if (action === 'code') {
-            payload.oldCode = document.getElementById('oldCode').value;
-            payload.newCode = document.getElementById('newCode').value;
-        } else if (action === 'create_school') {
-            payload.lName = document.getElementById('lName').value;
-            payload.sName = document.getElementById('sName').value;
-            payload.reqCode = document.getElementById('reqCode').value;
-            payload.reqEmail = document.getElementById('reqEmail').value;
-            payload.bQty = document.getElementById('bQty').value;
-            payload.sQty = document.getElementById('sQty').value;
-            payload.captchaAns = document.getElementById('captchaAns').value;
-            payload.captchaExp = document.getElementById('captchaExp').value;
-        }
-
-        fetch('/api/chat-action', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            showModal("System Message", data.message, [{text: "OK"}]);
-            if (data.status === 'success') resetChat();
-        });
-    }
-
-    function startDemo() {
-        const overlay = document.getElementById('demoOverlay');
-        const step = document.getElementById('demoStep');
-        const desc = document.getElementById('demoDesc');
-        const progress = document.getElementById('demoProgress');
-        
-        overlay.style.display = 'flex';
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
-        
-        const steps = [
-            { t: "Student Hub", d: "One-tap secure checkouts." },
-            { t: "Librarian Deck", d: "Manage thousands of books effortlessly." },
-            { t: "Analytics", d: "Real-time overdue tracking." },
-            { t: "World Reach", d: "Global link sharing for remote access." },
-            { t: "Finalizing", d: "Preparing your individual sandboxed session." }
-        ];
-
-        let current = 0;
-        let p = 0;
-        const interval = setInterval(() => {
-            p += 1;
-            progress.style.width = p + '%';
-            
-            if (p % 20 === 0 && current < steps.length) {
-                step.innerText = steps[current].t;
-                desc.innerText = steps[current].d;
-                current++;
-            }
-
-            if (p >= 100) {
-                clearInterval(interval);
-                finishDemo();
-            }
-        }, 50);
-    }
-
-    function finishDemo() {
-        document.getElementById('demoOverlay').style.display = 'none';
-        
-        showModal("Sequence Detailed", "System initialized. Would you like to enter the 5-minute interactive sandbox?", [
-            {text: "ENTER DEMO", class: "btn-neon", action: () => window.location.href = '/demo-mode'},
-            {text: "NOT NOW", action: () => {
-                showModal("Feedback", "What could be improved?", [
-                    {text: "User Interface", action: () => showModal("Thanks", "Feedback noted!", [{text: "Close"}])},
-                    {text: "Features", action: () => showModal("Thanks", "Feedback noted!", [{text: "Close"}])}
-                ]);
-            }}
-        ]);
-        
-        document.getElementById('demoProgress').style.width = '0%';
-    }
-
-    // Custom 3-Round Image MCQ Captcha
-    const captchaRounds = [
-        {
-            images: ['🍎', '🚗', '🎸', '🏀', '🐶'],
-            question: "Which image represents an animal?",
-            options: ["A) 🍎", "B) 🚗", "C) 🐶", "D) 🎸"],
-            answer: 2 // index 2 is option C (🐶)
-        },
-        {
-            images: ['📱', '💻', '⌚', '📚', '🖥️'],
-            question: "Which of these is NOT an electronic device?",
-            options: ["A) 📱", "B) 📚", "C) 💻", "D) ⌚"],
-            answer: 1 // index 1 is option B (📚)
-        },
-        {
-            images: ['☀️', '☁️', '🌧️', '☃️', '⚡'],
-            question: "What is the 4th image from the left?",
-            options: ["A) 🌧️", "B) ☀️", "C) ⚡", "D) ☃️"],
-            answer: 3 // index 3 is option D (☃️)
-        }
-    ];
-
-    let currentCaptchaRound = 0;
-    let isCaptchaLocked = false;
-
-    function startCaptchaFlow() {
-        if (isCaptchaLocked) return;
-        
-        // Basic form validation before Captcha
-        if (!document.getElementById('sName').value || !document.getElementById('lName').value || !document.getElementById('reqEmail').value) {
-            alert("Please fill in the required fields (Institution Name, Librarian Name, Gmail).");
-            return;
-        }
-
-        currentCaptchaRound = 0;
-        document.getElementById('captchaOverlay').style.display = 'flex';
-        loadCaptchaRound();
-    }
-
-    function loadCaptchaRound() {
-        if (currentCaptchaRound >= captchaRounds.length) {
-            // Passed all 3 rounds!
-            document.getElementById('captchaOverlay').style.display = 'none';
-            submitRequestForm();
-            return;
-        }
-
-        const round = captchaRounds[currentCaptchaRound];
-        document.getElementById('captchaStatus').innerText = `Round ${currentCaptchaRound + 1} of 3`;
-        
-        const imgContainer = document.getElementById('captchaImages');
-        imgContainer.innerHTML = round.images.map(img => `<span>${img}</span>`).join('');
-        
-        document.getElementById('captchaQuestion').innerText = round.question;
-        
-        const optContainer = document.getElementById('captchaOptions');
-        optContainer.innerHTML = round.options.map((opt, idx) => 
-            `<button class="btn-alt" style="width:100%; text-align:left;" onclick="checkCaptchaAnswer(${idx})">${opt}</button>`
-        ).join('');
-    }
-
-    function checkCaptchaAnswer(selectedIndex) {
-        const round = captchaRounds[currentCaptchaRound];
-        if (selectedIndex === round.answer) {
-            currentCaptchaRound++;
-            loadCaptchaRound();
-        } else {
-            // Failed! Lockout for 30 seconds.
-            triggerCaptchaLockout();
-        }
-    }
-
-    function triggerCaptchaLockout() {
-        isCaptchaLocked = true;
-        document.getElementById('captchaOptions').innerHTML = '';
-        document.getElementById('captchaImages').innerHTML = '<span style="font-size:4rem;">🚫</span>';
-        document.getElementById('captchaQuestion').innerText = "Incorrect answer.";
-        
-        const lockDiv = document.getElementById('captchaLock');
-        const timerSpan = document.getElementById('captchaTimer');
-        lockDiv.style.display = 'block';
-        
-        let timeLeft = 30;
-        timerSpan.innerText = timeLeft;
-        
-        const timer = setInterval(() => {
-            timeLeft--;
-            timerSpan.innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                isCaptchaLocked = false;
-                lockDiv.style.display = 'none';
-                document.getElementById('captchaOverlay').style.display = 'none';
-            }
-        }, 1000);
-    }
-
-    function submitRequestForm() {
-        processAction('create_school');
-    }
-</script>
 {% endblock %}
