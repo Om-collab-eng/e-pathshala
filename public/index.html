@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBPS Library Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Content will be injected here -->
+    </div>
+
+    <!-- Login Template -->
+    <template id="tpl-login">
+        <div class="auth-container fade-in">
+            <div class="card auth-card">
+                <h2 style="margin-bottom: 0.5rem; text-align: center;">VBPS Library</h2>
+                <p style="text-align: center; margin-bottom: 2rem;">Welcome back! Please login.</p>
+                
+                <div class="tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <button class="btn btn-secondary flex-1 active" id="btn-tab-admin" onclick="switchLoginTab('admin')">Admin</button>
+                    <button class="btn btn-secondary flex-1" id="btn-tab-student" onclick="switchLoginTab('student')">Student</button>
+                </div>
+
+                <form id="form-login">
+                    <div class="input-group">
+                        <label id="lbl-id">Admin ID</label>
+                        <input type="text" id="input-id" placeholder="Enter ID" required>
+                    </div>
+                    <div class="input-group">
+                        <label>PIN</label>
+                        <input type="password" id="input-pin" placeholder="••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full" style="width: 100%;">Login</button>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- Dashboard Shell Template -->
+    <template id="tpl-dashboard">
+        <div class="app-container">
+            <aside class="sidebar">
+                <div class="logo" style="margin-bottom: 3rem;">
+                    <h2 style="color: var(--primary);">VBPS LIB</h2>
+                </div>
+                <nav style="display: flex; flex-direction: column; gap: 0.5rem; flex: 1;">
+                    <button class="btn btn-secondary nav-link active" onclick="loadView('home')">
+                        <i data-lucide="layout-dashboard"></i> Dashboard
+                    </button>
+                    <button class="btn btn-secondary nav-link" onclick="loadView('books')">
+                        <i data-lucide="book"></i> Books
+                    </button>
+                    <button class="btn btn-secondary nav-link admin-only" onclick="loadView('students')">
+                        <i data-lucide="users"></i> Students
+                    </button>
+                </nav>
+                <div class="sidebar-footer" style="padding-top: 2rem; border-top: 1px solid var(--border);">
+                    <button class="btn btn-secondary w-full" onclick="toggleTheme()" style="width:100%; margin-bottom: 0.5rem;">
+                        <i data-lucide="sun" id="theme-icon"></i> Theme
+                    </button>
+                    <button class="btn btn-secondary w-full" onclick="logout()" style="width:100%; color: #ef4444;">
+                        <i data-lucide="log-out"></i> Logout
+                    </button>
+                </div>
+            </aside>
+            <main class="main-content" id="view-content">
+                <!-- Sub-views injected here -->
+            </main>
+        </div>
+    </template>
+
+    <!-- Dashboard Home View -->
+    <template id="tpl-view-home">
+        <div class="fade-in">
+            <h1 style="margin-bottom: 2rem;">Overview</h1>
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <p>Total Books</p>
+                    <div class="stat-value" id="stat-books">-</div>
+                </div>
+                <div class="card stat-card">
+                    <p>Total Students</p>
+                    <div class="stat-value" id="stat-students">-</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Welcome to VBPS Library System</h3>
+                <p>Manage books, students, and more from your centralized dashboard.</p>
+            </div>
+        </div>
+    </template>
+
+    <!-- Books View -->
+    <template id="tpl-view-books">
+        <div class="fade-in">
+            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+                <h1>Book Collection</h1>
+                <div style="flex: 1;"></div>
+                <button class="btn btn-secondary admin-only" onclick="loadView('scan')">
+                    <i data-lucide="scan"></i> Scan Book
+                </button>
+                <button class="btn btn-primary admin-only" onclick="showAddBookModal()">
+                    <i data-lucide="plus"></i> Add Book
+                </button>
+            </div>
+            
+            <div class="card table-container">
+                <table id="table-books">
+                    <thead>
+                        <tr>
+                            <th>Book ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Genre</th>
+                            <th>Status</th>
+                            <th class="admin-only">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Books injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <!-- Students View -->
+    <template id="tpl-view-students">
+        <div class="fade-in">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1>Student Directory</h1>
+                <button class="btn btn-primary" onclick="showAddStudentModal()">
+                    <i data-lucide="user-plus"></i> Add Student
+                </button>
+            </div>
+            
+            <div class="card table-container">
+                <table id="table-students">
+                    <thead>
+                        <tr>
+                            <th>Admission No</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Section</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Students injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <!-- Scan Book View -->
+    <template id="tpl-view-scan">
+        <div class="fade-in">
+            <h1 style="margin-bottom: 2rem;">Scan New Book</h1>
+            <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="card">
+                    <h3>1. Capture / Upload Images</h3>
+                    <p style="margin-bottom: 1.5rem;">Take photos of the front and back cover for OCR and records.</p>
+                    
+                    <div class="capture-group" style="margin-bottom: 1.5rem;">
+                        <label>Front Cover</label>
+                        <div class="camera-preview" id="preview-front" style="width: 100%; aspect-ratio: 3/4; border: 2px dashed var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                            <i data-lucide="camera" style="width: 48px; height: 48px; opacity: 0.2;"></i>
+                            <video id="video-front" style="width: 100%; height: 100%; object-fit: cover; display: none;" autoplay playsinline></video>
+                            <canvas id="canvas-front" style="display: none;"></canvas>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button class="btn btn-secondary btn-sm flex-1" onclick="startCamera('front')">Start Camera</button>
+                            <button class="btn btn-primary btn-sm flex-1" onclick="capturePhoto('front')">Capture</button>
+                            <input type="file" id="file-front" hidden onchange="handleFileSelect('front')">
+                            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-front').click()">
+                                <i data-lucide="upload"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="capture-group">
+                        <label>Back Cover</label>
+                        <div class="camera-preview" id="preview-back" style="width: 100%; aspect-ratio: 3/4; border: 2px dashed var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                            <i data-lucide="camera" style="width: 48px; height: 48px; opacity: 0.2;"></i>
+                            <video id="video-back" style="width: 100%; height: 100%; object-fit: cover; display: none;" autoplay playsinline></video>
+                            <canvas id="canvas-back" style="display: none;"></canvas>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button class="btn btn-secondary btn-sm flex-1" onclick="startCamera('back')">Start Camera</button>
+                            <button class="btn btn-primary btn-sm flex-1" onclick="capturePhoto('back')">Capture</button>
+                            <input type="file" id="file-back" hidden onchange="handleFileSelect('back')">
+                            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-back').click()">
+                                <i data-lucide="upload"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>2. Extract & Process</h3>
+                    <p style="margin-bottom: 1.5rem;">The system will use Google Gemini to extract text and generate a summary.</p>
+                    
+                    <div id="scan-feedback" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg); border-radius: 10px; min-height: 100px;">
+                        <p style="opacity: 0.6;">Waiting for images...</p>
+                    </div>
+
+                    <button class="btn btn-primary w-full" id="btn-run-ocr" onclick="runOCR()" disabled>
+                        <i data-lucide="zap"></i> Run AI Extraction
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Edit/Review Book Template -->
+    <template id="tpl-view-edit-book">
+        <div class="fade-in">
+            <h1 style="margin-bottom: 2rem;">Review & Save Book</h1>
+            <form id="form-save-scanned-book" class="card shadow-lg">
+                <div class="grid-2" style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+                    <div class="form-images">
+                        <div class="image-box" style="margin-bottom: 1rem;">
+                            <label>Front Cover</label>
+                            <img id="edit-img-front" src="" style="width: 100%; border-radius: 10px; border: 1px solid var(--border);">
+                        </div>
+                        <div class="image-box">
+                            <label>Back Cover</label>
+                            <img id="edit-img-back" src="" style="width: 100%; border-radius: 10px; border: 1px solid var(--border);">
+                        </div>
+                    </div>
+                    <div class="form-fields">
+                        <div class="input-group">
+                            <label>Book ID (Auto)</label>
+                            <input type="text" id="edit-book-id" value="Auto-generated" disabled>
+                        </div>
+                        <div class="input-group">
+                            <label>Title</label>
+                            <input type="text" id="edit-title" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Author</label>
+                            <input type="text" id="edit-author" required>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="input-group flex-1">
+                                <label>Genre</label>
+                                <input type="text" id="edit-genre">
+                            </div>
+                            <div class="input-group flex-1">
+                                <label>Price</label>
+                                <input type="number" id="edit-price" value="0">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="input-group flex-1">
+                                <label>Publisher</label>
+                                <input type="text" id="edit-publisher">
+                            </div>
+                            <div class="input-group flex-1">
+                                <label>Publish Date</label>
+                                <input type="text" id="edit-publish-date">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Description (AI Summary)</label>
+                            <textarea id="edit-description" style="width: 100%; height: 100px; padding: 0.75rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text);"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button type="button" class="btn btn-secondary flex-1" onclick="loadView('scan')">Cancel</button>
+                            <button type="submit" class="btn btn-primary flex-1">Save to Library</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </template>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

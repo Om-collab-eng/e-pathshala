@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}My Publications - E-Pathshala{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="header">
+        <div>
+            <h1>📚 My Publications</h1>
+            <p style="color: var(--text-mid); font-size: 0.85rem;">Track the status of your submitted Digital Library content.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/student/publish" class="btn-neon">📝 Publish New</a>
+            <a href="/student" class="btn-alt">Dashboard</a>
+        </div>
+    </header>
+
+    <main style="margin: 2rem auto; max-width: 1200px; padding: 0 1rem;">
+        {% if not publications %}
+        <div class="glow-box" style="text-align: center; padding: 3rem;">
+            <h2>No Publications Yet</h2>
+            <p style="color: var(--text-mid); margin: 1rem 0 2rem;">You haven't submitted any content to the Digital Library yet. Start building your Author Profile today!</p>
+            <a href="/student/publish" class="btn-neon">Publish First Asset</a>
+        </div>
+        {% else %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            {% for pub in publications %}
+            <div class="stat-card" style="position: relative;">
+                {% if pub.status == 'Submitted' %}
+                <span class="badge badge-warning" style="position: absolute; top: 10px; right: 10px;">Pending Review</span>
+                {% elif pub.status == 'Approved' or pub.status == 'Published' %}
+                <span class="badge badge-success" style="position: absolute; top: 10px; right: 10px;">Published</span>
+                {% elif pub.status == 'Rejected' %}
+                <span class="badge badge-danger" style="position: absolute; top: 10px; right: 10px;">Rejected</span>
+                {% else %}
+                <span class="badge" style="position: absolute; top: 10px; right: 10px; background: #6b7280;">{{ pub.status }}</span>
+                {% endif %}
+                
+                <div style="margin-bottom: 1rem;">
+                    <span style="font-size: 0.75rem; color: var(--accent-primary); font-weight: bold; text-transform: uppercase;">{{ pub.category }}</span>
+                    <h3 style="margin-top: 5px;">{{ pub.title }}</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-mid);">Subject: {{ pub.subject }}</p>
+                </div>
+                
+                {% if pub.status == 'Rejected' and pub.rejection_reason %}
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 1rem;">
+                    <strong style="color: #ef4444; font-size: 0.8rem;">Rejection Reason:</strong>
+                    <p style="font-size: 0.8rem; margin: 0; color: var(--text-light);">{{ pub.rejection_reason }}</p>
+                    {% if pub.suggested_changes %}
+                    <strong style="color: #ef4444; font-size: 0.8rem; display: block; margin-top: 5px;">Suggested Changes:</strong>
+                    <p style="font-size: 0.8rem; margin: 0; color: var(--text-light);">{{ pub.suggested_changes }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <div style="font-size: 0.75rem; color: var(--text-low);">
+                        <div>👁️ {{ pub.views }} Views</div>
+                        <div>⬇️ {{ pub.downloads }} Downloads</div>
+                    </div>
+                    {% if pub.file_url %}
+                    <a href="{{ pub.file_url }}" target="_blank" class="btn-alt" style="padding: 5px 10px; font-size: 0.75rem;">View File</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

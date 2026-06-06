@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}{{ content.title }} - E-Pathshala{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="header">
+        <div>
+            <h1>{{ content.title }}</h1>
+            <p style="color: var(--text-mid); font-size: 0.85rem;">Digital Library Item</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/digital-library" class="btn-alt">Back to Library</a>
+        </div>
+    </header>
+
+    <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem; display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
+        
+        <!-- Left Column: Content Details -->
+        <div>
+            <div class="glow-box" style="margin-bottom: 2rem; position: relative;">
+                {% if content.featured %}
+                <span class="badge badge-success" style="position: absolute; top: 20px; right: 20px;">⭐ Featured</span>
+                {% endif %}
+                
+                <div style="display: flex; gap: 20px; margin-bottom: 2rem;">
+                    {% if content.cover_url %}
+                    <img src="{{ content.cover_url }}" style="width: 150px; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                    {% else %}
+                    <div style="width: 150px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">📄</div>
+                    {% endif %}
+                    
+                    <div style="flex: 1;">
+                        <span style="font-size: 0.75rem; color: var(--accent-primary); font-weight: bold; text-transform: uppercase; background: rgba(139, 92, 246, 0.1); padding: 4px 10px; border-radius: 12px; display: inline-block; margin-bottom: 10px;">{{ content.category }}</span>
+                        <h2 style="margin: 0 0 10px 0; color: var(--text-light); font-size: 1.8rem;">{{ content.title }}</h2>
+                        <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                            <div>
+                                <p style="margin: 0; font-size: 0.75rem; color: var(--text-low);">Subject</p>
+                                <p style="margin: 0; font-size: 0.9rem; color: var(--text-light); font-weight: bold;">{{ content.subject }}</p>
+                            </div>
+                            {% if content.class %}
+                            <div>
+                                <p style="margin: 0; font-size: 0.75rem; color: var(--text-low);">Class</p>
+                                <p style="margin: 0; font-size: 0.9rem; color: var(--text-light); font-weight: bold;">{{ content.class }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                            <div style="font-size: 0.85rem; color: var(--text-mid);">👁️ <strong>{{ content.views }}</strong> Views</div>
+                            <div style="font-size: 0.85rem; color: var(--text-mid);">⬇️ <strong>{{ content.downloads }}</strong> Downloads</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color: var(--text-light); margin-bottom: 10px; font-size: 1.1rem;">Description</h3>
+                    <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; line-height: 1.6; color: var(--text-mid); font-size: 0.9rem;">
+                        {{ content.description }}
+                    </div>
+                </div>
+
+                {% if content.tags %}
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color: var(--text-light); margin-bottom: 10px; font-size: 1.1rem;">Tags</h3>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        {% for tag in content.tags.split(',') %}
+                        <span style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-mid); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem;">#{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button onclick="window.location.href='/digital-library/read/{{ content.id }}'" class="btn-neon" style="font-size: 1.1rem; padding: 1rem 3rem;">
+                        📖 Read Document
+                    </button>
+                    <p style="margin-top: 10px; font-size: 0.75rem; color: var(--text-low);">Secure native E-Reader</p>
+                </div>
+            </div>
+            
+            <!-- Reviews Section -->
+            <div class="glow-box">
+                <h3 style="color: var(--text-light); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Community Reviews</span>
+                    <span class="badge" style="background: rgba(255,255,255,0.1);">{{ reviews|length }} Reviews</span>
+                </h3>
+                
+                {% if not reviews %}
+                <div style="text-align: center; padding: 2rem 0; border: 1px dashed var(--border-color); border-radius: 8px; margin-bottom: 1.5rem;">
+                    <p style="color: var(--text-mid); font-size: 0.85rem; margin: 0;">No reviews yet. Be the first to share your thoughts!</p>
+                </div>
+                {% else %}
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+                    {% for review in reviews %}
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <div style="color: #fcd34d;">
+                                {% for i in range(review.rating) %}★{% endfor %}{% for i in range(5 - review.rating) %}☆{% endfor %}
+                            </div>
+                            <span style="font-size: 0.7rem; color: var(--text-low);">{{ review.created_at }}</span>
+                        </div>
+                        <h4 style="color: var(--text-light); margin: 0 0 5px 0; font-size: 0.95rem;">{{ review.review_title }}</h4>
+                        <p style="color: var(--text-mid); font-size: 0.8rem; margin: 0 0 10px 0; line-height: 1.4;">{{ review.review_comment }}</p>
+                        <div style="font-size: 0.7rem; color: var(--text-low);">By {{ review.reviewer_name }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Author Profile & Actions -->
+        <div>
+            <!-- Author Card -->
+            <div class="glow-box" style="margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 15px 0; font-size: 1rem; color: var(--text-mid); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Published By</h3>
+                
+                <div style="text-align: center; padding: 10px 0;">
+                    <div style="width: 60px; height: 60px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; font-weight: bold; margin: 0 auto 10px auto; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);">
+                        {{ content.student_name[0] }}
+                    </div>
+                    <h3 style="margin: 0 0 5px 0; color: var(--text-light);">{{ content.student_name }}</h3>
+                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-mid);">Class {{ content.student_class }}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.75rem; color: var(--text-low);">{{ content.school_name }}</p>
+                    
+                    <a href="/author/{{ content.student_id }}" class="btn-alt" style="display: block; margin-top: 15px; padding: 8px;">View Full Profile</a>
+                </div>
+            </div>
+
+            <!-- Write Review Form -->
+            <div class="glow-box" style="margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 15px 0; font-size: 1rem; color: var(--text-mid); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Write a Review</h3>
+                
+                <form onsubmit="submitReview(event)" id="reviewForm">
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Rating</label>
+                        <select id="r_rating" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
+                            <option value="5">★★★★★ (5/5)</option>
+                            <option value="4">★★★★☆ (4/5)</option>
+                            <option value="3">★★★☆☆ (3/5)</option>
+                            <option value="2">★★☆☆☆ (2/5)</option>
+                            <option value="1">★☆☆☆☆ (1/5)</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Headline</label>
+                        <input type="text" id="r_title" required placeholder="Very helpful notes!" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label>Review</label>
+                        <textarea id="r_comment" required rows="3" placeholder="Tell others what you thought..." style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-high); border: 1px solid var(--border-color);"></textarea>
+                    </div>
+                    <button type="submit" class="btn-alt" style="width: 100%; border-color: var(--accent-primary); color: var(--accent-primary);">Submit Review</button>
+                </form>
+            </div>
+
+            <!-- Report Content -->
+            <div style="text-align: center;">
+                <button onclick="reportContent()" style="background: none; border: none; color: #ef4444; font-size: 0.75rem; text-decoration: underline; cursor: pointer;">
+                    🚩 Report this content
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function downloadDocument(url, id) {
+    // Notify server of download to increment stats (lazy async)
+    fetch('/digital-library/api/track-download', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ content_id: id })
+    });
+    
+    // Trigger download
+    window.open(url, '_blank');
+}
+
+async function submitReview(e) {
+    e.preventDefault();
+    const payload = {
+        content_id: {{ content.id }},
+        rating: document.getElementById('r_rating').value,
+        title: document.getElementById('r_title').value,
+        comment: document.getElementById('r_comment').value
+    };
+    
+    const res = await fetch('/api/submit-review', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+    
+    const data = await res.json();
+    if(data.status === 'success') {
+        showToast("Review submitted successfully!", "success");
+        setTimeout(() => window.location.reload(), 1000);
+    }
+}
+
+async function reportContent() {
+    const reason = prompt("Please provide a reason for reporting this content (e.g., Plagiarism, Incorrect Info, Offensive):");
+    if(!reason) return;
+    
+    const res = await fetch('/digital-library/api/report', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ content_id: {{ content.id }}, reason: reason })
+    });
+    
+    const data = await res.json();
+    if(data.status === 'success') {
+        alert("Report submitted successfully. A librarian will review this.");
+    }
+}
+</script>
+{% endblock %}

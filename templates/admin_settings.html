@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - E-Pathshala{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="header">
+        <div>
+            <h1>School Management</h1>
+            <p style="color: var(--text-mid); font-size: 0.85rem;">Security & Institutional Controls</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/admin" class="btn-alt">Cancel</a>
+        </div>
+    </header>
+
+    <div class="auth-card" style="max-width: 600px; margin: 0 auto;">
+        <h2 style="margin-bottom: 2rem;">Institutional Settings</h2>
+        
+        <form method="POST">
+            <div class="input-group">
+                <label for="new_name">Institution Display Name</label>
+                <input type="text" id="new_name" name="new_name" value="{{ school.name }}" required>
+            </div>
+
+            <div class="input-group">
+                <label for="new_code">Dynamic School Code (Warning: Logouts will occur)</label>
+                <input type="text" id="new_code" name="new_code" value="{{ school.school_code }}" required pattern="SCH-[A-Z0-9]+">
+                <p style="font-size: 0.7rem; color: var(--accent-warning); margin-top: 5px;">Changing this code will force all members (including you) to re-authenticate with the new credentials.</p>
+            </div>
+
+            <button type="submit" class="btn-neon">Authorize Changes</button>
+        </form>
+
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center;">
+            <p style="font-size: 0.8rem; color: var(--text-low); margin-bottom: 1rem;">Platform Ownership Issue?</p>
+            <a href="/logout" class="btn-alt" style="width: 100%; border-color: var(--accent-error); color: var(--accent-error);">Switch to Platform Account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

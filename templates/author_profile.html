@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ author.name }} - Author Profile{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="header" style="justify-content: center; text-align: center; display: flex; flex-direction: column; padding-bottom: 3rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem;">
+        <div style="width: 100px; height: 100px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: bold; margin: 0 auto 15px auto; box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);">
+            {{ author.name[0] }}
+        </div>
+        <h1 style="margin: 0 0 5px 0;">{{ author.name }}</h1>
+        <p style="color: var(--text-mid); font-size: 1rem; margin: 0;">Class {{ author.class }}</p>
+        
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+            {% if stats.total_pubs >= 5 %}
+            <span class="badge badge-success" style="font-size: 0.8rem;">🌟 Top Author</span>
+            {% elif stats.total_pubs > 0 %}
+            <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: var(--accent-primary); font-size: 0.8rem;">✍️ Contributor</span>
+            {% endif %}
+            
+            {% if stats.total_downloads >= 100 %}
+            <span class="badge badge-warning" style="font-size: 0.8rem;">🔥 Most Downloaded</span>
+            {% endif %}
+        </div>
+    </header>
+
+    <main style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
+        <!-- Stats Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <div class="stat-card" style="text-align: center;">
+                <h3 style="font-size: 2rem; color: var(--accent-primary); margin: 0 0 5px 0;">{{ stats.total_pubs or 0 }}</h3>
+                <p style="color: var(--text-mid); margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Publications</p>
+            </div>
+            <div class="stat-card" style="text-align: center;">
+                <h3 style="font-size: 2rem; color: #10b981; margin: 0 0 5px 0;">{{ stats.total_views or 0 }}</h3>
+                <p style="color: var(--text-mid); margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Total Views</p>
+            </div>
+            <div class="stat-card" style="text-align: center;">
+                <h3 style="font-size: 2rem; color: #3b82f6; margin: 0 0 5px 0;">{{ stats.total_downloads or 0 }}</h3>
+                <p style="color: var(--text-mid); margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Total Downloads</p>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 1.5rem; border-left: 4px solid var(--accent-primary); padding-left: 10px;">Published Works</h2>
+        
+        {% if not publications %}
+        <div class="glow-box" style="text-align: center; padding: 3rem;">
+            <p style="color: var(--text-mid);">This author hasn't published anything yet.</p>
+        </div>
+        {% else %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            {% for item in publications %}
+            <a href="/digital-library/content/{{ item.id }}" class="stat-card" style="text-decoration: none; position: relative; transition: transform 0.2s; cursor: pointer; display: block;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                {% if item.featured %}
+                <span class="badge badge-success" style="position: absolute; top: 15px; right: 15px; font-size: 0.7rem;">⭐ Featured</span>
+                {% endif %}
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 1rem;">
+                    {% if item.cover_url %}
+                    <img src="{{ item.cover_url }}" style="width: 70px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                    {% else %}
+                    <div style="width: 70px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">📄</div>
+                    {% endif %}
+                    
+                    <div>
+                        <span style="font-size: 0.7rem; color: var(--accent-primary); font-weight: bold; text-transform: uppercase; background: rgba(139, 92, 246, 0.1); padding: 3px 8px; border-radius: 12px;">{{ item.category }}</span>
+                        <h3 style="margin: 8px 0 5px 0; font-size: 1.1rem; color: var(--text-light);">{{ item.title }}</h3>
+                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-mid);">{{ item.subject }}</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <span style="font-size: 0.75rem; color: var(--text-low);">{{ item.created_at.split(' ')[0] }}</span>
+                    <div style="font-size: 0.7rem; color: var(--text-low);">
+                        <span>👁️ {{ item.views }}</span>
+                        <span style="margin-left: 5px;">⬇️ {{ item.downloads }}</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

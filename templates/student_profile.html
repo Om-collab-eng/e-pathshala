@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - E-Pathshala{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="header">
+        <h1>Account Settings</h1>
+        <a href="/student" class="btn-alt">Back</a>
+    </header>
+
+    <main class="grid-layout">
+        <aside>
+            <div class="glow-box" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-low);">Reading Analytics</h3>
+                
+                <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">📚</div>
+                    <div style="font-size: 2.5rem; color: var(--accent-primary); font-weight: 800;">{{ stats.total_read }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-mid);">Total Books Read</div>
+                </div>
+
+                <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">🌟</div>
+                    <div style="font-size: 1.5rem; color: var(--accent-success); font-weight: 800;">{{ stats.favorite_category }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-mid);">Favorite Category</div>
+                </div>
+            </div>
+        </aside>
+
+        <section class="content">
+            <div class="glow-box">
+                <h2 style="font-family: 'Outfit'; margin-bottom: 2rem;">Security & Identity</h2>
+                <form method="POST">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" name="name" value="{{ user.name or '' }}" placeholder="Enter Full Name">
+                    </div>
+                    <div class="input-group">
+                        <label>Admission No. (Official)</label>
+                        <input type="text" name="admission_no" value="{{ user.admission_no or '' }}" placeholder="Enter Admission No.">
+                    </div>
+                    <div class="input-group">
+                        <label>Academic Class</label>
+                        <input type="text" name="class" value="{{ user.class or '' }}" placeholder="Enter Class">
+                    </div>
+                    <div class="input-group">
+                        <label>Primary Phone</label>
+                        <input type="text" name="phone" value="{{ user.phone }}" readonly style="opacity: 0.7;">
+                    </div>
+                    <div class="input-group">
+                        <label>Change Password</label>
+                        <input type="password" name="password" value="{{ user.password }}" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-neon">Refresh Identity Data</button>
+                </form>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}

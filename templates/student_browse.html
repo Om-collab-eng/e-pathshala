@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Book Catalog - E-Pathshala{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="header">
+        <div>
+            <h1>Global Catalog</h1>
+            <p style="color: var(--text-mid); font-size: 0.85rem;">Browse and Acquire Knowledge</p>
+        </div>
+        <a href="/student" class="btn-alt">Return to Dashboard</a>
+    </header>
+
+    <main class="grid-layout">
+        <aside>
+            <div class="glow-box">
+                <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-low); margin-bottom: 1.5rem;">Filter by Category</h3>
+                <ul class="class-list">
+                    <li>
+                        <a href="/student/browse" class="btn-alt {% if not active_genre %}active{% endif %}">
+                            <span style="font-size: 1.2rem;">📂</span> All Categories
+                        </a>
+                    </li>
+                    {% for genre in genres %}
+                    <li>
+                        <a href="/student/browse?genre={{ genre }}" class="btn-alt {% if active_genre == genre %}active{% endif %}">
+                            {{ genre }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="status" style="margin-top: 2rem;">
+                <h3>Quick Tip</h3>
+                <p style="font-size: 0.8rem; color: var(--text-mid); line-height: 1.5;">You can issue up to 3 books at a time. Deadlines are strictly enforced.</p>
+            </div>
+        </aside>
+
+        <section class="content">
+            <div class="glow-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <h1><span class="icon">🔍</span> Book Catalog</h1>
+                    
+                    <form method="GET" action="/student/browse" style="display: flex; gap: 0.5rem; flex: 1; max-width: 400px;">
+                        <input type="text" name="q" placeholder="Search title or author..." value="{{ search_query or '' }}" class="input-field" style="flex: 1;">
+                        {% if active_genre %}
+                        <input type="hidden" name="genre" value="{{ active_genre }}">
+                        {% endif %}
+                        <button type="submit" class="btn-alt">Search</button>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    {% if books %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Book Details</th>
+                                <th>Classification</th>
+                                <th>Stock Levels</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in books %}
+                            <tr>
+                                <td data-label="Book">
+                                    <div style="font-weight: 700;">{{ book.title }}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-low);">{{ book.author }}</div>
+                                </td>
+                                <td data-label="Classification">
+                                    <span class="badge" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);">{{ book.genre or 'General' }}</span>
+                                </td>
+                                <td data-label="Status">
+                                    {% if book.available_copies > 0 %}
+                                    <div style="display: flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                                        <span style="width: 6px; height: 6px; background: var(--accent-success); border-radius: 50%;"></span>
+                                        <span style="color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">{{ book.available_copies }} Units</span>
+                                    </div>
+                                    {% else %}
+                                    <span class="badge badge-error">Sold Out</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="Action">
+                                    <a href="/student/book/{{ book.id }}" class="btn-neon" style="font-size: 0.75rem; padding: 8px 16px; width: auto;">View Details</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div style="text-align: center; padding: 3rem; color: var(--text-low);">No books found in this classification.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterBooks() {
+    const input = document.getElementById("assetSearch");
+    const filter = input.value.toLowerCase();
+    const table = document.querySelector(".table-container table");
+    if (!table) return;
+    
+    const tr = table.getElementsByTagName("tr");
+    let visibleCount = 0;
+
+    for (let i = 1; i < tr.length; i++) {
+        const td = tr[i].getElementsByTagName("td")[0]; // Book Details col
+        if (td) {
+            const textValue = td.textContent || td.innerText;
+            if (textValue.toLowerCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+                visibleCount++;
+            } else {
+                tr[i].style.display = "none";
+            }
+        }       
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Publish Content - E-Pathshala{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="header">
+        <div>
+            <h1>📝 Publish Digital Content</h1>
+            <p style="color: var(--text-mid); font-size: 0.85rem;">Submit your notes, projects, and summaries for the Digital Library.</p>
+        </div>
+        <a href="/student" class="btn-alt">Back to Dashboard</a>
+    </header>
+
+    <main style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+        <div class="glow-box">
+            <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid var(--accent-primary); border-radius: 12px; padding: 1rem; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 0.5rem; color: var(--accent-primary);">📌 Review Process</h3>
+                <p style="font-size: 0.85rem; color: var(--text-light); margin: 0;">All submissions are reviewed by your school's Librarian. Once approved, it will be published globally to the Digital Library with a "Published By" badge under your name!</p>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" onsubmit="showToast('Uploading your content...', 'info')">
+                <div class="input-group">
+                    <label>Title</label>
+                    <input type="text" name="title" required placeholder="e.g. Complete Physics Notes Chapter 1">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="input-group">
+                        <label>Category</label>
+                        <select name="category" required>
+                            <option value="Notes">Notes</option>
+                            <option value="Study Material">Study Material</option>
+                            <option value="Project Report">Project Report</option>
+                            <option value="Research Work">Research Work</option>
+                            <option value="Book Summary">Book Summary</option>
+                            <option value="Presentation">Presentation</option>
+                            <option value="Article">Article</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Subject</label>
+                        <input type="text" name="subject" required placeholder="e.g. Physics">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="input-group">
+                        <label>Class/Grade (Optional)</label>
+                        <input type="text" name="class" placeholder="e.g. Class 11">
+                    </div>
+                    <div class="input-group">
+                        <label>Tags (Comma Separated)</label>
+                        <input type="text" name="tags" placeholder="e.g. optics, ray-diagrams">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="4" required placeholder="Briefly describe what this content contains..." style="width: 100%; padding: 0.8rem 1rem; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(255,255,255,0.02); color: var(--text-light);"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 1rem;">
+                    <div class="input-group">
+                        <label>Cover Image (Optional)</label>
+                        <input type="file" name="cover" accept="image/*" class="btn-alt" style="width:100%;">
+                        <small style="color: var(--text-low); font-size: 0.7rem;">Recommended ratio: 16:9 or 3:4</small>
+                    </div>
+                    <div class="input-group">
+                        <label>Document Upload (PDF/DOCX) *</label>
+                        <input type="file" name="document" accept=".pdf,.doc,.docx,.ppt,.pptx" class="btn-alt" style="width:100%;" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-neon" style="width: 100%; margin-top: 2rem; padding: 1rem;">Submit For Review ✨</button>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

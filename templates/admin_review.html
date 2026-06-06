@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Content Review Queue - E-Pathshala{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="header">
+        <div>
+            <h1>⚖️ Content Review Queue</h1>
+            <p style="color: var(--text-mid); font-size: 0.85rem;">Review, approve, or reject student digital publications.</p>
+        </div>
+        <a href="/admin" class="btn-alt">Back to Dashboard</a>
+    </header>
+
+    <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+        {% if not content_list %}
+        <div class="glow-box" style="text-align: center; padding: 3rem;">
+            <h2 style="color: var(--text-light);">Queue is Empty</h2>
+            <p style="color: var(--text-mid); margin-top: 1rem;">No pending digital content submissions to review.</p>
+        </div>
+        {% else %}
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.5rem;">
+            {% for item in content_list %}
+            <div class="glow-box" id="item-{{ item.id }}" style="position: relative;">
+                <span class="badge badge-warning" style="position: absolute; top: 15px; right: 15px;">{{ item.status }}</span>
+                
+                <div style="display: flex; gap: 15px; align-items: flex-start; margin-bottom: 1rem;">
+                    {% if item.cover_url %}
+                    <img src="{{ item.cover_url }}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                    {% else %}
+                    <div style="width: 80px; height: 110px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">📄</div>
+                    {% endif %}
+                    
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--accent-primary); font-weight: bold; text-transform: uppercase;">{{ item.category }}</span>
+                        <h3 style="margin: 5px 0; font-size: 1.1rem; color: var(--text-light);">{{ item.title }}</h3>
+                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-mid);">By: <strong>{{ item.student_name }}</strong> ({{ item.admission_no }}) - Class {{ item.class }}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 0.75rem; color: var(--text-low);">Submitted: {{ item.created_at }}</p>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; margin-bottom: 1rem;">
+                    <strong style="font-size: 0.8rem; color: var(--text-light);">Description:</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-mid); margin: 5px 0 0 0;">{{ item.description }}</p>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                    <a href="{{ item.file_url }}" target="_blank" class="btn-alt" style="flex: 1; text-align: center; text-decoration: none;">👁️ Preview Document</a>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="approveContent({{ item.id }})" class="btn-neon" style="flex: 1; background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981;">✅ Approve</button>
+                    <button onclick="showRejectModal({{ item.id }})" class="btn-alt" style="flex: 1; border-color: #ef4444; color: #ef4444;">❌ Reject</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="auth-card" style="width: 100%; max-width: 500px; padding: 2rem;">
+        <h2 style="color: #ef4444; margin-bottom: 1.5rem;">Reject Submission</h2>
+        <input type="hidden" id="reject_id">
+        
+        <div class="input-group">
+            <label>Rejection Reason (Required)</label>
+            <select id="reject_reason" required style="width: 100%; padding: 0.8rem; border-radius: 8px; background: var(--bg-surface); color: white; border: 1px solid var(--border-color);">
+                <option value="Poor formatting or readability">Poor formatting or readability</option>
+                <option value="Incomplete content">Incomplete content</option>
+                <option value="Plagiarism / Duplicate content">Plagiarism / Duplicate content</option>
+                <option value="Inappropriate content">Inappropriate content</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label>Suggested Changes for Student</label>
+            <textarea id="reject_suggestions" rows="4" style="width: 100%; padding: 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border-color);" placeholder="Tell the student how to fix this..."></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+            <button onclick="closeRejectModal()" class="btn-alt" style="flex: 1;">Cancel</button>
+            <button onclick="submitReject()" class="btn-neon" style="flex: 1; background: #ef4444; border-color: #ef4444;">Confirm Rejection</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function approveContent(id) {
+    if(!confirm("Are you sure you want to approve this and publish it to the digital library?")) return;
+    
+    const res = await fetch('/admin/api/moderate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'Approve', content_id: id })
+    });
+    
+    const data = await res.json();
+    if(data.status === 'success') {
+        document.getElementById('item-' + id).style.display = 'none';
+        showToast("Content Published Successfully", "success");
+    }
+}
+
+function showRejectModal(id) {
+    document.getElementById('reject_id').value = id;
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+
+async function submitReject() {
+    const id = document.getElementById('reject_id').value;
+    const reason = document.getElementById('reject_reason').value;
+    const suggestions = document.getElementById('reject_suggestions').value;
+    
+    if(!reason) return alert("Select a reason");
+    
+    const res = await fetch('/admin/api/moderate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            action: 'Reject', 
+            content_id: id,
+            rejection_reason: reason,
+            suggested_changes: suggestions
+        })
+    });
+    
+    const data = await res.json();
+    if(data.status === 'success') {
+        document.getElementById('item-' + id).style.display = 'none';
+        closeRejectModal();
+        showToast("Content Rejected", "info");
+    }
+}
+</script>
+{% endblock %}

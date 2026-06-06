@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Issue Terminal - E-Pathshala{% endblock %}
+
+{% block content %}
+<style>
+    /* Fix for dropdown options appearing white-on-white */
+    select option {
+        background-color: var(--bg-surface, #1e1e2d);
+        color: var(--text-light, #ffffff);
+    }
+</style>
+<div class="login-container">
+    <div class="auth-card" style="max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1 style="text-align: left; margin: 0;">Issue Terminal</h1>
+            <a href="/admin" class="btn-alt" style="padding: 6px 12px; font-size: 0.75rem;">Back</a>
+        </div>
+        
+        <p style="margin-bottom: 2rem; color: var(--text-mid); font-size: 0.85rem;">Identify student and register asset allocation.</p>
+
+        <form method="POST">
+            <div class="input-group">
+                <label>Target Student Entity</label>
+                <select name="student_id" required>
+                    {% for student in students %}
+                    <option value="{{ student.id }}">{{ student.name }} (ID: {{ student.admission_no }} - Cls {{ student.class }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Manual Asset Selection</label>
+                <select name="book_id">
+                    <option value="">-- No selection --</option>
+                    {% for book in books %}
+                    <option value="{{ book.id }}">{{ book.title }} ({{ book.barcode_id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 10px; margin: 1.5rem 0;">
+                <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+                <span style="font-size: 0.7rem; color: var(--text-low); font-weight: 700;">OR SCAN BARCODE</span>
+                <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+            </div>
+
+            <div class="input-group">
+                <label>Live Scanner Input</label>
+                <input type="text" id="barcode_input" name="barcode_id" placeholder="Waiting for scanner pulse..." autofocus>
+            </div>
+
+            <button type="submit" class="btn-neon">Commit Transaction</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Keep focus on barcode input for scanner-ready experience
+    document.addEventListener('click', () => {
+        document.getElementById('barcode_input').focus();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,767 @@
+{% extends "base.html" %}
+
+{% block title %}System Master - E-Pathshala{% endblock %}
+
+{% block content %}
+<!-- PDF & Canvas Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<div class="dashboard" id="dashboard-container">
+    <header class="header">
+        <div>
+            <h1>Global Operations Control</h1>
+            <p style="color: var(--text-mid); font-size: 0.85rem;">Connected as <span style="color: var(--accent-primary); font-weight: 700;">System Master</span></p>
+        </div>
+        <a href="/logout" class="btn-alt" style="border-color: var(--accent-error); color: var(--accent-error);">Terminals Offline</a>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 10px;">
+        <button class="btn-alt tab-btn active" onclick="switchTab('overview')">Overview</button>
+        <button class="btn-alt tab-btn" onclick="switchTab('schools')">Schools</button>
+        <button class="btn-alt tab-btn" onclick="switchTab('users')">Users</button>
+        <button class="btn-alt tab-btn" onclick="switchTab('catalog')">Catalog</button>
+        <button class="btn-alt tab-btn" onclick="switchTab('transactions')">Transactions</button>
+    </div>
+
+    <main id="tab-overview" class="tab-content" style="display: block;">
+        <!-- Dashboard Overview Statistics -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="glass-panel" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; color: var(--accent-primary); font-weight: 800;">{{ stats.total_schools }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-mid); text-transform: uppercase;">Total Schools</div>
+                <div style="font-size: 0.75rem; color: var(--accent-success); margin-top: 5px;">{{ stats.active_schools }} Active</div>
+            </div>
+            <div class="glass-panel" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; color: var(--text-high); font-weight: 800;">{{ stats.total_students }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-mid); text-transform: uppercase;">Total Students</div>
+                <div style="font-size: 0.75rem; color: var(--text-low); margin-top: 5px;">+ {{ stats.total_librarians }} Librarians</div>
+            </div>
+            <div class="glass-panel" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; color: var(--accent-secondary); font-weight: 800;">{{ stats.total_books }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-mid); text-transform: uppercase;">Global Catalog</div>
+                <div style="font-size: 0.75rem; color: var(--accent-success); margin-top: 5px;">{{ stats.available_books }} Available</div>
+            </div>
+            <div class="glass-panel" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; color: var(--accent-warning); font-weight: 800;">{{ stats.issued_books }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-mid); text-transform: uppercase;">Issued Books</div>
+                <div style="font-size: 0.75rem; color: var(--accent-error); margin-top: 5px;">{{ stats.overdue_books }} Overdue</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <p style="color: var(--text-low); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Network Integrity</p>
+            <ul style="list-style: none; padding: 0;">
+                <li><a href="/super-admin/global-content" style="color: var(--text-mid); text-decoration: none; padding: 10px; display: block; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">🛡️ Global Content Moderation</a></li>
+            </ul>
+        </div>
+
+        <div class="grid-layout">
+            <div class="glow-box">
+                <h3 style="margin-top: 0;">Quick Actions</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn-alt" onclick="openModal('addSchoolModal')">Add School</button>
+                    <button class="btn-alt" onclick="openModal('addAdminModal')">Add Global Admin</button>
+                    <button class="btn-alt" onclick="openModal('settingsModal')">System Settings</button>
+                    <button class="btn-alt" onclick="openModal('dataHubModal')" style="border-color: var(--accent-success); color: var(--accent-success);">Data Import/Export Hub</button>
+                    <button class="btn-alt" onclick="openModal('exportModal')" style="border-color: var(--accent-primary); color: var(--accent-primary);">Export Dashboard Summary</button>
+                </div>
+            </div>
+            <div class="glow-box">
+                <h3 style="margin-top: 0;">Recent Activity Log</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    {% if logs %}
+                        {% for log in logs %}
+                        <div style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem;">
+                            <span style="color: var(--accent-primary);">{{ log.created_at }}</span> - 
+                            <strong style="color: var(--text-high);">{{ log.module }}</strong>: {{ log.action }}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: var(--text-mid); font-size: 0.85rem;">No recent activity logged.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <main id="tab-schools" class="tab-content" style="display: none;">
+        <div class="glow-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">School Management</h2>
+                <button class="btn-neon" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openModal('addSchoolModal')">+ New School</button>
+            </div>
+            
+            {% if pending_requests %}
+            <h3 style="color: var(--accent-warning); margin-bottom: 10px;">Pending Onboarding Requests</h3>
+            <div class="table-container" style="margin-bottom: 2rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>School Name</th>
+                            <th>Librarian</th>
+                            <th>Contact Phone</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in pending_requests %}
+                        <tr>
+                            <td data-label="School Name" style="font-weight: bold;">{{ r.school_name }}</td>
+                            <td data-label="Librarian">{{ r.librarian_name }}</td>
+                            <td data-label="Contact Phone" style="color: var(--text-mid); font-family: monospace;">{{ r.phone }}</td>
+                            <td data-label="Action">
+                                <button onclick="window.location.href='/super-admin/approve/{{ r.id }}'" class="btn-alt" style="font-size: 0.7rem; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: var(--accent-success); border-color: var(--accent-success);">Approve Request</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>School Code</th>
+                            <th>Name</th>
+                            <th>Principal / Admin</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in schools %}
+                        <tr>
+                            <td data-label="School Code" style="font-family: monospace; color: var(--accent-primary);">{{ s.school_code }}</td>
+                            <td data-label="Name">{{ s.name }}</td>
+                            <td data-label="Principal / Admin">{{ s.librarian_name }}</td>
+                            <td data-label="Status">
+                                {% if s.status == 'Active' %}
+                                <span class="badge badge-success">Active</span>
+                                {% elif s.status == 'Blocked' %}
+                                <span class="badge badge-error">Blocked</span>
+                                {% else %}
+                                <span class="badge badge-error">{{ s.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Action" style="display: flex; gap: 5px;">
+                                <form action="/super-admin/school/{{ s.id }}/toggle-block" method="POST" style="margin:0;">
+                                    <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; color: var(--accent-warning); border-color: var(--accent-warning);">{{ 'Unblock' if s.status == 'Blocked' else 'Block' }}</button>
+                                </form>
+                                <form action="/super-admin/school/{{ s.id }}/delete" method="POST" style="margin:0;" onsubmit="return confirm('NUCLEAR WARNING: Permanently delete this school and ALL its users, books, and transactions? This CANNOT be undone.');">
+                                    <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; color: var(--accent-error); border-color: var(--accent-error);">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <main id="tab-users" class="tab-content" style="display: none;">
+        <div class="glow-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Global User Management</h2>
+                <button class="btn-alt" onclick="openModal('addUserModal')" style="border-color: var(--accent-primary); color: var(--accent-primary);">+ Create User</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>Identity / Phone</th>
+                            <th>Role</th>
+                            <th>School Code</th>
+                            <th>Password</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td data-label="User Name" style="font-weight: 500;">{{ u.name or 'Pending Profile' }}</td>
+                            <td data-label="Identity / Phone" style="color: var(--text-mid);">{{ u.phone or u.admission_no }}</td>
+                            <td data-label="Role"><span class="badge" style="background: rgba(255,255,255,0.1);">{{ u.role | upper }}</span></td>
+                            <td data-label="School Code" style="font-family: monospace; color: var(--accent-secondary);">{{ u.school_code }}</td>
+                            <td data-label="Password" style="font-family: monospace; color: var(--accent-warning);">{{ u.password }}</td>
+                            <td data-label="Status">
+                                {% if u.is_banned %}
+                                <span class="badge badge-error">Banned</span>
+                                {% elif u.status == 'active' %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-error">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Action" style="display: flex; gap: 5px;">
+                                <form action="/super-admin/user/{{ u.id }}/toggle-ban" method="POST" style="margin:0;">
+                                    <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; color: var(--accent-warning); border-color: var(--accent-warning);">{{ 'Unban' if u.is_banned else 'Ban' }}</button>
+                                </form>
+                                <form action="/super-admin/user/{{ u.id }}/delete" method="POST" style="margin:0;" onsubmit="return confirm('WARNING: Permanently delete this user? This cannot be undone.');">
+                                    <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; color: var(--accent-error); border-color: var(--accent-error);">Delete</button>
+                                </form>
+                                {% if u.role == 'admin' %}
+                                <button onclick="openPermissionsModal({{ u.id }}, '{{ u.permissions }}')" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; border-color: var(--accent-primary); color: var(--accent-primary);">Permissions</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <main id="tab-catalog" class="tab-content" style="display: none;">
+        <div class="glow-box">
+            <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Global Book Catalog</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Barcode ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>School Code</th>
+                            <th>Available / Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in books %}
+                        <tr>
+                            <td data-label="Barcode ID" style="font-family: monospace; color: var(--text-low);">{{ b.barcode_id }}</td>
+                            <td data-label="Title" style="font-weight: 500;">{{ b.title }}</td>
+                            <td data-label="Author" style="color: var(--text-mid);">{{ b.author }}</td>
+                            <td data-label="School Code" style="font-family: monospace; color: var(--accent-primary);">{{ b.school_code }}</td>
+                            <td data-label="Available / Total">
+                                <span style="color: {{ 'var(--accent-success)' if b.available_copies > 0 else 'var(--accent-error)' }}">{{ b.available_copies }}</span> / {{ b.total_copies }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <main id="tab-transactions" class="tab-content" style="display: none;">
+        <div class="glow-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin-top: 0; margin-bottom: 0;">Global Transaction Feed</h2>
+                <button onclick="openModal('exportModal')" class="btn-neon" style="font-size: 0.8rem; padding: 6px 12px;">Export Data</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Asset</th>
+                            <th>School Code</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                        <tr>
+                            <td data-label="Student" style="font-weight: 500;">{{ tx.student_name }}</td>
+                            <td data-label="Asset">{{ tx.book_title }}</td>
+                            <td data-label="School Code" style="font-family: monospace; color: var(--accent-secondary);">{{ tx.school_code }}</td>
+                            <td data-label="Duration" style="font-size: 0.85rem; color: var(--text-mid);">
+                                Iss: {{ tx.issue_date }}<br>
+                                Due: {{ tx.due_date }}
+                            </td>
+                            <td data-label="Status">
+                                {% if tx.return_date %}
+                                <span class="badge badge-success">Returned ({{ tx.return_date }})</span>
+                                {% elif tx.is_overdue %}
+                                <span class="badge badge-error">Overdue</span>
+                                <div style="font-size: 0.75rem; color: var(--accent-error); margin-top: 4px;">Fine: ₹{{ tx.calculated_fine }}</div>
+                                {% else %}
+                                <span class="badge" style="background: rgba(255,255,255,0.1);">Active</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modals -->
+<div id="permissionsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 400px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Admin Permissions</h2>
+            <button onclick="closeModal('permissionsModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form id="permissionsForm" method="POST">
+            <div class="input-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-high);">
+                    <input type="checkbox" name="perm_manage_books" id="cb_manage_books" style="width: auto;">
+                    Manage Books
+                </label>
+            </div>
+            <div class="input-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-high);">
+                    <input type="checkbox" name="perm_manage_students" id="cb_manage_students" style="width: auto;">
+                    Manage Students
+                </label>
+            </div>
+            <div class="input-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-high);">
+                    <input type="checkbox" name="perm_manage_transactions" id="cb_manage_transactions" style="width: auto;">
+                    Manage Transactions (Issue/Return)
+                </label>
+            </div>
+            <div class="input-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-high);">
+                    <input type="checkbox" name="perm_approve_content" id="cb_approve_content" style="width: auto;">
+                    Approve Content & Reviews
+                </label>
+            </div>
+            <button type="submit" class="btn-neon" style="width: 100%; margin-top: 1rem;">Save Permissions</button>
+        </form>
+    </div>
+</div>
+
+<div id="addSchoolModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 500px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Register New School</h2>
+            <button onclick="closeModal('addSchoolModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form action="/super-admin/add-school" method="POST">
+            <div class="input-group">
+                <label>Institution Name</label>
+                <input type="text" name="name" required placeholder="e.g. Springfield High">
+            </div>
+            <div class="input-group">
+                <label>Institution Code (Optional)</label>
+                <input type="text" name="code" placeholder="Leave blank to auto-generate">
+            </div>
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
+            <h3 style="font-size: 1rem; margin-top: 0; margin-bottom: 1rem; color: var(--accent-primary);">Admin / Librarian Details</h3>
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" name="lib_name" required placeholder="John Doe">
+            </div>
+            <div class="input-group">
+                <label>Phone Number (Login ID)</label>
+                <input type="text" name="lib_phone" required placeholder="10-digit number">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="lib_pass" required>
+            </div>
+            <button type="submit" class="btn-neon" style="width: 100%; margin-top: 1rem;">Create School & Admin</button>
+        </form>
+    </div>
+</div>
+
+<div id="addUserModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 500px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Manually Create User</h2>
+            <button onclick="closeModal('addUserModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form action="/super-admin/add-user" method="POST">
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" name="name" required placeholder="User Name">
+            </div>
+            <div class="input-group">
+                <label>Role</label>
+                <select name="role" required>
+                    <option value="student">Student</option>
+                    <option value="admin">Admin / Librarian</option>
+                    <option value="super_admin">Super Admin</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>School Code</label>
+                <input type="text" name="school_code" required placeholder="e.g. DEFAULT, SCH123, GLOBAL">
+            </div>
+            <div class="input-group">
+                <label>Admission No. (For Students Only)</label>
+                <input type="text" name="admission_no" placeholder="Optional">
+            </div>
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
+            <div class="input-group">
+                <label>Phone Number (Login ID)</label>
+                <input type="text" name="phone" required placeholder="10-digit number">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-neon" style="width: 100%; margin-top: 1rem;">Create User</button>
+        </form>
+    </div>
+</div>
+
+<div id="addAdminModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 400px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Add Super Admin</h2>
+            <button onclick="closeModal('addAdminModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form action="/super-admin/add-admin" method="POST">
+            <div class="input-group">
+                <label>Admin Name</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="input-group">
+                <label>Phone / User ID</label>
+                <input type="text" name="phone" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-neon" style="width: 100%; margin-top: 1rem;">Create Global Admin</button>
+        </form>
+    </div>
+</div>
+
+<div id="settingsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 500px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">System Settings</h2>
+            <button onclick="closeModal('settingsModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form action="/super-admin/settings" method="POST">
+            <div class="input-group">
+                <label>Global Fine Per Day (₹)</label>
+                <input type="number" name="fine_amount" value="10">
+            </div>
+            <div class="input-group">
+                <label>Allow Student Self-Registration</label>
+                <select name="allow_registration">
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-neon" style="width: 100%; margin-top: 1rem; margin-bottom: 2rem;">Save Settings</button>
+        
+        <div style="border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+            <h3 style="color: var(--accent-error); margin-top: 0; margin-bottom: 1rem;">Danger Zone</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <form action="/super-admin/toggle-maintenance" method="POST" style="margin: 0;">
+                    <button type="submit" class="btn-alt" style="width: 100%; border-color: var(--accent-warning); color: var(--accent-warning);">Toggle Maintenance Mode</button>
+                </form>
+
+                <form action="/super-admin/force-backup" method="POST" style="margin: 0;">
+                    <button type="submit" class="btn-alt" style="width: 100%; border-color: var(--accent-success); color: var(--accent-success);">Force Firebase Backup Sync</button>
+                </form>
+
+                <form action="/super-admin/wipe-data" method="POST" style="margin: 0;" onsubmit="return confirm('NUCLEAR WARNING: This will permanently DELETE ALL SCHOOLS, USERS, BOOKS, AND DATA. ARE YOU ABSOLUTELY SURE?');">
+                    <button type="submit" class="btn-primary" style="width: 100%; background: var(--accent-error); color: white;">WIPE ALL SYSTEM DATA</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="exportModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 450px; width: 100%; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0;">Download Summary</h2>
+            <button onclick="closeModal('exportModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <p style="color: var(--text-mid); font-size: 0.9rem; margin-bottom: 1.5rem;">Select your preferred format.</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <button onclick="downloadVisual('png')" class="btn-alt" style="padding: 1.5rem;">
+                <span style="font-size: 2rem; display: block; margin-bottom: 10px;">🖼️</span>
+                <strong style="color: var(--text-high);">Image (.png)</strong><br>
+                <span style="font-size: 0.75rem; color: var(--text-low);">Visual Snapshot</span>
+            </button>
+            <button onclick="downloadVisual('pdf')" class="btn-alt" style="padding: 1.5rem;">
+                <span style="font-size: 2rem; display: block; margin-bottom: 10px;">📄</span>
+                <strong style="color: var(--text-high);">Document (.pdf)</strong><br>
+                <span style="font-size: 0.75rem; color: var(--text-low);">Visual Report</span>
+            </button>
+            <button onclick="closeModal('exportModal'); window.location.href='/super-admin/export-report?format=csv'" class="btn-alt" style="padding: 1.5rem;">
+                <span style="font-size: 2rem; display: block; margin-bottom: 10px;">📊</span>
+                <strong style="color: var(--text-high);">Spreadsheet (.csv)</strong><br>
+                <span style="font-size: 0.75rem; color: var(--text-low);">Raw Transactions Data</span>
+            </button>
+            <button onclick="closeModal('exportModal'); window.location.href='/super-admin/export-report?format=txt'" class="btn-alt" style="padding: 1.5rem;">
+                <span style="font-size: 2rem; display: block; margin-bottom: 10px;">📝</span>
+                <strong style="color: var(--text-high);">Text (.txt)</strong><br>
+                <span style="font-size: 0.75rem; color: var(--text-low);">Human Readable Summary</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="dataHubModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 600px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Global Data Hub</h2>
+            <button onclick="closeModal('dataHubModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <label>Target School (For Import/Export)</label>
+            <select id="hubSchoolSelect" class="input-field" style="width: 100%; padding: 12px; background: var(--bg-surface); color: var(--text-high); border: 1px solid var(--border-color); border-radius: 8px;">
+                <option value="ALL">All Schools (Export Only)</option>
+                {% for s in schools %}
+                <option value="{{ s.school_code }}">{{ s.name }} ({{ s.school_code }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="glass-panel" style="padding: 1rem;">
+                <h3 style="margin-top:0; font-size:1rem;">1. Import Data</h3>
+                <select id="importModule" class="input-field" style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-surface); color: var(--text-high);">
+                    <option value="books">Books</option>
+                    <option value="students">Students</option>
+                    <option value="librarians">Librarians</option>
+                    <option value="schools">Schools</option>
+                </select>
+                <input type="file" id="importFile" accept=".csv, .xlsx" style="margin-bottom: 10px; width: 100%;">
+                <button onclick="handleImport()" class="btn-neon" style="width: 100%; padding: 8px;">Upload & Import</button>
+                <div id="importResult" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-mid);"></div>
+            </div>
+            
+            <div class="glass-panel" style="padding: 1rem;">
+                <h3 style="margin-top:0; font-size:1rem;">2. Export Data</h3>
+                <select id="exportModule" class="input-field" style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-surface); color: var(--text-high);">
+                    <option value="books">Books</option>
+                    <option value="students">Students</option>
+                    <option value="transactions">Transactions</option>
+                    <option value="librarians">Librarians</option>
+                    <option value="schools">Schools</option>
+                </select>
+                <select id="exportFormat" class="input-field" style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-surface); color: var(--text-high);">
+                    <option value="csv">CSV (.csv)</option>
+                    <option value="xlsx">Excel (.xlsx)</option>
+                </select>
+                <button onclick="handleExport()" class="btn-alt" style="width: 100%; padding: 8px; border-color: var(--accent-secondary); color: var(--accent-secondary);">Download Export</button>
+            </div>
+        </div>
+
+        <div class="glass-panel" style="padding: 1rem; text-align: center;">
+            <h3 style="margin-top:0; font-size:1rem;">Blank Templates</h3>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <a href="/data/template/books" class="btn-alt" style="font-size:0.75rem;">Books CSV</a>
+                <a href="/data/template/students" class="btn-alt" style="font-size:0.75rem;">Students CSV</a>
+                <a href="/data/template/librarians" class="btn-alt" style="font-size:0.75rem;">Librarians CSV</a>
+                <a href="/data/template/schools" class="btn-alt" style="font-size:0.75rem;">Schools CSV</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function switchTab(tabId) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        // Remove active class from buttons
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        // Show target tab
+        document.getElementById('tab-' + tabId).style.display = 'block';
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.style.display = 'none';
+        }
+    }
+
+    async function downloadVisual(format) {
+        // We will snapshot the currently active tab content + header
+        const activeTab = document.querySelector('.tab-content[style*="display: block"]');
+        const header = document.querySelector('.header');
+        
+        // Hide buttons temporarily so they don't appear in the snapshot
+        const buttons = document.querySelectorAll('.btn-neon, .btn-alt, .tab-btn');
+        const origDisplays = [];
+        buttons.forEach(b => {
+            origDisplays.push(b.style.display);
+            if(!b.classList.contains('tab-btn')) b.style.display = 'none'; // Keep tabs visible
+        });
+        
+        try {
+            closeModal('exportModal');
+            document.body.style.cursor = 'wait';
+            
+            // Render canvas
+            const canvas = await html2canvas(document.getElementById('dashboard-container'), {
+                backgroundColor: '#0a0a0f', // Match app background
+                scale: 2 // High resolution
+            });
+
+            if (format === 'png') {
+                const link = document.createElement('a');
+                link.download = 'E-Pathshala-Summary.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } else if (format === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210; 
+                const pageHeight = 295;  
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                pdf.save('E-Pathshala-Summary.pdf');
+            }
+        } catch(e) {
+            console.error("Export failed", e);
+            alert("Snapshot failed. Try again.");
+        } finally {
+            // Restore buttons
+            buttons.forEach((b, i) => b.style.display = origDisplays[i]);
+            document.body.style.cursor = 'default';
+        }
+    }
+
+    async function handleImport() {
+        const fileInput = document.getElementById('importFile');
+        const module = document.getElementById('importModule').value;
+        const school = document.getElementById('hubSchoolSelect').value;
+        const resultDiv = document.getElementById('importResult');
+
+        if (!fileInput.files[0]) {
+            resultDiv.innerHTML = '<span style="color:var(--accent-error)">Please select a file first.</span>';
+            return;
+        }
+        if (school === 'ALL') {
+            resultDiv.innerHTML = '<span style="color:var(--accent-error)">Please select a specific school for importing.</span>';
+            return;
+        }
+
+        resultDiv.innerHTML = 'Uploading...';
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('school', school);
+
+        try {
+            const res = await fetch(`/data/import/${module}`, { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (res.ok) {
+                let html = `<span style="color:var(--accent-success)">Import Complete!</span><br>
+                            Total: ${data.total} | Success: ${data.success}<br>
+                            Failed: ${data.failed} | Duplicates: ${data.duplicates}`;
+                if (data.errors && data.errors.length > 0) {
+                    html += `<div style="color:var(--accent-error); font-size:0.7rem; margin-top:5px; max-height: 50px; overflow-y: auto;">
+                                ${data.errors.join('<br>')}
+                             </div>`;
+                }
+                resultDiv.innerHTML = html;
+            } else {
+                resultDiv.innerHTML = `<span style="color:var(--accent-error)">Error: ${data.error || 'Upload failed'}</span>`;
+            }
+        } catch (e) {
+            resultDiv.innerHTML = `<span style="color:var(--accent-error)">Network error occurred.</span>`;
+        }
+    }
+
+    function handleExport() {
+        const module = document.getElementById('exportModule').value;
+        const format = document.getElementById('exportFormat').value;
+        const school = document.getElementById('hubSchoolSelect').value;
+        closeModal('dataHubModal');
+        window.location.href = `/data/export/${module}?format=${format}&school=${school}`;
+    }
+    function openPermissionsModal(userId, permsString) {
+        document.getElementById('permissionsForm').action = '/super-admin/user/' + userId + '/update-permissions';
+        
+        // Reset all
+        document.getElementById('cb_manage_books').checked = false;
+        document.getElementById('cb_manage_students').checked = false;
+        document.getElementById('cb_manage_transactions').checked = false;
+        document.getElementById('cb_approve_content').checked = false;
+        
+        try {
+            if(permsString && permsString !== 'None' && permsString !== '') {
+                const cleanStr = permsString.replace(/'/g, '"');
+                const perms = JSON.parse(cleanStr);
+                if(perms.includes('manage_books')) document.getElementById('cb_manage_books').checked = true;
+                if(perms.includes('manage_students')) document.getElementById('cb_manage_students').checked = true;
+                if(perms.includes('manage_transactions')) document.getElementById('cb_manage_transactions').checked = true;
+                if(perms.includes('approve_content')) document.getElementById('cb_approve_content').checked = true;
+            }
+        } catch(e) {
+            console.error("Failed to parse permissions", e);
+        }
+        
+        openModal('permissionsModal');
+    }
+</script>
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(5px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    .tab-btn {
+        opacity: 0.6;
+        transition: all 0.3s ease;
+        border: none;
+        background: rgba(255,255,255,0.05);
+        white-space: nowrap;
+    }
+    .tab-btn.active {
+        opacity: 1;
+        background: rgba(99, 102, 241, 0.2);
+        color: var(--accent-primary);
+        border-bottom: 2px solid var(--accent-primary);
+    }
+    .tab-btn:hover {
+        opacity: 0.9;
+        background: rgba(255,255,255,0.1);
+    }
+</style>
+{% endblock %}

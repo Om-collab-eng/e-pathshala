@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Secure Access - E-Pathshala{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="auth-card">
+        <h1>Secure Portal</h1>
+        <p>Enter your credentials to access the hub</p>
+        
+        <form method="POST" id="loginForm">
+            {% if error %}
+            <div style="background: rgba(244, 63, 94, 0.1); color: var(--accent-error); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem; text-align: center; border: 1px solid rgba(244, 63, 94, 0.2);">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <!-- School Code Field Added -->
+            <div class="input-group">
+                <label for="school_code">Institution Code</label>
+                <input type="text" id="school_code" name="school_code" placeholder="School Code (e.g. DEMO)" required>
+            </div>
+
+            {% if is_demo %}
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <span style="font-size: 0.75rem; background: var(--accent-primary); color: white; padding: 4px 12px; border-radius: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);">Demo Sandbox Active</span>
+            </div>
+            {% endif %}
+
+            <div class="input-group">
+                <label for="username">Phone Number</label>
+                <input type="text" id="username" name="username" placeholder="Phone No." required>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Security Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-neon" id="loginBtn">Authenticate & Enter</button>
+            
+            <div style="margin-top: 1.5rem; text-align: center; display: flex; flex-direction: column; gap: 10px;">
+                {% if not is_demo %}
+                <button type="button" class="btn-alt" onclick="window.location.href='/demo-mode'" style="width: 100%; border-color: var(--accent-warning); color: var(--accent-warning);">
+                    Enter Demo Sandbox
+                </button>
+                {% endif %}
+            </div>
+            
+            <!-- Return Home Link -->
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="/" style="color: var(--text-mid); text-decoration: none; font-size: 0.9rem;">&larr; Return to Home Page</a>
+            </div>
+        </form>
+
+        {% if is_demo %}
+        <div id="savedAccountsSection" class="saved-accounts" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <p style="font-size: 0.8rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px; margin: 0;">Saved Profiles</p>
+                <button onclick="clearSaved()" style="background: none; border: none; color: var(--accent-error); font-size: 0.7rem; cursor: pointer;">Clear All</button>
+            </div>
+            <div id="accountsList"></div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function clearSaved() {
+        if(confirm("Clear all saved profiles?")) {
+            localStorage.removeItem('saved_accounts');
+            location.reload();
+        }
+    }
+
+
+
+    // Saved Accounts Logic
+    const accountsList = document.getElementById('accountsList');
+    const savedSection = document.getElementById('savedAccountsSection');
+    const loginForm = document.getElementById('loginForm');
+    
+    let raw = JSON.parse(localStorage.getItem('saved_accounts') || '[]');
+    let accounts = raw.filter(a => a.id && a.sc); // Ensure ID and School Code exist
+
+    // Clear Demo State if returning from logout
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('clear_demo')) {
+        localStorage.removeItem('demo_active');
+        // Clean up URL without refreshing
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Inject Demo Accounts and Set LocalStorage
+    {% if is_demo %}
+    localStorage.setItem('demo_active', 'true');
+    if (!accounts.some(a => a.id === '123' && a.sc === 'DEMO')) {
+        accounts.unshift({ id: '123', sc: 'DEMO', display: 'Admin Demo', p_data: btoa('admin123') });
+    }
+    if (!accounts.some(a => a.id === '555001' && a.sc === 'DEMO')) {
+        accounts.unshift({ id: '555001', sc: 'DEMO', display: 'Student Demo', p_data: btoa('demo123') });
+    }
+    {% else %}
+    if (localStorage.getItem('demo_active') === 'true') {
+        // We lost the session cookie, but local storage knows we are in demo mode!
+        // Redirect to restore it immediately
+        window.location.href = '/demo-mode';
+    }
+    {% endif %}
+
+    {% if is_demo %}
+    if (accounts.length > 0) {
+        savedSection.style.display = 'block';
+        accounts.forEach(acc => {
+            const chip = document.createElement('div');
+            chip.className = 'saved-account-chip';
+            chip.innerHTML = `
+                <div style="width: 32px; height: 32px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: white;">
+                    ${acc.display[0].toUpperCase()}
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.9rem; font-weight: 600;">${acc.display}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-low);">${acc.sc} | ${acc.id}</div>
+                </div>
+                <div style="font-size: 1rem;">⚡</div>
+            `;
+            if (acc.sc === 'DEMO') {
+                chip.style.animation = 'glow 2s infinite alternate';
+                chip.style.borderColor = 'var(--accent-primary)';
+            }
+            
+            chip.onclick = () => {
+                document.getElementById('username').value = acc.id;
+                document.getElementById('school_code').value = acc.sc;
+                if (acc.p_data) {
+                    document.getElementById('password').value = atob(acc.p_data);
+                    document.getElementById('loginBtn').innerText = "⚡ Authenticating...";
+                    setTimeout(() => loginForm.submit(), 300);
+                } else {
+                    document.getElementById('password').focus();
+                }
+            };
+            accountsList.appendChild(chip);
+        });
+    }
+
+    // Save on submit (Only in Demo Mode)
+    loginForm.addEventListener('submit', (e) => {
+        const userVal = document.getElementById('username').value;
+        const passVal = document.getElementById('password').value;
+        const schoolVal = document.getElementById('school_code').value.toUpperCase();
+        
+        if (userVal.toLowerCase() === 'superadmin') return; // Don't save superadmin
+
+        let filtered = accounts.filter(a => a.id !== userVal);
+        filtered.push({ 
+            id: userVal,
+            sc: schoolVal,
+            display: userVal, 
+            p_data: btoa(passVal) 
+        });
+        localStorage.setItem('saved_accounts', JSON.stringify(filtered));
+    });
+    {% else %}
+    // Outside of demo mode, explicitly remove the memory flag just in case
+    localStorage.removeItem('demo_active');
+    {% endif %}
+</script>
+{% endblock %}

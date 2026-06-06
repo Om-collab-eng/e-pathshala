@@ -1,0 +1,47 @@
+[
+  {
+    "book_id": "1",
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "genre": "Classic",
+    "description": "A story of wealth, love, and the American Dream.",
+    "status": "available"
+  },
+  {
+    "book_id": "2",
+    "title": "To Kill a Mockingbird",
+    "author": "Harper Lee",
+    "genre": "Fiction",
+    "description": "A novel about racial injustice and the loss of innocence.",
+    "status": "available"
+  },
+  {
+    "book_id": "1776340054742",
+    "title": "Automated Test Book",
+    "author": "Bot",
+    "genre": "Tech",
+    "description": "Testing API",
+    "status": "available"
+  },
+  {
+    "book_id": "1776340073313",
+    "title": "Automated Test Book",
+    "author": "Bot",
+    "genre": "Tech",
+    "description": "Testing API",
+    "status": "available"
+  },
+  {
+    "book_id": "VBPG20260001",
+    "title": "Test API Title",
+    "author": "Test Author",
+    "description": "No description available.",
+    "publisher": "Unknown",
+    "publish_date": "Unknown",
+    "price": "0",
+    "front_image": "/uploads/books/1780236813490-mock_image.jpg",
+    "back_image": "",
+    "status": "available",
+    "created_at": "2026-05-31T14:13:33.497Z"
+  }
+]

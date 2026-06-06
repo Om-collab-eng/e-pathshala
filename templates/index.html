@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - E-Pathshala{% endblock %}
+
+{% block content %}
+<!-- Removed top navbar -->
+
+<div class="hero">
+    <div id="homeSection">
+        <img src="/static/logo.png" alt="E-Pathshala Logo" style="height: 120px; width: auto; margin-bottom: 1.5rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(249, 115, 22, 0.2);">
+        <h1>Welcome to<br>E-Pathshala</h1>
+        <p style="font-size: 1.2rem; color: var(--text-mid); margin-bottom: 3rem;">
+            The next generation of library systems. Secure, streamlined, and globally accessible.
+        </p>
+        <a href="/login" class="btn-neon" style="width: auto; padding: 1.2rem 3rem; font-size: 1.1rem;">Sign In</a>
+        
+        <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.95rem;">
+            <a href="#" style="color: var(--text-mid); text-decoration: none; transition: color 0.3s;" onclick="switchTab('home')">Home</a>
+            <a href="#" style="color: var(--text-mid); text-decoration: none; transition: color 0.3s;" onclick="switchTab('about')">About</a>
+            <a href="#" style="color: var(--text-mid); text-decoration: none; transition: color 0.3s;" onclick="switchTab('contact')">Contact</a>
+        </div>
+    </div>
+
+    <div id="aboutSection" style="display: none;">
+        <h2 style="font-size: 3rem; margin-bottom: 1.5rem;">Academic Excellence.</h2>
+        <p style="font-size: 1.1rem; color: var(--text-mid); line-height: 1.8;">
+            E-Pathshala was designed to bridge the gap between physical inventory and digital tracking. 
+            Providing real-time insights, automated barcode systems, and professional management tools.
+        </p>
+    </div>
+
+    <div id="contactSection" style="display: none;">
+        <h2 style="font-size: 3rem; margin-bottom: 1.5rem;">Get in Touch.</h2>
+        <p style="font-size: 1.1rem; color: var(--text-mid);">
+            Need assistance or have specific requirements? Open the help desk below.
+        </p>
+    </div>
+</div>
+
+<!-- Chat Interface -->
+<div class="chat-trigger" onclick="toggleChat()">
+    💬 Help Desk
+</div>
+
+<div class="chat-panel" id="chatPanel">
+    <h3 style="margin-bottom: 1.5rem;">Support Assistant</h3>
+    
+    <div id="chatOptions">
+        <div class="chat-option" onclick="startDemo()">
+            <strong>1. Want Demo</strong>
+            <p style="font-size: 0.75rem; color: var(--text-low); margin: 0;">Try the system live (5s tour)</p>
+        </div>
+        <div class="chat-option" onclick="showPrompt('create_school')">
+            <strong>2. Request E-Pathshala</strong>
+            <p style="font-size: 0.75rem; color: var(--text-low); margin: 0;">Setup your institution hub</p>
+        </div>
+        <div class="chat-option" onclick="showPrompt('creds')">
+            <strong>3. Change Credentials</strong>
+            <p style="font-size: 0.75rem; color: var(--text-low); margin: 0;">Update library login info</p>
+        </div>
+    </div>
+    
+    <div id="chatResponse" style="display: none;">
+        <p id="responseText" style="font-size: 0.85rem; margin-bottom: 1.5rem;"></p>
+        <div id="chatInputs"></div>
+        <button class="btn-alt" onclick="resetChat()" style="margin-top: 1rem;">Back to Options</button>
+    </div>
+</div>
+
+
+<!-- Demo Overlay -->
+<div id="demoOverlay">
+    <div style="text-align: center;">
+        <h1 id="demoStep">System Initialization...</h1>
+        <p id="demoDesc" style="color: var(--text-mid);">Optimizing internal logic for demonstration.</p>
+        <div style="width: 200px; height: 4px; background: var(--bg-card); margin: 2rem auto; border-radius: 2px;">
+            <div id="demoProgress" style="width: 0%; height: 100%; background: var(--accent-primary); border-radius: 2px; transition: width 0.1s linear;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Captcha Overlay -->
+<div id="captchaOverlay" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 2000;">
+    <div class="modal-content glow-box" style="max-width: 500px; width: 100%; text-align: center;">
+        <h2 id="captchaTitle" style="margin-bottom: 10px;">Security Verification</h2>
+        <p id="captchaStatus" style="color: var(--text-mid); font-size: 0.9rem; margin-bottom: 20px;">Round 1 of 3</p>
+        
+        <div id="captchaImages" style="display: flex; justify-content: center; gap: 15px; font-size: 3rem; margin-bottom: 20px;">
+            <!-- Emojis injected here -->
+        </div>
+        
+        <p id="captchaQuestion" style="font-weight: 600; margin-bottom: 15px;"></p>
+        
+        <div id="captchaOptions" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Buttons injected here -->
+        </div>
+
+        <div id="captchaLock" style="display: none; color: var(--accent-error); font-weight: 600; margin-top: 20px;">
+            Verification Failed. Try again in <span id="captchaTimer">30</span>s.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function switchTab(tab) {
+        // Toggle tabs
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Toggle sections
+        ['home', 'about', 'contact'].forEach(s => {
+            document.getElementById(s + 'Section').style.display = (s === tab ? 'block' : 'none');
+        });
+    }
+
+    function toggleChat() {
+        const panel = document.getElementById('chatPanel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function resetChat() {
+        document.getElementById('chatOptions').style.display = 'block';
+        document.getElementById('chatResponse').style.display = 'none';
+        document.getElementById('chatInputs').innerHTML = '';
+    }
+
+    // Check for clear_demo flag to wipe sandbox stickiness
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('clear_demo')) {
+        localStorage.removeItem('demo_active');
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function showPrompt(type) {
+        document.getElementById('chatOptions').style.display = 'none';
+        document.getElementById('chatResponse').style.display = 'block';
+        const inputs = document.getElementById('chatInputs');
+        const text = document.getElementById('responseText');
+
+        if (type === 'creds') {
+            text.innerText = "To update Librarian credentials, please verify your identity.";
+            inputs.innerHTML = `
+                <input type="password" id="sCode" placeholder="School Code" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <input type="text" id="newName" placeholder="New Librarian Name" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <input type="password" id="newPass" placeholder="New School Code" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <button class="btn-neon" onclick="processAction('creds')">Update Credentials</button>
+            `;
+        } else if (type === 'create_school') {
+            text.innerText = "Request a dedicated library hub for your institution.";
+            
+            inputs.innerHTML = `
+                <input type="text" id="lName" placeholder="Librarian Name" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <input type="text" id="sName" placeholder="School Name" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <input type="text" id="reqCode" placeholder="School Code (Optional)" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <input type="email" id="reqEmail" placeholder="Gmail" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                    <input type="number" id="bQty" placeholder="How many books" class="btn-alt" style="width: 50%; text-align: left;">
+                    <input type="number" id="sQty" placeholder="No. of students" class="btn-alt" style="width: 50%; text-align: left;">
+                </div>
+                <button id="reqSubmitBtn" class="btn-neon" onclick="startCaptchaFlow()">Submit for Review</button>
+            `;
+        }
+ else if (type === 'code') {
+            text.innerText = "Enter your current and new School Code.";
+            inputs.innerHTML = `
+                <input type="password" id="oldCode" placeholder="Old School Code" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <input type="password" id="newCode" placeholder="New School Code" class="btn-alt" style="width: 100%; text-align: left; margin-bottom: 10px;">
+                <button class="btn-neon" onclick="processAction('code')">Update Security Code</button>
+            `;
+        }
+    }
+
+
+    async function processAction(action) {
+        let payload = { action_type: action };
+        
+        if (action === 'creds') {
+            payload.sCode = document.getElementById('sCode').value;
+            payload.newName = document.getElementById('newName').value;
+            payload.newPass = document.getElementById('newPass').value;
+        } else if (action === 'code') {
+            payload.oldCode = document.getElementById('oldCode').value;
+            payload.newCode = document.getElementById('newCode').value;
+        } else if (action === 'create_school') {
+            payload.lName = document.getElementById('lName').value;
+            payload.sName = document.getElementById('sName').value;
+            payload.reqCode = document.getElementById('reqCode').value;
+            payload.reqEmail = document.getElementById('reqEmail').value;
+            payload.bQty = document.getElementById('bQty').value;
+            payload.sQty = document.getElementById('sQty').value;
+            payload.captchaAns = document.getElementById('captchaAns').value;
+            payload.captchaExp = document.getElementById('captchaExp').value;
+        }
+
+        fetch('/api/chat-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            showModal("System Message", data.message, [{text: "OK"}]);
+            if (data.status === 'success') resetChat();
+        });
+    }
+
+    function startDemo() {
+        const overlay = document.getElementById('demoOverlay');
+        const step = document.getElementById('demoStep');
+        const desc = document.getElementById('demoDesc');
+        const progress = document.getElementById('demoProgress');
+        
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        
+        const steps = [
+            { t: "Student Hub", d: "One-tap secure checkouts." },
+            { t: "Librarian Deck", d: "Manage thousands of books effortlessly." },
+            { t: "Analytics", d: "Real-time overdue tracking." },
+            { t: "World Reach", d: "Global link sharing for remote access." },
+            { t: "Finalizing", d: "Preparing your individual sandboxed session." }
+        ];
+
+        let current = 0;
+        let p = 0;
+        const interval = setInterval(() => {
+            p += 1;
+            progress.style.width = p + '%';
+            
+            if (p % 20 === 0 && current < steps.length) {
+                step.innerText = steps[current].t;
+                desc.innerText = steps[current].d;
+                current++;
+            }
+
+            if (p >= 100) {
+                clearInterval(interval);
+                finishDemo();
+            }
+        }, 50);
+    }
+
+    function finishDemo() {
+        document.getElementById('demoOverlay').style.display = 'none';
+        
+        showModal("Sequence Detailed", "System initialized. Would you like to enter the 5-minute interactive sandbox?", [
+            {text: "ENTER DEMO", class: "btn-neon", action: () => window.location.href = '/demo-mode'},
+            {text: "NOT NOW", action: () => {
+                showModal("Feedback", "What could be improved?", [
+                    {text: "User Interface", action: () => showModal("Thanks", "Feedback noted!", [{text: "Close"}])},
+                    {text: "Features", action: () => showModal("Thanks", "Feedback noted!", [{text: "Close"}])}
+                ]);
+            }}
+        ]);
+        
+        document.getElementById('demoProgress').style.width = '0%';
+    }
+
+    // Custom 3-Round Image MCQ Captcha
+    const captchaRounds = [
+        {
+            images: ['🍎', '🚗', '🎸', '🏀', '🐶'],
+            question: "Which image represents an animal?",
+            options: ["A) 🍎", "B) 🚗", "C) 🐶", "D) 🎸"],
+            answer: 2 // index 2 is option C (🐶)
+        },
+        {
+            images: ['📱', '💻', '⌚', '📚', '🖥️'],
+            question: "Which of these is NOT an electronic device?",
+            options: ["A) 📱", "B) 📚", "C) 💻", "D) ⌚"],
+            answer: 1 // index 1 is option B (📚)
+        },
+        {
+            images: ['☀️', '☁️', '🌧️', '☃️', '⚡'],
+            question: "What is the 4th image from the left?",
+            options: ["A) 🌧️", "B) ☀️", "C) ⚡", "D) ☃️"],
+            answer: 3 // index 3 is option D (☃️)
+        }
+    ];
+
+    let currentCaptchaRound = 0;
+    let isCaptchaLocked = false;
+
+    function startCaptchaFlow() {
+        if (isCaptchaLocked) return;
+        
+        // Basic form validation before Captcha
+        if (!document.getElementById('sName').value || !document.getElementById('lName').value || !document.getElementById('reqEmail').value) {
+            alert("Please fill in the required fields (Institution Name, Librarian Name, Gmail).");
+            return;
+        }
+
+        currentCaptchaRound = 0;
+        document.getElementById('captchaOverlay').style.display = 'flex';
+        loadCaptchaRound();
+    }
+
+    function loadCaptchaRound() {
+        if (currentCaptchaRound >= captchaRounds.length) {
+            // Passed all 3 rounds!
+            document.getElementById('captchaOverlay').style.display = 'none';
+            submitRequestForm();
+            return;
+        }
+
+        const round = captchaRounds[currentCaptchaRound];
+        document.getElementById('captchaStatus').innerText = `Round ${currentCaptchaRound + 1} of 3`;
+        
+        const imgContainer = document.getElementById('captchaImages');
+        imgContainer.innerHTML = round.images.map(img => `<span>${img}</span>`).join('');
+        
+        document.getElementById('captchaQuestion').innerText = round.question;
+        
+        const optContainer = document.getElementById('captchaOptions');
+        optContainer.innerHTML = round.options.map((opt, idx) => 
+            `<button class="btn-alt" style="width:100%; text-align:left;" onclick="checkCaptchaAnswer(${idx})">${opt}</button>`
+        ).join('');
+    }
+
+    function checkCaptchaAnswer(selectedIndex) {
+        const round = captchaRounds[currentCaptchaRound];
+        if (selectedIndex === round.answer) {
+            currentCaptchaRound++;
+            loadCaptchaRound();
+        } else {
+            // Failed! Lockout for 30 seconds.
+            triggerCaptchaLockout();
+        }
+    }
+
+    function triggerCaptchaLockout() {
+        isCaptchaLocked = true;
+        document.getElementById('captchaOptions').innerHTML = '';
+        document.getElementById('captchaImages').innerHTML = '<span style="font-size:4rem;">🚫</span>';
+        document.getElementById('captchaQuestion').innerText = "Incorrect answer.";
+        
+        const lockDiv = document.getElementById('captchaLock');
+        const timerSpan = document.getElementById('captchaTimer');
+        lockDiv.style.display = 'block';
+        
+        let timeLeft = 30;
+        timerSpan.innerText = timeLeft;
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            timerSpan.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                isCaptchaLocked = false;
+                lockDiv.style.display = 'none';
+                document.getElementById('captchaOverlay').style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    function submitRequestForm() {
+        processAction('create_school');
+    }
+</script>
+{% endblock %}
