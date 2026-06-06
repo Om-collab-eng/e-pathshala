@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome - E-Pathshala{% endblock %}
+{% block title %}Welcome - librikia.in{% endblock %}
 
 {% block content %}
 <!-- Removed top navbar -->
 
 <div class="hero">
     <div id="homeSection">
-        <img src="/static/logo.png" alt="E-Pathshala Logo" style="height: 120px; width: auto; margin-bottom: 1.5rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(249, 115, 22, 0.2);">
-        <h1>Welcome to<br>E-Pathshala</h1>
+        <img src="/static/logo.png" alt="librikia.in Logo" style="height: 120px; width: auto; margin-bottom: 1.5rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(249, 115, 22, 0.2);">
+        <h1>Welcome to<br>librikia.in</h1>
         <p style="font-size: 1.2rem; color: var(--text-mid); margin-bottom: 3rem;">
             The next generation of library systems. Secure, streamlined, and globally accessible.
         </p>
@@ -21,19 +21,42 @@
         </div>
     </div>
 
-    <div id="aboutSection" style="display: none;">
-        <h2 style="font-size: 3rem; margin-bottom: 1.5rem;">Academic Excellence.</h2>
-        <p style="font-size: 1.1rem; color: var(--text-mid); line-height: 1.8;">
-            E-Pathshala was designed to bridge the gap between physical inventory and digital tracking. 
+    <div id="aboutSection" style="display: none; text-align: left; max-width: 800px; margin: 0 auto;">
+        <h2 style="font-size: 3rem; margin-bottom: 1.5rem; text-align: center;">Academic Excellence.</h2>
+        <p style="font-size: 1.1rem; color: var(--text-mid); line-height: 1.8; margin-bottom: 1.5rem; text-align: center;">
+            librikia.in was designed to bridge the gap between physical inventory and digital tracking. 
             Providing real-time insights, automated barcode systems, and professional management tools.
         </p>
+        <div style="font-size: 1.1rem; color: var(--text-mid); line-height: 1.8; background: var(--bg-card); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="color: var(--text-high); margin-bottom: 1rem;">Core Features & Functions:</h3>
+            <ul style="list-style-type: none; padding: 0; display: flex; flex-direction: column; gap: 1rem;">
+                <li>✅ <strong>Automated Cataloging:</strong> Instant AI-powered barcode scanning and book data extraction.</li>
+                <li>✅ <strong>Digital Circulation:</strong> Seamless check-in and check-out tracking for students and staff.</li>
+                <li>✅ <strong>Smart Analytics:</strong> Real-time dashboards monitoring overdue books and reading trends.</li>
+                <li>✅ <strong>E-Library Integration:</strong> Direct access to digital PDFs and media content alongside physical books.</li>
+                <li>✅ <strong>Role-Based Access:</strong> Dedicated secure portals for Super Admins, Librarians, and Students.</li>
+            </ul>
+        </div>
     </div>
 
-    <div id="contactSection" style="display: none;">
+    <div id="contactSection" style="display: none; max-width: 600px; margin: 0 auto;">
         <h2 style="font-size: 3rem; margin-bottom: 1.5rem;">Get in Touch.</h2>
-        <p style="font-size: 1.1rem; color: var(--text-mid);">
-            Need assistance or have specific requirements? Open the help desk below.
+        <p style="font-size: 1.1rem; color: var(--text-mid); margin-bottom: 2rem;">
+            Need assistance, have specific requirements, or want to deploy librikia.in at your institution? We're here to help! Reach out to us directly or open the help desk below.
         </p>
+        <div style="text-align: left; background: var(--bg-card); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="margin-bottom: 1rem; color: var(--text-high);">Contact Information</h3>
+            <p style="margin-bottom: 1rem; color: var(--text-mid);">
+                <strong>📧 Email:</strong><br>
+                <a href="mailto:ayushmangupta003@gmail.com" style="color: var(--accent-primary); text-decoration: none;">ayushmangupta003@gmail.com</a><br>
+                <a href="mailto:guptaashish123@gmail.com" style="color: var(--accent-primary); text-decoration: none;">guptaashish123@gmail.com</a>
+            </p>
+            <p style="color: var(--text-mid);">
+                <strong>📞 Phone:</strong><br>
+                +91 9354713610<br>
+                +91 8527198907
+            </p>
+        </div>
     </div>
 </div>
 
@@ -51,7 +74,7 @@
             <p style="font-size: 0.75rem; color: var(--text-low); margin: 0;">Try the system live (5s tour)</p>
         </div>
         <div class="chat-option" onclick="showPrompt('create_school')">
-            <strong>2. Request E-Pathshala</strong>
+            <strong>2. Request librikia.in</strong>
             <p style="font-size: 0.75rem; color: var(--text-low); margin: 0;">Setup your institution hub</p>
         </div>
         <div class="chat-option" onclick="showPrompt('creds')">
