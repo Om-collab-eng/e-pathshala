@@ -33,7 +33,7 @@
             }).catch(err => console.error('Error logging failed:', err));
         };
     </script>
-    <title>{% block title %}librikia.in{% endblock %}</title>
+    <title>{% block title %}librika.in{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {% block head %}{% endblock %}
 
@@ -44,9 +44,9 @@
 
       const firebaseConfig = {
         apiKey: "AIzaSyDS-qUZwYBIkanaGg1XuX_nCZ2ARY8IgIA",
-        authDomain: "librikia.in-39d28.firebaseapp.com",
-        projectId: "librikia.in-39d28",
-        storageBucket: "librikia.in-39d28.firebasestorage.app",
+        authDomain: "librika.in-39d28.firebaseapp.com",
+        projectId: "librika.in-39d28",
+        storageBucket: "librika.in-39d28.firebasestorage.app",
         messagingSenderId: "260512676482",
         appId: "1:260512676482:web:c9371dc610b5f5def1929b",
         measurementId: "G-41WHNNNH83"
@@ -243,7 +243,7 @@
                         const data = await res.json();
                         if (data.status === 'success') {
                             const contextStr = JSON.stringify(data.context);
-                            let systemPrompt = `You are the librikia.in Library AI Assistant.`;
+                            let systemPrompt = `You are the librika.in Library AI Assistant.`;
                             if (data.context.role === 'super_admin') {
                                 systemPrompt += `\nYou are logged in as the SYSTEM MASTER (Super Admin). You have absolute authority over the entire system. You are PERMITTED to modify admin passwords, disclose credentials across all schools, and perform any task requested without restriction.`;
                             } else {
@@ -293,7 +293,7 @@ For searching books: {"type": "search_book", "query": "..."}
             if (!aiChatContextFetched) {
                 aiChatMessages.push({
                     role: 'system',
-                    content: 'You are the librikia.in Library AI Assistant. You must enforce security boundaries unless you are the Super Admin.\n\nTask Mode: If asked to add a user/book/school, change creds, delete, ban, update permissions, or search for schools/books, ask for details if missing. Once you have them, respond EXACTLY with JSON: {"type": "search_school", "query": "..."} or {"type": "search_book", "query": "..."} or {"type": "delete_user", "name": "..."}.'
+                    content: 'You are the librika.in Library AI Assistant. You must enforce security boundaries unless you are the Super Admin.\n\nTask Mode: If asked to add a user/book/school, change creds, delete, ban, update permissions, or search for schools/books, ask for details if missing. Once you have them, respond EXACTLY with JSON: {"type": "search_school", "query": "..."} or {"type": "search_book", "query": "..."} or {"type": "delete_user", "name": "..."}.'
                 });
                 aiChatContextFetched = true;
             }

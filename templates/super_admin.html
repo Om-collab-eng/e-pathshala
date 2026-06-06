@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}System Master - librikia.in{% endblock %}
+{% block title %}System Master - librika.in{% endblock %}
 
 {% block content %}
 <!-- PDF & Canvas Libraries -->
@@ -621,7 +621,7 @@
 
             if (format === 'png') {
                 const link = document.createElement('a');
-                link.download = 'librikia.in-Summary.png';
+                link.download = 'librika.in-Summary.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             } else if (format === 'pdf') {
@@ -642,7 +642,7 @@
                     pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
                     heightLeft -= pageHeight;
                 }
-                pdf.save('librikia.in-Summary.pdf');
+                pdf.save('librika.in-Summary.pdf');
             }
         } catch(e) {
             console.error("Export failed", e);
