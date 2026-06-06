@@ -330,3 +330,16 @@ t=2026-06-06T21:00:18+0530 lvl=eror msg="heartbeat timeout, terminating session"
 t=2026-06-06T21:00:28+0530 lvl=eror msg="session closed, starting reconnect loop" obj=tunnels.session obj=csess id=5a4305b19a54 err="session closed"
 t=2026-06-06T21:00:30+0530 lvl=info msg="client session established" obj=tunnels.session
 t=2026-06-06T21:00:30+0530 lvl=info msg="tunnel session started" obj=tunnels.session
+t=2026-06-06T21:29:16+0530 lvl=info msg="update available" obj=updater
+t=2026-06-06T21:50:30+0530 lvl=info msg="join connections" obj=join id=675b789b1c0f l=127.0.0.1:5000 r=122.161.50.164:18699
+t=2026-06-06T21:50:30+0530 lvl=info msg="join connections" obj=join id=28fc83b9f9c7 l=127.0.0.1:5000 r=122.161.50.164:13779
+t=2026-06-06T21:50:31+0530 lvl=info msg="join connections" obj=join id=647369156390 l=127.0.0.1:5000 r=122.161.50.164:13779
+t=2026-06-06T21:50:32+0530 lvl=info msg="join connections" obj=join id=f8d97b3a6bb5 l=127.0.0.1:5000 r=122.161.50.164:13779
+t=2026-06-06T22:39:53+0530 lvl=eror msg="heartbeat timeout, terminating session" obj=tunnels.session obj=csess id=74b138c72610 clientid=723973fb2cbea913f3b1f2ac4d6399d4
+t=2026-06-06T22:39:56+0530 lvl=eror msg="session closed, starting reconnect loop" obj=tunnels.session obj=csess id=5a4305b19a54 err="session closed"
+t=2026-06-06T22:40:07+0530 lvl=info msg="client session established" obj=tunnels.session
+t=2026-06-06T22:40:07+0530 lvl=info msg="tunnel session started" obj=tunnels.session
+t=2026-06-06T22:59:45+0530 lvl=eror msg="heartbeat timeout, terminating session" obj=tunnels.session obj=csess id=2f60078e3da7 clientid=723973fb2cbea913f3b1f2ac4d6399d4
+t=2026-06-06T22:59:56+0530 lvl=eror msg="session closed, starting reconnect loop" obj=tunnels.session obj=csess id=5a4305b19a54 err="read tcp 192.168.1.8:58237->3.108.208.206:443: wsarecv: An existing connection was forcibly closed by the remote host."
+t=2026-06-06T23:00:09+0530 lvl=info msg="client session established" obj=tunnels.session
+t=2026-06-06T23:00:09+0530 lvl=info msg="tunnel session started" obj=tunnels.session

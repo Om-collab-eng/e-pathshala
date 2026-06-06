@@ -253,6 +253,36 @@ body {
     .grid-layout { grid-template-columns: 1fr; }
 }
 
+/* Responsive Grid Utilities */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.grid-3-col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.grid-with-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .grid-2-col, .grid-3-col {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 1024px) {
+    .grid-with-sidebar {
+        grid-template-columns: 1fr;
+    }
+}
+
 .status-panel {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
