@@ -901,7 +901,8 @@ def admin_panel():
     total_returned = conn.execute('SELECT COUNT(*) FROM transactions WHERE return_date IS NOT NULL AND school_code = ?', (s_code,)).fetchone()[0] or 0
         
     conn.close()
-    return render_template('admin.html', transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=len(students), total_issued=total_issued, total_returned=total_returned)
+    template_name = 'demo_admin.html' if session.get('is_demo') else 'admin.html'
+    return render_template(template_name, transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=len(students), total_issued=total_issued, total_returned=total_returned)
 
 @app.route('/admin/student/add', methods=['POST'])
 def admin_add_student():
@@ -1129,7 +1130,8 @@ def student_panel():
     }
         
     conn.close()
-    return render_template('student.html', transactions=transactions, recommended_books=recommended_books, stats=stats, due_soon=due_soon, overdue_books=overdue_books, school_name=session['school_name'])
+    template_name = 'demo_student.html' if session.get('is_demo') else 'student.html'
+    return render_template(template_name, transactions=transactions, recommended_books=recommended_books, stats=stats, due_soon=due_soon, overdue_books=overdue_books, school_name=session['school_name'])
 
 @app.route('/student/profile', methods=['GET', 'POST'])
 def student_profile():
