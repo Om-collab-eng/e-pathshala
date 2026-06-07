@@ -102,12 +102,6 @@
     if (!accounts.some(a => a.id === '555001' && a.sc === 'DEMO')) {
         accounts.unshift({ id: '555001', sc: 'DEMO', display: 'Student Demo', p_data: btoa('demo123') });
     }
-    {% else %}
-    if (localStorage.getItem('demo_active') === 'true') {
-        // We lost the session cookie, but local storage knows we are in demo mode!
-        // Redirect to restore it immediately
-        window.location.href = '/demo-mode';
-    }
     {% endif %}
 
     {% if is_demo %}
