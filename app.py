@@ -2059,6 +2059,36 @@ def send_organization_email(to_email, contact_person, code=None, login_id=None, 
     # This is deprecated as we are moving EmailJS to the frontend
     pass
 
+@app.route('/api/check-user', methods=['POST'])
+def check_user():
+    data = request.json
+    try:
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE phone = ?', (data['phone'],)).fetchone()
+        if user:
+            # Attempt to find email from organization requests
+            req = conn.execute('SELECT email FROM organization_requests WHERE phone = ? ORDER BY id DESC LIMIT 1', (data['phone'],)).fetchone()
+            email = req['email'] if req else 'noreply@librika.in' # Use their org email if found
+            return jsonify({"status": "success", "email": email})
+        return jsonify({"status": "error", "message": "User not found"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    data = request.json
+    try:
+        conn = get_db_connection()
+        conn.execute('UPDATE users SET password = ? WHERE phone = ?', (data['new_password'], data['phone']))
+        conn.commit()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
 @app.route('/api/apply-organization', methods=['POST'])
 def apply_organization():
     data = request.json
