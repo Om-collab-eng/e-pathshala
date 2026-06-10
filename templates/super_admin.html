@@ -585,9 +585,9 @@
                     <button type="submit" class="btn-alt" style="width: 100%; border-color: var(--accent-success); color: var(--accent-success);">Force Firebase Backup Sync</button>
                 </form>
 
-                <form action="/super-admin/wipe-data" method="POST" style="margin: 0;" onsubmit="return confirm('NUCLEAR WARNING: This will permanently DELETE ALL SCHOOLS, USERS, BOOKS, AND DATA. ARE YOU ABSOLUTELY SURE?');">
-                    <button type="submit" class="btn-primary" style="width: 100%; background: var(--accent-error); color: white;">WIPE ALL SYSTEM DATA</button>
-                </form>
+                <div style="margin: 0;">
+                    <button type="button" class="btn-primary" style="width: 100%; background: var(--accent-error); color: white;" onclick="initiateWipe()">WIPE ALL SYSTEM DATA</button>
+                </div>
             </div>
         </div>
     </div>
@@ -688,12 +688,82 @@
 
 {% endblock %}
 
+<div id="wipeOtpModal" class="modal-overlay" style="display: none; z-index: 10000;">
+    <div class="modal-content glow-box" style="max-width: 450px; width: 100%; text-align: center;">
+        <h2 style="margin: 0 0 1rem 0; color: var(--accent-error);">⚠️ Authentication Required</h2>
+        <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Sent a code to THE head super admin at <strong style="color: var(--text-high);">ayushmangupta003@gmail.com</strong>.</p>
+        <div id="wipeOtpInputArea">
+            <p style="font-size: 1.5rem; font-family: monospace; font-weight: bold; color: var(--text-high); margin-bottom: 1rem;" id="wipeTimer">03:00</p>
+            <form action="/super-admin/wipe-data" method="POST">
+                <input type="text" name="otp" required placeholder="Enter 6-digit OTP" style="width: 100%; padding: 0.8rem; margin-bottom: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-high); font-size: 1.2rem; text-align: center; letter-spacing: 5px;">
+                <button type="submit" class="btn-neon" style="background: var(--accent-error);">Confirm Wipe</button>
+            </form>
+        </div>
+        <div id="wipeOtpErrorArea" style="display: none;">
+            <p style="color: var(--accent-error); font-weight: bold; font-size: 1.2rem; margin-bottom: 1rem;">OTP Expired</p>
+            <button class="btn-alt" onclick="closeModal('wipeOtpModal')" style="width: 100%; justify-content: center;">Close & Try Again</button>
+        </div>
+    </div>
+</div>
+
 {% block scripts %}
         </div>
     </div>
 </div>
 
 <script>
+    let wipeInterval = null;
+
+    function initiateWipe() {
+        if (!confirm('NUCLEAR WARNING: This will permanently DELETE ALL SCHOOLS, USERS, BOOKS, AND DATA. ARE YOU ABSOLUTELY SURE?')) return;
+        
+        fetch('/super-admin/generate-wipe-otp', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                let templateParams = {
+                    to_email: 'ayushmangupta003@gmail.com',
+                    otp: data.otp,
+                    reply_to: 'noreply@librika.in'
+                };
+                emailjs.send('service_jv9t9j1', 'template_fflm2lr', templateParams)
+                .then(() => {
+                    document.getElementById('wipeOtpInputArea').style.display = 'block';
+                    document.getElementById('wipeOtpErrorArea').style.display = 'none';
+                    openModal('wipeOtpModal');
+                    startWipeTimer(180);
+                }).catch(err => {
+                    console.error('EmailJS error:', err);
+                    alert('Failed to send OTP email.');
+                });
+            } else {
+                alert('Failed to generate OTP.');
+            }
+        });
+    }
+
+    function startWipeTimer(duration) {
+        let timer = duration, minutes, seconds;
+        let display = document.getElementById('wipeTimer');
+        clearInterval(wipeInterval);
+        
+        wipeInterval = setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = minutes + ":" + seconds;
+
+            if (--timer < 0) {
+                clearInterval(wipeInterval);
+                document.getElementById('wipeOtpInputArea').style.display = 'none';
+                document.getElementById('wipeOtpErrorArea').style.display = 'block';
+            }
+        }, 1000);
+    }
+
     function switchTab(tabId) {
         // Hide all tabs
         document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');

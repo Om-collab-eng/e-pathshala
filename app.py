@@ -810,9 +810,34 @@ def super_admin_delete_school(id):
     conn.close()
     return redirect('/super-admin')
 
+@app.route('/super-admin/generate-wipe-otp', methods=['POST'])
+def generate_wipe_otp():
+    if session.get('role') != 'super_admin': return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    import random
+    otp = str(random.randint(100000, 999999))
+    session['wipe_otp'] = otp
+    session['wipe_otp_expiry'] = time.time() + 180  # 3 minutes
+    return jsonify({'status': 'success', 'otp': otp})
 @app.route('/super-admin/wipe-data', methods=['POST'])
 def super_admin_wipe_data():
     if session.get('role') != 'super_admin': return redirect('/login')
+    
+    otp = request.form.get('otp', '')
+    expected_otp = session.get('wipe_otp')
+    expiry = session.get('wipe_otp_expiry', 0)
+    
+    if not expected_otp or not expiry or time.time() > expiry:
+        # OTP Expired or missing
+        return "OTP Expired or invalid. Please try again.", 400
+        
+    if otp != expected_otp:
+        # Incorrect OTP
+        return "Incorrect OTP.", 400
+        
+    # Clear OTP session
+    session.pop('wipe_otp', None)
+    session.pop('wipe_otp_expiry', None)
+
     # NUCLEAR OPTION - Wipes all non-super-admin data
     conn = get_db_connection()
     tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
