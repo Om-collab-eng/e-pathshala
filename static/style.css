@@ -226,12 +226,16 @@ body {
     gap: 8px;
 }
 
-.btn-alt:hover, .btn-alt.active {
-    background: rgba(255, 255, 255, 0.05);
+.btn-alt:hover {
+    background: var(--bg-main);
     border-color: var(--accent-primary);
     color: var(--text-high);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-alt.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white !important;
 }
 
 /* Dashboard Grid */
@@ -372,7 +376,7 @@ th {
 
 td {
     padding: 1.2rem 1.5rem;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-surface);
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
     transition: var(--transition);
@@ -389,7 +393,7 @@ td:last-child {
 }
 
 tr:hover td {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-main);
     border-color: var(--accent-primary);
 }
 

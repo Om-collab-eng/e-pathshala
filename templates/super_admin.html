@@ -121,7 +121,7 @@
                         {% for req in org_requests %}
                         <tr>
                             <td>{{ req.created_at.split(' ')[0] if req.created_at else '-' }}</td>
-                            <td><strong style="color: white;">{{ req.org_name }}</strong></td>
+                            <td><strong style="color: var(--text-high);">{{ req.org_name }}</strong></td>
                             <td>{{ req.contact_person }}</td>
                             <td><a href="mailto:{{ req.email }}" style="color: var(--accent-primary);">{{ req.email }}</a></td>
                             <td>{{ req.phone }}</td>
