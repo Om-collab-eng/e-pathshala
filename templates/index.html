@@ -449,9 +449,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-    emailjs.init('gDSazAs0k6ID6ixQW');
+<!-- EmailJS removed -->
     let generatedOtp = "";
 
     function showOtpFlow() {
@@ -463,34 +461,17 @@
         const phone = document.getElementById('resetPhone').value;
         if(!phone) { alert('Please enter your phone number.'); return; }
         
-        // Ensure user exists first before sending OTP (Call backend API)
-        fetch('/api/check-user', {
+        fetch('/api/generate-reset-otp', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({phone: phone})
         }).then(r => r.json()).then(res => {
             if(res.status === 'success') {
-                generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                
-                // You will need to create an EmailJS template for OTP. 
-                // Using placeholder template ID 'template_otp' for now.
-                const templateParams = {
-                    to_email: res.email, // Backend must return user's email
-                    passcode: generatedOtp,
-                    time: new Date(new Date().getTime() + 15*60000).toLocaleTimeString()
-                };
-                
-                emailjs.send('service_jv9t9j1', 'template_fflm2lr', templateParams)
-                .then(() => {
-                    alert('OTP sent to your registered email!');
-                    document.getElementById('sendOtpBtn').style.display = 'none';
-                    document.getElementById('otpStep2').style.display = 'block';
-                }).catch(err => {
-                    console.error(err);
-                    alert('Failed to send OTP email. Please check template ID.');
-                });
+                alert('OTP sent to your registered email!');
+                document.getElementById('sendOtpBtn').style.display = 'none';
+                document.getElementById('otpStep2').style.display = 'block';
             } else {
-                alert('User not found.');
+                alert('User not found or error occurred.');
             }
         });
     }
@@ -500,22 +481,22 @@
         const newPassword = document.getElementById('resetNewPassword').value;
         const phone = document.getElementById('resetPhone').value;
         
-        if(otp !== generatedOtp) {
-            alert('Invalid OTP!');
+        if(!otp || !newPassword) {
+            alert('Please enter OTP and new password.');
             return;
         }
         
         fetch('/api/reset-password', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({phone: phone, new_password: newPassword})
+            body: JSON.stringify({phone: phone, new_password: newPassword, otp: otp})
         }).then(r => r.json()).then(res => {
             if(res.status === 'success') {
                 alert('Password reset successfully! You can now log in.');
                 document.getElementById('helpDeskModal').style.display = 'none';
                 window.location.href = '/login';
             } else {
-                alert('Failed to reset password.');
+                alert('Failed to reset password: ' + (res.message || 'Invalid OTP'));
             }
         });
     }
