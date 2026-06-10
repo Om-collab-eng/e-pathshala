@@ -108,6 +108,14 @@ body {
     letter-spacing: -0.5px;
 }
 
+.header p {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.header p span {
+    color: white !important;
+}
+
 /* Cards & Containers */
 .glow-box {
     background: var(--bg-surface);
@@ -312,11 +320,19 @@ aside .class-list .btn-alt {
     padding: 0.75rem 1rem;
 }
 
-aside .class-list .btn-alt.active, aside .class-list .btn-alt:hover {
+aside .class-list .btn-alt:hover {
     background: rgba(59, 89, 152, 0.1);
     color: var(--accent-primary);
     box-shadow: none;
     transform: none;
+}
+
+aside .class-list .btn-alt.active {
+    background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-primary) 100%);
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+    transform: none;
+    border: none;
 }
 
 .content {
