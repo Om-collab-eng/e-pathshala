@@ -133,7 +133,7 @@ def init_db():
                   
     conn.execute('''CREATE TABLE IF NOT EXISTS users 
                  (id INTEGER PRIMARY KEY, name TEXT, admission_no TEXT, class TEXT, 
-                  phone TEXT, password TEXT, role TEXT, session_token TEXT,
+                  phone TEXT, email TEXT, password TEXT, role TEXT, session_token TEXT,
                   school_code TEXT DEFAULT 'APP')''')
                   
     conn.execute('''CREATE TABLE IF NOT EXISTS books 
@@ -153,7 +153,13 @@ def init_db():
                   
     conn.execute('''CREATE TABLE IF NOT EXISTS organization_requests 
                  (id INTEGER PRIMARY KEY, org_name TEXT, contact_person TEXT, 
-                  email TEXT, phone TEXT, status TEXT DEFAULT 'pending', created_at TEXT)''')
+                  email TEXT, phone TEXT, status TEXT, created_at TEXT)''')
+                  
+    # Migration: Add email to users if it doesn't exist
+    try:
+        conn.execute('ALTER TABLE users ADD COLUMN email TEXT')
+    except sqlite3.OperationalError:
+        pass
                   
     conn.execute('''CREATE TABLE IF NOT EXISTS reservations 
                  (id INTEGER PRIMARY KEY, user_id INTEGER, book_id INTEGER, 
@@ -241,6 +247,7 @@ def init_db():
             class TEXT,
             session_token TEXT,
             is_banned INTEGER DEFAULT 0,
+            email TEXT,
             permissions TEXT DEFAULT '["manage_books", "manage_students", "manage_transactions", "approve_content"]')''')
     
     dconn.execute('''CREATE TABLE IF NOT EXISTS schools 
@@ -268,7 +275,13 @@ def init_db():
                   
     dconn.execute('''CREATE TABLE IF NOT EXISTS organization_requests 
                  (id INTEGER PRIMARY KEY, org_name TEXT, contact_person TEXT, 
-                  email TEXT, phone TEXT, status TEXT DEFAULT 'pending', created_at TEXT)''')
+                  email TEXT, phone TEXT, status TEXT, created_at TEXT)''')
+    
+    # Migration for Demo DB: Add email to users if it doesn't exist
+    try:
+        dconn.execute('ALTER TABLE users ADD COLUMN email TEXT')
+    except sqlite3.OperationalError:
+        pass
                   
     dconn.execute('''CREATE TABLE IF NOT EXISTS digital_content (
             id INTEGER PRIMARY KEY, title TEXT, category TEXT, description TEXT,
@@ -924,13 +937,14 @@ def admin_add_student():
     name = request.form['name']
     admission_no = request.form['admission_no']
     phone = request.form['phone']
+    email = request.form.get('email', '')
     cls = request.form['class']
     password = request.form['password']
     
     conn = get_db_connection()
     try:
-        conn.execute('INSERT INTO users (name, admission_no, phone, class, role, password, school_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                     (name, admission_no, phone, cls, 'student', password, s_code))
+        conn.execute('INSERT INTO users (name, admission_no, phone, email, class, role, password, school_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                     (name, admission_no, phone, email, cls, 'student', password, s_code))
         conn.commit()
     except sqlite3.IntegrityError:
         pass # phone might be duplicate
@@ -2066,9 +2080,14 @@ def check_user():
         conn = get_db_connection()
         user = conn.execute('SELECT * FROM users WHERE phone = ?', (data['phone'],)).fetchone()
         if user:
-            # Attempt to find email from organization requests
-            req = conn.execute('SELECT email FROM organization_requests WHERE phone = ? ORDER BY id DESC LIMIT 1', (data['phone'],)).fetchone()
-            email = req['email'] if req else 'noreply@librika.in' # Use their org email if found
+            # First check if user has a direct email attached
+            if user['email']:
+                email = user['email']
+            else:
+                # Attempt to find email from organization requests as fallback for admins
+                req = conn.execute('SELECT email FROM organization_requests WHERE phone = ? ORDER BY id DESC LIMIT 1', (data['phone'],)).fetchone()
+                email = req['email'] if req else 'noreply@librika.in'
+                
             return jsonify({"status": "success", "email": email})
         return jsonify({"status": "error", "message": "User not found"})
     except Exception as e:
