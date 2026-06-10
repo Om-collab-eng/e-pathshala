@@ -2056,30 +2056,8 @@ def refund():
 import requests
 
 def send_organization_email(to_email, contact_person, code=None, login_id=None, password=None):
-    url = "https://api.emailjs.com/api/v1.0/email/send"
-    payload = {
-        "service_id": "service_jv9t9j1",
-        "template_id": "template_bdki963",
-        "user_id": "gDSazAs0k6ID6ixQW",
-        "template_params": {
-            "to_email": to_email,
-            "contact_person": contact_person,
-            "code": code,
-            "login id": login_id,
-            "password": password
-        }
-    }
-    
-    try:
-        response = requests.post(url, json=payload)
-        print(f"\n--- EMAILJS SENT ---")
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
-        print(f"--------------------\n")
-    except Exception as e:
-        print(f"\n--- EMAILJS ERROR ---")
-        print(str(e))
-        print(f"---------------------\n")
+    # This is deprecated as we are moving EmailJS to the frontend
+    pass
 
 @app.route('/api/apply-organization', methods=['POST'])
 def apply_organization():
@@ -2117,9 +2095,17 @@ def accept_org_request(req_id):
             conn.execute('UPDATE organization_requests SET status = "Approved" WHERE id = ?', (req_id,))
             conn.commit()
             
-            send_organization_email(req['email'], req['contact_person'], org_id, req['phone'], password)
+            # We don't send from backend anymore. Return data so frontend can send it via emailjs
+            return jsonify({
+                "status": "success", 
+                "org_id": org_id, 
+                "password": password, 
+                "contact_person": req['contact_person'], 
+                "email": req['email'], 
+                "phone": req['phone']
+            })
             
-        return jsonify({"status": "success"})
+        return jsonify({"status": "error", "message": "Request not found"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
     finally:
