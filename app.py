@@ -937,14 +937,13 @@ def admin_add_student():
     name = request.form['name']
     admission_no = request.form['admission_no']
     phone = request.form['phone']
-    email = request.form.get('email', '')
     cls = request.form['class']
     password = request.form['password']
     
     conn = get_db_connection()
     try:
-        conn.execute('INSERT INTO users (name, admission_no, phone, email, class, role, password, school_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                     (name, admission_no, phone, email, cls, 'student', password, s_code))
+        conn.execute('INSERT INTO users (name, admission_no, phone, class, role, password, school_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                     (name, admission_no, phone, cls, 'student', password, s_code))
         conn.commit()
     except sqlite3.IntegrityError:
         pass # phone might be duplicate
@@ -2080,6 +2079,9 @@ def check_user():
         conn = get_db_connection()
         user = conn.execute('SELECT * FROM users WHERE phone = ?', (data['phone'],)).fetchone()
         if user:
+            if user['role'] != 'admin':
+                return jsonify({"status": "error", "message": "Password reset is only available for Admins. Please contact your school administrator."})
+
             # First check if user has a direct email attached
             if user['email']:
                 email = user['email']
@@ -2136,9 +2138,9 @@ def accept_org_request(req_id):
             # Create school
             conn.execute('INSERT INTO schools (name, school_code, librarian_name, max_books, max_students, created_at) VALUES (?,?,?,?,?,?)',
                          (req['org_name'], org_id, req['contact_person'], 1000, 500, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-            # Create user
-            conn.execute('INSERT INTO users (name, phone, password, role, school_code) VALUES (?,?,?,?,?)',
-                         (req['contact_person'], req['phone'], password, 'admin', org_id))
+            # Create user (Admin)
+            conn.execute('INSERT INTO users (name, phone, email, password, role, school_code) VALUES (?,?,?,?,?,?)',
+                         (req['contact_person'], req['phone'], req['email'], password, 'admin', org_id))
             
             # Update status
             conn.execute('UPDATE organization_requests SET status = "Approved" WHERE id = ?', (req_id,))
