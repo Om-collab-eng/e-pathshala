@@ -23,6 +23,7 @@
         <button class="btn-alt tab-btn" onclick="switchTab('users')">Users</button>
         <button class="btn-alt tab-btn" onclick="switchTab('catalog')">Catalog</button>
         <button class="btn-alt tab-btn" onclick="switchTab('transactions')">Transactions</button>
+        <button class="btn-alt tab-btn" onclick="switchTab('requests')" style="border-color: var(--accent-warning); color: var(--accent-warning);">Requests</button>
         <button class="btn-alt tab-btn" onclick="switchTab('billing')" style="border-color: #4ade80; color: #4ade80;">Revenue</button>
     </div>
 
@@ -84,6 +85,55 @@
                     {% endif %}
                 </div>
             </div>
+        </div>
+    </main>
+
+    <main id="tab-requests" class="tab-content" style="display: none;">
+        <div class="glow-box">
+            <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Organization Requests</h2>
+            {% if org_requests %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Organization Name</th>
+                            <th>Contact Person</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in org_requests %}
+                        <tr>
+                            <td>{{ req.created_at.split(' ')[0] if req.created_at else '-' }}</td>
+                            <td><strong style="color: white;">{{ req.org_name }}</strong></td>
+                            <td>{{ req.contact_person }}</td>
+                            <td><a href="mailto:{{ req.email }}" style="color: var(--accent-primary);">{{ req.email }}</a></td>
+                            <td>{{ req.phone }}</td>
+                            <td>
+                                <span class="badge {% if req.status == 'Approved' %}success{% elif req.status == 'Rejected' %}error{% else %}warning{% endif %}">{{ req.status }}</span>
+                            </td>
+                            <td>
+                                {% if req.status == 'pending' %}
+                                <div style="display: flex; gap: 5px;">
+                                    <button class="btn-neon" style="padding: 4px 8px; font-size: 0.75rem;" onclick="processOrgRequest({{ req.id }}, 'accept')">Accept</button>
+                                    <button class="btn-alt" style="padding: 4px 8px; font-size: 0.75rem; border-color: var(--accent-error); color: var(--accent-error);" onclick="processOrgRequest({{ req.id }}, 'reject')">Reject</button>
+                                </div>
+                                {% else %}
+                                <span style="color: var(--text-low); font-size: 0.8rem;">Processed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-mid); text-align: center; padding: 2rem;">No organization requests found.</p>
+            {% endif %}
         </div>
     </main>
 
@@ -777,6 +827,19 @@
         }
         
         openModal('permissionsModal');
+    }
+    function processOrgRequest(id, action) {
+        if(!confirm(`Are you sure you want to ${action} this request?`)) return;
+        fetch(`/super-admin/request/${id}/${action}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(res => {
+            if(res.status === 'success') {
+                showToast(`Request ${action}ed successfully and email sent!`);
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                alert('Error: ' + res.message);
+            }
+        });
     }
 </script>
 <style>

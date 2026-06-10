@@ -151,6 +151,10 @@ def init_db():
                   librarian_name TEXT, b_qty INTEGER, s_qty INTEGER, 
                   status TEXT DEFAULT 'pending', created_at TEXT, phone TEXT, password TEXT)''')
                   
+    conn.execute('''CREATE TABLE IF NOT EXISTS organization_requests 
+                 (id INTEGER PRIMARY KEY, org_name TEXT, contact_person TEXT, 
+                  email TEXT, phone TEXT, status TEXT DEFAULT 'pending', created_at TEXT)''')
+                  
     conn.execute('''CREATE TABLE IF NOT EXISTS reservations 
                  (id INTEGER PRIMARY KEY, user_id INTEGER, book_id INTEGER, 
                   status TEXT DEFAULT 'Pending', created_at TEXT, school_code TEXT)''')
@@ -261,6 +265,10 @@ def init_db():
     dconn.execute('''CREATE TABLE IF NOT EXISTS notifications 
                  (id INTEGER PRIMARY KEY, user_id INTEGER, message TEXT, 
                   type TEXT, is_read INTEGER DEFAULT 0, created_at TEXT, school_code TEXT)''')
+                  
+    dconn.execute('''CREATE TABLE IF NOT EXISTS organization_requests 
+                 (id INTEGER PRIMARY KEY, org_name TEXT, contact_person TEXT, 
+                  email TEXT, phone TEXT, status TEXT DEFAULT 'pending', created_at TEXT)''')
                   
     dconn.execute('''CREATE TABLE IF NOT EXISTS digital_content (
             id INTEGER PRIMARY KEY, title TEXT, category TEXT, description TEXT,
@@ -608,6 +616,8 @@ def super_admin_panel():
     
     recent_logs = conn.execute('SELECT * FROM logs ORDER BY created_at DESC LIMIT 50').fetchall()
     pending_requests = conn.execute('SELECT * FROM pending_requests WHERE status = "Pending"').fetchall()
+    org_requests = conn.execute('SELECT * FROM organization_requests ORDER BY created_at DESC').fetchall()
+
     
     # Billing Stats
     revenue_mrr = conn.execute('SELECT SUM(p.monthly_price) FROM subscriptions s JOIN plans p ON s.plan_id = p.id WHERE s.status="active" AND p.id != "plan_free"').fetchone()[0] or 0
@@ -628,7 +638,8 @@ def super_admin_panel():
                            transactions=transactions,
                            logs=recent_logs,
                            pending_requests=pending_requests,
-                           recent_payments=recent_payments)
+                           recent_payments=recent_payments,
+                           org_requests=org_requests)
 
 import csv
 from flask import Response
@@ -2041,6 +2052,95 @@ def terms():
 @app.route('/refund')
 def refund():
     return render_template('page.html', title='Refund Policy')
+
+import requests
+
+def send_organization_email(to_email, contact_person, code=None, login_id=None, password=None):
+    url = "https://api.emailjs.com/api/v1.0/email/send"
+    payload = {
+        "service_id": "service_jv9t9j1",
+        "template_id": "template_bdki963",
+        "user_id": "gDSazAs0k6ID6ixQW",
+        "template_params": {
+            "to_email": to_email,
+            "contact_person": contact_person,
+            "code": code,
+            "login id": login_id,
+            "password": password
+        }
+    }
+    
+    try:
+        response = requests.post(url, json=payload)
+        print(f"\n--- EMAILJS SENT ---")
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.text}")
+        print(f"--------------------\n")
+    except Exception as e:
+        print(f"\n--- EMAILJS ERROR ---")
+        print(str(e))
+        print(f"---------------------\n")
+
+@app.route('/api/apply-organization', methods=['POST'])
+def apply_organization():
+    data = request.json
+    try:
+        conn = get_db_connection()
+        conn.execute('INSERT INTO organization_requests (org_name, contact_person, email, phone, status, created_at) VALUES (?,?,?,?,?,?)',
+                     (data['org_name'], data['contact_person'], data['email'], data['phone'], 'pending', datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        conn.commit()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/super-admin/request/<int:req_id>/accept', methods=['POST'])
+def accept_org_request(req_id):
+    if session.get('role') != 'super_admin': return jsonify({"status": "error"}), 403
+    try:
+        import string, random
+        conn = get_db_connection()
+        req = conn.execute('SELECT * FROM organization_requests WHERE id = ?', (req_id,)).fetchone()
+        if req:
+            org_id = "ORG" + "".join(random.choices(string.digits, k=5))
+            password = "".join(random.choices(string.ascii_letters + string.digits, k=8))
+            
+            # Create school
+            conn.execute('INSERT INTO schools (name, school_code, librarian_name, max_books, max_students, created_at) VALUES (?,?,?,?,?,?)',
+                         (req['org_name'], org_id, req['contact_person'], 1000, 500, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            # Create user
+            conn.execute('INSERT INTO users (name, phone, password, role, school_code) VALUES (?,?,?,?,?)',
+                         (req['contact_person'], req['phone'], password, 'admin', org_id))
+            
+            # Update status
+            conn.execute('UPDATE organization_requests SET status = "Approved" WHERE id = ?', (req_id,))
+            conn.commit()
+            
+            send_organization_email(req['email'], req['contact_person'], org_id, req['phone'], password)
+            
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/super-admin/request/<int:req_id>/reject', methods=['POST'])
+def reject_org_request(req_id):
+    if session.get('role') != 'super_admin': return jsonify({"status": "error"}), 403
+    try:
+        conn = get_db_connection()
+        req = conn.execute('SELECT * FROM organization_requests WHERE id = ?', (req_id,)).fetchone()
+        if req:
+            conn.execute('UPDATE organization_requests SET status = "Rejected" WHERE id = ?', (req_id,))
+            conn.commit()
+            # For rejection, we don't send code/password
+            send_organization_email(req['email'], req['contact_person'], None, None, None)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
 
 if __name__ == '__main__':
     init_db()

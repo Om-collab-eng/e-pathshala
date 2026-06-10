@@ -371,25 +371,48 @@
         <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem; background: linear-gradient(135deg, var(--text-high), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Apply for Organization</h2>
         <p style="color: var(--text-mid); margin-bottom: 2rem;">Fill out this form to register your school or publisher organization.</p>
         
-        <form onsubmit="event.preventDefault(); alert('Request sent! Our team will contact you shortly.'); document.getElementById('orgModal').style.display='none';">
+        <form onsubmit="submitOrgRequest(event)">
             <div style="margin-bottom: 1.2rem; text-align: left;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Organization Name</label>
-                <input type="text" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+                <input type="text" id="orgName" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
             </div>
             <div style="margin-bottom: 1.2rem; text-align: left;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Contact Person</label>
-                <input type="text" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+                <input type="text" id="contactPerson" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
             </div>
             <div style="margin-bottom: 1.2rem; text-align: left;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Email Address</label>
-                <input type="email" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+                <input type="email" id="orgEmail" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
             </div>
             <div style="margin-bottom: 2rem; text-align: left;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Phone Number</label>
-                <input type="tel" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+                <input type="tel" id="orgPhone" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
             </div>
             <button type="submit" class="btn-neon" style="width: 100%; border-radius: 8px; padding: 1rem; font-size: 1rem; color: black !important;">Submit Request</button>
         </form>
+        <script>
+        function submitOrgRequest(e) {
+            e.preventDefault();
+            const data = {
+                org_name: document.getElementById('orgName').value,
+                contact_person: document.getElementById('contactPerson').value,
+                email: document.getElementById('orgEmail').value,
+                phone: document.getElementById('orgPhone').value
+            };
+            fetch('/api/apply-organization', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(res => {
+                if(res.status === 'success') {
+                    alert('Request sent successfully! Our team will contact you shortly.');
+                    document.getElementById('orgModal').style.display='none';
+                } else {
+                    alert('Error sending request: ' + res.message);
+                }
+            });
+        }
+        </script>
     </div>
 </div>
 
