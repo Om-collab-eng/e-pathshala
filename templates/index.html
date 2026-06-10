@@ -60,8 +60,8 @@
 
 
     <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
-        <a href="/demo-mode" class="btn-neon" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Start Free Trial</a>
-        <a href="#demo-search" class="btn-alt" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-color: var(--text-mid); color: var(--text-high);">Book a Demo</a>
+        <a href="/register" class="btn-neon" style="padding: 1rem 2.5rem; font-size: 1.1rem; color: white;">Sign Up</a>
+        <a href="/demo-mode" class="btn-alt" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-color: var(--text-mid); color: var(--text-high);">See a Demo</a>
     </div>
 
     <!-- Platform Stats -->
@@ -143,21 +143,9 @@
     <h2>E-Publishing Marketplace</h2>
     <p class="subtitle">Empowering authors and publishers to distribute digital content directly to millions of students worldwide.</p>
     
-    <div class="feature-bento" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
-        <div class="feature-card" style="border-color: var(--accent-primary);">
-            <h3 style="color: var(--accent-primary);">✍️ For Authors</h3>
-            <p style="color: var(--text-mid); margin-bottom: 1.5rem; line-height: 1.6;">Self-publish your work globally. Get instant feedback from students, track your sales, and manage royalties from your dedicated dashboard.</p>
-            <ul>
-                <li>Upload PDF/EPUB Formats</li>
-                <li>Author Profiles & Rankings</li>
-                <li>Royalty Tracking Dashboard</li>
-                <li>Real-Time Sales Analytics</li>
-            </ul>
-            <button class="btn-alt" style="margin-top: 2rem; width: 100%;" onclick="window.location.href='/login'">Join as Author</button>
-        </div>
-        
-        <div class="feature-card" style="border-color: #d946ef;">
-            <h3 style="color: #d946ef;">🏢 For Publishers</h3>
+    <div style="display: flex; justify-content: center;">
+        <div class="feature-card" style="border-color: #d946ef; max-width: 600px; width: 100%;">
+            <h3 style="color: #d946ef;">🏢 For Publishers & Organizations</h3>
             <p style="color: var(--text-mid); margin-bottom: 1.5rem; line-height: 1.6;">Verify your organization, bulk upload your entire catalog, and securely distribute educational materials directly to institutional networks.</p>
             <ul>
                 <li>Verified Publisher Badge</li>
@@ -165,7 +153,7 @@
                 <li>Distribution Management</li>
                 <li>Institutional Licensing</li>
             </ul>
-            <button class="btn-alt" style="margin-top: 2rem; width: 100%; border-color: #d946ef; color: #d946ef;" onclick="window.location.href='/login'">Register Organization</button>
+            <button class="btn-alt" style="margin-top: 2rem; width: 100%; border-color: #d946ef; color: #d946ef;" onclick="document.getElementById('orgModal').style.display='flex'">Apply for Organization</button>
         </div>
     </div>
 </section>
@@ -225,7 +213,7 @@
                 <li>Basic Issue/Return</li>
                 <li>Community Support</li>
             </ul>
-            <a href="/demo-mode" class="btn-alt">Get Started</a>
+            <a href="/login" class="btn-alt">Get Started</a>
         </div>
         
         <div class="pricing-card">
@@ -237,7 +225,7 @@
                 <li>Unlimited Students</li>
                 <li>Email Support</li>
             </ul>
-            <a href="/demo-mode" class="btn-alt">Start Basic</a>
+            <a href="/login" class="btn-alt">Start Basic</a>
         </div>
         
         <div class="pricing-card popular">
@@ -251,7 +239,7 @@
                 <li>Advanced Analytics</li>
                 <li>Priority Support</li>
             </ul>
-            <a href="/demo-mode" class="btn-neon" style="width: 100%;">Start Professional</a>
+            <a href="/login" class="btn-neon" style="width: 100%; color: black !important;">Start Professional</a>
         </div>
         
         <div class="pricing-card">
@@ -357,18 +345,17 @@
         <div class="footer-column">
             <h4>Ecosystem</h4>
             <a href="#publishers">Publishers</a>
-            <a href="#publishers">Authors</a>
-            <a href="#resources">API Documentation</a>
-            <a href="#resources">Integrations</a>
+            <a href="#" onclick="alert('API Documentation coming soon!'); return false;">API Documentation</a>
+            <a href="#" onclick="alert('Integrations coming soon!'); return false;">Integrations</a>
         </div>
         
         <div class="footer-column" id="resources">
             <h4>Resources & Legal</h4>
-            <a href="#help">Help Center</a>
-            <a href="#blog">Blog & Case Studies</a>
-            <a href="#privacy">Privacy Policy</a>
-            <a href="#terms">Terms & Conditions</a>
-            <a href="#refunds">Refund Policy</a>
+            <a href="#" onclick="alert('Help Center coming soon!'); return false;">Help Center</a>
+            <a href="#" onclick="alert('Blog & Case Studies coming soon!'); return false;">Blog & Case Studies</a>
+            <a href="#" onclick="alert('Privacy Policy coming soon!'); return false;">Privacy Policy</a>
+            <a href="#" onclick="alert('Terms & Conditions coming soon!'); return false;">Terms & Conditions</a>
+            <a href="#" onclick="alert('Refund Policy coming soon!'); return false;">Refund Policy</a>
         </div>
     </div>
     
@@ -376,5 +363,34 @@
         &copy; 2026 E-Pathshala Platform. All rights reserved. Built for global education.
     </div>
 </footer>
+
+<!-- Organization Application Modal -->
+<div id="orgModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div style="background: var(--bg-card); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border); width: 90%; max-width: 500px; color: var(--text-high); position: relative; text-align: center;">
+        <span onclick="document.getElementById('orgModal').style.display='none'" style="position: absolute; right: 20px; top: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-mid);">&times;</span>
+        <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem; background: linear-gradient(135deg, var(--text-high), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Apply for Organization</h2>
+        <p style="color: var(--text-mid); margin-bottom: 2rem;">Fill out this form to register your school or publisher organization.</p>
+        
+        <form onsubmit="event.preventDefault(); alert('Request sent! Our team will contact you shortly.'); document.getElementById('orgModal').style.display='none';">
+            <div style="margin-bottom: 1.2rem; text-align: left;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Organization Name</label>
+                <input type="text" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 1.2rem; text-align: left;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Contact Person</label>
+                <input type="text" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 1.2rem; text-align: left;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Email Address</label>
+                <input type="email" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 2rem; text-align: left;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Phone Number</label>
+                <input type="tel" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+            </div>
+            <button type="submit" class="btn-neon" style="width: 100%; border-radius: 8px; padding: 1rem; font-size: 1rem; color: black !important;">Submit Request</button>
+        </form>
+    </div>
+</div>
 
 {% endblock %}

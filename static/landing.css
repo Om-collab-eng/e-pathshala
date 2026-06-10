@@ -27,6 +27,10 @@
     transition: color 0.3s;
 }
 
+.saas-nav-links a.btn-neon {
+    color: black !important;
+}
+
 .saas-nav-links a:hover {
     color: var(--accent-primary);
 }
