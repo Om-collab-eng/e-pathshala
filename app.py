@@ -18,38 +18,8 @@ from barcode.writer import ImageWriter
 
 import threading
 import time
-import requests
+import firebase_admin
 from firebase_admin import credentials, storage
-import os
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
-
-def send_email_brevo(to_email, subject, html_content):
-    api_key = os.environ.get('BREVO_API_KEY')
-    if not api_key:
-        print("BREVO_API_KEY environment variable not set!")
-        return
-
-    url = "https://api.brevo.com/v3/smtp/email"
-    headers = {
-        "accept": "application/json",
-        "api-key": api_key,
-        "content-type": "application/json"
-    }
-    payload = {
-        "sender": {"name": "Global Operations Control", "email": "ayushmangupta003@gmail.com"},
-        "to": [{"email": to_email, "name": "Head Admin"}],
-        "subject": subject,
-        "htmlContent": html_content
-    }
-    try:
-        res = requests.post(url, json=payload, headers=headers, timeout=5)
-        print("Brevo Response:", res.status_code, res.text)
-    except Exception as e:
-        print(f"Brevo API error: {e}")
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -847,15 +817,6 @@ def generate_wipe_otp():
     otp = str(random.randint(100000, 999999))
     session['wipe_otp'] = otp
     session['wipe_otp_expiry'] = time.time() + 180  # 3 minutes
-    
-    html_content = f"""
-    <h2>Authentication Required</h2>
-    <p>A highly sensitive action has been requested on the Global Operations Control panel.</p>
-    <p>Your wipe OTP is: <strong>{otp}</strong></p>
-    <p>This code will expire in 3 minutes.</p>
-    """
-    send_email_brevo('ayushmangupta003@gmail.com', 'Auth Code: Action Required', html_content)
-    
     return jsonify({'status': 'success', 'otp': otp})
 @app.route('/super-admin/wipe-data', methods=['POST'])
 def super_admin_wipe_data():

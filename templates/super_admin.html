@@ -721,10 +721,21 @@
         .then(r => r.json())
         .then(data => {
             if (data.status === 'success') {
-                document.getElementById('wipeOtpInputArea').style.display = 'block';
-                document.getElementById('wipeOtpErrorArea').style.display = 'none';
-                openModal('wipeOtpModal');
-                startWipeTimer(180);
+                let templateParams = {
+                    to_email: 'ayushmangupta003@gmail.com',
+                    otp: data.otp,
+                    reply_to: 'noreply@librika.in'
+                };
+                emailjs.send('service_jv9t9j1', 'template_fflm2lr', templateParams)
+                .then(() => {
+                    document.getElementById('wipeOtpInputArea').style.display = 'block';
+                    document.getElementById('wipeOtpErrorArea').style.display = 'none';
+                    openModal('wipeOtpModal');
+                    startWipeTimer(180);
+                }).catch(err => {
+                    console.error('EmailJS error:', err);
+                    alert('Failed to send OTP email.');
+                });
             } else {
                 alert('Failed to generate OTP.');
             }
