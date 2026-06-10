@@ -20,18 +20,26 @@
         <a href="/logout" class="btn-alt" style="border-color: var(--accent-error); color: var(--accent-error);">Terminals Offline</a>
     </header>
 
-    <!-- Tab Navigation -->
-    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 10px;">
-        <button class="btn-alt tab-btn active" onclick="switchTab('overview')">Overview</button>
-        <button class="btn-alt tab-btn" onclick="switchTab('schools')">Schools</button>
-        <button class="btn-alt tab-btn" onclick="switchTab('users')">Users</button>
-        <button class="btn-alt tab-btn" onclick="switchTab('catalog')">Catalog</button>
-        <button class="btn-alt tab-btn" onclick="switchTab('transactions')">Transactions</button>
-        <button class="btn-alt tab-btn" onclick="switchTab('requests')" style="border-color: var(--accent-warning); color: var(--accent-warning);">Requests</button>
-        <button class="btn-alt tab-btn" onclick="switchTab('billing')" style="border-color: #4ade80; color: #4ade80;">Revenue</button>
-    </div>
+    <main class="grid-layout">
+        <aside>
+            <div style="padding: 0 0.5rem; margin-bottom: 2rem;">
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Admin Console</p>
+                <h3 style="margin: 5px 0 0 0; color: var(--text-high); font-size: 1.1rem; font-family: 'Outfit';">Global Network</h3>
+            </div>
+            
+            <ul class="class-list">
+                <li><button class="btn-alt tab-btn active" onclick="switchTab('overview')">📊 Overview</button></li>
+                <li><button class="btn-alt tab-btn" onclick="switchTab('schools')">🏫 Schools</button></li>
+                <li><button class="btn-alt tab-btn" onclick="switchTab('users')">👥 Global Users</button></li>
+                <li><button class="btn-alt tab-btn" onclick="switchTab('catalog')">📚 Global Catalog</button></li>
+                <li><button class="btn-alt tab-btn" onclick="switchTab('transactions')">🔄 Global Transactions</button></li>
+                <li><button class="btn-alt tab-btn" onclick="switchTab('requests')" style="color: var(--accent-warning);">📝 Requests</button></li>
+                <li><button class="btn-alt tab-btn" onclick="switchTab('billing')" style="color: #4ade80;">💳 Revenue</button></li>
+            </ul>
+        </aside>
 
-    <main id="tab-overview" class="tab-content" style="display: block;">
+        <div class="content">
+            <div id="tab-overview" class="tab-content" style="display: block;">
         <!-- Dashboard Overview Statistics -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
             <div class="glass-panel" style="text-align: center; padding: 1.5rem;">
@@ -63,7 +71,7 @@
             </ul>
         </div>
 
-        <div class="grid-layout">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
             <div class="glow-box">
                 <h3 style="margin-top: 0;">Quick Actions</h3>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -90,9 +98,11 @@
                 </div>
             </div>
         </div>
-    </main>
+            </div>
+        </div>
+    </div>
 
-    <main id="tab-requests" class="tab-content" style="display: none;">
+    <div id="tab-requests" class="tab-content" style="display: none;">
         <div class="glow-box">
             <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Organization Requests</h2>
             {% if org_requests %}
@@ -139,9 +149,8 @@
             <p style="color: var(--text-mid); text-align: center; padding: 2rem;">No organization requests found.</p>
             {% endif %}
         </div>
-    </main>
 
-    <main id="tab-schools" class="tab-content" style="display: none;">
+    <div id="tab-schools" class="tab-content" style="display: none;">
         <div class="glow-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 style="margin: 0;">School Management</h2>
@@ -216,9 +225,9 @@
                 </table>
             </div>
         </div>
-    </main>
+    </div>
 
-    <main id="tab-users" class="tab-content" style="display: none;">
+    <div id="tab-users" class="tab-content" style="display: none;">
         <div class="glow-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 style="margin: 0;">Global User Management</h2>
@@ -271,9 +280,9 @@
                 </table>
             </div>
         </div>
-    </main>
+    </div>
 
-    <main id="tab-catalog" class="tab-content" style="display: none;">
+    <div id="tab-catalog" class="tab-content" style="display: none;">
         <div class="glow-box">
             <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Global Book Catalog</h2>
             <div class="table-container">
@@ -303,9 +312,9 @@
                 </table>
             </div>
         </div>
-    </main>
+    </div>
 
-    <main id="tab-transactions" class="tab-content" style="display: none;">
+    <div id="tab-transactions" class="tab-content" style="display: none;">
         <div class="glow-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 style="margin-top: 0; margin-bottom: 0;">Global Transaction Feed</h2>
@@ -348,9 +357,9 @@
                 </table>
             </div>
         </div>
-    </main>
+    </div>
 
-    <main id="tab-billing" class="tab-content" style="display: none;">
+    <div id="tab-billing" class="tab-content" style="display: none;">
         <!-- Dashboard Overview Statistics -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
             <div class="glass-panel" style="text-align: center; padding: 1.5rem; border-color: #4ade80;">
@@ -398,7 +407,7 @@
                 </table>
             </div>
         </div>
-    </main>
+    </div>
 </div>
 
 <!-- Modals -->
@@ -456,8 +465,12 @@
             <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
             <h3 style="font-size: 1rem; margin-top: 0; margin-bottom: 1rem; color: var(--accent-primary);">Admin / Librarian Details</h3>
             <div class="input-group">
-                <label>Full Name</label>
+                <label>Admin Name (Full Name)</label>
                 <input type="text" name="lib_name" required placeholder="John Doe">
+            </div>
+            <div class="input-group">
+                <label>Gmail / Email</label>
+                <input type="email" name="reqEmail" required placeholder="admin@gmail.com">
             </div>
             <div class="input-group">
                 <label>Phone Number (Login ID)</label>
@@ -500,6 +513,10 @@
                 <input type="text" name="admission_no" placeholder="Optional">
             </div>
             <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
+            <div class="input-group">
+                <label>Gmail / Email</label>
+                <input type="email" name="reqEmail" required placeholder="user@gmail.com">
+            </div>
             <div class="input-group">
                 <label>Phone Number (Login ID)</label>
                 <input type="text" name="phone" required placeholder="10-digit number">
@@ -673,6 +690,10 @@
 {% endblock %}
 
 {% block scripts %}
+        </div>
+    </div>
+</div>
+
 <script>
     function switchTab(tabId) {
         // Hide all tabs

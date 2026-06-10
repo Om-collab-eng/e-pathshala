@@ -663,6 +663,7 @@ def super_admin_add_school():
     name = request.form.get('name')
     code = request.form.get('code', '').strip().upper()
     lib_name = request.form.get('lib_name')
+    lib_email = request.form.get('reqEmail')
     lib_phone = request.form.get('lib_phone')
     lib_pass = request.form.get('lib_pass')
     
@@ -674,8 +675,8 @@ def super_admin_add_school():
     try:
         conn.execute('INSERT INTO schools (name, school_code, librarian_name, created_at) VALUES (?, ?, ?, ?)',
                      (name, code, lib_name, datetime.now().strftime('%Y-%m-%d %H:%M')))
-        conn.execute('INSERT INTO users (name, phone, password, role, school_code) VALUES (?, ?, ?, ?, ?)',
-                     (lib_name, lib_phone, lib_pass, 'admin', code))
+        conn.execute('INSERT INTO users (name, phone, email, password, role, school_code) VALUES (?, ?, ?, ?, ?, ?)',
+                     (lib_name, lib_phone, lib_email, lib_pass, 'admin', code))
         conn.execute('INSERT INTO logs (user_id, action, module, created_at) VALUES (?, ?, ?, ?)',
                      (session.get('user_id'), f"Created school {code}", "Schools", datetime.now().strftime('%Y-%m-%d %H:%M')))
         conn.commit()
@@ -706,6 +707,7 @@ def super_admin_add_user():
     if session.get('role') != 'super_admin': return redirect('/login')
     name = request.form.get('name')
     phone = request.form.get('phone')
+    email = request.form.get('reqEmail')
     password = request.form.get('password')
     role = request.form.get('role')
     school_code = request.form.get('school_code')
@@ -714,11 +716,11 @@ def super_admin_add_user():
     conn = get_db_connection()
     try:
         if role == 'student':
-            conn.execute('INSERT INTO users (name, phone, password, role, school_code, admission_no, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0)',
-                         (name, phone, password, role, school_code, admission_no))
+            conn.execute('INSERT INTO users (name, phone, email, password, role, school_code, admission_no, is_banned) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
+                         (name, phone, email, password, role, school_code, admission_no))
         else:
-            conn.execute('INSERT INTO users (name, phone, password, role, school_code, is_banned) VALUES (?, ?, ?, ?, ?, 0)',
-                         (name, phone, password, role, school_code))
+            conn.execute('INSERT INTO users (name, phone, email, password, role, school_code, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0)',
+                         (name, phone, email, password, role, school_code))
         conn.commit()
     except Exception as e:
         pass
