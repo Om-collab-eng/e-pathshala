@@ -1,9 +1,4 @@
 import os, uuid
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
 from flask import Flask, render_template, request, redirect, session, url_for, has_request_context, jsonify, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
@@ -23,9 +18,16 @@ from barcode.writer import ImageWriter
 
 import threading
 import time
+import requests
 from firebase_admin import credentials, storage
+import os
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-def send_email_brevo(to_email, to_name, subject, html_content):
+def send_email_brevo(to_email, subject, html_content):
     api_key = os.environ.get('BREVO_API_KEY')
     if not api_key:
         print("BREVO_API_KEY environment variable not set!")
@@ -38,13 +40,14 @@ def send_email_brevo(to_email, to_name, subject, html_content):
         "content-type": "application/json"
     }
     payload = {
-        "sender": {"name": "Global Operations Control", "email": "noreply@librika.in"},
-        "to": [{"email": to_email, "name": to_name}],
+        "sender": {"name": "Global Operations Control", "email": "ayushmangupta003@gmail.com"},
+        "to": [{"email": to_email, "name": "Head Admin"}],
         "subject": subject,
         "htmlContent": html_content
     }
     try:
-        requests.post(url, json=payload, headers=headers, timeout=5)
+        res = requests.post(url, json=payload, headers=headers, timeout=5)
+        print("Brevo Response:", res.status_code, res.text)
     except Exception as e:
         print(f"Brevo API error: {e}")
 
@@ -707,18 +710,6 @@ def super_admin_add_school():
         conn.execute('INSERT INTO logs (user_id, action, module, created_at) VALUES (?, ?, ?, ?)',
                      (session.get('user_id'), f"Created school {code}", "Schools", datetime.now().strftime('%Y-%m-%d %H:%M')))
         conn.commit()
-        
-        # Send credentials via Brevo
-        html_content = f"""
-        <h2>Welcome to the Network</h2>
-        <p>Hello <strong>{lib_name}</strong>,</p>
-        <p>Your administrative node has been successfully provisioned. You can now access your dashboard using the credentials below.</p>
-        <p><strong>School Code:</strong> {code}</p>
-        <p><strong>Password:</strong> {lib_pass}</p>
-        <p>Please log in immediately and change your password.</p>
-        """
-        send_email_brevo(lib_email, lib_name, "Your Network Credentials", html_content)
-        
     except sqlite3.IntegrityError:
         pass # Code or phone might be duplicate
     finally:
@@ -739,12 +730,6 @@ def super_admin_add_admin():
                  (session.get('user_id'), f"Created Super Admin {name}", "Users", datetime.now().strftime('%Y-%m-%d %H:%M')))
     conn.commit()
     conn.close()
-    
-    # Send credentials via Brevo
-    # Assuming super admins use phone or email, let's just send to the hardcoded head admin for now or skip if email not collected
-    # The form currently only asks for name, phone, password. It does not ask for email. 
-    # We will skip email for add_admin since we don't have an email field, or send to head admin.
-    
     return redirect('/super-admin')
 
 @app.route('/super-admin/add-user', methods=['POST'])
@@ -869,7 +854,7 @@ def generate_wipe_otp():
     <p>Your wipe OTP is: <strong>{otp}</strong></p>
     <p>This code will expire in 3 minutes.</p>
     """
-    send_email_brevo('ayushmangupta003@gmail.com', 'Head Admin', 'Auth Code: Action Required', html_content)
+    send_email_brevo('ayushmangupta003@gmail.com', 'Auth Code: Action Required', html_content)
     
     return jsonify({'status': 'success', 'otp': otp})
 @app.route('/super-admin/wipe-data', methods=['POST'])
@@ -2178,53 +2163,13 @@ def check_user():
     finally:
         conn.close()
 
-@app.route('/api/generate-reset-otp', methods=['POST'])
-def generate_reset_otp():
-    data = request.json
-    phone = data.get('phone')
-    conn = get_db_connection()
-    user = conn.execute('SELECT email, name FROM users WHERE phone = ?', (phone,)).fetchone()
-    conn.close()
-    
-    if not user:
-        return jsonify({"status": "error", "message": "User not found"})
-        
-    email = user['email']
-    name = user['name']
-    
-    import random
-    otp = str(random.randint(100000, 999999))
-    session['reset_otp'] = otp
-    session['reset_phone'] = phone
-    session['reset_otp_expiry'] = time.time() + 900 # 15 mins
-    
-    html_content = f"""
-    <h2>Authentication Required</h2>
-    <p>Your password reset OTP is: <strong style="font-size:24px;">{otp}</strong></p>
-    <p>This code will expire in 15 minutes.</p>
-    """
-    send_email_brevo(email, name, "Password Reset OTP", html_content)
-    return jsonify({"status": "success", "email": email})
-
 @app.route('/api/reset-password', methods=['POST'])
 def reset_password():
     data = request.json
-    phone = data.get('phone')
-    otp = data.get('otp')
-    new_password = data.get('new_password')
-    
-    expected_otp = session.get('reset_otp')
-    expected_phone = session.get('reset_phone')
-    expiry = session.get('reset_otp_expiry', 0)
-    
-    if not expected_otp or phone != expected_phone or time.time() > expiry or otp != expected_otp:
-        return jsonify({"status": "error", "message": "Invalid or expired OTP."})
-        
     try:
         conn = get_db_connection()
-        conn.execute('UPDATE users SET password = ? WHERE phone = ?', (new_password, phone))
+        conn.execute('UPDATE users SET password = ? WHERE phone = ?', (data['new_password'], data['phone']))
         conn.commit()
-        session.pop('reset_otp', None)
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -2267,17 +2212,15 @@ def accept_org_request(req_id):
             conn.execute('UPDATE organization_requests SET status = "Approved" WHERE id = ?', (req_id,))
             conn.commit()
             
-            html_content = f"""
-            <h2>Welcome to the Network</h2>
-            <p>Hello <strong>{req['contact_person']}</strong>,</p>
-            <p>Your administrative node has been successfully provisioned. You can now access your dashboard using the credentials below.</p>
-            <p><strong>School Code:</strong> {org_id}</p>
-            <p><strong>Password:</strong> {password}</p>
-            <p>Please log in immediately and change your password.</p>
-            """
-            send_email_brevo(req['email'], req['contact_person'], "Your Network Credentials", html_content)
-            
-            return jsonify({"status": "success"})
+            # We don't send from backend anymore. Return data so frontend can send it via emailjs
+            return jsonify({
+                "status": "success", 
+                "org_id": org_id, 
+                "password": password, 
+                "contact_person": req['contact_person'], 
+                "email": req['email'], 
+                "phone": req['phone']
+            })
             
         return jsonify({"status": "error", "message": "Request not found"})
     except Exception as e:
