@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - librika.in{% endblock %}
+
+{% block content %}
+<div class="saas-section" style="min-height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(135deg, var(--text-high), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ title }}</h1>
+    <p style="color: var(--text-mid); font-size: 1.2rem; max-width: 600px; margin-bottom: 2.5rem;">
+        This page is currently under construction. Check back soon for updates!
+    </p>
+    <a href="/" class="btn-neon" style="padding: 1rem 2.5rem; font-size: 1.1rem; color: white !important;">← Back to Home</a>
+</div>
+{% endblock %}

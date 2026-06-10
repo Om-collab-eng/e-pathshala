@@ -2013,6 +2013,35 @@ def api_ai_context():
     conn.close()
     return jsonify({"status": "success", "context": context})
 
+# Static Footer Pages
+@app.route('/api-docs')
+def api_docs():
+    return render_template('page.html', title='API Documentation')
+
+@app.route('/integrations')
+def integrations():
+    return render_template('page.html', title='Integrations')
+
+@app.route('/help-center')
+def help_center():
+    return render_template('page.html', title='Help Center')
+
+@app.route('/blog')
+def blog():
+    return render_template('page.html', title='Blog & Case Studies')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('page.html', title='Privacy Policy')
+
+@app.route('/terms')
+def terms():
+    return render_template('page.html', title='Terms & Conditions')
+
+@app.route('/refund')
+def refund():
+    return render_template('page.html', title='Refund Policy')
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)
