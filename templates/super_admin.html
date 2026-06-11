@@ -192,6 +192,7 @@
                             <th>Name</th>
                             <th>Principal / Admin</th>
                             <th>Status</th>
+                            <th>Subscription</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -208,6 +209,22 @@
                                 <span class="badge badge-error">Blocked</span>
                                 {% else %}
                                 <span class="badge badge-error">{{ s.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Subscription">
+                                <span class="badge" style="margin-bottom: 5px; display: inline-block;">{{ s.plan_name }}</span>
+                                <form action="/super-admin/school/{{ s.school_code }}/subscription/update" method="POST" style="margin: 0; display: flex; gap: 5px;">
+                                    <select name="plan_id" style="font-size: 0.7rem; padding: 2px; max-width: 80px;">
+                                        {% for p in plans %}
+                                        <option value="{{ p.id }}" {% if p.id == s.plan_id %}selected{% endif %}>{{ p.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 2px 4px; border-color: #4ade80; color: #4ade80;">Set</button>
+                                </form>
+                                {% if s.plan_id != 'plan_free' %}
+                                <form action="/super-admin/school/{{ s.school_code }}/subscription/cancel" method="POST" style="margin: 5px 0 0 0;" onsubmit="return confirm('Cancel this subscription immediately?');">
+                                    <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 2px 4px; color: var(--accent-error); border-color: var(--accent-error); width: 100%;">Cancel Plan</button>
+                                </form>
                                 {% endif %}
                             </td>
                             <td data-label="Action" style="display: flex; gap: 5px;">

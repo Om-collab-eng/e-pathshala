@@ -56,3 +56,16 @@ def checkout():
         flash(res['message'], 'success')
         
     return redirect(url_for('billing.dashboard'))
+
+@billing_bp.route('/cancel', methods=['POST'])
+@login_required
+@admin_required
+def cancel():
+    school_code = session.get('school_code')
+    conn = get_db_connection()
+    # Mark subscription to cancel at period end
+    conn.execute('UPDATE subscriptions SET cancel_at_period_end = 1 WHERE school_code = ?', (school_code,))
+    conn.commit()
+    conn.close()
+    flash('Your subscription has been marked for cancellation and will not renew.', 'success')
+    return redirect(url_for('billing.dashboard'))
