@@ -628,15 +628,18 @@ def super_admin_panel():
         'pending_reservations': conn.execute('SELECT COUNT(*) FROM reservations WHERE status="Pending"').fetchone()[0]
     }
     
-    schools_raw = conn.execute('SELECT s.*, sub.plan_id, sub.status as sub_status, p.name as plan_name FROM schools s LEFT JOIN subscriptions sub ON s.school_code = sub.school_code LEFT JOIN plans p ON sub.plan_id = p.id ORDER BY s.created_at DESC').fetchall()
+    schools_raw = conn.execute('SELECT * FROM schools ORDER BY created_at DESC').fetchall()
     schools = [dict(s) for s in schools_raw]
     for s in schools:
-        if not s['plan_id']:
-            s['plan_id'] = 'plan_free'
-            s['plan_name'] = 'Free'
-            s['sub_status'] = 'active'
+        if not s.get('activePlan'):
+            s['activePlan'] = 'FREE'
+        s['plan_id'] = s['activePlan']
+        s['plan_name'] = s['activePlan']
+        s['sub_status'] = s.get('subscriptionStatus') or 'active'
     
-    plans = conn.execute('SELECT * FROM plans').fetchall()
+    from permissions import PLANS
+    plans = [{'id': k, 'name': k} for k in PLANS.keys()]
+    
     users = conn.execute('SELECT * FROM users ORDER BY id DESC').fetchall()
     books = conn.execute('SELECT * FROM books ORDER BY id DESC').fetchall()
     
@@ -862,27 +865,24 @@ def super_admin_update_subscription(school_code):
     if not plan_id:
         return redirect('/super-admin')
         
+    from permissions import PLANS
+    if plan_id not in PLANS:
+        return redirect('/super-admin')
+        
     conn = get_db_connection()
-    existing_sub = conn.execute('SELECT id FROM subscriptions WHERE school_code = ?', (school_code,)).fetchone()
-    
-    import uuid
     from datetime import datetime, timedelta
     now = datetime.now()
     period_end = now + timedelta(days=365) # Grant 1 year manually
     
-    if existing_sub:
-        conn.execute('''
-            UPDATE subscriptions 
-            SET plan_id = ?, status = ?, current_period_end = ?, cancel_at_period_end = 0
-            WHERE school_code = ?
-        ''', (plan_id, 'active', period_end.strftime('%Y-%m-%d %H:%M:%S'), school_code))
-    else:
-        sub_id = f"sub_{uuid.uuid4().hex[:10]}"
-        conn.execute('''
-            INSERT INTO subscriptions (id, school_code, plan_id, status, start_date, current_period_end, cancel_at_period_end)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (sub_id, school_code, plan_id, 'active', now.strftime('%Y-%m-%d %H:%M:%S'), period_end.strftime('%Y-%m-%d %H:%M:%S'), 0))
-    
+    limits = PLANS[plan_id]["limits"]
+    conn.execute('''
+        UPDATE schools 
+        SET activePlan = ?, subscriptionStatus = "active", expiryDate = ?,
+            studentLimit = ?, librarianLimit = ?, adminLimit = ?
+        WHERE school_code = ?
+    ''', (plan_id, period_end.strftime('%Y-%m-%d %H:%M:%S'), 
+          limits['studentLimit'], limits['librarianLimit'], limits['adminLimit'], school_code))
+          
     conn.execute('INSERT INTO logs (user_id, action, module, created_at) VALUES (?, ?, ?, ?)',
                  (session.get('user_id'), f"Updated subscription for {school_code} to {plan_id}", "Billing", now.strftime('%Y-%m-%d %H:%M')))
     conn.commit()
