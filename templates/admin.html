@@ -6,7 +6,10 @@
 <div class="dashboard">
     <header class="header">
         <div>
-            <h1>librika.in Admin</h1>
+            <h1 style="display: flex; align-items: center; gap: 10px;">
+                librika.in Admin
+                <span class="badge" style="background: var(--accent-primary); font-size: 0.8rem; padding: 4px 8px;">{{ school_plan }} PLAN</span>
+            </h1>
             <p style="color: var(--text-mid); font-size: 0.85rem;">System Management Center</p>
         </div>
         <div style="display: flex; gap: 12px; align-items: center;">
@@ -14,7 +17,11 @@
             <a href="/billing" class="btn-alt" style="border-color: #4ade80; color: #4ade80;">💳 Billing & Plan</a>
             <a href="/admin/settings" class="btn-alt" style="border-color: var(--accent-primary); color: var(--accent-primary);">Settings</a>
             {% if 'manage_books' in session.get('permissions', []) %}
-            <a href="/admin/scanner" class="btn-neon" style="width: auto; background: linear-gradient(135deg, var(--accent-primary), #d946ef);">✨ Smart Scan</a>
+            {% if school_perms.canUseAIScanner %}
+                <a href="/admin/scanner" class="btn-neon" style="width: auto; background: linear-gradient(135deg, var(--accent-primary), #d946ef);">✨ Smart Scan</a>
+            {% else %}
+                <button onclick="requireFeature('BASIC', 'AI Smart Scan')" class="btn-neon" style="width: auto; background: rgba(255,255,255,0.1); color: var(--text-mid); border: 1px solid var(--border-color);">🔒 Smart Scan</button>
+            {% endif %}
             <a href="/admin/add_book" class="btn-alt" style="width: auto;">+ Manual Asset</a>
             {% endif %}
             {% if 'manage_transactions' in session.get('permissions', []) %}
@@ -280,7 +287,11 @@
                     <option value="librarians">Librarians</option>
                 </select>
                 <input type="file" id="importFile" accept=".csv, .xlsx" style="margin-bottom: 10px; width: 100%;">
-                <button onclick="handleImport()" class="btn-neon" style="width: 100%; padding: 8px;">Upload & Import</button>
+                {% if school_perms.canImportCSV %}
+                    <button onclick="handleImport()" class="btn-neon" style="width: 100%; padding: 8px;">Upload & Import</button>
+                {% else %}
+                    <button onclick="requireFeature('BASIC', 'CSV Import')" class="btn-neon" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); color: var(--text-mid); border: 1px solid var(--border-color);">🔒 Upload & Import (BASIC)</button>
+                {% endif %}
                 <div id="importResult" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-mid);"></div>
             </div>
             
@@ -296,7 +307,11 @@
                     <option value="csv">CSV (.csv)</option>
                     <option value="xlsx">Excel (.xlsx)</option>
                 </select>
-                <button onclick="handleExport()" class="btn-alt" style="width: 100%; padding: 8px; border-color: var(--accent-secondary); color: var(--accent-secondary);">Download Export</button>
+                {% if school_perms.canExportCSV %}
+                    <button onclick="handleExport()" class="btn-alt" style="width: 100%; padding: 8px; border-color: var(--accent-secondary); color: var(--accent-secondary);">Download Export</button>
+                {% else %}
+                    <button onclick="requireFeature('BASIC', 'CSV Export')" class="btn-alt" style="width: 100%; padding: 8px; border-color: var(--border-color); color: var(--text-mid);">🔒 Download Export (BASIC)</button>
+                {% endif %}
             </div>
         </div>
 
@@ -316,7 +331,7 @@
     <div class="modal-content glow-box" style="max-width: 500px; width: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
             <h2 style="margin: 0;">Register Student</h2>
-            <button class="btn-alt" onclick="closeModal('addStudentModal')" style="padding: 5px 10px;">? Close</button>
+            <button class="btn-alt" onclick="closeModal('addStudentModal')" style="padding: 5px 10px;">✕ Close</button>
         </div>
         <form action="/admin/student/add" method="POST">
             <div class="input-group">

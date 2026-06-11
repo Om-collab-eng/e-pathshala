@@ -26,7 +26,11 @@
                 <li><a href="/student" class="btn-alt active">📊 My Books</a></li>
                 <li><a href="/student/browse" class="btn-alt">📚 Browse Catalog</a></li>
                 <li><a href="/digital-library" class="btn-alt">🌐 Digital Library</a></li>
+                {% if school_perms.canUsePublishing %}
                 <li><a href="/student/publish" class="btn-alt">📝 Publish Content</a></li>
+                {% else %}
+                <li><button onclick="requireFeature('PROFESSIONAL', 'E-Library Publishing')" class="btn-alt" style="width: 100%; text-align: left; background: rgba(255,255,255,0.1); color: var(--text-mid); border: 1px solid var(--border-color);">🔒 Publish Content</button></li>
+                {% endif %}
                 <li><a href="/student/my-publications" class="btn-alt">📖 My Publications</a></li>
                 <li><a href="/student/bookmarks" class="btn-alt">🔖 Saved For Later</a></li>
             </ul>

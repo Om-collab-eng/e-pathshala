@@ -13,6 +13,8 @@ def get_db_connection():
     return conn
 
 # ----------------- TEMPLATES -----------------
+from permissions import require_permission
+
 @data_bp.route('/template/<module>')
 def download_template(module):
     if not session.get('role') in ['admin', 'super_admin']: return jsonify({'error': 'Unauthorized'}), 403
@@ -33,6 +35,7 @@ def download_template(module):
 
 # ----------------- EXPORTS -----------------
 @data_bp.route('/export/<module>')
+@require_permission('canExportCSV')
 def export_data(module):
     if not session.get('role') in ['admin', 'super_admin']: return jsonify({'error': 'Unauthorized'}), 403
     
@@ -121,6 +124,7 @@ def export_data(module):
 
 # ----------------- IMPORTS -----------------
 @data_bp.route('/import/<module>', methods=['POST'])
+@require_permission('canImportCSV')
 def import_data(module):
     if not session.get('role') in ['admin', 'super_admin']: return jsonify({'error': 'Unauthorized'}), 403
     

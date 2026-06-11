@@ -421,6 +421,28 @@ For searching books: {"type": "search_book", "query": "..."}
             return msgId;
         }
     </script>
+    <!-- Global Upgrade Modal -->
+    <div id="upgradeFeatureModal" class="modal-overlay" style="display: none; z-index: 10000;">
+        <div class="modal-content glow-box" style="max-width: 450px; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+            <h2 style="color: var(--text-high); margin-bottom: 0.5rem;">Feature Locked</h2>
+            <p style="color: var(--text-mid); margin-bottom: 1.5rem;">
+                <strong id="upgradeModalFeature" style="color: var(--accent-secondary);">This feature</strong> is available in the <strong id="upgradeModalPlan" style="color: var(--accent-warning);">BASIC</strong> Plan and above.
+            </p>
+            <p style="color: var(--text-low); font-size: 0.9rem; margin-bottom: 2rem;">Upgrade your school subscription to unlock this feature for all users.</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-alt" style="flex: 1;" onclick="closeModal('upgradeFeatureModal')">Close</button>
+                <a href="/admin/settings" class="btn-neon" style="flex: 1; text-decoration: none; text-align: center;">View Plans</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        function requireFeature(planName, featureName) {
+            document.getElementById('upgradeModalPlan').innerText = planName;
+            document.getElementById('upgradeModalFeature').innerText = featureName;
+            openModal('upgradeFeatureModal');
+        }
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

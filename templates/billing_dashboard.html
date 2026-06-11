@@ -105,28 +105,28 @@
         </div>
 
         <div class="grid-3-col">
-            {% for plan in plans %}
-            {% if plan.id != 'plan_free' %}
+            {% for plan_id, plan in plans.items() %}
+            {% if plan_id != 'FREE' %}
             <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; transition: border-color 0.3s;" class="plan-card">
-                <h3 style="color: var(--text-high); margin-bottom: 0.5rem; font-size: 1.25rem;">{{ plan.name }}</h3>
+                <h3 style="color: var(--text-high); margin-bottom: 0.5rem; font-size: 1.25rem;">{{ plan_id }} Plan</h3>
                 <div style="font-size: 2rem; font-weight: bold; color: var(--accent-primary); margin-bottom: 1.5rem;">
-                    <span class="price-monthly">Rs. {{ plan.monthly_price }}<span style="font-size: 1rem; color: var(--text-mid); font-weight: normal;">/mo</span></span>
-                    <span class="price-annual" style="display: none;">Rs. {{ plan.annual_price }}<span style="font-size: 1rem; color: var(--text-mid); font-weight: normal;">/yr</span></span>
+                    <span class="price-monthly">Rs. {{ plan.price }}<span style="font-size: 1rem; color: var(--text-mid); font-weight: normal;">/mo</span></span>
+                    <span class="price-annual" style="display: none;">Rs. {{ plan.price * 12 }}<span style="font-size: 1rem; color: var(--text-mid); font-weight: normal;">/yr</span></span>
                 </div>
                 
                 <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-mid); font-size: 0.95rem;">
-                    <li style="margin-bottom: 0.5rem;">✅ Up to {{ plan.max_students }} Students</li>
-                    <li style="margin-bottom: 0.5rem;">✅ Up to {{ plan.max_books }} Books</li>
-                    {% set features = json.loads(plan.features_json) %}
-                    {% if features.analytics %}<li style="margin-bottom: 0.5rem;">✅ Advanced Analytics</li>{% endif %}
-                    {% if features.api %}<li style="margin-bottom: 0.5rem;">✅ API Access</li>{% endif %}
-                    {% if features.multi_branch %}<li style="margin-bottom: 0.5rem;">✅ Multi-Branch Sync</li>{% endif %}
+                    <li style="margin-bottom: 0.5rem;">✅ Up to {{ plan.limits.studentLimit }} Students</li>
+                    <li style="margin-bottom: 0.5rem;">✅ Up to {{ plan.limits.max_books }} Books</li>
+                    {% if plan.perms.canUseAIScanner %}<li style="margin-bottom: 0.5rem;">✅ AI Scanner & ISBN</li>{% endif %}
+                    {% if plan.perms.canUseAdvancedAnalytics %}<li style="margin-bottom: 0.5rem;">✅ Advanced Analytics</li>{% endif %}
+                    {% if plan.perms.canUseAPI %}<li style="margin-bottom: 0.5rem;">✅ API Access</li>{% endif %}
+                    {% if plan.perms.canUseMultiBranch %}<li style="margin-bottom: 0.5rem;">✅ Multi-Branch Sync</li>{% endif %}
                 </ul>
                 
                 <form action="/billing/checkout" method="POST">
-                    <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                    <input type="hidden" name="plan_id" value="{{ plan_id }}">
                     <input type="hidden" name="billing_cycle" value="monthly" class="billing-cycle-input">
-                    <button type="submit" class="btn-alt" style="width: 100%;">Select {{ plan.name }}</button>
+                    <button type="submit" class="btn-alt" style="width: 100%;">Select {{ plan_id }}</button>
                 </form>
             </div>
             {% endif %}

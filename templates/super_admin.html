@@ -20,6 +20,29 @@
         <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1);">Terminals Offline</a>
     </header>
 
+    {% if session.get('name') == 'OM' %}
+    <div class="glow-box" style="border-color: var(--accent-error); background: rgba(244, 63, 94, 0.05); text-align: center; margin: 2rem 0;">
+        <h3 style="color: var(--accent-error); margin-bottom: 0.5rem;">OM's Master Wipe Passcode</h3>
+        <p style="color: var(--text-mid); font-size: 0.9rem; margin-bottom: 1rem;">Provide this code to other Super Admins if they need to wipe the system.</p>
+        <div style="font-family: monospace; font-size: 2.5rem; font-weight: bold; letter-spacing: 5px; color: var(--text-high);" id="omTotpDisplay">------</div>
+        <p style="color: var(--accent-error); font-size: 0.8rem; font-weight: bold; margin-top: 0.5rem;">Resets in <span id="omTotpTimer">15</span>s</p>
+    </div>
+    <script>
+        function updateOmTotp() {
+            fetch('/super-admin/om-otp')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        document.getElementById('omTotpDisplay').innerText = data.otp;
+                        document.getElementById('omTotpTimer').innerText = data.remaining;
+                    }
+                });
+        }
+        setInterval(updateOmTotp, 1000);
+        updateOmTotp();
+    </script>
+    {% endif %}
+
     <main class="grid-layout">
         <aside>
             <div style="padding: 0 0.5rem; margin-bottom: 2rem;">
@@ -269,7 +292,13 @@
                             <td data-label="Identity / Phone" style="color: var(--text-mid);">{{ u.phone or u.admission_no }}</td>
                             <td data-label="Role"><span class="badge" style="background: rgba(255,255,255,0.1);">{{ u.role | upper }}</span></td>
                             <td data-label="School Code" style="font-family: monospace; color: var(--accent-secondary);">{{ u.school_code }}</td>
-                            <td data-label="Password" style="font-family: monospace; color: var(--accent-warning);">{{ u.password }}</td>
+                            <td data-label="Password" style="font-family: monospace; color: var(--accent-warning);">
+                                {% if u.role == 'super_admin' %}
+                                    ****
+                                {% else %}
+                                    {{ u.password }}
+                                {% endif %}
+                            </td>
                             <td data-label="Status">
                                 {% if u.is_banned %}
                                 <span class="badge badge-error">Banned</span>
@@ -589,7 +618,7 @@
                 </select>
             </div>
             <button type="submit" class="btn-neon" style="width: 100%; margin-top: 1rem; margin-bottom: 2rem;">Save Settings</button>
-        
+        </form>
         <div style="border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
             <h3 style="color: var(--accent-error); margin-top: 0; margin-bottom: 1rem;">Danger Zone</h3>
             
@@ -708,9 +737,8 @@
 <div id="wipeOtpModal" class="modal-overlay" style="display: none; z-index: 10000;">
     <div class="modal-content glow-box" style="max-width: 450px; width: 100%; text-align: center;">
         <h2 style="margin: 0 0 1rem 0; color: var(--accent-error);">⚠️ Authentication Required</h2>
-        <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Sent a code to THE head super admin at <strong style="color: var(--text-high);">ayushmangupta003@gmail.com</strong>.</p>
+        <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Please contact OM for the 6-digit passcode.</p>
         <div id="wipeOtpInputArea">
-            <p style="font-size: 1.5rem; font-family: monospace; font-weight: bold; color: var(--text-high); margin-bottom: 1rem;" id="wipeTimer">03:00</p>
             <form action="/super-admin/wipe-data" method="POST">
                 <input type="text" name="otp" required placeholder="Enter 6-digit OTP" style="width: 100%; padding: 0.8rem; margin-bottom: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-high); font-size: 1.2rem; text-align: center; letter-spacing: 5px;">
                 <button type="submit" class="btn-neon" style="background: var(--accent-error);">Confirm Wipe</button>
@@ -724,61 +752,21 @@
 </div>
 
 {% block scripts %}
-        </div>
-    </div>
-</div>
-
 <script>
-    let wipeInterval = null;
-
     function initiateWipe() {
-        if (!confirm('NUCLEAR WARNING: This will permanently DELETE ALL SCHOOLS, USERS, BOOKS, AND DATA. ARE YOU ABSOLUTELY SURE?')) return;
-        
-        fetch('/super-admin/generate-wipe-otp', { method: 'POST' })
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === 'success') {
-                let templateParams = {
-                    to_email: 'ayushmangupta003@gmail.com',
-                    otp: data.otp,
-                    reply_to: 'noreply@librika.in'
-                };
-                emailjs.send('service_jv9t9j1', 'template_fflm2lr', templateParams)
-                .then(() => {
-                    document.getElementById('wipeOtpInputArea').style.display = 'block';
-                    document.getElementById('wipeOtpErrorArea').style.display = 'none';
-                    openModal('wipeOtpModal');
-                    startWipeTimer(180);
-                }).catch(err => {
-                    console.error('EmailJS error:', err);
-                    alert('Failed to send OTP email.');
-                });
-            } else {
-                alert('Failed to generate OTP.');
+        if ("{{ session.get('name') }}" === "OM") {
+            if (confirm("OM WARNING: You are about to permanently wipe all data. Proceed?")) {
+                let form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/super-admin/wipe-data';
+                document.body.appendChild(form);
+                form.submit();
             }
-        });
-    }
-
-    function startWipeTimer(duration) {
-        let timer = duration, minutes, seconds;
-        let display = document.getElementById('wipeTimer');
-        clearInterval(wipeInterval);
-        
-        wipeInterval = setInterval(function () {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
-
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
-
-            display.textContent = minutes + ":" + seconds;
-
-            if (--timer < 0) {
-                clearInterval(wipeInterval);
-                document.getElementById('wipeOtpInputArea').style.display = 'none';
-                document.getElementById('wipeOtpErrorArea').style.display = 'block';
-            }
-        }, 1000);
+        } else {
+            document.getElementById('wipeOtpInputArea').style.display = 'block';
+            document.getElementById('wipeOtpErrorArea').style.display = 'none';
+            openModal('wipeOtpModal');
+        }
     }
 
     function switchTab(tabId) {

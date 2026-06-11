@@ -112,6 +112,23 @@ def check_maintenance_mode():
     except Exception as e:
         pass # system_settings might not exist yet
     return None
+
+from permissions import get_school_plan, get_school_permissions, get_school_limits, PLANS, require_permission
+
+@app.context_processor
+def inject_permissions():
+    if session.get('school_code') and session.get('school_code') != 'APP':
+        conn = get_db_connection()
+        try:
+            plan = get_school_plan(conn, session.get('school_code'))
+            perms = get_school_permissions(conn, session.get('school_code'))
+            limits = get_school_limits(conn, session.get('school_code'))
+            return dict(school_plan=plan, school_perms=perms, school_limits=limits)
+        except Exception as e:
+            pass
+        finally:
+            conn.close()
+    return dict(school_plan="FREE", school_perms=PLANS["FREE"]["perms"], school_limits=PLANS["FREE"]["limits"])
 def get_db_connection():
     # Dynamically select DB based on session
     use_db = DB_FILE
@@ -130,6 +147,18 @@ def init_db():
                  (id INTEGER PRIMARY KEY, name TEXT, school_code TEXT UNIQUE, 
                   librarian_name TEXT, max_books INTEGER, max_students INTEGER, 
                   created_at TEXT)''')
+    try: conn.execute('ALTER TABLE schools ADD COLUMN activePlan TEXT DEFAULT "FREE"')
+    except: pass
+    try: conn.execute('ALTER TABLE schools ADD COLUMN subscriptionStatus TEXT DEFAULT "active"')
+    except: pass
+    try: conn.execute('ALTER TABLE schools ADD COLUMN expiryDate TEXT')
+    except: pass
+    try: conn.execute('ALTER TABLE schools ADD COLUMN studentLimit INTEGER DEFAULT 50')
+    except: pass
+    try: conn.execute('ALTER TABLE schools ADD COLUMN librarianLimit INTEGER DEFAULT 1')
+    except: pass
+    try: conn.execute('ALTER TABLE schools ADD COLUMN adminLimit INTEGER DEFAULT 1')
+    except: pass
                   
     conn.execute('''CREATE TABLE IF NOT EXISTS users 
                  (id INTEGER PRIMARY KEY, name TEXT, admission_no TEXT, class TEXT, 
@@ -752,8 +781,11 @@ def super_admin_toggle_maintenance():
 def super_admin_toggle_user_ban(id):
     if session.get('role') != 'super_admin': return redirect('/login')
     conn = get_db_connection()
-    current = conn.execute('SELECT is_banned FROM users WHERE id = ?', (id,)).fetchone()
-    new_val = 1 if not current or current['is_banned'] == 0 else 0
+    target_user = conn.execute('SELECT name, role, is_banned FROM users WHERE id = ?', (id,)).fetchone()
+    if target_user and target_user['name'] == 'OM' and target_user['role'] == 'super_admin':
+        conn.close()
+        return "Cannot ban OM.", 403
+    new_val = 1 if not target_user or target_user['is_banned'] == 0 else 0
     conn.execute('UPDATE users SET is_banned = ? WHERE id = ?', (new_val, id))
     conn.commit()
     conn.close()
@@ -783,6 +815,10 @@ def super_admin_update_permissions(id):
 def super_admin_delete_user(id):
     if session.get('role') != 'super_admin': return redirect('/login')
     conn = get_db_connection()
+    target_user = conn.execute('SELECT name, role FROM users WHERE id = ?', (id,)).fetchone()
+    if target_user and target_user['name'] == 'OM' and target_user['role'] == 'super_admin':
+        conn.close()
+        return "Cannot delete OM.", 403
     conn.execute('DELETE FROM users WHERE id = ?', (id,))
     conn.commit()
     conn.close()
@@ -868,33 +904,31 @@ def super_admin_cancel_subscription(school_code):
     conn.close()
     return redirect('/super-admin')
 
-@app.route('/super-admin/generate-wipe-otp', methods=['POST'])
-def generate_wipe_otp():
-    if session.get('role') != 'super_admin': return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
-    import random
-    otp = str(random.randint(100000, 999999))
-    session['wipe_otp'] = otp
-    session['wipe_otp_expiry'] = time.time() + 180  # 3 minutes
-    return jsonify({'status': 'success', 'otp': otp})
+def get_om_totp(offset=0):
+    import time
+    import hashlib
+    window = int(time.time() / 15) + offset
+    secret = "OM_MASTER_WIPE_SECRET_" + str(window)
+    return hashlib.sha256(secret.encode()).hexdigest()[:6].upper()
+
+@app.route('/super-admin/om-otp', methods=['GET'])
+def get_om_otp():
+    if session.get('role') != 'super_admin' or session.get('name') != 'OM':
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    import time
+    otp = get_om_totp(0)
+    remaining = 15 - (int(time.time()) % 15)
+    return jsonify({'status': 'success', 'otp': otp, 'remaining': remaining})
+
 @app.route('/super-admin/wipe-data', methods=['POST'])
 def super_admin_wipe_data():
     if session.get('role') != 'super_admin': return redirect('/login')
     
-    otp = request.form.get('otp', '')
-    expected_otp = session.get('wipe_otp')
-    expiry = session.get('wipe_otp_expiry', 0)
-    
-    if not expected_otp or not expiry or time.time() > expiry:
-        # OTP Expired or missing
-        return "OTP Expired or invalid. Please try again.", 400
-        
-    if otp != expected_otp:
-        # Incorrect OTP
-        return "Incorrect OTP.", 400
-        
-    # Clear OTP session
-    session.pop('wipe_otp', None)
-    session.pop('wipe_otp_expiry', None)
+    if session.get('name') != 'OM':
+        otp = request.form.get('otp', '').strip().upper()
+        if otp != get_om_totp(0) and otp != get_om_totp(-1):
+            return "Incorrect or expired OTP. Please contact OM.", 400
+
 
     # NUCLEAR OPTION - Wipes all non-super-admin data
     conn = get_db_connection()
@@ -1027,6 +1061,12 @@ def admin_add_student():
     
     conn = get_db_connection()
     try:
+        from billing import get_school_subscription
+        sub = get_school_subscription(s_code)
+        student_count = conn.execute('SELECT COUNT(*) FROM users WHERE role="student" AND school_code=?', (s_code,)).fetchone()[0]
+        if sub['max_students'] != float('inf') and student_count >= sub['max_students']:
+            return "Upgrade your school subscription to add more students.", 403
+            
         conn.execute('INSERT INTO users (name, admission_no, phone, class, role, password, school_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
                      (name, admission_no, phone, cls, 'student', password, s_code))
         conn.commit()
@@ -1365,6 +1405,7 @@ def student_self_issue(book_id):
     return redirect('/student')
 
 @app.route('/student/publish', methods=['GET', 'POST'])
+@require_permission('canUsePublishing')
 def student_publish():
     if 'user_id' not in session or session.get('role') != 'student':
         return redirect('/login')
@@ -1682,11 +1723,13 @@ def approve_request(req_id):
 # SMART SCANNER MODULE
 # ---------------------------------------------------------
 @app.route('/admin/scanner')
+@require_permission('canUseAIScanner')
 def smart_scanner():
     if session.get('role') not in ['admin', 'demo_admin']: return redirect('/login')
     return render_template('scanner_v2.html')
 
 @app.route('/admin/api/upload-cover', methods=['POST'])
+@require_permission('canUseAIScanner')
 def api_upload_cover():
     if session.get('role') not in ['admin', 'demo_admin']: return {"status": "error", "message": "Unauthorized"}
     
