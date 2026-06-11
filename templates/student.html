@@ -16,36 +16,54 @@
     </header>
     
     <main class="grid-layout">
-        <aside>
-            <div style="padding: 0 0.5rem; margin-bottom: 2rem;">
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Student Access</p>
-                <h3 style="margin: 5px 0 0 0; color: var(--text-high); font-size: 1.1rem; font-family: 'Outfit';">🏫 {{ school_name or session.get('school_name', 'librika.in') }}</h3>
-            </div>
+        <section class="content" style="display: flex; flex-direction: column; gap: 2rem;">
             
-            <ul class="class-list">
-                <li><a href="/student" class="btn-alt active">📊 My Books</a></li>
-                <li><a href="/student/browse" class="btn-alt">📚 Browse Catalog</a></li>
-                <li><a href="/digital-library" class="btn-alt">🌐 Digital Library</a></li>
-                {% if school_perms.canUsePublishing %}
-                <li><a href="/student/publish" class="btn-alt">📝 Publish Content</a></li>
-                {% else %}
-                <li><button onclick="requireFeature('PROFESSIONAL', 'E-Library Publishing')" class="btn-alt" style="width: 100%; text-align: left; background: rgba(255,255,255,0.1); color: var(--text-mid); border: 1px solid var(--border-color);">🔒 Publish Content</button></li>
-                {% endif %}
-                <li><a href="/student/my-publications" class="btn-alt">📖 My Publications</a></li>
-                <li><a href="/student/bookmarks" class="btn-alt">🔖 Saved For Later</a></li>
-            </ul>
-            
-            <div style="margin-top: 2rem; padding: 1rem 0.5rem;">
-                <h3 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-low); margin-bottom: 0.5rem;">My Profile</h3>
-                <div style="font-size: 0.85rem; color: var(--text-mid);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Student Access</p>
+                    <h3 style="margin: 5px 0 0 0; color: var(--text-high); font-size: 1.1rem; font-family: 'Outfit';">🏫 {{ school_name or session.get('school_name', 'librika.in') }}</h3>
+                </div>
+                <div style="text-align: right; font-size: 0.85rem; color: var(--text-mid);">
                     <p style="margin-bottom: 0.3rem;">ID: <strong style="color: var(--text-high);">#{{ session['admission_no'] }}</strong></p>
                     <p>Class: <strong style="color: var(--text-high);">{{ session['class'] }}</strong></p>
                 </div>
             </div>
-        </aside>
-        
-        <section class="content" style="display: flex; flex-direction: column; gap: 2rem;">
-            
+
+            <!-- Navigation Blocks -->
+            <div class="nav-blocks">
+                <a href="/student" class="nav-block-btn active">
+                    <div class="nav-block-icon">📊</div>
+                    <div class="nav-block-title">My Books</div>
+                </a>
+                <a href="/student/browse" class="nav-block-btn">
+                    <div class="nav-block-icon">📚</div>
+                    <div class="nav-block-title">Catalog</div>
+                </a>
+                <a href="/digital-library" class="nav-block-btn">
+                    <div class="nav-block-icon">🌐</div>
+                    <div class="nav-block-title">Digital Library</div>
+                </a>
+                {% if school_perms.canUsePublishing %}
+                <a href="/student/publish" class="nav-block-btn">
+                    <div class="nav-block-icon">📝</div>
+                    <div class="nav-block-title">Publish</div>
+                </a>
+                {% else %}
+                <button onclick="requireFeature('PROFESSIONAL', 'E-Library Publishing')" class="nav-block-btn" style="opacity: 0.7;">
+                    <div class="nav-block-icon">🔒</div>
+                    <div class="nav-block-title">Publish</div>
+                </button>
+                {% endif %}
+                <a href="/student/my-publications" class="nav-block-btn">
+                    <div class="nav-block-icon">📖</div>
+                    <div class="nav-block-title">Publications</div>
+                </a>
+                <a href="/student/bookmarks" class="nav-block-btn">
+                    <div class="nav-block-icon">🔖</div>
+                    <div class="nav-block-title">Saved</div>
+                </a>
+            </div>
+
             <!-- Dashboard Stats -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
                 <div class="glass-panel" style="text-align: center; padding: 1rem;">

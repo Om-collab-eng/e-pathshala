@@ -44,24 +44,46 @@
     {% endif %}
 
     <main class="grid-layout">
-        <aside>
-            <div style="padding: 0 0.5rem; margin-bottom: 2rem;">
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Admin Console</p>
-                <h3 style="margin: 5px 0 0 0; color: var(--text-high); font-size: 1.1rem; font-family: 'Outfit';">Global Network</h3>
-            </div>
-            
-            <ul class="class-list">
-                <li><button class="btn-alt tab-btn active" onclick="switchTab('overview')">📊 Overview</button></li>
-                <li><button class="btn-alt tab-btn" onclick="switchTab('schools')">🏫 Schools</button></li>
-                <li><button class="btn-alt tab-btn" onclick="switchTab('users')">👥 Global Users</button></li>
-                <li><button class="btn-alt tab-btn" onclick="switchTab('catalog')">📚 Global Catalog</button></li>
-                <li><button class="btn-alt tab-btn" onclick="switchTab('transactions')">🔄 Global Transactions</button></li>
-                <li><button class="btn-alt tab-btn" onclick="switchTab('requests')" style="color: var(--accent-warning);">📝 Requests</button></li>
-                <li><button class="btn-alt tab-btn" onclick="switchTab('billing')" style="color: #4ade80;">💳 Revenue</button></li>
-            </ul>
-        </aside>
-
+    <main class="grid-layout">
         <div class="content">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <div>
+                    <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Admin Console</p>
+                    <h3 style="margin: 5px 0 0 0; color: var(--text-high); font-size: 1.1rem; font-family: 'Outfit';">Global Network</h3>
+                </div>
+            </div>
+
+            <!-- Navigation Blocks -->
+            <div class="nav-blocks">
+                <button class="nav-block-btn tab-btn active" onclick="switchTab('overview')">
+                    <div class="nav-block-icon">📊</div>
+                    <div class="nav-block-title">Overview</div>
+                </button>
+                <button class="nav-block-btn tab-btn" onclick="switchTab('schools')">
+                    <div class="nav-block-icon">🏫</div>
+                    <div class="nav-block-title">Schools</div>
+                </button>
+                <button class="nav-block-btn tab-btn" onclick="switchTab('users')">
+                    <div class="nav-block-icon">👥</div>
+                    <div class="nav-block-title">Global Users</div>
+                </button>
+                <button class="nav-block-btn tab-btn" onclick="switchTab('catalog')">
+                    <div class="nav-block-icon">📚</div>
+                    <div class="nav-block-title">Global Catalog</div>
+                </button>
+                <button class="nav-block-btn tab-btn" onclick="switchTab('transactions')">
+                    <div class="nav-block-icon">🔄</div>
+                    <div class="nav-block-title">Global Transactions</div>
+                </button>
+                <button class="nav-block-btn tab-btn" onclick="switchTab('requests')" style="color: var(--accent-warning);">
+                    <div class="nav-block-icon">📝</div>
+                    <div class="nav-block-title">Requests</div>
+                </button>
+                <button class="nav-block-btn tab-btn" onclick="switchTab('billing')" style="color: #4ade80;">
+                    <div class="nav-block-icon">💳</div>
+                    <div class="nav-block-title">Revenue</div>
+                </button>
+            </div>
             <div id="tab-overview" class="tab-content" style="display: block;">
         <!-- Dashboard Overview Statistics -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">

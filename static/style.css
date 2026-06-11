@@ -287,7 +287,47 @@ body {
     box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
 }
 
-/* Dashboard Grid */
+/* Dashboard Grid & Nav Blocks */
+.nav-blocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 15px;
+    margin-bottom: 2rem;
+}
+.nav-block-btn {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-high);
+    box-shadow: var(--shadow-premium);
+}
+.nav-block-btn:hover, .nav-block-btn.active {
+    border-color: var(--accent-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+}
+.nav-block-btn.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(14, 165, 233, 0.1));
+}
+.nav-block-icon {
+    font-size: 2.2rem;
+    line-height: 1;
+}
+.nav-block-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
 .grid-layout {
     display: flex;
     min-height: calc(100vh - 70px);

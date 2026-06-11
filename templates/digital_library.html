@@ -9,9 +9,12 @@
             <h1 style="display:flex; align-items:center; gap:10px;"><span style="font-size:2rem;">🌐</span> Community Digital Library</h1>
             <p style="color: var(--text-mid); font-size: 0.85rem;">Discover notes, projects, and articles published by your peers.</p>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <a href="/student/publish" class="btn-neon">📝 Publish Yours</a>
-            <a href="{% if session.get('role') in ['admin', 'super_admin'] %}/admin{% else %}/student{% endif %}" class="btn-alt">Back to Dashboard</a>
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+            <div style="display: flex; gap: 10px;">
+                <a href="/student/publish" class="btn-neon" style="padding: 4px 12px; font-size: 0.8rem;">📝 Publish Yours</a>
+                <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
+            </div>
+            <a href="{% if session.get('role') in ['admin', 'super_admin'] %}/admin{% else %}/student{% endif %}" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
         </div>
     </header>
 

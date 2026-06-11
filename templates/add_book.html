@@ -7,7 +7,10 @@
     <div class="auth-card" style="max-width: 500px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h1 style="text-align: left; margin: 0;">New Asset</h1>
-            <a href="/admin" class="btn-alt" style="padding: 6px 12px; font-size: 0.75rem;">Cancel</a>
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
+                <a href="/admin" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
+            </div>
         </div>
         <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid var(--accent-primary); border-radius: 12px; padding: 1rem; text-align: center; margin-bottom: 2rem;">
             <p style="margin: 0; color: var(--text-light); font-weight: 500;">

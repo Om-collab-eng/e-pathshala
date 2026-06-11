@@ -4,7 +4,13 @@
 <div class="content-container slide-up">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <h1><span class="icon">📖</span> Book Details</h1>
-        <a href="/student/browse" class="btn-alt">← Back to Catalog</a>
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+            <div style="display: flex; gap: 10px;">
+                <a href="/student/browse" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">← Back to Catalog</a>
+                <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
+            </div>
+            <a href="/student" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
+        </div>
     </div>
 
     <div class="glass-panel" style="display: flex; gap: 2rem; flex-wrap: wrap;">

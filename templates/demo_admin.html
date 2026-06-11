@@ -25,46 +25,47 @@
     </header>
     
     <main class="grid-layout">
-        <aside>
-            <div class="glow-box" style="margin-bottom: 1rem; text-align: center;">
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Library Network</p>
-                <h3 style="margin: 5px 0 0 0; color: var(--text-light); font-size: 1.1rem;">🏫 {{ session.get('school_name', 'librika.in Network') }}</h3>
-            </div>
-            <div class="glow-box">
-                <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-low); margin-bottom: 1.5rem;">Academic Filter</h3>
-                <ul class="class-list">
-                    <li><a href="/admin" class="btn-alt {{ 'active' if not class_filter else '' }}">All Classes</a></li>
-                    <li><a href="/admin?class=10" class="btn-alt {{ 'active' if class_filter == '10' else '' }}">Class 10</a></li>
-                    <li><a href="/admin?class=11" class="btn-alt {{ 'active' if class_filter == '11' else '' }}">Class 11</a></li>
-                    <li><a href="/admin?class=12" class="btn-alt {{ 'active' if class_filter == '12' else '' }}">Class 12</a></li>
-                </ul>
-            </div>
-            
-            <div class="glow-box" style="margin-top: 1rem;">
-                <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-low); margin-bottom: 1.5rem;">Moderation</h3>
-                <ul class="class-list">
-                    {% if 'approve_content' in session.get('permissions', []) %}
-                    <li><a href="/admin/review-queue" class="btn-alt" style="border-color: #f59e0b; color: #f59e0b;">⚖️ Content Review Queue</a></li>
-                    {% endif %}
-                    <li><a href="/digital-library" class="btn-alt" style="border-color: var(--accent-primary); color: var(--accent-primary);">🌐 Digital Library</a></li>
-                </ul>
-            </div>
-
-            <div class="glow-box" style="margin-top: 1rem; padding: 1.5rem; border-style: dashed; border-color: var(--accent-secondary); text-align: center;">
-                <p style="font-size: 0.75rem; color: var(--text-mid); margin-bottom: 1rem;">Need your own separate library?</p>
-                <a href="/logout" class="btn-alt" style="font-size: 0.7rem; border-color: var(--accent-secondary); width: 100%;">Create via Platform</a>
-            </div>
-
-            <div class="status" style="margin-top: 2rem;">
-                <h3>System Connectivity</h3>
+        <section class="content" style="display: flex; flex-direction: column; gap: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Library Network</p>
+                    <h3 style="margin: 5px 0 0 0; color: var(--text-high); font-size: 1.1rem; font-family: 'Outfit';">🏫 {{ session.get('school_name', 'librika.in Network') }}</h3>
+                </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="width: 8px; height: 8px; background: var(--accent-success); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--accent-success);"></span>
-                    <span style="font-size: 0.9rem; font-weight: 600;">Server Operational</span>
+                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-mid);">Server Operational</span>
                 </div>
             </div>
-        </aside>
-        
-        <section class="content">
+
+            <!-- Navigation Blocks -->
+            <div class="nav-blocks">
+                <a href="/admin" class="nav-block-btn {{ 'active' if not class_filter else '' }}">
+                    <div class="nav-block-icon">📚</div>
+                    <div class="nav-block-title">All Classes</div>
+                </a>
+                <a href="/admin?class=10" class="nav-block-btn {{ 'active' if class_filter == '10' else '' }}">
+                    <div class="nav-block-icon">10</div>
+                    <div class="nav-block-title">Class 10</div>
+                </a>
+                <a href="/admin?class=11" class="nav-block-btn {{ 'active' if class_filter == '11' else '' }}">
+                    <div class="nav-block-icon">11</div>
+                    <div class="nav-block-title">Class 11</div>
+                </a>
+                <a href="/admin?class=12" class="nav-block-btn {{ 'active' if class_filter == '12' else '' }}">
+                    <div class="nav-block-icon">12</div>
+                    <div class="nav-block-title">Class 12</div>
+                </a>
+                {% if 'approve_content' in session.get('permissions', []) %}
+                <a href="/admin/review-queue" class="nav-block-btn" style="color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">
+                    <div class="nav-block-icon">⚖️</div>
+                    <div class="nav-block-title">Review Queue</div>
+                </a>
+                {% endif %}
+                <a href="/digital-library" class="nav-block-btn" style="color: var(--accent-primary); border-color: rgba(59, 130, 246, 0.3);">
+                    <div class="nav-block-icon">🌐</div>
+                    <div class="nav-block-title">Digital Library</div>
+                </a>
+            </div>
             <div class="status-panel" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                 <div class="status available">
                     <h3>Inventory Stock</h3>
