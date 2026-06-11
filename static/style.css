@@ -650,9 +650,9 @@ tr:hover td {
     }
     
     .btn-alt {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-color: rgba(255, 255, 255, 0.5) !important;
-        color: #fff !important;
+        background: rgba(0, 0, 0, 0.03) !important;
+        border-color: var(--accent-primary) !important;
+        color: var(--text-high) !important;
         font-weight: bold;
     }
     
