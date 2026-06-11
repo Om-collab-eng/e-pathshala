@@ -45,7 +45,11 @@
                 {% if 'manage_students' in session.get('permissions', []) %}
                 <li><button class="btn-alt tab-btn" onclick="switchTab('students')">👥 Students</button></li>
                 {% endif %}
+                {% if school_perms.canUsePublishing %}
                 <li><button class="btn-alt tab-btn" onclick="switchTab('moderation')">⚖️ Content & Review</button></li>
+                {% else %}
+                <li><button class="btn-alt tab-btn" onclick="requireFeature('PROFESSIONAL', 'Content & Review')">🔒 Content & Review (PRO)</button></li>
+                {% endif %}
             </ul>
 
             <div style="margin-top: 2rem; padding: 1rem 0.5rem;">

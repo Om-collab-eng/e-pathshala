@@ -646,6 +646,14 @@ tr:hover td {
     .btn-neon, .btn-alt {
         width: 100% !important;
         justify-content: center;
+        opacity: 1 !important;
+    }
+    
+    .btn-alt {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        color: #fff !important;
+        font-weight: bold;
     }
     
     .status-panel {

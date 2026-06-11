@@ -2008,6 +2008,7 @@ def superadmin_moderate_content():
     return {"status": "success"}
 
 @app.route('/admin/review-queue')
+@require_permission('canUsePublishing')
 def admin_review_queue():
     if session.get('role') not in ['admin', 'demo_admin']: return redirect('/login')
     if 'approve_content' not in session.get('permissions', []) and session.get('role') != 'demo_admin': return redirect('/admin')
