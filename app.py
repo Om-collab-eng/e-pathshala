@@ -638,11 +638,22 @@ def super_admin_panel():
         s['plan_id'] = s['activePlan']
         s['plan_name'] = s['activePlan']
         s['sub_status'] = s.get('subscriptionStatus') or 'active'
+        
+        # Fetch librarian details
+        lib = conn.execute('SELECT phone, email, password FROM users WHERE role="admin" AND school_code = ? LIMIT 1', (s['school_code'],)).fetchone()
+        if lib:
+            s['librarian_phone'] = lib['phone']
+            s['librarian_email'] = lib['email']
+            s['librarian_password'] = lib['password']
+        else:
+            s['librarian_phone'] = 'N/A'
+            s['librarian_email'] = 'N/A'
+            s['librarian_password'] = 'N/A'
     
     from permissions import PLANS
     plans = [{'id': k, 'name': k} for k in PLANS.keys()]
     
-    users = conn.execute('SELECT * FROM users ORDER BY id DESC').fetchall()
+    users = [dict(u) for u in conn.execute('SELECT * FROM users ORDER BY id DESC').fetchall()]
     books = conn.execute('SELECT * FROM books ORDER BY id DESC').fetchall()
     
     transactions_raw = conn.execute('''
@@ -755,15 +766,12 @@ def super_admin_add_user():
     role = request.form.get('role')
     school_code = request.form.get('school_code')
     admission_no = request.form.get('admission_no', '')
+    class_name = request.form.get('class', '')
     
     conn = get_db_connection()
     try:
-        if role == 'student':
-            conn.execute('INSERT INTO users (name, phone, email, password, role, school_code, admission_no, is_banned) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
-                         (name, phone, email, password, role, school_code, admission_no))
-        else:
-            conn.execute('INSERT INTO users (name, phone, email, password, role, school_code, is_banned) VALUES (?, ?, ?, ?, ?, ?, 0)',
-                         (name, phone, email, password, role, school_code))
+        conn.execute('INSERT INTO users (name, phone, email, password, role, school_code, admission_no, class, is_banned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)',
+                     (name, phone, email, password, role, school_code, admission_no, class_name))
         conn.commit()
     except Exception as e:
         pass
@@ -1088,15 +1096,17 @@ def admin_panel():
     books = conn.execute('SELECT * FROM books WHERE school_code = ?', (s_code,)).fetchall()
     
     students = []
+    total_students_val = 0
     if 'manage_students' in session.get('permissions', []):
-        students = conn.execute('SELECT * FROM users WHERE role = "student" AND school_code = ? ORDER BY id DESC', (s_code,)).fetchall()
+        students = [dict(u) for u in conn.execute('SELECT * FROM users WHERE school_code = ? ORDER BY id DESC', (s_code,)).fetchall()]
+        total_students_val = len([u for u in students if u.get('role') == 'student'])
         
     total_issued = conn.execute('SELECT COUNT(*) FROM transactions WHERE school_code = ?', (s_code,)).fetchone()[0] or 0
     total_returned = conn.execute('SELECT COUNT(*) FROM transactions WHERE return_date IS NOT NULL AND school_code = ?', (s_code,)).fetchone()[0] or 0
         
     conn.close()
     template_name = 'demo_admin.html' if session.get('is_demo') else 'admin.html'
-    return render_template(template_name, transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=len(students), total_issued=total_issued, total_returned=total_returned)
+    return render_template(template_name, transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=total_students_val, total_issued=total_issued, total_returned=total_returned)
 
 @app.route('/admin/student/add', methods=['POST'])
 def admin_add_student():
@@ -1104,22 +1114,28 @@ def admin_add_student():
     if 'manage_students' not in session.get('permissions', []): return redirect('/admin')
     
     s_code = session.get('school_code')
-    name = request.form['name']
-    admission_no = request.form['admission_no']
-    phone = request.form['phone']
-    cls = request.form['class']
-    password = request.form['password']
+    name = request.form.get('name')
+    admission_no = request.form.get('admission_no', '')
+    phone = request.form.get('phone')
+    cls = request.form.get('class', '')
+    password = request.form.get('password')
+    email = request.form.get('reqEmail', '')
+    role = request.form.get('role', 'student')
+    school_code = request.form.get('school_code', s_code)
+    if not school_code:
+        school_code = s_code
     
     conn = get_db_connection()
     try:
-        from billing import get_school_subscription
-        sub = get_school_subscription(s_code)
-        student_count = conn.execute('SELECT COUNT(*) FROM users WHERE role="student" AND school_code=?', (s_code,)).fetchone()[0]
-        if sub['max_students'] != float('inf') and student_count >= sub['max_students']:
-            return "Upgrade your school subscription to add more students.", 403
+        if role == 'student':
+            from billing import get_school_subscription
+            sub = get_school_subscription(school_code)
+            student_count = conn.execute('SELECT COUNT(*) FROM users WHERE role="student" AND school_code=?', (school_code,)).fetchone()[0]
+            if sub['max_students'] != float('inf') and student_count >= sub['max_students']:
+                return "Upgrade your school subscription to add more students.", 403
             
-        conn.execute('INSERT INTO users (name, admission_no, phone, class, role, password, school_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                     (name, admission_no, phone, cls, 'student', password, s_code))
+        conn.execute('INSERT INTO users (name, admission_no, phone, class, role, password, school_code, email, is_banned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)',
+                     (name, admission_no, phone, cls, role, password, school_code, email))
         conn.commit()
     except sqlite3.IntegrityError:
         pass # phone might be duplicate

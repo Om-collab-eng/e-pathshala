@@ -29,7 +29,10 @@
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
                 <div>
                     <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Library Network</p>
-                    <h3 style="margin: 5px 0 0 0; color: var(--text-high); font-size: 1.1rem; font-family: 'Outfit';">🏫 {{ session.get('school_name', 'librika.in Network') }}</h3>
+                    <h3 style="margin: 5px 0 0 0; color: var(--text-high); font-size: 1.1rem; font-family: 'Outfit'; display: flex; align-items: center; gap: 8px;">
+                        🏫 {{ session.get('school_name', 'librika.in Network') }}
+                        <button class="btn-alt" style="font-size: 0.7rem; padding: 2px 6px; cursor: pointer; border-color: var(--accent-primary); color: var(--accent-primary);" onclick="openViewSchoolModal()">👁️ Info</button>
+                    </h3>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="width: 8px; height: 8px; background: var(--accent-success); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--accent-success);"></span>
@@ -196,8 +199,8 @@
             {% if 'manage_students' in session.get('permissions', []) %}
             <div class="glow-box" style="margin-top: 2rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h2 style="font-family: 'Outfit'; margin-bottom: 0;">Student Management</h2>
-                    <button class="btn-alt" onclick="openModal('addStudentModal')" style="border-color: var(--accent-primary); color: var(--accent-primary);">+ Create Student</button>
+                    <h2 style="font-family: 'Outfit'; margin-bottom: 0;">User Management</h2>
+                    <button class="btn-alt" onclick="openModal('addUserModal')" style="border-color: var(--accent-primary); color: var(--accent-primary);">+ Create User</button>
                 </div>
                 <div class="table-container">
                     {% if students %}
@@ -207,6 +210,7 @@
                                 <th>Name</th>
                                 <th>Admission No / Phone</th>
                                 <th>Class</th>
+                                <th>Role</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -215,8 +219,15 @@
                             {% for u in students %}
                             <tr>
                                 <td data-label="Name" style="font-weight: 500;">{{ u.name }}</td>
-                                <td data-label="Admission / Phone" style="color: var(--text-mid);">{{ u.admission_no }} / {{ u.phone }}</td>
-                                <td data-label="Class">{{ u.class }}</td>
+                                <td data-label="Admission / Phone" style="color: var(--text-mid);">{{ u.admission_no or 'N/A' }} / {{ u.phone }}</td>
+                                <td data-label="Class">{{ u.class or 'N/A' }}</td>
+                                <td data-label="Role">
+                                    {% if u.role == 'admin' %}
+                                    <span class="badge" style="background: #7c3aed; color: white;">Admin</span>
+                                    {% else %}
+                                    <span class="badge" style="background: #3b82f6; color: white;">Student</span>
+                                    {% endif %}
+                                </td>
                                 <td data-label="Status">
                                     {% if u.is_banned %}
                                     <span class="badge badge-error">Banned</span>
@@ -225,10 +236,11 @@
                                     {% endif %}
                                 </td>
                                 <td data-label="Action" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                    <button class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; color: var(--accent-primary); border-color: var(--accent-primary);" onclick='openViewUserModal({{ u | tojson }})'>👁️ View</button>
                                     <form action="/admin/student/{{ u.id }}/toggle-ban" method="POST" style="margin:0;">
                                         <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; color: {{ 'var(--accent-success)' if u.is_banned else 'var(--accent-warning)' }}; border-color: {{ 'var(--accent-success)' if u.is_banned else 'var(--accent-warning)' }};">{{ 'Unban' if u.is_banned else 'Ban' }}</button>
                                     </form>
-                                    <form action="/admin/student/{{ u.id }}/delete" method="POST" style="margin:0;" onsubmit="return confirm('WARNING: Permanently delete this student? This cannot be undone.');">
+                                    <form action="/admin/student/{{ u.id }}/delete" method="POST" style="margin:0;" onsubmit="return confirm('WARNING: Permanently delete this user? This cannot be undone.');">
                                         <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; color: var(--accent-error); border-color: var(--accent-error);">Delete</button>
                                     </form>
                                 </td>
@@ -237,7 +249,7 @@
                         </tbody>
                     </table>
                     {% else %}
-                    <div style="text-align: center; padding: 3rem; color: var(--text-low);">No students found.</div>
+                    <div style="text-align: center; padding: 3rem; color: var(--text-low);">No users found.</div>
                     {% endif %}
                 </div>
             </div>
@@ -291,40 +303,106 @@
                 <a href="/data/template/students" class="btn-alt" style="font-size:0.75rem;">Students CSV</a>
                 <a href="/data/template/librarians" class="btn-alt" style="font-size:0.75rem;">Librarians CSV</a>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Student Modal -->
-<div id="addStudentModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content glow-box" style="max-width: 500px; width: 100%;">
+        <!-- Add User Modal -->
+<div id="addUserModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 500px; width: 100%; background: var(--bg-card); color: var(--text-high);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0;">Register Student</h2>
-            <button class="btn-alt" onclick="closeModal('addStudentModal')" style="padding: 5px 10px;">? Close</button>
+            <h2 style="margin: 0; font-family: 'Outfit'; font-weight: 700;">👤 Add New User</h2>
+            <button class="btn-alt" onclick="closeModal('addUserModal')" style="padding: 5px 10px;">✕ Close</button>
         </div>
         <form action="/admin/student/add" method="POST">
             <div class="input-group">
-                <label>Student Name</label>
-                <input type="text" name="name" required>
+                <label>Full Name</label>
+                <input type="text" name="name" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
             </div>
             <div class="input-group">
-                <label>Admission Number</label>
-                <input type="text" name="admission_no" required>
+                <label>Email / Gmail</label>
+                <input type="email" name="reqEmail" required placeholder="e.g. user@gmail.com" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
             </div>
             <div class="input-group">
                 <label>Phone Number (Login ID)</label>
-                <input type="text" name="phone" required>
-            </div>
-            <div class="input-group">
-                <label>Class</label>
-                <input type="number" name="class" min="1" max="12" required>
+                <input type="text" name="phone" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
             </div>
             <div class="input-group">
                 <label>Password</label>
-                <input type="text" name="password" required value="studentpass">
+                <input type="text" name="password" required value="userpass" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
             </div>
-            <button type="submit" class="btn-neon" style="width: 100%; margin-top: 1rem;">Create Student</button>
+            <div class="input-group">
+                <label>Role</label>
+                <select name="role" id="addUserRole" onchange="toggleAddUserClassField()" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
+                    <option value="student">Student</option>
+                    <option value="admin">Admin / Librarian</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>School Code</label>
+                <input type="text" name="school_code" readonly value="{{ session.get('school_code', '') }}" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.1); color: var(--text-mid); border: 1px solid var(--border-color);">
+            </div>
+            <div class="input-group" id="addUserClassGroup">
+                <label>Class</label>
+                <input type="number" name="class" min="1" max="12" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
+            </div>
+            <div class="input-group" id="addUserAdmissionGroup">
+                <label>Admission / Student ID</label>
+                <input type="text" name="admission_no" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); color: var(--text-high); border: 1px solid var(--border-color);">
+            </div>
+            <button type="submit" class="btn-neon" style="width: 100%; margin-top: 1rem;">Create User</button>
         </form>
+    </div>
+</div>
+
+<!-- View User Modal -->
+<div id="viewUserModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 500px; width: 100%; background: var(--bg-card); color: var(--text-high);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; font-family: 'Outfit'; font-weight: 700;">👤 User Details</h2>
+            <button onclick="closeModal('viewUserModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 0.95rem; text-align: left;">
+            <div><strong>Full Name:</strong> <span id="vUserName"></span></div>
+            <div><strong>Phone / Login ID:</strong> <span id="vUserPhone"></span></div>
+            <div><strong>Email (Gmail):</strong> <span id="vUserEmail"></span></div>
+            <div><strong>Password:</strong> <span id="vUserPassword"></span></div>
+            <div><strong>Role:</strong> <span id="vUserRole" class="badge"></span></div>
+            <div><strong>School Code:</strong> <span id="vUserSchool"></span></div>
+            <div><strong>Class:</strong> <span id="vUserClass"></span></div>
+            <div><strong>Admission / Student ID:</strong> <span id="vUserAdmission"></span></div>
+            <div><strong>Status:</strong> <span id="vUserStatus"></span></div>
+        </div>
+        <button onclick="closeModal('viewUserModal')" class="btn-neon" style="width: 100%; margin-top: 1.5rem; justify-content: center;">Close Details</button>
+    </div>
+</div>
+
+<!-- View School Modal -->
+<div id="viewSchoolModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glow-box" style="max-width: 500px; width: 100%; background: var(--bg-card); color: var(--text-high);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; font-family: 'Outfit'; font-weight: 700;">🏫 School Profile</h2>
+            <button onclick="closeModal('viewSchoolModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 0.95rem; text-align: left;">
+            <div><strong>School Name:</strong> <span>{{ session.get('school_name', 'librika.in') }}</span></div>
+            <div><strong>School Code:</strong> <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">{{ session.get('school_code', 'GLOBAL') }}</code></div>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+            <h3 style="font-size: 1rem; color: var(--accent-primary); margin: 0; font-family: 'Outfit'; font-weight: 700;">💳 Plan & Subscriptions</h3>
+            <div><strong>Active Plan:</strong> <span class="badge" style="background: var(--accent-primary); color: white;">{{ school_plan }}</span></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 8px; background: rgba(0,0,0,0.05); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);">
+                <div style="text-align: center;"><div style="font-weight: 700; color: var(--accent-primary);">{{ school_limits.studentLimit if school_limits.studentLimit != 999999 else 'Unlimited' }}</div><div style="font-size: 0.75rem; color: var(--text-low);">Max Students</div></div>
+                <div style="text-align: center;"><div style="font-weight: 700; color: var(--accent-primary);">{{ school_limits.librarianLimit if school_limits.librarianLimit != 999999 else 'Unlimited' }}</div><div style="font-size: 0.75rem; color: var(--text-low);">Max Libs</div></div>
+                <div style="text-align: center;"><div style="font-weight: 700; color: var(--accent-primary);">{{ school_limits.adminLimit if school_limits.adminLimit != 999999 else 'Unlimited' }}</div><div style="font-size: 0.75rem; color: var(--text-low);">Max Admins</div></div>
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+            <h3 style="font-size: 1rem; color: var(--accent-primary); margin: 0; font-family: 'Outfit'; font-weight: 700;">⚙️ Features Status</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem;">
+                <div>CSV Import: <span class="badge" style="background: {{ 'var(--accent-success)' if school_perms.canImportCSV else 'var(--accent-error)' }}; color: white;">{{ 'Enabled' if school_perms.canImportCSV else 'Disabled' }}</span></div>
+                <div>CSV Export: <span class="badge" style="background: {{ 'var(--accent-success)' if school_perms.canExportCSV else 'var(--accent-error)' }}; color: white;">{{ 'Enabled' if school_perms.canExportCSV else 'Disabled' }}</span></div>
+                <div>AI Scanner: <span class="badge" style="background: {{ 'var(--accent-success)' if school_perms.canUseAIScanner else 'var(--accent-error)' }}; color: white;">{{ 'Enabled' if school_perms.canUseAIScanner else 'Disabled' }}</span></div>
+                <div>Barcode Scanner: <span class="badge" style="background: {{ 'var(--accent-success)' if school_perms.canUseBarcodeScanner else 'var(--accent-error)' }}; color: white;">{{ 'Enabled' if school_perms.canUseBarcodeScanner else 'Disabled' }}</span></div>
+                <div>Analytics: <span class="badge" style="background: {{ 'var(--accent-success)' if school_perms.canUseAdvancedAnalytics else 'var(--accent-error)' }}; color: white;">{{ 'Enabled' if school_perms.canUseAdvancedAnalytics else 'Disabled' }}</span></div>
+                <div>Publishing: <span class="badge" style="background: {{ 'var(--accent-success)' if school_perms.canUsePublishing else 'var(--accent-error)' }}; color: white;">{{ 'Enabled' if school_perms.canUsePublishing else 'Disabled' }}</span></div>
+            </div>
+        </div>
+        <button onclick="closeModal('viewSchoolModal')" class="btn-neon" style="width: 100%; margin-top: 1.5rem; justify-content: center;">Close Info</button>
     </div>
 </div>
 {% endblock %}
@@ -363,10 +441,69 @@ function filterTable(inputId, tableId, searchColumns) {
 
 function openModal(modalId) {
     document.getElementById(modalId).style.display = 'flex';
+    if (modalId === 'addUserModal') {
+        toggleAddUserClassField();
+    }
 }
 
 function closeModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
+}
+
+function openViewSchoolModal() {
+    openModal('viewSchoolModal');
+}
+
+function openViewUserModal(userData) {
+    document.getElementById('vUserName').innerText = userData.name || 'Pending Profile';
+    document.getElementById('vUserPhone').innerText = userData.phone || 'N/A';
+    document.getElementById('vUserEmail').innerText = userData.email || 'N/A';
+    document.getElementById('vUserPassword').innerText = userData.password || 'N/A';
+    
+    const roleSpan = document.getElementById('vUserRole');
+    roleSpan.innerText = (userData.role || 'student').toUpperCase();
+    if (userData.role === 'admin') {
+        roleSpan.style.background = '#7c3aed';
+        roleSpan.style.color = 'white';
+    } else {
+        roleSpan.style.background = '#3b82f6';
+        roleSpan.style.color = 'white';
+    }
+    
+    document.getElementById('vUserSchool').innerText = userData.school_code || 'N/A';
+    document.getElementById('vUserClass').innerText = userData.class || 'N/A';
+    document.getElementById('vUserAdmission').innerText = userData.admission_no || 'N/A';
+    
+    const statusSpan = document.getElementById('vUserStatus');
+    if (userData.is_banned) {
+        statusSpan.innerText = 'BANNED';
+        statusSpan.className = 'badge badge-error';
+    } else {
+        statusSpan.innerText = 'ACTIVE';
+        statusSpan.className = 'badge badge-success';
+    }
+    
+    openModal('viewUserModal');
+}
+
+function toggleAddUserClassField() {
+    const role = document.getElementById('addUserRole').value;
+    const classGroup = document.getElementById('addUserClassGroup');
+    const admissionGroup = document.getElementById('addUserAdmissionGroup');
+    const classInput = classGroup.querySelector('input');
+    const admissionInput = admissionGroup.querySelector('input');
+    
+    if (role === 'student') {
+        classGroup.style.display = 'block';
+        admissionGroup.style.display = 'block';
+        classInput.setAttribute('required', 'required');
+        admissionInput.setAttribute('required', 'required');
+    } else {
+        classGroup.style.display = 'none';
+        admissionGroup.style.display = 'none';
+        classInput.removeAttribute('required');
+        admissionInput.removeAttribute('required');
+    }
 }
 
 window.onclick = function(event) {
