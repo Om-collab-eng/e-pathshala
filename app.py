@@ -238,7 +238,8 @@ def init_db():
                         ('users', 'school_code'), ('books', 'school_code'), ('transactions', 'school_code'),
                         ('pending_requests', 'phone'), ('pending_requests', 'password'),
                         ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'),
-                        ('schools', 'status'), ('users', 'status'), ('users', 'is_banned'), ('users', 'permissions')]:
+                        ('schools', 'status'), ('users', 'status'), ('users', 'is_banned'), ('users', 'permissions'),
+                        ('books', 'is_banned')]:
         try:
             conn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
         except sqlite3.OperationalError:
@@ -342,7 +343,8 @@ def init_db():
     # Run migrations on Demo DB
     for table, col in [('users', 'session_token'), ('users', 'admission_no'), ('users', 'class'), ('users', 'school_code'),
                        ('books', 'school_code'), ('transactions', 'school_code'),
-                       ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'), ('users', 'is_banned'), ('users', 'permissions')]:
+                       ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'), ('users', 'is_banned'), ('users', 'permissions'),
+                       ('books', 'is_banned')]:
         try:
             dconn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
         except sqlite3.OperationalError:
@@ -858,6 +860,55 @@ def super_admin_delete_school(id):
     conn.close()
     return redirect('/super-admin')
 
+@app.route('/super-admin/school/<int:id>/update', methods=['POST'])
+def super_admin_update_school(id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    name = request.form.get('name')
+    librarian_name = request.form.get('librarian_name')
+    
+    conn = get_db_connection()
+    conn.execute('UPDATE schools SET name = ?, librarian_name = ? WHERE id = ?',
+                 (name, librarian_name, id))
+    conn.commit()
+    conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/user/<int:id>/update', methods=['POST'])
+def super_admin_update_user(id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    name = request.form.get('name')
+    phone = request.form.get('phone')
+    role = request.form.get('role')
+    school_code = request.form.get('school_code')
+    
+    conn = get_db_connection()
+    conn.execute('UPDATE users SET name = ?, phone = ?, role = ?, school_code = ? WHERE id = ?',
+                 (name, phone, role, school_code, id))
+    conn.commit()
+    conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/book/<int:id>/delete', methods=['POST'])
+def super_admin_delete_book(id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    conn = get_db_connection()
+    conn.execute('DELETE FROM books WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/book/<int:id>/toggle-ban', methods=['POST'])
+def super_admin_toggle_book_ban(id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    conn = get_db_connection()
+    book = conn.execute('SELECT is_banned FROM books WHERE id = ?', (id,)).fetchone()
+    if book:
+        new_val = 1 if not book['is_banned'] or book['is_banned'] == '0' or book['is_banned'] == 0 else 0
+        conn.execute('UPDATE books SET is_banned = ? WHERE id = ?', (new_val, id))
+        conn.commit()
+    conn.close()
+    return redirect('/super-admin')
+
 @app.route('/super-admin/school/<school_code>/subscription/update', methods=['POST'])
 def super_admin_update_subscription(school_code):
     if session.get('role') != 'super_admin': return redirect('/login')
@@ -1238,7 +1289,7 @@ def student_panel():
     txs = conn.execute('SELECT t.*, b.title, b.author, b.cover_url FROM transactions t JOIN books b ON b.id = t.book_id WHERE t.user_id = ? AND t.return_date IS NULL', (user_id,)).fetchall()
     
     # Fetch Recommended Books (Random 4 available books in the school)
-    recommended_books = conn.execute('SELECT * FROM books WHERE school_code = ? AND available_copies > 0 ORDER BY RANDOM() LIMIT 4', (s_code,)).fetchall()
+    recommended_books = conn.execute('SELECT * FROM books WHERE school_code = ? AND available_copies > 0 AND (is_banned IS NULL OR is_banned != 1 AND is_banned != \'1\') ORDER BY RANDOM() LIMIT 4', (s_code,)).fetchall()
     
     # Stats Calculation
     total_issued = conn.execute('SELECT COUNT(*) FROM transactions WHERE user_id = ?', (user_id,)).fetchone()[0]
@@ -1373,7 +1424,7 @@ def student_browse():
     
     conn = get_db_connection()
     
-    query = 'SELECT * FROM books WHERE 1=1'
+    query = "SELECT * FROM books WHERE (is_banned IS NULL OR is_banned != 1 AND is_banned != '1')"
     params = []
     
     if genre_filter:
@@ -1385,7 +1436,7 @@ def student_browse():
         params.extend([f'%{search_query}%', f'%{search_query}%'])
         
     books = conn.execute(query, params).fetchall()
-    genres = [row[0] for row in conn.execute('SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL').fetchall()]
+    genres = [row[0] for row in conn.execute("SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND (is_banned IS NULL OR is_banned != 1 AND is_banned != '1')").fetchall()]
     conn.close()
     return render_template('student_browse.html', books=books, genres=genres, active_genre=genre_filter, search_query=search_query)
 
@@ -1554,7 +1605,7 @@ def chat_action():
         if session.get('role') == 'super_admin':
             books = conn.execute("SELECT id, title, author, school_code FROM books WHERE title LIKE ? OR author LIKE ? LIMIT 10", (f"%{query}%", f"%{query}%")).fetchall()
         else:
-            books = conn.execute("SELECT id, title, author, school_code FROM books WHERE (title LIKE ? OR author LIKE ?) AND school_code = ? LIMIT 10", (f"%{query}%", f"%{query}%", s_code)).fetchall()
+            books = conn.execute("SELECT id, title, author, school_code FROM books WHERE (title LIKE ? OR author LIKE ?) AND school_code = ? AND (is_banned IS NULL OR is_banned != 1 AND is_banned != '1') LIMIT 10", (f"%{query}%", f"%{query}%", s_code)).fetchall()
         conn.close()
         if not books: return {"status": "success", "message": "No books found matching your query."}
         msg = "Found these books:<br>" + "<br>".join([f"• <a href='/student/book/{b['id']}' style='color:var(--accent-primary);text-decoration:underline;' target='_blank'>{b['title']}</a> by {b['author']} (School: {b['school_code']})" for b in books])
