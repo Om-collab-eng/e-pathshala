@@ -398,6 +398,10 @@
             <span class="sa-nav-icon">⚙️</span>
             <span>Settings</span>
         </button>
+        <button class="sa-nav-item" onclick="toggleGlobalNav()" title="Toggle Floating Navigation" style="border-left: 1px solid rgba(255,255,255,0.1);">
+            <span class="sa-nav-icon" id="sa-nav-toggle-icon">👁️</span>
+            <span id="sa-nav-toggle-text">Nav: On</span>
+        </button>
     </nav>
 </div>
 
@@ -688,6 +692,36 @@
 
 {% block scripts %}
 <script>
+    function updateSaToggleText() {
+        const isVisible = localStorage.getItem('globalNavVisible') !== 'false';
+        const textSpan = document.getElementById('sa-nav-toggle-text');
+        const iconSpan = document.getElementById('sa-nav-toggle-icon');
+        if (textSpan) {
+            textSpan.innerText = isVisible ? 'Nav: On' : 'Nav: Off';
+        }
+        if (iconSpan) {
+            iconSpan.innerText = isVisible ? '👁️' : '🕶️';
+        }
+    }
+
+    function toggleGlobalNav() {
+        const isVisible = localStorage.getItem('globalNavVisible') !== 'false';
+        localStorage.setItem('globalNavVisible', !isVisible ? 'true' : 'false');
+        if (window.updateGlobalNavVisibility) {
+            window.updateGlobalNavVisibility();
+        } else {
+            const nav = document.querySelector('.global-nav-container');
+            if (nav) {
+                nav.style.display = !isVisible ? 'flex' : 'none';
+            }
+        }
+        updateSaToggleText();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateSaToggleText();
+    });
+
     function switchTab(tabId, title, subtitle, btnElement) {
         // Hide all tabs
         document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
