@@ -675,3 +675,102 @@ details[open] summary {
     background-color: #f8fafc;
 }
 
+/* Sidebar Layout on Desktop/Laptop Screens */
+.sa-desktop-only-nav-item {
+    display: none !important;
+}
+
+@media (min-width: 1024px) {
+    /* Hide global floating navigation menu on super admin page */
+    .global-nav-container {
+        display: none !important;
+    }
+
+    .super-admin-body {
+        padding-bottom: 0 !important;
+        padding-left: 260px !important;
+    }
+
+    .sa-bottom-nav {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        width: 260px !important;
+        height: 100vh !important;
+        background: #ffffff !important;
+        border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
+        border-top: none !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        align-items: stretch !important;
+        padding: 3rem 1rem !important;
+        gap: 8px !important;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05) !important;
+        z-index: 1000 !important;
+    }
+
+    .sa-bottom-nav::before {
+        content: "librika.in";
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #4f46e5;
+        padding: 0 1rem 2rem 1rem;
+        display: block;
+        text-align: left;
+    }
+
+    .sa-nav-item {
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding: 12px 16px !important;
+        border-radius: 12px !important;
+        width: 100% !important;
+        max-width: none !important;
+        font-size: 0.95rem !important;
+        color: #64748b !important;
+        background: none !important;
+        flex-grow: 0 !important;
+        text-align: left !important;
+        box-sizing: border-box !important;
+    }
+
+    .sa-nav-item:hover {
+        color: #4f46e5 !important;
+        background-color: rgba(79, 70, 229, 0.04) !important;
+        transform: none !important;
+    }
+
+    .sa-nav-item:hover .sa-nav-icon {
+        transform: translateX(2px) !important;
+    }
+
+    .sa-nav-item.active {
+        color: #4f46e5 !important;
+        background-color: rgba(79, 70, 229, 0.08) !important;
+        font-weight: 800 !important;
+        border-left: 4px solid #4f46e5 !important;
+        border-radius: 0 12px 12px 0 !important;
+    }
+
+    .sa-nav-item.active .sa-nav-icon {
+        transform: scale(1.1) !important;
+    }
+
+    .sa-desktop-only-nav-item {
+        display: flex !important;
+    }
+
+    .sa-mobile-only-nav-item {
+        display: none !important;
+    }
+}
+
+.sa-mobile-only-nav-item {
+    display: flex !important;
+}
+

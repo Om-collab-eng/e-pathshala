@@ -21,12 +21,19 @@
 <div class="super-admin-body" id="dashboard-container">
     <!-- Header -->
     <header class="sa-header">
-        <h1 id="header-title">Global Operations</h1>
-        <p id="header-subtitle">Welcome back, <strong style="color: white;">System Master</strong></p>
-        <div class="sa-header-action" id="header-action-container">
-            <button class="btn-sa-primary" onclick="openModal('addSchoolModal')">
-                <span style="font-size: 1.2rem; line-height: 1;">+</span> New School
-            </button>
+        <div>
+            <h1 id="header-title">Global Operations</h1>
+            <p id="header-subtitle">Welcome back, <strong style="color: white;">System Master</strong></p>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <div class="sa-header-action" id="header-action-container">
+                <button class="btn-sa-primary" onclick="openModal('addSchoolModal')">
+                    <span style="font-size: 1.2rem; line-height: 1;">+</span> New School
+                </button>
+            </div>
+            <a href="/logout" class="btn-sa-primary" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; text-decoration: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                🚪 Logout
+            </a>
         </div>
     </header>
 
@@ -376,10 +383,29 @@
 
     </div>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation (Transforms to Vertical Sidebar on Desktop) -->
     <nav class="sa-bottom-nav">
-        <button class="sa-nav-item active" onclick="switchTab('overview', 'Global Operations', 'Welcome back, System Master', this)">
+        <!-- Desktop Back Button -->
+        <button class="sa-nav-item sa-desktop-only-nav-item" onclick="window.history.back()" title="Go Back">
+            <span class="sa-nav-icon">⬅️</span>
+            <span>Go Back</span>
+        </button>
+        <!-- Desktop Home Button -->
+        <button class="sa-nav-item sa-desktop-only-nav-item" onclick="window.location.href='/'" title="Go Home">
             <span class="sa-nav-icon">🏠</span>
+            <span>Go Home</span>
+        </button>
+        <!-- Desktop Theme Toggle -->
+        <button class="sa-nav-item sa-desktop-only-nav-item" id="superAdminThemeToggle" title="Switch Appearance">
+            <span class="sa-nav-icon" id="superAdminThemeIcon">🌙</span>
+            <span>Appearance</span>
+        </button>
+        
+        <hr class="sa-desktop-only-nav-item" style="border: 0; border-top: 1px solid rgba(0,0,0,0.05); margin: 8px 0;">
+
+        <!-- Regular Menu Items -->
+        <button class="sa-nav-item active" onclick="switchTab('overview', 'Global Operations', 'Welcome back, System Master', this)">
+            <span class="sa-nav-icon">📊</span>
             <span>Overview</span>
         </button>
         <button class="sa-nav-item" onclick="switchTab('schools', 'Schools', 'Manage all schools across the network', this)">
@@ -398,9 +424,17 @@
             <span class="sa-nav-icon">⚙️</span>
             <span>Settings</span>
         </button>
-        <button class="sa-nav-item" onclick="toggleGlobalNav()" title="Toggle Floating Navigation" style="border-left: 1px solid rgba(255,255,255,0.1);">
+        
+        <!-- Mobile Floating Nav Toggle -->
+        <button class="sa-nav-item sa-mobile-only-nav-item" onclick="toggleGlobalNav()" title="Toggle Floating Navigation" style="border-left: 1px solid rgba(255,255,255,0.1);">
             <span class="sa-nav-icon" id="sa-nav-toggle-icon">👁️</span>
             <span id="sa-nav-toggle-text">Nav: On</span>
+        </button>
+
+        <!-- Desktop Logout Button -->
+        <button class="sa-nav-item sa-desktop-only-nav-item" onclick="window.location.href='/logout'" title="Disconnect Terminal" style="margin-top: auto; color: #f43f5e; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 15px; border-radius: 0;">
+            <span class="sa-nav-icon">🚪</span>
+            <span>Disconnect</span>
         </button>
     </nav>
 </div>
@@ -720,6 +754,32 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         updateSaToggleText();
+        
+        // Super Admin Sidebar Theme Toggle
+        const saThemeToggle = document.getElementById('superAdminThemeToggle');
+        const saThemeIcon = document.getElementById('superAdminThemeIcon');
+        const htmlElement = document.documentElement;
+        
+        if (saThemeToggle && saThemeIcon) {
+            // Initial sync
+            const currentTheme = htmlElement.getAttribute('data-theme') || 'dark';
+            saThemeIcon.innerText = currentTheme === 'dark' ? '🌙' : '☀️';
+            
+            saThemeToggle.addEventListener('click', () => {
+                const theme = htmlElement.getAttribute('data-theme');
+                const nextTheme = theme === 'dark' ? 'light' : 'dark';
+                
+                htmlElement.setAttribute('data-theme', nextTheme);
+                localStorage.setItem('theme', nextTheme);
+                saThemeIcon.innerText = nextTheme === 'dark' ? '🌙' : '☀️';
+                
+                // Also sync global nav icon in base.html if exists
+                const baseThemeIcon = document.getElementById('themeIcon');
+                if (baseThemeIcon) {
+                    baseThemeIcon.innerText = nextTheme === 'dark' ? '🌙' : '☀️';
+                }
+            });
+        }
     });
 
     function switchTab(tabId, title, subtitle, btnElement) {
