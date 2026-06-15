@@ -19,6 +19,14 @@
 
 {% block content %}
 <div class="super-admin-body" id="dashboard-container">
+    <script>
+        (function() {
+            const savedState = localStorage.getItem('sidebarCollapsed');
+            if (savedState === 'true') {
+                document.getElementById('dashboard-container').classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
     <!-- Header -->
     <header class="sa-header">
         <div>
@@ -385,6 +393,18 @@
 
     <!-- Bottom Navigation (Transforms to Vertical Sidebar on Desktop) -->
     <nav class="sa-bottom-nav">
+        <!-- Sidebar Toggle Hamburger Button (Desktop Only) -->
+        <button class="sa-nav-item sa-desktop-only-nav-item" onclick="toggleSidebarCollapse()" title="Toggle Sidebar" style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 15px; border-radius: 0;">
+            <span class="sa-nav-icon" style="display: inline-flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </span>
+            <span>Collapse Menu</span>
+        </button>
+
         <!-- Desktop Back Button -->
         <button class="sa-nav-item sa-desktop-only-nav-item" onclick="window.history.back()" title="Go Back">
             <span class="sa-nav-icon">⬅️</span>
@@ -726,6 +746,28 @@
 
 {% block scripts %}
 <script>
+    function toggleSidebarCollapse() {
+        const container = document.getElementById('dashboard-container');
+        const isCollapsed = container.classList.contains('sidebar-collapsed');
+        if (isCollapsed) {
+            container.classList.remove('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', 'false');
+        } else {
+            container.classList.add('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', 'true');
+        }
+    }
+
+    function initSidebarCollapse() {
+        const container = document.getElementById('dashboard-container');
+        const savedState = localStorage.getItem('sidebarCollapsed');
+        if (savedState === 'true') {
+            container.classList.add('sidebar-collapsed');
+        } else {
+            container.classList.remove('sidebar-collapsed');
+        }
+    }
+
     function updateSaToggleText() {
         const isVisible = localStorage.getItem('globalNavVisible') !== 'false';
         const textSpan = document.getElementById('sa-nav-toggle-text');
@@ -753,6 +795,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        initSidebarCollapse();
         updateSaToggleText();
         
         // Super Admin Sidebar Theme Toggle

@@ -680,6 +680,10 @@ details[open] summary {
     display: none !important;
 }
 
+.sa-mobile-only-nav-item {
+    display: flex !important;
+}
+
 @media (min-width: 1024px) {
     /* Hide global floating navigation menu on super admin page */
     .global-nav-container {
@@ -689,6 +693,7 @@ details[open] summary {
     .super-admin-body {
         padding-bottom: 0 !important;
         padding-left: 260px !important;
+        transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
     .sa-bottom-nav {
@@ -709,6 +714,7 @@ details[open] summary {
         gap: 8px !important;
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05) !important;
         z-index: 1000 !important;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
     .sa-bottom-nav::before {
@@ -720,6 +726,7 @@ details[open] summary {
         padding: 0 1rem 2rem 1rem;
         display: block;
         text-align: left;
+        transition: all 0.3s ease;
     }
 
     .sa-nav-item {
@@ -737,6 +744,7 @@ details[open] summary {
         flex-grow: 0 !important;
         text-align: left !important;
         box-sizing: border-box !important;
+        transition: all 0.2s ease !important;
     }
 
     .sa-nav-item:hover {
@@ -768,9 +776,42 @@ details[open] summary {
     .sa-mobile-only-nav-item {
         display: none !important;
     }
-}
 
-.sa-mobile-only-nav-item {
-    display: flex !important;
-}
+    /* COLLAPSED STATE ON DESKTOP */
+    .super-admin-body.sidebar-collapsed {
+        padding-left: 80px !important;
+    }
 
+    .super-admin-body.sidebar-collapsed .sa-bottom-nav {
+        width: 80px !important;
+        padding: 3rem 0.5rem !important;
+        align-items: center !important;
+    }
+
+    .super-admin-body.sidebar-collapsed .sa-bottom-nav::before {
+        content: "L" !important;
+        padding: 0 !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .super-admin-body.sidebar-collapsed .sa-nav-item {
+        justify-content: center !important;
+        padding: 12px 0 !important;
+        border-left: none !important;
+        border-radius: 12px !important;
+    }
+
+    .super-admin-body.sidebar-collapsed .sa-nav-item.active {
+        background-color: rgba(79, 70, 229, 0.08) !important;
+        border-left: none !important;
+    }
+
+    .super-admin-body.sidebar-collapsed .sa-nav-item span:not(.sa-nav-icon) {
+        display: none !important;
+    }
+
+    .super-admin-body.sidebar-collapsed hr {
+        width: 60% !important;
+    }
+}
