@@ -269,6 +269,16 @@ def init_db():
         conn.execute('ALTER TABLE users ADD COLUMN email TEXT')
     except sqlite3.OperationalError:
         pass
+
+    try:
+        conn.execute('ALTER TABLE users ADD COLUMN stream TEXT')
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        conn.execute('ALTER TABLE users ADD COLUMN dob TEXT')
+    except sqlite3.OperationalError:
+        pass
                   
     conn.execute('''CREATE TABLE IF NOT EXISTS reservations 
                  (id INTEGER PRIMARY KEY, user_id INTEGER, book_id INTEGER, 
@@ -1440,40 +1450,75 @@ def student_profile():
     if 'user_id' not in session: return redirect('/login')
     conn = get_db_connection()
     if request.method == 'POST':
-        name = request.form.get('name')
-        password = request.form.get('password')
-        admission_no = request.form.get('admission_no')
-        class_name = request.form.get('class')
-        
-        conn.execute('UPDATE users SET name = ?, password = ?, admission_no = ?, class = ? WHERE id = ?',
-                     (name, password, admission_no, class_name, session['user_id']))
+        name = request.form.get('name', '').strip()
+        admission_no = request.form.get('admission_no', '').strip()
+        class_name = request.form.get('class', '').strip()
+        stream = request.form.get('stream', '').strip()
+        dob = request.form.get('dob', '').strip()
+        email = request.form.get('email', '').strip()
+        new_password = request.form.get('password', '').strip()
+
+        # Build update query dynamically
+        fields = 'name = ?, admission_no = ?, class = ?'
+        values = [name, admission_no, class_name]
+
+        # Update optional fields if columns exist
+        try:
+            conn.execute(f'UPDATE users SET {fields}, stream = ?, dob = ?, email = ? WHERE id = ?',
+                         values + [stream, dob, email, session['user_id']])
+        except Exception:
+            conn.execute(f'UPDATE users SET {fields} WHERE id = ?',
+                         values + [session['user_id']])
+
+        if new_password:
+            conn.execute('UPDATE users SET password = ? WHERE id = ?', (new_password, session['user_id']))
+
         conn.commit()
         session['user_name'] = name
         session['class'] = class_name
-        session['admission_no'] = admission_no
-        return redirect('/student')
+        flash('Profile updated successfully!', 'success')
+        return redirect('/student/profile')
+
     user = conn.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
-    
-    # Extended Statistics
-    total_read = conn.execute('SELECT COUNT(*) FROM transactions WHERE user_id = ? AND return_date IS NOT NULL', (session['user_id'],)).fetchone()[0]
-    
+
+    # Books read (returned transactions)
+    total_read = conn.execute(
+        'SELECT COUNT(*) FROM transactions WHERE user_id = ? AND return_date IS NOT NULL',
+        (session['user_id'],)
+    ).fetchone()[0]
+
+    # Saved Items (bookmarks via reading_progress)
+    saved_count = conn.execute(
+        'SELECT COUNT(*) FROM reading_progress WHERE student_id = ?',
+        (session['user_id'],)
+    ).fetchone()[0]
+
+    # Publications
+    publications_count = conn.execute(
+        'SELECT COUNT(*) FROM digital_content WHERE student_id = ? AND status = ?',
+        (session['user_id'], 'approved')
+    ).fetchone()[0]
+
     # Favorite Category
     fav_genre_row = conn.execute('''
-        SELECT b.genre, COUNT(*) as count 
-        FROM transactions t 
-        JOIN books b ON t.book_id = b.id 
-        WHERE t.user_id = ? AND b.genre IS NOT NULL 
-        GROUP BY b.genre 
+        SELECT b.genre, COUNT(*) as count
+        FROM transactions t
+        JOIN books b ON t.book_id = b.id
+        WHERE t.user_id = ? AND b.genre IS NOT NULL
+        GROUP BY b.genre
         ORDER BY count DESC LIMIT 1
     ''', (session['user_id'],)).fetchone()
-    
-    fav_category = fav_genre_row[0] if fav_genre_row else "N/A"
-    
+
+    fav_category = fav_genre_row[0] if fav_genre_row else 'General'
+
     stats = {
         'total_read': total_read,
-        'favorite_category': fav_category
+        'saved_count': saved_count,
+        'publications_count': publications_count,
+        'favorite_category': fav_category,
+        'days_streak': 7  # placeholder; extend with actual streak logic if needed
     }
-    
+
     conn.close()
     return render_template('student_profile.html', user=user, stats=stats)
 
