@@ -305,7 +305,7 @@
 <div id="dataHubModal" class="modal-overlay" style="display: none;">
     <div class="modal-content glow-box" style="max-width: 600px; width: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0;">School Data Hub</h2>
+            <h2 style="margin: 0;">Library Data Hub</h2>
             <button onclick="closeModal('dataHubModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
 
@@ -389,7 +389,7 @@
                 </select>
             </div>
             <div class="input-group">
-                <label>School Code</label>
+                <label>Library Code</label>
                 <input type="text" name="school_code" readonly value="{{ session.get('school_code', '') }}" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.1); color: var(--text-mid); border: 1px solid var(--border-color);">
             </div>
             <div class="input-group" id="addUserClassGroup">
@@ -418,7 +418,7 @@
             <div><strong>Email (Gmail):</strong> <span id="vUserEmail"></span></div>
             <div><strong>Password:</strong> <span id="vUserPassword"></span></div>
             <div><strong>Role:</strong> <span id="vUserRole" class="badge"></span></div>
-            <div><strong>School Code:</strong> <span id="vUserSchool"></span></div>
+            <div><strong>Library Code:</strong> <span id="vUserSchool"></span></div>
             <div><strong>Class:</strong> <span id="vUserClass"></span></div>
             <div><strong>Admission / Student ID:</strong> <span id="vUserAdmission"></span></div>
             <div><strong>Status:</strong> <span id="vUserStatus"></span></div>
@@ -431,12 +431,12 @@
 <div id="viewSchoolModal" class="modal-overlay" style="display: none;">
     <div class="modal-content glow-box" style="max-width: 500px; width: 100%; background: var(--bg-card); color: var(--text-high);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; font-family: 'Outfit'; font-weight: 700;">🏫 School Profile</h2>
+            <h2 style="margin: 0; font-family: 'Outfit'; font-weight: 700;">🌐 Digital Library Profile</h2>
             <button onclick="closeModal('viewSchoolModal')" style="background: none; border: none; color: var(--text-mid); font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
         <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 0.95rem; text-align: left;">
-            <div><strong>School Name:</strong> <span>{{ session.get('school_name', 'librika.in') }}</span></div>
-            <div><strong>School Code:</strong> <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">{{ session.get('school_code', 'GLOBAL') }}</code></div>
+            <div><strong>Library Name:</strong> <span>{{ session.get('school_name', 'librika.in') }}</span></div>
+            <div><strong>Library Code:</strong> <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">{{ session.get('school_code', 'GLOBAL') }}</code></div>
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
             <h3 style="font-size: 1rem; color: var(--accent-primary); margin: 0; font-family: 'Outfit'; font-weight: 700;">💳 Plan & Subscriptions</h3>
             <div><strong>Active Plan:</strong> <span class="badge" style="background: var(--accent-primary); color: white;">{{ school_plan }}</span></div>

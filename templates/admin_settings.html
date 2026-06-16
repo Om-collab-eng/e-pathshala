@@ -6,8 +6,8 @@
 <div class="dashboard">
     <header class="header">
         <div>
-            <h1>School Management</h1>
-            <p style="color: var(--text-mid); font-size: 0.85rem;">Security & Institutional Controls</p>
+            <h1>Digital Library Management</h1>
+            <p style="color: var(--text-mid); font-size: 0.85rem;">Security & Library Controls</p>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
             <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
@@ -16,17 +16,17 @@
     </header>
 
     <div class="auth-card" style="max-width: 600px; margin: 0 auto;">
-        <h2 style="margin-bottom: 2rem;">Institutional Settings</h2>
+        <h2 style="margin-bottom: 2rem;">Library Settings</h2>
         
         <form method="POST">
             <div class="input-group">
-                <label for="new_name">Institution Display Name</label>
+                <label for="new_name">Library Display Name</label>
                 <input type="text" id="new_name" name="new_name" value="{{ school.name }}" required>
             </div>
 
             <div class="input-group">
-                <label for="new_code">Dynamic School Code (Warning: Logouts will occur)</label>
-                <input type="text" id="new_code" name="new_code" value="{{ school.school_code }}" required pattern="SCH-[A-Z0-9]+">
+                <label for="new_code">Dynamic Library Code (Warning: Logouts will occur)</label>
+                <input type="text" id="new_code" name="new_code" value="{{ school.school_code }}" required pattern="[A-Z0-9\-]+">
                 <p style="font-size: 0.7rem; color: var(--accent-warning); margin-top: 5px;">Changing this code will force all members (including you) to re-authenticate with the new credentials.</p>
             </div>
 

@@ -33,6 +33,8 @@
                 <span class="badge badge-warning" style="position: absolute; top: 10px; right: 10px;">Pending Review</span>
                 {% elif pub.status == 'Approved' or pub.status == 'Published' %}
                 <span class="badge badge-success" style="position: absolute; top: 10px; right: 10px;">Published</span>
+                {% elif pub.status == 'Draft' %}
+                <span class="badge" style="position: absolute; top: 10px; right: 10px; background: #64748b; color: white;">Draft</span>
                 {% elif pub.status == 'Rejected' %}
                 <span class="badge badge-danger" style="position: absolute; top: 10px; right: 10px;">Rejected</span>
                 {% else %}
@@ -61,7 +63,9 @@
                         <div>👁️ {{ pub.views }} Views</div>
                         <div>⬇️ {{ pub.downloads }} Downloads</div>
                     </div>
-                    {% if pub.file_url %}
+                    {% if pub.status == 'Draft' %}
+                    <a href="/student/publish?draft_id={{ pub.id }}" class="btn-neon" style="padding: 5px 10px; font-size: 0.75rem; text-decoration: none;">✏️ Resume Edit</a>
+                    {% elif pub.file_url %}
                     <a href="{{ pub.file_url }}" target="_blank" class="btn-alt" style="padding: 5px 10px; font-size: 0.75rem;">View File</a>
                     {% endif %}
                 </div>

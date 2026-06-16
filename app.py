@@ -1561,6 +1561,8 @@ def student_self_issue(book_id):
 @require_permission('canUsePublishing')
 def student_publish():
     if 'user_id' not in session or session.get('role') != 'student':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"status": "error", "message": "Session expired. Please log in again."}), 401
         return redirect('/login')
         
     s_code = session.get('school_code')
@@ -1587,7 +1589,6 @@ def student_publish():
         if cover_file and cover_file.filename:
             cover_filename = f"c_{user_id}_{int(time.time())}_{secure_filename(cover_file.filename)}"
             cover_path = os.path.join(app.config['UPLOAD_FOLDER'] if 'UPLOAD_FOLDER' in app.config else os.path.join(BASE_DIR, 'static', 'uploads'), cover_filename)
-            # Ensure upload folder exists
             os.makedirs(os.path.dirname(cover_path), exist_ok=True)
             cover_file.save(cover_path)
             cover_url = f"/static/uploads/{cover_filename}"
@@ -1599,17 +1600,62 @@ def student_publish():
             file_url = f"/static/digital_content/{doc_filename}"
             
         conn = get_db_connection()
-        conn.execute('''
-            INSERT INTO digital_content (title, category, description, subject, class, tags, 
-                                         cover_url, file_url, student_id, school_code, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted', ?)
-        ''', (title, category, description, subject, class_name, tags, cover_url, file_url, user_id, s_code, datetime.now().strftime('%Y-%m-%d %H:%M')))
-        conn.commit()
+        
+        draft_id = request.form.get('draft_id') or request.args.get('draft_id')
+        
+        if draft_id:
+            # Updating existing draft
+            old = conn.execute('SELECT cover_url, file_url FROM digital_content WHERE id = ? AND student_id = ?', (draft_id, user_id)).fetchone()
+            if old:
+                if not cover_url: cover_url = old['cover_url']
+                if not file_url: file_url = old['file_url']
+            
+            conn.execute('''
+                UPDATE digital_content 
+                SET title = ?, category = ?, description = ?, subject = ?, class = ?, tags = ?, 
+                    cover_url = ?, file_url = ?
+                WHERE id = ? AND student_id = ?
+            ''', (title, category, description, subject, class_name, tags, cover_url, file_url, draft_id, user_id))
+            conn.commit()
+            id_to_return = draft_id
+        else:
+            # Creating new draft publication
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO digital_content (title, category, description, subject, class, tags, 
+                                             cover_url, file_url, student_id, school_code, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Draft', ?)
+            ''', (title, category, description, subject, class_name, tags, cover_url, file_url, user_id, s_code, datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            id_to_return = cursor.lastrowid
+            
         conn.close()
         
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"status": "success", "draft_id": id_to_return, "redirect": "/student/my-publications"})
+            
         return redirect('/student/my-publications')
         
-    return render_template('student_publish.html')
+    draft_id = request.args.get('draft_id')
+    draft = None
+    if draft_id:
+        conn = get_db_connection()
+        draft = conn.execute('SELECT * FROM digital_content WHERE id = ? AND student_id = ?', (draft_id, user_id)).fetchone()
+        conn.close()
+        
+    return render_template('student_publish.html', draft=draft)
+
+@app.route('/api/publish-finalize/<int:pub_id>', methods=['POST'])
+def api_publish_finalize(pub_id):
+    if 'user_id' not in session or session.get('role') != 'student':
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+        
+    conn = get_db_connection()
+    conn.execute("UPDATE digital_content SET status = 'Submitted' WHERE id = ? AND student_id = ?", (pub_id, session.get('user_id')))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({"status": "success"})
 
 @app.route('/student/my-publications')
 def student_my_publications():
@@ -1848,8 +1894,8 @@ def approve_request(req_id):
     req = conn.execute('SELECT * FROM pending_requests WHERE id = ?', (req_id,)).fetchone()
     
     if req:
-        # Use provided code or generate unique school code
-        sCode = req['password'] if req['password'] else ("SCH-" + str(uuid.uuid4().hex[:6]).upper())
+        # Use provided code or generate unique library code
+        sCode = req['password'] if req['password'] else ("DL-" + str(uuid.uuid4().hex[:6]).upper())
         
         # 1. Create the School
         conn.execute('INSERT INTO schools (name, school_code, librarian_name, max_books, max_students, created_at) VALUES (?,?,?,?,?,?)',
@@ -2465,4 +2511,5 @@ def reject_org_request(req_id):
 init_db()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(host='0.0.0.0', port=port, debug=True)
