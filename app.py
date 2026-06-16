@@ -144,24 +144,34 @@ if SUPABASE_URL and SUPABASE_KEY:
     except Exception as files_err:
         print(f"Warning: Could not restore digital content from Supabase Storage: {files_err}")
 
-    # Register lifecycle hook
+    # Register lifecycle hook (Runs asynchronously in a background thread to prevent blocking HTTP responses)
+    supabase_sync_lock = threading.Lock()
+
+    def async_supabase_sync():
+        if not supabase_sync_lock.acquire(blocking=False):
+            print("Supabase Sync: Already in progress, skipping duplicate sync request.")
+            return
+        try:
+            # Sync Database
+            if os.path.exists(DB_FILE):
+                upload_to_supabase(DB_FILE, 'backups/library_v3.db')
+            
+            # Sync digital content files
+            for root, _, files in os.walk(DIGITAL_CONTENT_DIR):
+                for file in files:
+                    local_path = os.path.join(root, file)
+                    remote_path = f"backups/digital_content/{file}"
+                    upload_to_supabase(local_path, remote_path)
+            print("Lifecycle Sync: Synced DB and files to Supabase Storage in the background.")
+        except Exception as e:
+            print(f"Supabase Lifecycle Sync Error: {e}")
+        finally:
+            supabase_sync_lock.release()
+
     @app.after_request
     def sync_to_supabase_after_request(response):
         if request.method in ["POST", "PUT", "DELETE"]:
-            try:
-                # Sync Database
-                if os.path.exists(DB_FILE):
-                    upload_to_supabase(DB_FILE, 'backups/library_v3.db')
-                
-                # Sync digital content files
-                for root, _, files in os.walk(DIGITAL_CONTENT_DIR):
-                    for file in files:
-                        local_path = os.path.join(root, file)
-                        remote_path = f"backups/digital_content/{file}"
-                        upload_to_supabase(local_path, remote_path)
-                print("Lifecycle Sync: Synced DB and files to Supabase Storage.")
-            except Exception as e:
-                print(f"Supabase Lifecycle Sync Error: {e}")
+            threading.Thread(target=async_supabase_sync).start()
         return response
 else:
     print("WARNING: Supabase credentials not found. App is running without cloud persistence.")
