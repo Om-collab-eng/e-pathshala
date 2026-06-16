@@ -1,131 +1,1334 @@
 {% extends "base.html" %}
 
-{% block title %}Book Catalog - librika.in{% endblock %}
+{% block title %}Book Catalog - E-Pathshala Network{% endblock %}
+
+{% block head %}
+<style>
+    /* Fonts import */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --sp-purple: #5c3cf3;
+        --sp-purple-light: #f0eeff;
+        --sp-pink-light: #fff0f3;
+        --sp-pink: #ff4d6d;
+        --sp-orange-light: #fff4eb;
+        --sp-orange: #ff8800;
+        --sp-green-light: #ebfbf2;
+        --sp-green: #00b050;
+        --sp-text-dark: #0f172a;
+        --sp-text-muted: #64748b;
+        --sp-bg-light: #f8fafc;
+        --sp-white: #ffffff;
+        --sp-blue-light: #e0f2fe;
+        --sp-blue: #0284c7;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #0f172a; /* Same global base theme background */
+        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+
+    .portal-wrapper {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        background-color: var(--sp-bg-light);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+        overflow-x: hidden;
+    }
+
+    .desktop-sidebar {
+        display: none;
+    }
+
+    .portal-main {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .portal-header {
+        background: linear-gradient(180deg, #3b2bc4 0%, #5c3cf3 100%);
+        padding: 2.5rem 1.5rem 4rem 1.5rem;
+        color: var(--sp-white);
+        position: relative;
+        overflow: hidden;
+        border-bottom-left-radius: 32px;
+        border-bottom-right-radius: 32px;
+    }
+
+    .portal-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .portal-header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .header-btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--sp-white);
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: background 0.2s;
+        position: relative;
+    }
+
+    .header-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .header-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #ef4444;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 10px;
+        border: 2px solid #3b2bc4;
+    }
+
+    .header-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    .portal-welcome {
+        max-width: 60%;
+        position: relative;
+        z-index: 10;
+    }
+
+    .portal-welcome h2 {
+        margin: 0;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 900;
+    }
+
+    .portal-welcome p {
+        margin: 4px 0 0 0;
+        font-size: 0.8rem;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    .header-illustration {
+        position: absolute;
+        right: -10px;
+        bottom: -10px;
+        height: 120px;
+        width: auto;
+        opacity: 0.95;
+        z-index: 5;
+    }
+
+    .portal-content {
+        padding: 0 1.25rem 6.5rem 1.25rem;
+        margin-top: -32px;
+        position: relative;
+        z-index: 20;
+    }
+
+    /* Search and Filter Row */
+    .search-filter-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-container {
+        flex-grow: 1;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        background: var(--sp-white);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 14px 14px 14px 44px;
+        box-sizing: border-box;
+        font-family: inherit;
+        font-size: 0.85rem;
+        color: var(--sp-text-dark);
+        outline: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-input:focus {
+        border-color: var(--sp-purple);
+        box-shadow: 0 4px 20px rgba(92, 60, 243, 0.08);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--sp-text-muted);
+        pointer-events: none;
+    }
+
+    .filter-btn {
+        background: var(--sp-white);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 0 16px;
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--sp-text-dark);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        transition: background 0.2s;
+    }
+
+    .filter-btn:hover {
+        background: #f8fafc;
+    }
+
+    /* Categories Horizontal Scroller */
+    .categories-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .categories-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .categories-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin: 0;
+    }
+
+    .categories-link {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--sp-purple);
+        text-decoration: none;
+    }
+
+    .categories-scroll {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 4px 0 12px 0;
+        scrollbar-width: none; /* Hide scrollbar on Firefox */
+    }
+
+    .categories-scroll::-webkit-scrollbar {
+        display: none; /* Hide scrollbar on Chrome/Safari */
+    }
+
+    .category-card {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--sp-white);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 12px 18px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .category-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .category-card.active {
+        background: var(--sp-purple-light);
+        border-color: var(--sp-purple);
+        color: var(--sp-purple);
+    }
+
+    .category-card.active .category-icon-wrapper {
+        background: var(--sp-purple);
+        color: var(--sp-white);
+    }
+
+    .category-icon-wrapper {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        background: #f1f5f9;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .category-text {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--sp-text-dark);
+    }
+
+    .category-card.active .category-text {
+        color: var(--sp-purple);
+    }
+
+    /* Featured Collection Banner */
+    .featured-banner {
+        background: linear-gradient(135deg, #f5f3ff 0%, #edd8ff 100%);
+        border-radius: 24px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(92, 60, 243, 0.04);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .featured-info {
+        max-width: 60%;
+        z-index: 10;
+    }
+
+    .featured-label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--sp-purple);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+    }
+
+    .featured-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.35rem;
+        font-weight: 900;
+        color: var(--sp-text-dark);
+        margin: 0 0 6px 0;
+        line-height: 1.25;
+    }
+
+    .featured-subtitle {
+        font-size: 0.8rem;
+        color: var(--sp-text-muted);
+        margin: 0 0 16px 0;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+
+    .featured-btn {
+        background: var(--sp-purple);
+        color: var(--sp-white);
+        border: none;
+        border-radius: 12px;
+        padding: 10px 18px;
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    .featured-btn:hover {
+        background: #4b2bd3;
+        transform: translateY(-1px);
+    }
+
+    /* Carousel dots */
+    .carousel-dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: -12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .carousel-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        transition: background 0.2s, width 0.2s;
+    }
+
+    .carousel-dot.active {
+        background: var(--sp-purple);
+        width: 16px;
+        border-radius: 3px;
+    }
+
+    /* Book Rows (Trending & New Arrivals) */
+    .book-section {
+        margin-bottom: 2rem;
+    }
+
+    .book-row-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .book-row-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin: 0;
+    }
+
+    .book-row-link {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--sp-purple);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .book-scroller {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding: 4px 4px 16px 4px;
+        scrollbar-width: none;
+    }
+
+    .book-scroller::-webkit-scrollbar {
+        display: none;
+    }
+
+    .book-card {
+        flex-shrink: 0;
+        width: 140px;
+        background: var(--sp-white);
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 10px;
+        box-sizing: border-box;
+        text-decoration: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .book-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(92, 60, 243, 0.08);
+    }
+
+    .book-cover-placeholder {
+        width: 100%;
+        height: 155px;
+        border-radius: 14px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+        margin-bottom: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 16px 12px;
+        box-sizing: border-box;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .book-cover-placeholder::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%);
+        z-index: 1;
+    }
+
+    .cover-tag {
+        font-size: 0.6rem;
+        background: rgba(255,255,255,0.25);
+        backdrop-filter: blur(4px);
+        padding: 2px 8px;
+        border-radius: 20px;
+        align-self: flex-start;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        z-index: 2;
+    }
+
+    .cover-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 800;
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        z-index: 2;
+        line-height: 1.25;
+    }
+
+    .book-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex-grow: 1;
+    }
+
+    .book-title {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.3;
+    }
+
+    .book-author {
+        font-size: 0.7rem;
+        color: var(--sp-text-muted);
+        margin: 0;
+        font-weight: 500;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .book-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+    }
+
+    .book-rating {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #d97706;
+    }
+
+    .book-action-trigger {
+        background: transparent;
+        border: none;
+        color: var(--sp-text-muted);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .book-action-trigger:hover {
+        background: #f1f5f9;
+        color: var(--sp-text-dark);
+    }
+
+    /* Books Grid (For Search/Filter Results) */
+    .books-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 2rem;
+    }
+
+    .results-header {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin: 0 0 1rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Bottom Navigation Tab Bar */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom);
+        box-sizing: content-box;
+    }
+
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+        color: var(--sp-text-muted);
+        font-size: 0.65rem;
+        font-weight: 700;
+        width: 60px;
+        transition: color 0.2s;
+        cursor: pointer;
+    }
+
+    .bottom-nav-icon {
+        font-size: 1.35rem;
+        transition: transform 0.2s;
+    }
+
+    .bottom-nav-item.active {
+        color: var(--sp-purple);
+    }
+
+    .bottom-nav-item.active .bottom-nav-icon {
+        transform: translateY(-2px);
+    }
+
+    /* Chat Float Action Button */
+    .chat-fab {
+        position: fixed;
+        right: 20px;
+        bottom: 90px;
+        width: 56px;
+        height: 56px;
+        background: var(--sp-purple);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 24px rgba(92, 60, 243, 0.35);
+        cursor: pointer;
+        z-index: 900;
+        transition: transform 0.2s, background 0.2s;
+    }
+
+    .chat-fab:hover {
+        transform: scale(1.05);
+        background: #4b2bd3;
+    }
+
+    /* Responsive adjustments for desktop and laptop */
+    @media (min-width: 768px) {
+        body {
+            background-color: var(--sp-bg-light) !important;
+        }
+
+        .portal-wrapper {
+            max-width: none !important;
+            margin: 0 !important;
+            height: auto !important;
+            min-height: 100vh !important;
+            flex-direction: row !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
+
+        .portal-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--sp-bg-light);
+            overflow-y: auto;
+        }
+
+        .desktop-sidebar {
+            display: flex !important;
+            flex-direction: column;
+            width: 260px;
+            background: var(--sp-white);
+            border-right: 1px solid #e2e8f0;
+            padding: 2rem 1.5rem;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2.5rem;
+        }
+
+        .brand-icon {
+            font-size: 2rem;
+        }
+
+        .brand-info h4 {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--sp-text-dark);
+        }
+
+        .brand-info p {
+            margin: 2px 0 0 0;
+            font-size: 0.75rem;
+            color: var(--sp-text-muted);
+            font-weight: 600;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            color: var(--sp-text-dark);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .sidebar-link:hover {
+            background: var(--sp-purple-light);
+            color: var(--sp-purple);
+        }
+
+        .sidebar-link.active {
+            background: var(--sp-purple);
+            color: var(--sp-white);
+        }
+
+        .sidebar-divider {
+            border: none;
+            border-top: 1px solid #f1f5f9;
+            margin: 15px 0;
+        }
+
+        .logout-link {
+            color: #ef4444;
+        }
+
+        .logout-link:hover {
+            background: var(--sp-pink-light);
+            color: var(--sp-pink);
+        }
+
+        .sidebar-profile-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 12px;
+            margin-top: auto;
+        }
+
+        .profile-card-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--sp-purple);
+            color: white;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+        }
+
+        .profile-card-info h5 {
+            margin: 0;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--sp-text-dark);
+        }
+
+        .profile-card-info p {
+            margin: 2px 0 0 0;
+            font-size: 0.65rem;
+            color: var(--sp-text-muted);
+            font-weight: 600;
+        }
+
+        /* Hide bottom nav on desktop */
+        .bottom-nav {
+            display: none;
+        }
+
+        /* Reposition Chat FAB */
+        .chat-fab {
+            right: 40px;
+            bottom: 40px;
+        }
+
+        /* Adapt main elements */
+        .portal-header {
+            padding: 3rem 2.5rem 5.5rem 2.5rem !important;
+            border-radius: 0 0 40px 40px !important;
+        }
+
+        .portal-welcome {
+            max-width: 50% !important;
+        }
+
+        .header-illustration {
+            right: 40px !important;
+            bottom: -20px !important;
+            height: 150px !important;
+        }
+
+        .portal-content {
+            padding: 0 2.5rem 4rem 2.5rem !important;
+            margin-top: -40px !important;
+        }
+
+        /* Books grid multi-column adapt */
+        .books-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        /* scroller adjustments for desktop mouse use */
+        .book-scroller {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+            padding-bottom: 8px;
+        }
+        
+        .book-scroller::-webkit-scrollbar {
+            display: block;
+            height: 6px;
+        }
+
+        .book-scroller::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .book-scroller::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .book-scroller::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .books-grid {
+            grid-template-columns: repeat(5, 1fr);
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <header class="header">
-        <div>
-            <h1>Global Catalog</h1>
-            <p style="color: var(--text-mid); font-size: 0.85rem;">Browse and Acquire Knowledge</p>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-            <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
-            <a href="/student" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
-        </div>
-    </header>
-
-    <main class="grid-layout">
-        <aside>
-            <div class="glow-box">
-                <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-low); margin-bottom: 1.5rem;">Filter by Category</h3>
-                <ul class="class-list">
-                    <li>
-                        <a href="/student/browse" class="btn-alt {% if not active_genre %}active{% endif %}">
-                            <span style="font-size: 1.2rem;">📂</span> All Categories
-                        </a>
-                    </li>
-                    {% for genre in genres %}
-                    <li>
-                        <a href="/student/browse?genre={{ genre }}" class="btn-alt {% if active_genre == genre %}active{% endif %}">
-                            {{ genre }}
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
+<div class="portal-wrapper">
+    <!-- Desktop Sidebar Navigation -->
+    <aside class="desktop-sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">🏫</span>
+            <div class="brand-info">
+                <h4>{{ school_name }}</h4>
+                <p>Student Portal</p>
             </div>
-            
-            <div class="status" style="margin-top: 2rem;">
-                <h3>Quick Tip</h3>
-                <p style="font-size: 0.8rem; color: var(--text-mid); line-height: 1.5;">You can issue up to 3 books at a time. Deadlines are strictly enforced.</p>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="/student" class="sidebar-link">
+                <span class="link-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="/student/browse" class="sidebar-link active">
+                <span class="link-icon">📚</span>
+                <span>Library Catalog</span>
+            </a>
+            <a href="/digital-library" class="sidebar-link">
+                <span class="link-icon">🌐</span>
+                <span>Digital Library</span>
+            </a>
+            <a href="/student/publish" class="sidebar-link">
+                <span class="link-icon">✏️</span>
+                <span>Publish Content</span>
+            </a>
+            <a href="/student/my-publications" class="sidebar-link">
+                <span class="link-icon">📄</span>
+                <span>Publications</span>
+            </a>
+            <a href="/student/bookmarks" class="sidebar-link">
+                <span class="link-icon">🔖</span>
+                <span>Saved Items</span>
+            </a>
+            <a href="/student/profile" class="sidebar-link">
+                <span class="link-icon">👤</span>
+                <span>My Profile</span>
+            </a>
+            <hr class="sidebar-divider">
+            <a href="/logout" class="sidebar-link logout-link">
+                <span class="link-icon">🚪</span>
+                <span>Log Out</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-profile-card">
+            <div class="profile-card-avatar">
+                {{ session['user_name'][0] if session['user_name'] else 'S' }}
             </div>
-        </aside>
+            <div class="profile-card-info">
+                <h5>{{ session['user_name'] }}</h5>
+                <p>Class: {{ session['class'] }}</p>
+            </div>
+        </div>
+    </aside>
 
-        <section class="content">
-            <div class="glow-box">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <h1><span class="icon">🔍</span> Book Catalog</h1>
-                    
-                    <form method="GET" action="/student/browse" style="display: flex; gap: 0.5rem; flex: 1; max-width: 400px;">
-                        <input type="text" name="q" placeholder="Search title or author..." value="{{ search_query or '' }}" class="input-field" style="flex: 1;">
-                        {% if active_genre %}
-                        <input type="hidden" name="genre" value="{{ active_genre }}">
-                        {% endif %}
-                        <button type="submit" class="btn-alt">Search</button>
-                    </form>
+    <!-- Main Container -->
+    <div class="portal-main">
+        <!-- Header -->
+        <header class="portal-header">
+            <div class="portal-header-top">
+                <!-- Hamburger button (visible on mobile only) -->
+                <button class="header-btn" onclick="toggleSidebarMenu()" title="Main Menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="portal-header-actions">
+                    <button class="header-btn" onclick="window.location.href='/student/bookmarks'" title="Notifications" style="position: relative;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="header-badge" style="background: var(--sp-purple); border-color: #3b2bc4;">3</span>
+                    </button>
+                    <div class="header-avatar" onclick="window.location.href='/student/profile'">
+                        {{ session['user_name'][0] if session['user_name'] else 'S' }}
+                    </div>
                 </div>
+            </div>
+            <div class="portal-welcome">
+                <h2>Library 📚</h2>
+                <p>Explore vast collection of books, notes and learning resources</p>
+            </div>
+            <img src="{{ url_for('static', filename='student_books_illustration.png') }}" class="header-illustration" alt="Digital Library">
+        </header>
 
-                <div class="table-container">
-                    {% if books %}
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Book Details</th>
-                                <th>Classification</th>
-                                <th>Stock Levels</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for book in books %}
-                            <tr>
-                                <td data-label="Book">
-                                    <div style="font-weight: 700;">{{ book.title }}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-low);">{{ book.author }}</div>
-                                </td>
-                                <td data-label="Classification">
-                                    <span class="badge" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);">{{ book.genre or 'General' }}</span>
-                                </td>
-                                <td data-label="Status">
-                                    {% if book.available_copies > 0 %}
-                                    <div style="display: flex; align-items: center; gap: 6px; justify-content: flex-end;">
-                                        <span style="width: 6px; height: 6px; background: var(--accent-success); border-radius: 50%;"></span>
-                                        <span style="color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">{{ book.available_copies }} Units</span>
-                                    </div>
-                                    {% else %}
-                                    <span class="badge badge-error">Sold Out</span>
-                                    {% endif %}
-                                </td>
-                                <td data-label="Action">
-                                    <a href="/student/book/{{ book.id }}" class="btn-neon" style="font-size: 0.75rem; padding: 8px 16px; width: auto;">View Details</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <div style="text-align: center; padding: 3rem; color: var(--text-low);">No books found in this classification.</div>
+        <!-- Content overlapping -->
+        <div class="portal-content">
+            
+            <!-- Search & Filter Row -->
+            <form method="GET" action="/student/browse" class="search-filter-row">
+                <div class="search-container">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" name="q" placeholder="Search by title, author, subject..." value="{{ search_query or '' }}" class="search-input">
+                    {% if active_genre %}
+                    <input type="hidden" name="genre" value="{{ active_genre }}">
                     {% endif %}
                 </div>
+                <button type="submit" class="filter-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <span>Filter</span>
+                </button>
+            </form>
+
+            {% if not search_query and not active_genre %}
+            <!-- Categories Scroller -->
+            <div class="categories-section">
+                <div class="categories-header">
+                    <h3 class="categories-title">Categories</h3>
+                    <a href="/student/browse" class="categories-link">View All ></a>
+                </div>
+                <div class="categories-scroll">
+                    <a href="/student/browse" class="category-card {% if not active_genre %}active{% endif %}">
+                        <div class="category-icon-wrapper">📱</div>
+                        <span class="category-text">All</span>
+                    </a>
+                    <a href="/student/browse?genre=Self+Help" class="category-card {% if active_genre == 'Self Help' %}active{% endif %}">
+                        <div class="category-icon-wrapper">🌿</div>
+                        <span class="category-text">Self Help</span>
+                    </a>
+                    <a href="/student/browse?genre=Science" class="category-card {% if active_genre == 'Science' %}active{% endif %}">
+                        <div class="category-icon-wrapper">🧪</div>
+                        <span class="category-text">Science</span>
+                    </a>
+                    <a href="/student/browse?genre=Technology" class="category-card {% if active_genre == 'Technology' %}active{% endif %}">
+                        <div class="category-icon-wrapper">💻</div>
+                        <span class="category-text">Technology</span>
+                    </a>
+                    <a href="/student/browse?genre=Business" class="category-card {% if active_genre == 'Business' %}active{% endif %}">
+                        <div class="category-icon-wrapper">💼</div>
+                        <span class="category-text">Business</span>
+                    </a>
+                    <a href="/student/browse?genre=Story" class="category-card {% if active_genre == 'Story' %}active{% endif %}">
+                        <div class="category-icon-wrapper">📖</div>
+                        <span class="category-text">Story</span>
+                    </a>
+                </div>
             </div>
-        </section>
-    </main>
+
+            <!-- Featured Collection Banner -->
+            <div class="featured-banner">
+                <div class="featured-info">
+                    <div class="featured-label">Featured Collection</div>
+                    <h4 class="featured-title">Top Reads This Week</h4>
+                    <p class="featured-subtitle">Most popular and trending titles picked for you!</p>
+                    <a href="/student/browse?genre=Self+Help" class="featured-btn">Explore Now</a>
+                </div>
+                <span style="font-size: 5.5rem; line-height: 1; z-index: 5;">🏆</span>
+            </div>
+            
+            <div class="carousel-dots">
+                <div class="carousel-dot active"></div>
+                <div class="carousel-dot"></div>
+                <div class="carousel-dot"></div>
+                <div class="carousel-dot"></div>
+            </div>
+
+            <!-- Trending Now Section -->
+            <div class="book-section">
+                <div class="book-row-header">
+                    <h3 class="book-row-title">Trending Now</h3>
+                    <a href="/student/browse" class="book-row-link">View All ></a>
+                </div>
+                <div class="book-scroller">
+                    {% for book in books[:5] %}
+                    <a href="/student/book/{{ book.id }}" class="book-card">
+                        <div class="book-cover-placeholder" data-title="{{ book.title }}">
+                            <span class="cover-tag">{{ book.genre or 'Trending' }}</span>
+                            <h4 class="cover-title">{{ book.title }}</h4>
+                        </div>
+                        <div class="book-details">
+                            <h4 class="book-title">{{ book.title }}</h4>
+                            <p class="book-author">{{ book.author }}</p>
+                            <div class="book-meta">
+                                <div class="book-rating">
+                                    <span>⭐</span>
+                                    <span>{{ "%.1f"|format(4.5 + (book.id % 5) / 10) }}</span>
+                                </div>
+                                <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('{{ book.id }}');">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                        <circle cx="12" cy="5" r="1"></circle>
+                                        <circle cx="12" cy="19" r="1"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p style="color: var(--sp-text-muted); font-size: 0.85rem; padding-left: 5px;">No trending books available right now.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- New Arrivals Section -->
+            <div class="book-section">
+                <div class="book-row-header">
+                    <h3 class="book-row-title">New Arrivals</h3>
+                    <a href="/student/browse" class="book-row-link">View All ></a>
+                </div>
+                <div class="book-scroller">
+                    {% for book in books[5:10] %}
+                    <a href="/student/book/{{ book.id }}" class="book-card">
+                        <div class="book-cover-placeholder" data-title="{{ book.title }}">
+                            <span class="cover-tag">NEW</span>
+                            <h4 class="cover-title">{{ book.title }}</h4>
+                        </div>
+                        <div class="book-details">
+                            <h4 class="book-title">{{ book.title }}</h4>
+                            <p class="book-author">{{ book.author }}</p>
+                            <div class="book-meta">
+                                <div class="book-rating">
+                                    <span>⭐</span>
+                                    <span>{{ "%.1f"|format(4.4 + (book.id % 6) / 10) }}</span>
+                                </div>
+                                <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('{{ book.id }}');">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                        <circle cx="12" cy="5" r="1"></circle>
+                                        <circle cx="12" cy="19" r="1"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p style="color: var(--sp-text-muted); font-size: 0.85rem; padding-left: 5px;">No new arrivals available right now.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% else %}
+            <!-- Search / Filter Results Grid View -->
+            <div class="book-section">
+                <div class="results-header">
+                    <span>
+                        {% if search_query %}Search Results: "{{ search_query }}"{% endif %}
+                        {% if active_genre %}Genre: {{ active_genre }}{% endif %}
+                    </span>
+                    <a href="/student/browse" class="book-row-link" style="font-size: 0.75rem;">Clear Filters</a>
+                </div>
+                <div class="books-grid">
+                    {% for book in books %}
+                    <a href="/student/book/{{ book.id }}" class="book-card" style="width: auto;">
+                        <div class="book-cover-placeholder" data-title="{{ book.title }}">
+                            <span class="cover-tag">{{ book.genre or 'General' }}</span>
+                            <h4 class="cover-title">{{ book.title }}</h4>
+                        </div>
+                        <div class="book-details">
+                            <h4 class="book-title">{{ book.title }}</h4>
+                            <p class="book-author">{{ book.author }}</p>
+                            <div class="book-meta">
+                                <div class="book-rating">
+                                    <span>⭐</span>
+                                    <span>{{ "%.1f"|format(4.3 + (book.id % 7) / 10) }}</span>
+                                </div>
+                                <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('{{ book.id }}');">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                        <circle cx="12" cy="5" r="1"></circle>
+                                        <circle cx="12" cy="19" r="1"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <div style="grid-column: span 2; text-align: center; padding: 3rem; color: var(--sp-text-muted); font-size: 0.9rem;">
+                        No books matching your query were found.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Bottom Navigation Tab Bar -->
+<nav class="bottom-nav">
+    <a href="/student" class="bottom-nav-item">
+        <span class="bottom-nav-icon">🏠</span>
+        <span>Home</span>
+    </a>
+    <a href="/student/browse" class="bottom-nav-item active">
+        <span class="bottom-nav-icon">📚</span>
+        <span>Library</span>
+    </a>
+    <a href="/digital-library" class="bottom-nav-item">
+        <span class="bottom-nav-icon">🌐</span>
+        <span>Community</span>
+    </a>
+    <a href="/student/publish" class="bottom-nav-item">
+        <span class="bottom-nav-icon">✏️</span>
+        <span>Creator Hub</span>
+    </a>
+    <a href="/student/profile" class="bottom-nav-item">
+        <span class="bottom-nav-icon">👤</span>
+        <span>Profile</span>
+    </a>
+</nav>
+
+<!-- Mobile Sidebar Drawer Menu -->
+<div id="portalSidebar" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; z-index: 11000; box-shadow: 10px 0 30px rgba(0,0,0,0.15); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', sans-serif;">
+    <div style="background: linear-gradient(135deg, #3b2bc4 0%, #5c3cf3 100%); padding: 2.5rem 1.5rem; color: white;">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🏫</div>
+        <h4 style="margin: 0; font-family: 'Outfit'; font-size: 1.15rem; font-weight: 800;">{{ school_name }}</h4>
+        <p style="margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.8;">Student Portal</p>
+    </div>
+    <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto;">
+        <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Academic Profile</p>
+        <div style="background: #f8fafc; border-radius: 12px; padding: 12px; font-size: 0.85rem; margin-bottom: 1rem;">
+            <div style="margin-bottom: 6px;">Name: <strong style="color: var(--sp-text-dark);">{{ session['user_name'] }}</strong></div>
+            <div style="margin-bottom: 6px;">ID: <strong style="color: var(--sp-text-dark);">#{{ session['admission_no'] }}</strong></div>
+            <div>Class: <strong style="color: var(--sp-text-dark);">{{ session['class'] }}</strong></div>
+        </div>
+        
+        <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Navigation</p>
+        <a href="/student" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📊 Dashboard Overview</a>
+        <a href="/student/browse" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px; background: #f0eeff; color: #5c3cf3;">📚 Browse Books</a>
+        <a href="/digital-library" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🌐 Digital Library</a>
+        <a href="/student/publish" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">✏️ Publish Content</a>
+        <a href="/student/my-publications" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📄 My Publications</a>
+        <a href="/student/bookmarks" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🔖 Saved Bookmarks</a>
+        <a href="/student/profile" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">👤 Edit My Profile</a>
+        
+        <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 10px 0;">
+        <a href="/logout" style="color: #ef4444; text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#fff0f3';" onmouseout="this.style.background='transparent';">🚪 Log Out</a>
+    </div>
+</div>
+<!-- Sidebar backdrop overlay -->
+<div id="sidebarBackdrop" onclick="toggleSidebarMenu()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10500; display: none; opacity: 0; transition: opacity 0.3s ease;"></div>
+
+<!-- Quick Option Drawer Modal (reused from student.html style) -->
+<div id="optionModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 12000; display: none; align-items: flex-end;">
+    <div style="background: white; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 1.5rem; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Plus Jakarta Sans', sans-serif;">
+        <div style="width: 40px; height: 5px; background: #e2e8f0; border-radius: 3px; align-self: center; margin-bottom: 8px;"></div>
+        <h4 style="margin: 0 0 5px 0; font-family: 'Outfit'; font-size: 1.1rem; color: var(--sp-text-dark);">Book Options</h4>
+        <a id="optionBtnRead" href="#" style="background: var(--sp-purple); color: white; text-decoration: none; padding: 14px; border-radius: 12px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <span>📖 View Details / Issue</span>
+        </a>
+        <button onclick="closeOptionModal()" style="background: #f1f5f9; color: var(--sp-text-muted); border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer;">
+            <span>Close Menu</span>
+        </button>
+    </div>
+</div>
+
+<!-- Floating Action Button for Chat -->
+<div class="chat-fab">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function filterBooks() {
-    const input = document.getElementById("assetSearch");
-    const filter = input.value.toLowerCase();
-    const table = document.querySelector(".table-container table");
-    if (!table) return;
-    
-    const tr = table.getElementsByTagName("tr");
-    let visibleCount = 0;
+    // Procedural covers: colors array
+    const colors = [
+        ['#ff9a9e', '#fecfef'],
+        ['#a1c4fd', '#c2e9fb'],
+        ['#f5f7fa', '#c3cfe2'],
+        ['#fbc2eb', '#a6c1ee'],
+        ['#fdcbf1', '#e6dee9'],
+        ['#a18cd1', '#fbc2eb'],
+        ['#ffb199', '#ff0844'],
+        ['#4facfe', '#00f2fe'],
+        ['#30cfd0', '#330867']
+    ];
 
-    for (let i = 1; i < tr.length; i++) {
-        const td = tr[i].getElementsByTagName("td")[0]; // Book Details col
-        if (td) {
-            const textValue = td.textContent || td.innerText;
-            if (textValue.toLowerCase().indexOf(filter) > -1) {
-                tr[i].style.display = "";
-                visibleCount++;
-            } else {
-                tr[i].style.display = "none";
-            }
-        }       
+    // Seeded hash code to pick colors deterministically based on book title
+    function getPastelGradient(title) {
+        let hash = 0;
+        for (let i = 0; i < title.length; i++) {
+            hash = title.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % colors.length;
+        return colors[index];
     }
-}
+
+    // Apply procedural covers on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const placeholders = document.querySelectorAll('.book-cover-placeholder');
+        placeholders.forEach(el => {
+            const title = el.getAttribute('data-title') || 'Book';
+            const grad = getPastelGradient(title);
+            el.style.background = `linear-gradient(135deg, ${grad[0]} 0%, ${grad[1]} 100%)`;
+        });
+    });
+
+    // Mobile Sidebar Drawer Toggle
+    function toggleSidebarMenu() {
+        const sidebar = document.getElementById('portalSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar.style.left === '0px') {
+            sidebar.style.left = '-280px';
+            backdrop.style.opacity = '0';
+            setTimeout(() => backdrop.style.display = 'none', 300);
+        } else {
+            backdrop.style.display = 'block';
+            setTimeout(() => backdrop.style.opacity = '1', 50);
+            sidebar.style.left = '0px';
+        }
+    }
+
+    // Book Actions Drawer Modal
+    let activeBookId = null;
+
+    function showBookOptions(bookId) {
+        activeBookId = bookId;
+        document.getElementById('optionBtnRead').href = '/student/book/' + bookId;
+        const modal = document.getElementById('optionModal');
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.firstElementChild.style.transform = 'translateY(0)';
+        }, 50);
+    }
+
+    function closeOptionModal() {
+        const modal = document.getElementById('optionModal');
+        modal.firstElementChild.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
 </script>
 {% endblock %}
