@@ -1,4 +1,6 @@
 import os, uuid
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask, render_template, request, redirect, session, url_for, has_request_context, jsonify, Response, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
