@@ -1950,20 +1950,59 @@ def api_upload_cover():
 def digital_library():
     if 'user_id' not in session: return redirect('/login')
     s_code = session.get('school_code')
+    user_id = session.get('user_id')
     
     conn = get_db_connection()
-    # Fetch approved/published content
+    # Fetch approved/published content with is_bookmarked field
     query = '''
-        SELECT d.*, u.name as student_name, u.class as student_class
+        SELECT d.*, u.name as student_name, u.class as student_class,
+               (SELECT 1 FROM reading_progress rp WHERE rp.student_id = ? AND rp.content_id = d.id) as is_bookmarked
         FROM digital_content d
         JOIN users u ON d.student_id = u.id
         WHERE d.school_code = ? AND d.status = 'Published'
         ORDER BY d.featured DESC, d.created_at DESC
     '''
-    content_list = conn.execute(query, (s_code,)).fetchall()
+    content_list = conn.execute(query, (user_id, s_code)).fetchall()
+    
+    # Calculate contributor counts & total resources
+    contrib_row = conn.execute("SELECT COUNT(DISTINCT student_id) FROM digital_content WHERE school_code = ? AND status = 'Published'", (s_code,)).fetchone()
+    contributors_count = contrib_row[0] if contrib_row else 0
+    total_resources = len(content_list)
     conn.close()
     
-    return render_template('digital_library.html', content_list=content_list)
+    return render_template('digital_library.html', 
+                           content_list=content_list,
+                           contributors_count=contributors_count,
+                           total_resources=total_resources)
+
+@app.route('/api/toggle-bookmark', methods=['POST'])
+def api_toggle_bookmark():
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+        
+    data = request.json or {}
+    content_id = data.get('content_id')
+    user_id = session.get('user_id')
+    
+    if not content_id:
+        return jsonify({"status": "error", "message": "Missing content_id"}), 400
+        
+    conn = get_db_connection()
+    exists = conn.execute('SELECT id FROM reading_progress WHERE student_id = ? AND content_id = ?', 
+                          (user_id, content_id)).fetchone()
+    
+    if exists:
+        conn.execute('DELETE FROM reading_progress WHERE id = ?', (exists['id'],))
+        bookmarked = False
+    else:
+        now = datetime.now().strftime('%Y-%m-%d %H:%M')
+        conn.execute('INSERT INTO reading_progress (student_id, content_id, last_page, updated_at) VALUES (?, ?, 1, ?)',
+                     (user_id, content_id, now))
+        bookmarked = True
+        
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success", "bookmarked": bookmarked})
 
 @app.route('/digital-library/content/<int:content_id>')
 def view_digital_content(content_id):
