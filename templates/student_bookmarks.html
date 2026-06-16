@@ -1,62 +1,1434 @@
 {% extends "base.html" %}
 
-{% block title %}My Bookmarks - librika.in{% endblock %}
+{% block title %}Saved Items - librika.in{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <header class="header">
-        <div>
-            <h1>🔖 Continue Reading</h1>
-            <p style="color: var(--text-mid); font-size: 0.85rem;">Pick up right where you left off in your digital library books.</p>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-            <div style="display: flex; gap: 10px;">
-                <a href="/digital-library" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Browse Library</a>
-                <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
-            </div>
-            <a href="/student" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
-        </div>
-    </header>
+<!-- Load Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+<!-- Local Style overrides for Saved Items -->
+<style>
+    :root {
+        --sp-purple: #5c3cf3;
+        --sp-purple-light: #f0eeff;
+        --sp-pink-light: #fff0f3;
+        --sp-pink: #ff4d6d;
+        --sp-orange-light: #fff4eb;
+        --sp-orange: #ff8800;
+        --sp-green-light: #ebfbf2;
+        --sp-green: #00b050;
+        --sp-blue-light: #f0f9ff;
+        --sp-blue: #0ea5e9;
+        
+        --sp-text-dark: #0f172a;
+        --sp-text-muted: #64748b;
+        --sp-bg-light: #f8fafc;
+        --sp-white: #ffffff;
+        --sp-border: #f1f5f9;
+        
+        --sp-badge-notes-bg: #f0eeff;
+        --sp-badge-notes-text: #5c3cf3;
+        --sp-badge-articles-bg: #fff4eb;
+        --sp-badge-articles-text: #ff8800;
+        --sp-badge-projects-bg: #f0f9ff;
+        --sp-badge-projects-text: #0ea5e9;
+    }
+    
+    [data-theme="dark"] {
+        --sp-purple-light: rgba(92, 60, 243, 0.15);
+        --sp-text-dark: #f8fafc;
+        --sp-text-muted: #94a3b8;
+        --sp-bg-light: #0f172a;
+        --sp-white: #1e293b;
+        --sp-border: #334155;
+        
+        --sp-badge-notes-bg: rgba(92, 60, 243, 0.2);
+        --sp-badge-notes-text: #a78bfa;
+        --sp-badge-articles-bg: rgba(255, 136, 0, 0.2);
+        --sp-badge-articles-text: #fb923c;
+        --sp-badge-projects-bg: rgba(14, 165, 233, 0.2);
+        --sp-badge-projects-text: #38bdf8;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--sp-bg-light);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .portal-main {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding-bottom: 90px;
+        box-sizing: border-box;
+        background-color: var(--sp-bg-light);
+    }
+
+    /* Header styling */
+    .bookmarks-header {
+        background: var(--sp-white);
+        padding: 1.5rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--sp-border);
+    }
+
+    .bookmarks-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin: 0;
+    }
+
+    .bookmarks-subtitle {
+        font-size: 0.8rem;
+        color: var(--sp-text-muted);
+        margin: 2px 0 0 0;
+        font-weight: 500;
+    }
+
+    .circle-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid var(--sp-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--sp-text-dark);
+        background: var(--sp-white);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        padding: 0;
+    }
+    .circle-btn:hover {
+        background: var(--sp-bg-light);
+        border-color: var(--sp-text-muted);
+        transform: scale(1.03);
+    }
+    
+    .notification-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.65rem;
+        font-weight: 800;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--sp-white);
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--sp-purple);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(92, 60, 243, 0.15);
+        transition: transform 0.2s ease;
+    }
+    .avatar-circle:hover {
+        transform: scale(1.03);
+    }
+
+    /* Filter pills scrollbar */
+    .bookmarks-pills-row {
+        display: flex;
+        gap: 12px;
+        padding: 1.25rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .bookmarks-pills-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    .bookmark-pill {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--sp-white);
+        border: 1px solid var(--sp-border);
+        border-radius: 16px;
+        padding: 12px 18px;
+        min-width: 90px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    
+    .bookmark-pill:hover {
+        border-color: var(--sp-text-muted);
+        transform: translateY(-1px);
+    }
+
+    .bookmark-pill.active {
+        background: var(--sp-purple-light);
+        border-color: var(--sp-purple);
+        color: var(--sp-purple);
+    }
+    
+    .pill-label-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--sp-text-dark);
+    }
+    
+    .bookmark-pill.active .pill-label-wrapper {
+        color: var(--sp-purple);
+    }
+    
+    .pill-count {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--sp-text-muted);
+        margin-top: 4px;
+    }
+    
+    .bookmark-pill.active .pill-count {
+        color: var(--sp-purple);
+    }
+
+    /* Banner Container */
+    .bookmarks-banner {
+        background: var(--sp-purple-light);
+        border-radius: 20px;
+        padding: 16px 20px;
+        margin: 0 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        border: 1px solid rgba(92, 60, 243, 0.05);
+    }
+
+    .banner-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .banner-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--sp-white);
+        color: var(--sp-purple);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: 0 2px 8px rgba(92, 60, 243, 0.06);
+        flex-shrink: 0;
+    }
+
+    .banner-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--sp-text-dark);
+        margin: 0;
+    }
+
+    .banner-desc {
+        font-size: 0.78rem;
+        color: var(--sp-text-muted);
+        margin: 2px 0 0 0;
+        font-weight: 500;
+    }
+
+    .banner-select-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .banner-select {
+        background: var(--sp-white);
+        color: var(--sp-purple);
+        border: 1px solid rgba(92, 60, 243, 0.1);
+        padding: 8px 28px 8px 16px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    
+    .banner-select-wrapper::after {
+        content: "▼";
+        font-size: 0.6rem;
+        color: var(--sp-purple);
+        position: absolute;
+        right: 12px;
+        pointer-events: none;
+    }
+
+    /* Section Shelf header */
+    .section-shelf-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 1.25rem 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .section-shelf-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-shelf-icon-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .section-shelf-icon-badge.books-icon {
+        background: var(--sp-purple-light);
+        color: var(--sp-purple);
+    }
+
+    .section-shelf-icon-badge.notes-icon {
+        background: var(--sp-green-light);
+        color: var(--sp-green);
+    }
+
+    .section-shelf-icon-badge.articles-icon {
+        background: var(--sp-orange-light);
+        color: var(--sp-orange);
+    }
+
+    .section-shelf-icon-badge.projects-icon {
+        background: var(--sp-blue-light);
+        color: var(--sp-blue);
+    }
+
+    .section-shelf-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--sp-text-dark);
+        margin: 0;
+    }
+
+    .section-view-all {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--sp-purple);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .section-view-all:hover {
+        text-decoration: underline;
+    }
+
+    /* Horizontal Book Shelf */
+    .books-horizontal-shelf {
+        display: flex;
+        overflow-x: auto;
+        gap: 16px;
+        padding: 0.25rem 1.25rem 1.25rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .books-horizontal-shelf::-webkit-scrollbar {
+        display: none;
+    }
+
+    .book-shelf-card {
+        width: 140px;
+        flex-shrink: 0;
+        background: var(--sp-white);
+        border: 1px solid var(--sp-border);
+        border-radius: 16px;
+        padding: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        scroll-snap-align: start;
+        transition: all 0.2s ease;
+    }
+    
+    .book-shelf-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+        border-color: var(--sp-text-muted);
+    }
+
+    .book-shelf-cover-wrapper {
+        position: relative;
+        width: 100%;
+        height: 180px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--sp-bg-light);
+        border: 1px solid var(--sp-border);
+    }
+
+    .book-shelf-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .book-shelf-ribbon {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: var(--sp-white);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--sp-purple);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        cursor: pointer;
+        border: none;
+        z-index: 10;
+        transition: all 0.2s ease;
+        padding: 0;
+    }
+
+    .book-shelf-ribbon:hover {
+        transform: scale(1.1);
+    }
+
+    .book-card-info {
+        margin-top: 8px;
+        padding: 0 4px 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 6px;
+    }
+
+    .book-card-text {
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .book-shelf-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--sp-text-dark);
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.3;
+    }
+
+    .book-shelf-author {
+        font-size: 0.72rem;
+        color: var(--sp-text-muted);
+        font-weight: 500;
+        margin: 2px 0 0 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Fallback Cover Styling */
+    .pub-cover-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: #ffffff;
+        padding: 12px;
+        box-sizing: border-box;
+        text-align: center;
+        font-family: 'Outfit', sans-serif;
+    }
+    .pub-cover-fallback-icon {
+        font-size: 1.8rem;
+        margin-bottom: 8px;
+    }
+    .pub-cover-fallback-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Vertical Shelves */
+    .vertical-list-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 0 1.25rem 1.25rem;
+    }
+
+    .saved-item-card {
+        background: var(--sp-white);
+        border-radius: 16px;
+        border: 1px solid var(--sp-border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .saved-item-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        border-color: var(--sp-text-muted);
+    }
+
+    .saved-item-thumb {
+        width: 54px;
+        height: 54px;
+        border-radius: 10px;
+        border: 1px solid var(--sp-border);
+        overflow: hidden;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--sp-bg-light);
+    }
+
+    .saved-item-thumb-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .saved-item-thumb-placeholder {
+        font-size: 1.4rem;
+    }
+    
+    .saved-item-thumb.notes-thumb {
+        background: var(--sp-badge-notes-bg);
+        color: var(--sp-badge-notes-text);
+    }
+    .saved-item-thumb.articles-thumb {
+        background: var(--sp-badge-articles-bg);
+        color: var(--sp-badge-articles-text);
+    }
+    .saved-item-thumb.projects-thumb {
+        background: var(--sp-badge-projects-bg);
+        color: var(--sp-badge-projects-text);
+    }
+
+    .saved-item-details {
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .saved-item-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    
+    .saved-item-badge.notes-badge {
+        background: var(--sp-badge-notes-bg);
+        color: var(--sp-badge-notes-text);
+    }
+    .saved-item-badge.articles-badge {
+        background: var(--sp-badge-articles-bg);
+        color: var(--sp-badge-articles-text);
+    }
+    .saved-item-badge.projects-badge {
+        background: var(--sp-badge-projects-bg);
+        color: var(--sp-badge-projects-text);
+    }
+
+    .saved-item-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--sp-text-dark);
+        margin: 0;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .saved-item-subtext {
+        font-size: 0.72rem;
+        color: var(--sp-text-muted);
+        font-weight: 500;
+        margin: 2px 0 0 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .saved-item-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
+    .saved-item-time {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    .pub-menu-trigger {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+        transition: color 0.2s ease;
+    }
+
+    .pub-menu-trigger:hover {
+        color: var(--sp-text-dark);
+    }
+    
+    /* Interactive Dropdown Menu for Saved Items */
+    .saved-item-menu-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .saved-item-dropdown {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background: var(--sp-white);
+        border: 1px solid var(--sp-border);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        z-index: 100;
+        display: none;
+        flex-direction: column;
+        min-width: 150px;
+        padding: 6px;
+        margin-top: 4px;
+    }
+    
+    .saved-item-dropdown.show {
+        display: flex;
+    }
+    
+    .saved-item-dropdown a, .saved-item-dropdown button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        color: var(--sp-text-dark);
+        text-decoration: none;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 600;
+        box-sizing: border-box;
+    }
+    
+    .saved-item-dropdown a:hover, .saved-item-dropdown button:hover {
+        background: var(--sp-bg-light);
+        color: var(--sp-text-dark);
+    }
+    
+    .dropdown-icon {
+        font-size: 0.95rem;
+    }
+
+    /* Mobile bottom-nav overrides */
+    .bottom-nav {
+        background: var(--sp-white) !important;
+        border-top: 1px solid var(--sp-border) !important;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.02) !important;
+    }
+
+    .bottom-nav-item {
+        color: var(--sp-text-muted) !important;
+    }
+
+    .bottom-nav-item.active {
+        color: var(--sp-purple) !important;
+        background: var(--sp-purple-light) !important;
+    }
+
+    /* Live search overlay block */
+    .search-input-wrapper {
+        display: none;
+        padding: 12px 1.25rem;
+        background: var(--sp-white);
+        border-bottom: 1px solid var(--sp-border);
+        animation: slideDown 0.2s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from { transform: translateY(-10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .search-wrapper input {
+        width: 100%;
+        padding: 10px 16px;
+        border: 1px solid var(--sp-border);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-family: inherit;
+        outline: none;
+        background: var(--sp-bg-light);
+        color: var(--sp-text-dark);
+        box-sizing: border-box;
+    }
+    
+    .search-wrapper input:focus {
+        border-color: var(--sp-purple);
+        background: var(--sp-white);
+        box-shadow: 0 0 0 3px rgba(92, 60, 243, 0.1);
+    }
+
+    /* Responsive adjustments */
+    @media (min-width: 768px) {
+        .bookmarks-header {
+            border-bottom: none;
+            padding: 2rem;
+        }
+
+        .bookmarks-pills-row {
+            padding: 0 2rem 1.5rem;
+        }
+
+        .bookmarks-banner {
+            margin: 0 2rem 2rem;
+            padding: 1.5rem;
+        }
+
+        .section-shelf-header {
+            padding: 0 2rem 0.5rem;
+        }
+
+        .books-horizontal-shelf {
+            padding: 0.5rem 2rem 1.5rem 2rem;
+            gap: 20px;
+        }
+
+        .book-shelf-card {
+            width: 150px;
+        }
+
+        .book-shelf-cover-wrapper {
+            height: 195px;
+        }
+
+        .vertical-list-container {
+            padding: 0 2rem 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 15px;
+        }
+
+        .saved-item-card {
+            margin-bottom: 0;
+        }
+    }
+</style>
+
+<div class="portal-wrapper">
+    <!-- Desktop Sidebar Navigation -->
+    <aside class="desktop-sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">🌐</span>
+            <div class="brand-info">
+                <h4>{{ session.get('school_name', 'E-Pathshala Network') }}</h4>
+                <p>Student Portal</p>
+            </div>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="/student" class="sidebar-link">
+                <span class="link-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="/student/browse" class="sidebar-link">
+                <span class="link-icon">📚</span>
+                <span>Digital Library</span>
+            </a>
+            <a href="/digital-library" class="sidebar-link">
+                <span class="link-icon">🌐</span>
+                <span>Community Library</span>
+            </a>
+            <a href="/student/publish" class="sidebar-link">
+                <span class="link-icon">✏️</span>
+                <span>Publish Content</span>
+            </a>
+            <a href="/student/my-publications" class="sidebar-link">
+                <span class="link-icon">📄</span>
+                <span>Publications</span>
+            </a>
+            <a href="/student/bookmarks" class="sidebar-link active">
+                <span class="link-icon">🔖</span>
+                <span>Saved Items</span>
+            </a>
+            <a href="/student/profile" class="sidebar-link">
+                <span class="link-icon">👤</span>
+                <span>My Profile</span>
+            </a>
+            <hr class="sidebar-divider">
+            <a href="/logout" class="sidebar-link logout-link">
+                <span class="link-icon">🚪</span>
+                <span>Log Out</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-profile-card">
+            <div class="profile-card-avatar">
+                {{ session['user_name'][0]|upper if session['user_name'] else 'S' }}
+            </div>
+            <div class="profile-card-info">
+                <h5>{{ session['user_name'] }}</h5>
+                <p>Class: {{ session['class'] }}</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="portal-main">
+        <!-- Header -->
+        <header class="bookmarks-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="circle-btn" onclick="window.history.back()" title="Go Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <div>
+                    <h1 class="bookmarks-title" style="display: flex; align-items: center; gap: 8px;">
+                        Saved Items
+                        <!-- Inline SVG for bookmark ribbon to match mockup perfectly -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#5c3cf3" stroke="#5c3cf3" stroke-width="1"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                    </h1>
+                    <p class="bookmarks-subtitle">Your saved books, notes, articles and projects</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Search Button -->
+                <button class="circle-btn" onclick="toggleLocalSearch()" title="Search Items">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+                <!-- Notification bell -->
+                <button class="circle-btn" onclick="window.location.href='/student/bookmarks'" title="Notifications">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span class="notification-badge">3</span>
+                </button>
+                <!-- Avatar -->
+                <div class="avatar-circle" onclick="window.location.href='/student/profile'">
+                    {{ session['user_name'][0]|upper if session['user_name'] else 'S' }}
+                </div>
+            </div>
+        </header>
+
+        <!-- Live Search Field -->
+        <div class="search-input-wrapper" id="searchBarOverlay">
+            <div class="search-wrapper" style="max-width: none;">
+                <input type="text" id="bookmarkLocalSearch" placeholder="Search saved books, notes, articles..." onkeyup="performLocalBookmarkSearch()">
+            </div>
+        </div>
+
+        <!-- Categorization of bookmarks in Jinja -->
+        {% set books = [] %}
+        {% set notes = [] %}
+        {% set articles = [] %}
+        {% set projects = [] %}
+
+        {% for item in bookmarks %}
+            {% set cat_lower = item.category|lower %}
+            {% if cat_lower in ['book', 'books', 'ebook', 'textbook'] %}
+                {% set _ = books.append(item) %}
+            {% elif cat_lower in ['notes', 'study material', 'lecture notes', 'notes templates'] %}
+                {% set _ = notes.append(item) %}
+            {% elif cat_lower in ['article', 'articles', 'research work', 'research paper'] %}
+                {% set _ = articles.append(item) %}
+            {% elif cat_lower in ['project', 'project report', 'projects'] %}
+                {% set _ = projects.append(item) %}
+            {% else %}
+                <!-- Fallback category based on name keywords -->
+                {% if 'notes' in item.title|lower or 'formula' in item.title|lower %}
+                    {% set _ = notes.append(item) %}
+                {% elif 'project' in item.title|lower or 'campaign' in item.title|lower %}
+                    {% set _ = projects.append(item) %}
+                {% else %}
+                    {% set _ = articles.append(item) %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% set total_count = bookmarks|length %}
+        {% set books_count = books|length %}
+        {% set notes_count = notes|length %}
+        {% set articles_count = articles|length %}
+        {% set projects_count = projects|length %}
+
+        <!-- Filter Pills Row -->
+        <section class="bookmarks-pills-row">
+            <button class="bookmark-pill active" onclick="filterBookmarkSection('all', this)">
+                <div class="pill-label-wrapper">
+                    <span class="pill-label">All</span>
+                </div>
+                <span class="pill-count">({{ total_count }})</span>
+            </button>
+            <button class="bookmark-pill" onclick="filterBookmarkSection('books', this)">
+                <div class="pill-label-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sp-purple);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span class="pill-label">Books</span>
+                </div>
+                <span class="pill-count">({{ books_count }})</span>
+            </button>
+            <button class="bookmark-pill" onclick="filterBookmarkSection('notes', this)">
+                <div class="pill-label-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sp-green);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    <span class="pill-label">Notes</span>
+                </div>
+                <span class="pill-count">({{ notes_count }})</span>
+            </button>
+            <button class="bookmark-pill" onclick="filterBookmarkSection('articles', this)">
+                <div class="pill-label-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sp-orange);"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><path d="M16 8h2v8h-2zM6 8h8v2H6zm0 4h8v2H6z"></path></svg>
+                    <span class="pill-label">Articles</span>
+                </div>
+                <span class="pill-count">({{ articles_count }})</span>
+            </button>
+            <button class="bookmark-pill" onclick="filterBookmarkSection('projects', this)">
+                <div class="pill-label-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sp-blue);"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span class="pill-label">Projects</span>
+                </div>
+                <span class="pill-count">({{ projects_count }})</span>
+            </button>
+        </section>
+
+        <!-- Top Banner Info -->
+        <section class="bookmarks-banner">
+            <div class="banner-left">
+                <div class="banner-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="banner-title">All your saved resources in one place</h3>
+                    <p class="banner-desc">Access your favorite content anytime, anywhere.</p>
+                </div>
+            </div>
+            <div class="banner-select-wrapper">
+                <select class="banner-select" onchange="sortBookmarksList(this.value)">
+                    <option value="recent">Recently Saved</option>
+                    <option value="alpha">Alphabetical</option>
+                </select>
+            </div>
+        </section>
+
         {% if not bookmarks %}
-        <div class="glow-box" style="text-align: center; padding: 3rem;">
-            <h2 style="color: var(--text-light);">No Bookmarks Yet</h2>
-            <p style="color: var(--text-mid); margin-top: 1rem;">When you read a PDF in the Digital Library, your progress will be saved here automatically.</p>
-            <a href="/digital-library" class="btn-neon" style="display: inline-block; margin-top: 1.5rem;">Explore Library</a>
+        <!-- Empty State -->
+        <div class="glow-box" style="text-align: center; padding: 4rem 2rem; background: var(--sp-white); margin: 0 1.25rem 2rem; border-radius: 20px; border: 1px solid var(--sp-border);">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 12px rgba(92,60,243,0.15));">🔖</div>
+            <h2 style="color: var(--sp-text-dark); font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; margin-top: 1rem;">No Saved Items Yet</h2>
+            <p style="color: var(--sp-text-muted); font-size: 0.82rem; max-width: 280px; margin: 0.5rem auto 1.5rem; line-height: 1.5;">Bookmark textbooks, lecture notes, and research projects to see them grouped here.</p>
+            <a href="/student/browse" class="circle-btn" style="display: inline-flex; width: auto; height: auto; padding: 10px 24px; border-radius: 24px; background: #5c3cf3; color: white; border: none; font-size: 0.85rem; font-weight: 700; text-decoration: none; box-shadow: 0 4px 12px rgba(92,60,243,0.25);">Explore Library</a>
         </div>
         {% else %}
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
-            {% for item in bookmarks %}
-            <a href="/digital-library/read/{{ item.id }}" class="stat-card" style="text-decoration: none; position: relative; transition: transform 0.2s; cursor: pointer; display: block; border-left: 4px solid var(--accent-primary);" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                
-                <div style="display: flex; gap: 15px; margin-bottom: 1rem;">
-                    {% if item.cover_url %}
-                    <img src="{{ item.cover_url }}" style="width: 70px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-                    {% else %}
-                    <div style="width: 70px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">📄</div>
-                    {% endif %}
-                    
-                    <div style="flex: 1;">
-                        <span style="font-size: 0.7rem; color: var(--accent-primary); font-weight: bold; text-transform: uppercase;">{{ item.category }}</span>
-                        <h3 style="margin: 8px 0 5px 0; font-size: 1.1rem; color: var(--text-light);">{{ item.title }}</h3>
-                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-mid);">{{ item.subject }}</p>
-                        
-                        <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
-                            <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: var(--accent-primary);">Page {{ item.last_page }}</span>
-                            <span style="font-size: 0.7rem; color: var(--text-low);">Last read: {{ item.updated_at.split(' ')[0] }}</span>
+
+        <!-- 1. Books Section -->
+        <div class="bookmark-shelf-group" id="shelf-books" {% if books_count == 0 %}style="display:none;"{% endif %}>
+            <div class="section-shelf-header">
+                <div class="section-shelf-title-wrapper">
+                    <span class="section-shelf-icon-badge books-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    </span>
+                    <h2 class="section-shelf-title">Books</h2>
+                </div>
+                <a href="/student/browse" class="section-view-all">View All <span>&rsaquo;</span></a>
+            </div>
+            <div class="books-horizontal-shelf">
+                {% for item in books %}
+                {% set color_options = [
+                    ('linear-gradient(135deg, #fef08a 0%, #facc15 100%)', '#854d0e'),
+                    ('linear-gradient(135deg, #ffedd5 0%, #fb923c 100%)', '#c2410c'),
+                    ('linear-gradient(135deg, #e0f2fe 0%, #38bdf8 100%)', '#0369a1'),
+                    ('linear-gradient(135deg, #f3e8ff 0%, #c084fc 100%)', '#6b21a8'),
+                    ('linear-gradient(135deg, #dcfce7 0%, #4ade80 100%)', '#15803d')
+                ] %}
+                {% set color_idx = loop.index0 % 5 %}
+                {% set selected_color = color_options[color_idx][0] %}
+                {% set selected_text = color_options[color_idx][1] %}
+
+                <div class="book-shelf-card bookmark-item-node" data-title="{{ item.title|lower }}" data-author="{{ (item.student_name or item.subject)|lower }}">
+                    <div class="book-shelf-cover-wrapper">
+                        <!-- Bookmark ribbon button -->
+                        <button class="book-shelf-ribbon" onclick="removeBookmarkAJAX(event, '{{ item.id }}', this)" title="Remove Bookmark">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#5c3cf3" stroke="#5c3cf3" stroke-width="1"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                        </button>
+                        {% if item.cover_url %}
+                        <img src="{{ item.cover_url }}" class="book-shelf-cover" alt="Cover">
+                        {% else %}
+                        <div class="pub-cover-fallback" style="background: {{ selected_color }}; color: {{ selected_text }}">
+                            <div class="pub-cover-fallback-icon">📖</div>
+                            <div class="pub-cover-fallback-title">{{ item.title }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="book-card-info">
+                        <div class="book-card-text">
+                            <a href="/digital-library/read/{{ item.id }}" style="text-decoration:none;">
+                                <h3 class="book-shelf-title">{{ item.title }}</h3>
+                            </a>
+                            <p class="book-shelf-author">{{ item.student_name or item.subject }}</p>
+                        </div>
+                        <!-- Menu trigger -->
+                        <div class="saved-item-menu-container">
+                            <button class="pub-menu-trigger" onclick="toggleMenu(event, 'menu-{{ item.id }}')">⋮</button>
+                            <div class="saved-item-dropdown" id="menu-{{ item.id }}">
+                                <a href="/digital-library/read/{{ item.id }}"><span class="dropdown-icon">📖</span> Read Book</a>
+                                <button onclick="removeBookmarkAJAX(event, '{{ item.id }}', this)"><span class="dropdown-icon">❌</span> Remove Saved</button>
+                                <button onclick="shareBookmark('{{ item.title }}', '{{ item.id }}')"><span class="dropdown-icon">🔗</span> Share Link</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; text-align: center; color: var(--text-light); font-size: 0.9rem; font-weight: 500;">
-                    ▶ Resume Reading
-                </div>
-            </a>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
+
+        <!-- 2. Notes Section -->
+        <div class="bookmark-shelf-group" id="shelf-notes" {% if notes_count == 0 %}style="display:none;"{% endif %}>
+            <div class="section-shelf-header">
+                <div class="section-shelf-title-wrapper">
+                    <span class="section-shelf-icon-badge notes-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    </span>
+                    <h2 class="section-shelf-title">Nooks</h2>
+                </div>
+                <a href="/student/browse?category=Notes" class="section-view-all">View All <span>&rsaquo;</span></a>
+            </div>
+            <div class="vertical-list-container">
+                {% for item in notes %}
+                <div class="saved-item-card bookmark-item-node" data-title="{{ item.title|lower }}" data-author="{{ (item.student_name or item.subject)|lower }}">
+                    <div class="saved-item-thumb notes-thumb">
+                        {% if item.cover_url %}
+                        <img src="{{ item.cover_url }}" class="saved-item-thumb-img" alt="Cover">
+                        {% else %}
+                        <span class="saved-item-thumb-placeholder">📝</span>
+                        {% endif %}
+                    </div>
+                    <div class="saved-item-details">
+                        <span class="saved-item-badge notes-badge">Notes</span>
+                        <a href="/digital-library/read/{{ item.id }}" style="text-decoration:none;">
+                            <h3 class="saved-item-title">{{ item.title }}</h3>
+                        </a>
+                        <p class="saved-item-subtext">{{ item.class or 'Class 11' }} &bull; {{ item.subject }}</p>
+                    </div>
+                    <div class="saved-item-right">
+                        <span class="saved-item-time" data-time="{{ item.updated_at }}">...</span>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="saved-item-menu-container">
+                            <button class="pub-menu-trigger" onclick="toggleMenu(event, 'menu-{{ item.id }}')">⋮</button>
+                            <div class="saved-item-dropdown" id="menu-{{ item.id }}">
+                                <a href="/digital-library/read/{{ item.id }}"><span class="dropdown-icon">📖</span> View Notes</a>
+                                <button onclick="removeBookmarkAJAX(event, '{{ item.id }}', this)"><span class="dropdown-icon">❌</span> Remove Saved</button>
+                                <button onclick="shareBookmark('{{ item.title }}', '{{ item.id }}')"><span class="dropdown-icon">🔗</span> Share Link</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 3. Articles Section -->
+        <div class="bookmark-shelf-group" id="shelf-articles" {% if articles_count == 0 %}style="display:none;"{% endif %}>
+            <div class="section-shelf-header">
+                <div class="section-shelf-title-wrapper">
+                    <span class="section-shelf-icon-badge articles-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><path d="M16 8h2v8h-2zM6 8h8v2H6zm0 4h8v2H6z"></path></svg>
+                    </span>
+                    <h2 class="section-shelf-title">Articles</h2>
+                </div>
+                <a href="/student/browse?category=Articles" class="section-view-all">View All <span>&rsaquo;</span></a>
+            </div>
+            <div class="vertical-list-container">
+                {% for item in articles %}
+                <div class="saved-item-card bookmark-item-node" data-title="{{ item.title|lower }}" data-author="{{ (item.student_name or item.subject)|lower }}">
+                    <div class="saved-item-thumb articles-thumb">
+                        {% if item.cover_url %}
+                        <img src="{{ item.cover_url }}" class="saved-item-thumb-img" alt="Cover">
+                        {% else %}
+                        <span class="saved-item-thumb-placeholder">📄</span>
+                        {% endif %}
+                    </div>
+                    <div class="saved-item-details">
+                        <span class="saved-item-badge articles-badge">Article</span>
+                        <a href="/digital-library/read/{{ item.id }}" style="text-decoration:none;">
+                            <h3 class="saved-item-title">{{ item.title }}</h3>
+                        </a>
+                        <p class="saved-item-subtext">{{ item.student_name or 'Author' }} &bull; {{ item.subject }}</p>
+                    </div>
+                    <div class="saved-item-right">
+                        <span class="saved-item-time" data-time="{{ item.updated_at }}">...</span>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="saved-item-menu-container">
+                            <button class="pub-menu-trigger" onclick="toggleMenu(event, 'menu-{{ item.id }}')">⋮</button>
+                            <div class="saved-item-dropdown" id="menu-{{ item.id }}">
+                                <a href="/digital-library/read/{{ item.id }}"><span class="dropdown-icon">📰</span> Read Article</a>
+                                <button onclick="removeBookmarkAJAX(event, '{{ item.id }}', this)"><span class="dropdown-icon">❌</span> Remove Saved</button>
+                                <button onclick="shareBookmark('{{ item.title }}', '{{ item.id }}')"><span class="dropdown-icon">🔗</span> Share Link</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 4. Projects Section -->
+        <div class="bookmark-shelf-group" id="shelf-projects" {% if projects_count == 0 %}style="display:none;"{% endif %}>
+            <div class="section-shelf-header">
+                <div class="section-shelf-title-wrapper">
+                    <span class="section-shelf-icon-badge projects-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    </span>
+                    <h2 class="section-shelf-title">Projects</h2>
+                </div>
+                <a href="/student/browse?category=Projects" class="section-view-all">View All <span>&rsaquo;</span></a>
+            </div>
+            <div class="vertical-list-container">
+                {% for item in projects %}
+                <div class="saved-item-card bookmark-item-node" data-title="{{ item.title|lower }}" data-author="{{ (item.student_name or item.subject)|lower }}">
+                    <div class="saved-item-thumb projects-thumb">
+                        {% if item.cover_url %}
+                        <img src="{{ item.cover_url }}" class="saved-item-thumb-img" alt="Cover">
+                        {% else %}
+                        <span class="saved-item-thumb-placeholder">📂</span>
+                        {% endif %}
+                    </div>
+                    <div class="saved-item-details">
+                        <span class="saved-item-badge projects-badge">Project</span>
+                        <a href="/digital-library/read/{{ item.id }}" style="text-decoration:none;">
+                            <h3 class="saved-item-title">{{ item.title }}</h3>
+                        </a>
+                        <p class="saved-item-subtext">{{ item.student_name or 'Contributor' }} &bull; {{ item.subject }}</p>
+                    </div>
+                    <div class="saved-item-right">
+                        <span class="saved-item-time" data-time="{{ item.updated_at }}">...</span>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="saved-item-menu-container">
+                            <button class="pub-menu-trigger" onclick="toggleMenu(event, 'menu-{{ item.id }}')">⋮</button>
+                            <div class="saved-item-dropdown" id="menu-{{ item.id }}">
+                                <a href="/digital-library/read/{{ item.id }}"><span class="dropdown-icon">📂</span> View Project</a>
+                                <button onclick="removeBookmarkAJAX(event, '{{ item.id }}', this)"><span class="dropdown-icon">❌</span> Remove Saved</button>
+                                <button onclick="shareBookmark('{{ item.title }}', '{{ item.id }}')"><span class="dropdown-icon">🔗</span> Share Link</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
         {% endif %}
-    </main>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="bottom-nav">
+            <a href="/student" class="bottom-nav-item">
+                <span class="bottom-nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                </span>
+                <span class="bottom-nav-label">Home</span>
+            </a>
+            <a href="/student/browse" class="bottom-nav-item">
+                <span class="bottom-nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                </span>
+                <span class="bottom-nav-label">Library</span>
+            </a>
+            <a href="/digital-library" class="bottom-nav-item">
+                <span class="bottom-nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                </span>
+                <span class="bottom-nav-label">Community</span>
+            </a>
+            <a href="/student/publish" class="bottom-nav-item">
+                <span class="bottom-nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                </span>
+                <span class="bottom-nav-label">Creator Hub</span>
+            </a>
+            <a href="/student/profile" class="bottom-nav-item active">
+                <span class="bottom-nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </span>
+                <span class="bottom-nav-label">Profile</span>
+            </a>
+        </nav>
+    </div>
 </div>
+
+<script>
+    // Global listener to close any open dropdown menus when clicking outside
+    window.addEventListener('click', function(e) {
+        if (!e.target.closest('.pub-menu-trigger')) {
+            document.querySelectorAll('.saved-item-dropdown').forEach(d => {
+                d.classList.remove('show');
+            });
+        }
+    });
+
+    // Toggle Dropdown Action Menu
+    function toggleMenu(event, menuId) {
+        event.stopPropagation();
+        event.preventDefault();
+        const menu = document.getElementById(menuId);
+        const isOpen = menu.classList.contains('show');
+        
+        // Close all other dropdowns first
+        document.querySelectorAll('.saved-item-dropdown').forEach(d => {
+            d.classList.remove('show');
+        });
+        
+        if (!isOpen) {
+            menu.classList.add('show');
+        }
+    }
+
+    // Share bookmark link function
+    function shareBookmark(title, contentId) {
+        const shareUrl = window.location.origin + '/digital-library/content/' + contentId;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                url: shareUrl
+            }).catch(err => {
+                console.log('Web share failed, fallback to copy:', err);
+                copyToClipboard(title, shareUrl);
+            });
+        } else {
+            copyToClipboard(title, shareUrl);
+        }
+    }
+    
+    function copyToClipboard(title, url) {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('Link copied: ' + title, 'success');
+        }).catch(() => {
+            showToast('Could not copy link', 'error');
+        });
+    }
+
+    // Toggle Search input overlay
+    function toggleLocalSearch() {
+        const overlay = document.getElementById('searchBarOverlay');
+        if (overlay.style.display === 'block') {
+            overlay.style.display = 'none';
+            document.getElementById('bookmarkLocalSearch').value = '';
+            performLocalBookmarkSearch(); // Reset filters
+        } else {
+            overlay.style.display = 'block';
+            document.getElementById('bookmarkLocalSearch').focus();
+        }
+    }
+
+    // Perform Local Bookmark Search
+    function performLocalBookmarkSearch() {
+        const query = document.getElementById('bookmarkLocalSearch').value.toLowerCase().trim();
+        const items = document.querySelectorAll('.bookmark-item-node');
+        
+        items.forEach(item => {
+            const title = item.getAttribute('data-title');
+            const author = item.getAttribute('data-author');
+            if (!query || title.includes(query) || author.includes(query)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // Filter by Section tabs
+    function filterBookmarkSection(section, button) {
+        document.querySelectorAll('.bookmark-pill').forEach(pill => {
+            pill.classList.remove('active');
+        });
+        button.classList.add('active');
+
+        const shelves = document.querySelectorAll('.bookmark-shelf-group');
+        
+        shelves.forEach(shelf => {
+            const shelfId = shelf.id;
+            if (section === 'all') {
+                // Check if shelf has children items before displaying
+                const visibleItems = shelf.querySelectorAll('.bookmark-item-node').length;
+                if (visibleItems > 0) {
+                    shelf.style.display = '';
+                }
+            } else {
+                if (shelfId === 'shelf-' + section) {
+                    shelf.style.display = '';
+                } else {
+                    shelf.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Relative times calculation helper
+    function getRelativeTime(dateStr) {
+        if (!dateStr) return 'some time ago';
+        const parts = dateStr.split(/[- :]/);
+        if (parts.length < 5) return 'recently';
+        
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        const hour = parseInt(parts[3], 10);
+        const minute = parseInt(parts[4], 10);
+        
+        const date = new Date(year, month, day, hour, minute);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        
+        if (diffMins < 1) return 'Saved just now';
+        if (diffMins < 60) return `Saved ${diffMins}m ago`;
+        if (diffHours < 24) return `Saved ${diffHours}h ago`;
+        if (diffDays === 1) return `Saved yesterday`;
+        return `Saved ${diffDays}d ago`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.saved-item-time').forEach(el => {
+            const timeStr = el.getAttribute('data-time');
+            el.innerText = getRelativeTime(timeStr);
+        });
+    });
+
+    // AJAX Bookmark removal
+    function removeBookmarkAJAX(event, contentId, element) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        fetch('/api/toggle-bookmark', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content_id: contentId
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status === 'success') {
+                showToast('Removed from Saved Items', 'info');
+                // Reload page to update counters and groups dynamically
+                setTimeout(() => window.location.reload(), 300);
+            } else {
+                showToast(res.message || 'Bookmark removal failed', 'error');
+            }
+        })
+        .catch(() => {
+            showToast('Unable to complete request', 'error');
+        });
+    }
+
+    // Sorting client side function
+    function sortBookmarksList(criteria) {
+        showToast('Sorting by ' + criteria + '...', 'info');
+        
+        // Group each list container and sort its cards
+        // Sort books shelf
+        const booksShelf = document.querySelector('.books-horizontal-shelf');
+        if (booksShelf) sortContainer(booksShelf, criteria, '.book-shelf-card');
+
+        // Sort vertical lists
+        document.querySelectorAll('.vertical-list-container').forEach(container => {
+            sortContainer(container, criteria, '.saved-item-card');
+        });
+    }
+
+    function sortContainer(container, criteria, cardSelector) {
+        const cards = Array.from(container.querySelectorAll(cardSelector));
+        if (!cards.length) return;
+
+        cards.sort((a, b) => {
+            if (criteria === 'alpha') {
+                const titleA = a.getAttribute('data-title') || '';
+                const titleB = b.getAttribute('data-title') || '';
+                return titleA.localeCompare(titleB);
+            } else {
+                // default sort (recent) - use data-time if present, or maintain default order
+                const timeAEl = a.querySelector('.saved-item-time');
+                const timeBEl = b.querySelector('.saved-item-time');
+                const timeA = timeAEl ? timeAEl.getAttribute('data-time') || '' : '';
+                const timeB = timeBEl ? timeBEl.getAttribute('data-time') || '' : '';
+                return timeB.localeCompare(timeA); // Descending order (recent first)
+            }
+        });
+
+        // Re-append sorted cards
+        cards.forEach(card => container.appendChild(card));
+    }
+</script>
 {% endblock %}

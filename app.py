@@ -1665,6 +1665,7 @@ def student_my_publications():
     s_code = session.get('school_code')
     user_id = session.get('user_id')
     
+    conn = get_db_connection()
     query = '''
         SELECT d.*, 
                (SELECT COUNT(*) FROM reading_progress rp WHERE rp.content_id = d.id) as bookmarks_count
@@ -2170,11 +2171,12 @@ def student_bookmarks():
     if 'user_id' not in session or session.get('role') != 'student': return redirect('/login')
     
     conn = get_db_connection()
-    # Join with digital_content to get book details
+    # Join with digital_content to get book details & creator name
     query = '''
-        SELECT p.last_page, p.updated_at, d.* 
+        SELECT p.last_page, p.updated_at, d.*, u.name as student_name
         FROM reading_progress p
         JOIN digital_content d ON p.content_id = d.id
+        LEFT JOIN users u ON d.student_id = u.id
         WHERE p.student_id = ?
         ORDER BY p.updated_at DESC
     '''
