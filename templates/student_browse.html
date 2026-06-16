@@ -912,11 +912,11 @@
             </a>
             <a href="/student/browse" class="sidebar-link active">
                 <span class="link-icon">📚</span>
-                <span>Library Catalog</span>
+                <span>Digital Library</span>
             </a>
             <a href="/digital-library" class="sidebar-link">
                 <span class="link-icon">🌐</span>
-                <span>Digital Library</span>
+                <span>Community Library</span>
             </a>
             <a href="/student/publish" class="sidebar-link">
                 <span class="link-icon">✏️</span>
@@ -979,8 +979,8 @@
                 </div>
             </div>
             <div class="portal-welcome">
-                <h2>Library 📚</h2>
-                <p>Explore vast collection of books, notes and learning resources</p>
+                <h2 style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 1.6rem; line-height: 1;">🌐</span> Digital Library</h2>
+                <p>Explore, learn and grow every day.</p>
             </div>
             <img src="{{ url_for('static', filename='student_books_illustration.png') }}" class="header-illustration" alt="Digital Library">
         </header>
@@ -995,7 +995,7 @@
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" name="q" placeholder="Search by title, author, subject..." value="{{ search_query or '' }}" class="search-input">
+                    <input type="text" name="q" placeholder="Search by title, author, subject, keyword..." value="{{ search_query or '' }}" class="search-input">
                     {% if active_genre %}
                     <input type="hidden" name="genre" value="{{ active_genre }}">
                     {% endif %}
@@ -1048,10 +1048,10 @@
                 <div class="featured-info">
                     <div class="featured-label">Featured Collection</div>
                     <h4 class="featured-title">Top Reads This Week</h4>
-                    <p class="featured-subtitle">Most popular and trending titles picked for you!</p>
+                    <p class="featured-subtitle">Handpicked popular books and resources just for you!</p>
                     <a href="/student/browse?genre=Self+Help" class="featured-btn">Explore Now</a>
                 </div>
-                <span style="font-size: 5.5rem; line-height: 1; z-index: 5;">🏆</span>
+                <img src="{{ url_for('static', filename='books_stack_with_plant.png') }}" class="featured-illustration" alt="Featured Collection">
             </div>
             
             <div class="carousel-dots">
@@ -1224,8 +1224,8 @@
         
         <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Navigation</p>
         <a href="/student" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📊 Dashboard Overview</a>
-        <a href="/student/browse" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px; background: #f0eeff; color: #5c3cf3;">📚 Browse Books</a>
-        <a href="/digital-library" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🌐 Digital Library</a>
+        <a href="/student/browse" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px; background: #f0eeff; color: #5c3cf3;">📚 Digital Library</a>
+        <a href="/digital-library" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🌐 Community Library</a>
         <a href="/student/publish" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">✏️ Publish Content</a>
         <a href="/student/my-publications" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📄 My Publications</a>
         <a href="/student/bookmarks" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🔖 Saved Bookmarks</a>
