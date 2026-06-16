@@ -1,42 +1,462 @@
 {% extends "base.html" %}
-
 {% block title %}Settings - librika.in{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <header class="header">
-        <div>
-            <h1>Digital Library Management</h1>
-            <p style="color: var(--text-mid); font-size: 0.85rem;">Security & Library Controls</p>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-            <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
-            <a href="/admin" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
-        </div>
-    </header>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <div class="auth-card" style="max-width: 600px; margin: 0 auto;">
-        <h2 style="margin-bottom: 2rem;">Library Settings</h2>
+<style>
+:root {
+    --lp: #5c3cf3;
+    --lp-mid: #7c5cf6;
+    --lp-light: #f0eeff;
+    --lg: #22c55e;
+    --lg-light: #dcfce7;
+    --lo: #f97316;
+    --lo-light: #fff7ed;
+    --lr: #ef4444;
+    --lr-light: #fef2f2;
+    --lb: #3b82f6;
+    --lb-light: #eff6ff;
+    --lt: #06b6d4;
+    --lt-light: #ecfeff;
+    --lam: #f59e0b;
+    --lam-light: #fefce8;
+    --bg: #f8fafc;
+    --white: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --mid: #475569;
+    --muted: #94a3b8;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 10px 30px rgba(92, 60, 243, 0.08);
+    --radius: 18px;
+}
+[data-theme="dark"] {
+    --bg: #0f172a; --white: #1e293b; --border: #334155;
+    --text: #f1f5f9; --mid: #94a3b8; --muted: #64748b;
+    --lp-light: rgba(92, 60, 243, 0.15);
+    --lg-light: rgba(34, 197, 94, 0.12);
+    --lo-light: rgba(249, 115, 22, 0.12);
+    --lr-light: rgba(239, 68, 68, 0.12);
+    --lb-light: rgba(59, 130, 246, 0.12);
+    --lt-light: rgba(6, 182, 212, 0.12);
+    --lam-light: rgba(245, 158, 11, 0.12);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    --shadow-hover: 0 10px 30px rgba(92, 60, 243, 0.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+/* ── SHELL ── */
+.ld-shell { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.ld-sidebar {
+    width: 260px; background: var(--white); border-right: 1px solid var(--border);
+    display: none; flex-direction: column; padding: 1.5rem 1.25rem;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; flex-shrink: 0; z-index: 200;
+}
+.ld-sidebar-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+.ld-brand-icon {
+    width: 40px; height: 40px; background: var(--lp-light);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+}
+.ld-sidebar-brand h4 { font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 800; color: var(--text); }
+.ld-sidebar-brand p  { font-size: 0.68rem; color: var(--muted); font-weight: 500; }
+
+.ld-nav { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.ld-nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 12px;
+    text-decoration: none; color: var(--mid);
+    font-size: 0.83rem; font-weight: 600; transition: all 0.18s;
+}
+.ld-nav-link:hover { background: var(--lp-light); color: var(--lp); }
+.ld-nav-link.active { background: var(--lp-light); color: var(--lp); font-weight: 700; }
+.ld-nav-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: transparent; flex-shrink: 0; }
+.ld-nav-link.active .ld-nav-icon { background: var(--lp); }
+.ld-nav-link:hover .ld-nav-icon { background: var(--lp); }
+.ld-nav-icon svg { transition: stroke 0.18s; }
+.ld-nav-link.active .ld-nav-icon svg,
+.ld-nav-link:hover .ld-nav-icon svg { stroke: white; }
+
+.ld-nav-divider { border: none; border-top: 1px solid var(--border); margin: 0.6rem 0; }
+.ld-nav-link.logout:hover { background: rgba(239,68,68,0.08); color: var(--lr); }
+
+.ld-sidebar-profile {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.75rem; background: var(--lp-light); border-radius: 14px; margin-top: auto;
+    cursor: pointer; transition: all 0.2s;
+}
+.ld-sidebar-profile:hover { transform: translateY(-2px); }
+.ld-sidebar-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--lp); color: white; font-weight: 800; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ld-sidebar-profile h5 { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.ld-sidebar-profile p  { font-size: 0.67rem; color: var(--muted); font-weight: 500; }
+
+/* ── MAIN ── */
+.ld-main {
+    flex: 1; display: flex; flex-direction: column;
+    min-height: 100vh; overflow-y: auto; padding-bottom: 90px;
+}
+
+/* ── TOPBAR (mobile) ── */
+.ld-topbar {
+    background: var(--white); padding: 0.9rem 1.25rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+}
+.ld-topbar-left { display: flex; align-items: center; gap: 10px; }
+.ld-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.ld-logo-icon { width: 34px; height: 34px; background: var(--lp-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+.ld-logo h4 { font-family: 'Outfit', sans-serif; font-size: 0.88rem; font-weight: 800; color: var(--text); }
+.ld-logo p  { font-size: 0.62rem; color: var(--muted); font-weight: 500; }
+.ld-topbar-right { display: flex; align-items: center; gap: 8px; }
+.ld-avatar-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--lp); color: white; font-size: 0.9rem; font-weight: 800;
+    border: 2px solid var(--lp-light); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* ── PAGE CONTENT ── */
+.ld-content { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* Welcome */
+.ld-welcome { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.ld-welcome h1 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.ld-welcome p  { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+.ld-date-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px;
+    font-size: 0.75rem; font-weight: 600; color: var(--mid);
+    white-space: nowrap; box-shadow: var(--shadow); flex-shrink: 0;
+}
+
+/* Panels */
+.ld-panel {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.5rem;
+}
+.ld-panel-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+}
+.ld-panel-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text); }
+
+/* Buttons */
+.ld-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--lp); color: white; border: none; border-radius: 12px;
+    padding: 10px 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s; text-decoration: none;
+}
+.ld-btn:hover { background: var(--lp-mid); transform: translateY(-1px); box-shadow: var(--shadow-hover); }
+
+.ld-btn-alt {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--lp-light); color: var(--lp); border: 1px solid rgba(92,60,243,0.1); border-radius: 12px;
+    padding: 10px 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s; text-decoration: none;
+}
+.ld-btn-alt:hover { background: var(--lp); color: white; }
+.ld-btn-danger {
+    background: var(--lr-light); color: var(--lr); border: 1px solid rgba(239,68,68,0.1);
+}
+.ld-btn-danger:hover { background: var(--lr); color: white; }
+
+/* Forms & Inputs */
+.ld-form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 0.85rem; }
+.ld-form-group label { font-size: 0.78rem; font-weight: 700; color: var(--mid); }
+.ld-input {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 12px;
+    background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem; outline: none; transition: border-color 0.2s;
+}
+.ld-input:focus { border-color: var(--lp); }
+
+/* Badges */
+.ld-badge {
+    display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px;
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+}
+.ld-badge-warning { background: var(--lam-light); color: var(--lam); }
+
+/* ── BOTTOM NAV ── */
+.ld-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 72px;
+    background: var(--white); border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.04);
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 0 0.5rem; z-index: 1000;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.ld-bnav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    text-decoration: none; color: var(--muted);
+    font-size: 0.6rem; font-weight: 700; padding: 8px 12px; border-radius: 12px;
+    transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.ld-bnav-item.active { color: var(--lp); background: var(--lp-light); }
+
+/* Hide global floaters */
+.global-nav-container { display: none !important; }
+
+/* ── MODALS ── */
+.ld-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    z-index: 2000; display: none; align-items: center; justify-content: center;
+    padding: 1rem;
+}
+.ld-modal-content {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.75rem; width: 100%; max-width: 480px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12); position: relative;
+    max-height: 90vh; overflow-y: auto;
+}
+.ld-modal-close {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer;
+    line-height: 1; transition: color 0.2s;
+}
+.ld-modal-close:hover { color: var(--lr); }
+.ld-modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; color: var(--text); }
+
+/* ── DESKTOP ── */
+@media (min-width: 768px) {
+    .ld-sidebar    { display: flex !important; }
+    .ld-topbar     { display: none !important; }
+    .ld-bottom-nav { display: none !important; }
+    .ld-main       { padding-bottom: 2rem; }
+    .ld-content { padding: 2rem 2.5rem; gap: 2rem; }
+    .ld-welcome h1 { font-size: 2rem; }
+}
+</style>
+
+<div class="ld-shell">
+
+    <!-- ══ SIDEBAR (Desktop) ══ -->
+    <aside class="ld-sidebar">
+        <div class="ld-sidebar-brand">
+            <div class="ld-brand-icon">📚</div>
+            <div class="ld-brand-text">
+                <h4>Librika</h4>
+                <p>Librarian Panel</p>
+            </div>
+        </div>
+
+        <nav class="ld-nav">
+            <a href="/admin?section=dashboard" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </div>
+                Dashboard
+            </a>
+            <a href="/admin?section=books" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                Books
+            </a>
+            <a href="/admin?section=members" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                Members
+            </a>
+            <a href="/admin?section=transactions" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                </div>
+                Transactions
+            </a>
+            <a href="/admin?section=overdue" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                Overdue
+            </a>
+            {% if school_perms.canUsePublishing %}
+            <a href="/admin?section=moderation" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                Moderation
+            </a>
+            {% endif %}
+            <a href="/admin?section=reports" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                Reports & Hub
+            </a>
+            <a href="/admin/settings" class="ld-nav-link active">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                </div>
+                Settings
+            </a>
+            <hr class="ld-nav-divider">
+            <a href="/logout" class="ld-nav-link logout">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </div>
+                Disconnect
+            </a>
+        </nav>
+
+        <div class="ld-sidebar-profile" onclick="openModal('viewSchoolModal')">
+            <div class="ld-sidebar-avatar">{{ session.get('user_name','L')[0]|upper }}</div>
+            <div style="min-width: 0;">
+                <h5 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ session.get('user_name', 'Librarian') }}</h5>
+                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ session.get('school_name', 'Library') }}</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ══ MAIN ══ -->
+    <div class="ld-main">
+
+        <!-- Mobile Top Bar -->
+        <div class="ld-topbar">
+            <div class="ld-topbar-left">
+                <a href="/admin" class="ld-logo">
+                    <div class="ld-logo-icon">📚</div>
+                    <div>
+                        <h4>Librika</h4>
+                        <p>Librarian Panel</p>
+                    </div>
+                </a>
+            </div>
+            <div class="ld-topbar-right">
+                <div class="ld-avatar-btn" onclick="openModal('viewSchoolModal')">{{ session.get('user_name','L')[0]|upper }}</div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="ld-content">
+
+            <!-- Title Welcome -->
+            <div class="ld-welcome" style="margin-bottom: 0.5rem;">
+                <div>
+                    <h1 style="display:flex; align-items:center; gap:8px;">⚙️ Library Settings</h1>
+                    <p>Security & Library Controls</p>
+                </div>
+                <div class="ld-date-chip">
+                    <a href="/admin" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:4px; font-weight:700;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Form Card panel -->
+            <div class="ld-panel" style="max-width: 650px; margin: 0 auto; width: 100%;">
+                <div class="ld-panel-header" style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 8px;">
+                    <h3 class="ld-panel-title">Update Credentials</h3>
+                    <p style="font-size: 0.78rem; color: var(--muted); margin-top: 1px;">Make changes to your institution display details and dynamic codes.</p>
+                </div>
+
+                <form method="POST">
+                    <div class="ld-form-group">
+                        <label for="new_name">Library Display Name</label>
+                        <input type="text" id="new_name" name="new_name" value="{{ school.name }}" class="ld-input" required placeholder="e.g. Greenwood Library">
+                    </div>
+
+                    <div class="ld-form-group">
+                        <label for="new_code">Dynamic Library Code</label>
+                        <input type="text" id="new_code" name="new_code" value="{{ school.school_code }}" class="ld-input" required pattern="[A-Z0-9\-]+" placeholder="e.g. GREENWOOD-101">
+                        
+                        <!-- Warning message box -->
+                        <div style="background: var(--lr-light); border: 1.5px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 10px 14px; color: var(--lr); font-size: 0.75rem; font-weight: 600; margin-top: 8px; display: flex; align-items: flex-start; gap: 8px;">
+                            <span style="font-size: 1rem; line-height: 1;">⚠️</span>
+                            <span>Changing this code will force all active users (including your admin account) to log out and re-authenticate using the new credentials.</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="ld-btn" style="width: 100%; margin-top: 1rem; padding: 12px; font-size: 0.9rem;">Authorize Changes</button>
+                </form>
+
+                <!-- Platform switch card -->
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); text-align: center;">
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; font-weight: 600;">Platform Ownership Issue?</p>
+                    <a href="/logout" class="ld-btn-alt ld-btn-danger" style="width: 100%; text-decoration: none;">Switch to Platform Account</a>
+                </div>
+            </div>
+
+        </div><!-- end ld-content -->
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="ld-bottom-nav">
+            <a href="/admin?section=dashboard" class="ld-bnav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/admin?section=books" class="ld-bnav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span>Books</span>
+            </a>
+            <a href="/admin?section=members" class="ld-bnav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Members</span>
+            </a>
+            <a href="/admin?section=transactions" class="ld-bnav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                <span>Transactions</span>
+            </a>
+            <a href="/admin?section=reports" class="ld-bnav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Reports</span>
+            </a>
+        </nav>
+
+    </div><!-- end ld-main -->
+</div><!-- end ld-shell -->
+
+<!-- ══ MODALS ══ -->
+<div id="viewSchoolModal" class="ld-modal-overlay">
+    <div class="ld-modal-content" style="max-width: 480px;">
+        <button class="ld-modal-close" onclick="closeModal('viewSchoolModal')">✕</button>
+        <h3 class="ld-modal-title">🏫 School Profile & Subscriptions</h3>
         
-        <form method="POST">
-            <div class="input-group">
-                <label for="new_name">Library Display Name</label>
-                <input type="text" id="new_name" name="new_name" value="{{ school.name }}" required>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 14px; font-size: 0.88rem;">
+            <div>
+                <span style="color:var(--muted); font-weight:700; display:block; margin-bottom:2px;">LIBRARY NAME</span>
+                <span style="font-weight:800; font-size:1rem; color:var(--text);">{{ session.get('school_name', 'librika.in') }}</span>
             </div>
-
-            <div class="input-group">
-                <label for="new_code">Dynamic Library Code (Warning: Logouts will occur)</label>
-                <input type="text" id="new_code" name="new_code" value="{{ school.school_code }}" required pattern="[A-Z0-9\-]+">
-                <p style="font-size: 0.7rem; color: var(--accent-warning); margin-top: 5px;">Changing this code will force all members (including you) to re-authenticate with the new credentials.</p>
+            <div>
+                <span style="color:var(--muted); font-weight:700; display:block; margin-bottom:2px;">LIBRARY UNIQUE CODE</span>
+                <code style="background:var(--bg); border:1px solid var(--border); padding:4px 8px; border-radius:6px; font-weight:800; font-family:monospace; color:var(--lp); font-size:0.85rem;">{{ session.get('school_code', 'GLOBAL') }}</code>
             </div>
-
-            <button type="submit" class="btn-neon">Authorize Changes</button>
-        </form>
-
-        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center;">
-            <p style="font-size: 0.8rem; color: var(--text-low); margin-bottom: 1rem;">Platform Ownership Issue?</p>
-            <a href="/logout" class="btn-alt" style="width: 100%; border-color: var(--accent-error); color: var(--accent-error);">Switch to Platform Account</a>
+            <hr style="border:0; border-top:1px solid var(--border); margin:4px 0;">
+            <h4 style="font-family:'Outfit'; font-weight:800; color:var(--lp);">Plan Allowances & Quota</h4>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700; color:var(--mid);">Active Plan</span>
+                <span class="ld-badge ld-badge-warning" style="font-size:0.75rem; padding:4px 12px; background:var(--lp-light); color:var(--lp);">{{ school_plan }}</span>
+            </div>
         </div>
+        <button class="ld-btn" onclick="closeModal('viewSchoolModal')" style="width: 100%; justify-content: center; margin-top: 1.5rem;">Close Details</button>
     </div>
 </div>
+
+<script>
+    // Modal Helpers
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+    }
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    window.onclick = function(event) {
+        if (event.target.classList.contains('ld-modal-overlay')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
 {% endblock %}
