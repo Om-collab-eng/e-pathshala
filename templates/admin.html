@@ -3,37 +3,92 @@
 {% block title %}librika.in Admin{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <header class="header">
-        <div>
-            <h1 style="display: flex; align-items: center; gap: 10px;">
-                librika.in Admin
-                <span class="badge" style="background: var(--accent-primary); font-size: 0.8rem; padding: 4px 8px;">{{ school_plan }} PLAN</span>
-            </h1>
-            <p style="color: var(--text-mid); font-size: 0.85rem;">System Management Center</p>
+<div class="portal-wrapper">
+    <!-- Desktop Sidebar Navigation -->
+    <aside class="desktop-sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">🏫</span>
+            <div class="brand-info">
+                <h4>{{ session.get('school_name', 'librika.in') }}</h4>
+                <p>Admin Portal</p>
+            </div>
         </div>
-        <div style="display: flex; gap: 12px; align-items: center;">
-            <button class="btn-alt" onclick="openModal('dataHubModal')" style="border-color: var(--accent-success); color: var(--accent-success);">Data Hub</button>
-            <a href="/billing" class="btn-alt" style="border-color: #4ade80; color: #4ade80;">💳 Billing & Plan</a>
-            <a href="/admin/settings" class="btn-alt" style="border-color: var(--accent-primary); color: var(--accent-primary);">Settings</a>
-            {% if 'manage_books' in session.get('permissions', []) %}
-            {% if school_perms.canUseAIScanner %}
-                <a href="/admin/scanner" class="btn-neon" style="width: auto; background: linear-gradient(135deg, var(--accent-primary), #d946ef);">✨ Smart Scan</a>
-            {% else %}
-                <button onclick="requireFeature('BASIC', 'AI Smart Scan')" class="btn-neon" style="width: auto; background: rgba(255,255,255,0.1); color: var(--text-mid); border: 1px solid var(--border-color);">🔒 Smart Scan</button>
+        <nav class="sidebar-menu">
+            <button class="sidebar-link tab-btn active" onclick="switchTab('dashboard', this)">
+                <span class="link-icon">📊</span>
+                <span>Dashboard</span>
+            </button>
+            <button class="sidebar-link tab-btn" onclick="switchTab('issue', this)">
+                <span class="link-icon">🔄</span>
+                <span>Issue Book</span>
+            </button>
+            <button class="sidebar-link tab-btn" onclick="switchTab('books', this)">
+                <span class="link-icon">📚</span>
+                <span>See Books</span>
+            </button>
+            {% if 'manage_students' in session.get('permissions', []) %}
+            <button class="sidebar-link tab-btn" onclick="switchTab('students', this)">
+                <span class="link-icon">👥</span>
+                <span>Students</span>
+            </button>
             {% endif %}
-            <a href="/admin/add_book" class="btn-alt" style="width: auto;">+ Manual Asset</a>
+            {% if school_perms.canUsePublishing %}
+            <button class="sidebar-link tab-btn" onclick="switchTab('moderation', this)">
+                <span class="link-icon">⚖️</span>
+                <span>Content & Review</span>
+            </button>
             {% endif %}
-            {% if 'manage_transactions' in session.get('permissions', []) %}
-            <a href="/admin/issue" class="btn-alt">Issue Logic</a>
-            {% endif %}
-            <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1);">Disconnect Terminal</a>
-        </div>
-    </header>
-    
-    <main class="grid-layout">
-    <main class="grid-layout">
-        <div class="content">
+            
+            <hr class="sidebar-divider">
+            
+            <a href="/admin/settings" class="sidebar-link">
+                <span class="link-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+            <a href="/billing" class="sidebar-link">
+                <span class="link-icon">💳</span>
+                <span>Billing & Plan</span>
+            </a>
+            <button class="sidebar-link" onclick="openModal('dataHubModal')" type="button">
+                <span class="link-icon">📂</span>
+                <span>Data Hub</span>
+            </button>
+            
+            <hr class="sidebar-divider">
+            
+            <a href="/logout" class="sidebar-link logout-link">
+                <span class="link-icon">🚪</span>
+                <span>Disconnect</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="portal-main">
+        <header class="header" style="background: linear-gradient(180deg, var(--accent-primary) 0%, #2b447a 100%); padding: 1.5rem 2rem; color: white;">
+            <div>
+                <h1 style="display: flex; align-items: center; gap: 10px; font-family: 'Outfit'; margin: 0;">
+                    librika.in Admin
+                    <span class="badge" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); font-size: 0.8rem; padding: 4px 8px;">{{ school_plan }} PLAN</span>
+                </h1>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 5px 0 0 0;">System Management Center</p>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                {% if 'manage_books' in session.get('permissions', []) %}
+                {% if school_perms.canUseAIScanner %}
+                    <a href="/admin/scanner" class="btn-neon" style="width: auto; background: linear-gradient(135deg, var(--accent-primary), #d946ef);">✨ Smart Scan</a>
+                {% else %}
+                    <button onclick="requireFeature('BASIC', 'AI Smart Scan')" class="btn-neon" style="width: auto; background: rgba(255,255,255,0.1); color: var(--text-mid); border: 1px solid var(--border-color);">🔒 Smart Scan</button>
+                {% endif %}
+                <a href="/admin/add_book" class="btn-alt" style="width: auto; border-color: rgba(255,255,255,0.4); color: white; background: rgba(255,255,255,0.1);">+ Manual Asset</a>
+                {% endif %}
+                {% if 'manage_transactions' in session.get('permissions', []) %}
+                <a href="/admin/issue" class="btn-alt" style="border-color: rgba(255,255,255,0.4); color: white; background: rgba(255,255,255,0.1);">Issue Logic</a>
+                {% endif %}
+            </div>
+        </header>
+        
+        <div class="content" style="padding: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem;">
                 <div>
                     <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Library Network</p>
@@ -456,18 +511,29 @@
                 <div>Publishing: <span class="badge" style="background: {{ 'var(--accent-success)' if school_perms.canUsePublishing else 'var(--accent-error)' }}; color: white;">{{ 'Enabled' if school_perms.canUsePublishing else 'Disabled' }}</span></div>
             </div>
         </div>
-        <button onclick="closeModal('viewSchoolModal')" class="btn-neon" style="width: 100%; margin-top: 1.5rem; justify-content: center;">Close Info</button>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function switchTab(tabId) {
+function switchTab(tabId, element) {
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + tabId).style.display = 'block';
-    event.target.classList.add('active');
+    
+    const targetTab = document.getElementById('tab-' + tabId);
+    if (targetTab) {
+        targetTab.style.display = 'block';
+    }
+    
+    // Sync active class across all triggers for this tab (both sidebar links and nav blocks)
+    const relatedTriggers = document.querySelectorAll(`[onclick*="switchTab('${tabId}'"]`);
+    relatedTriggers.forEach(el => el.classList.add('active'));
+    
+    if (element) {
+        element.classList.add('active');
+    }
 }
 
 function filterTable(inputId, tableId, searchColumns) {

@@ -3,29 +3,90 @@
 {% block title %}librika.in Admin{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <header class="header">
-        <div>
-            <h1>librika.in Admin</h1>
-            <p style="color: var(--text-mid); font-size: 0.85rem;">System Management Center</p>
+<div class="portal-wrapper">
+    <!-- Desktop Sidebar Navigation -->
+    <aside class="desktop-sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">🏫</span>
+            <div class="brand-info">
+                <h4>{{ session.get('school_name', 'librika.in Network') }}</h4>
+                <p>Admin Portal (Demo)</p>
+            </div>
         </div>
-        <div style="display: flex; gap: 12px; align-items: center;">
-            <button class="btn-alt" onclick="openModal('dataHubModal')" style="border-color: var(--accent-success); color: var(--accent-success);">Data Hub</button>
-            <a href="/billing" class="btn-alt" style="border-color: #4ade80; color: #4ade80;">💳 Billing & Plan</a>
-            <a href="/admin/settings" class="btn-alt" style="border-color: var(--accent-primary); color: var(--accent-primary);">Settings</a>
-            {% if 'manage_books' in session.get('permissions', []) %}
-            <a href="/admin/scanner" class="btn-neon" style="width: auto; background: linear-gradient(135deg, var(--accent-primary), #d946ef);">✨ Smart Scan</a>
-            <a href="/admin/add_book" class="btn-alt" style="width: auto;">+ Manual Asset</a>
+        <nav class="sidebar-menu">
+            <a href="/admin" class="sidebar-link {{ 'active' if not class_filter else '' }}">
+                <span class="link-icon">📚</span>
+                <span>All Classes</span>
+            </a>
+            <a href="/admin?class=10" class="sidebar-link {{ 'active' if class_filter == '10' else '' }}">
+                <span class="link-icon">🔟</span>
+                <span>Class 10</span>
+            </a>
+            <a href="/admin?class=11" class="sidebar-link {{ 'active' if class_filter == '11' else '' }}">
+                <span class="link-icon">11</span>
+                <span>Class 11</span>
+            </a>
+            <a href="/admin?class=12" class="sidebar-link {{ 'active' if class_filter == '12' else '' }}">
+                <span class="link-icon">12</span>
+                <span>Class 12</span>
+            </a>
+            {% if 'approve_content' in session.get('permissions', []) %}
+            <a href="/admin/review-queue" class="sidebar-link">
+                <span class="link-icon">⚖️</span>
+                <span>Review Queue</span>
+            </a>
             {% endif %}
-            {% if 'manage_transactions' in session.get('permissions', []) %}
-            <a href="/admin/issue" class="btn-alt">Issue Logic</a>
-            {% endif %}
-            <a href="/logout" class="btn-alt" style="border-color: var(--accent-error); color: var(--accent-error);">Log Out</a>
-        </div>
-    </header>
-    
-    <main class="grid-layout">
-        <section class="content" style="display: flex; flex-direction: column; gap: 2rem;">
+            <a href="/digital-library" class="sidebar-link">
+                <span class="link-icon">🌐</span>
+                <span>Digital Library</span>
+            </a>
+            
+            <hr class="sidebar-divider">
+            
+            <a href="/admin/settings" class="sidebar-link">
+                <span class="link-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+            <a href="/billing" class="sidebar-link">
+                <span class="link-icon">💳</span>
+                <span>Billing & Plan</span>
+            </a>
+            <button class="sidebar-link" onclick="openModal('dataHubModal')" type="button">
+                <span class="link-icon">📂</span>
+                <span>Data Hub</span>
+            </button>
+            
+            <hr class="sidebar-divider">
+            
+            <a href="/logout" class="sidebar-link logout-link">
+                <span class="link-icon">🚪</span>
+                <span>Disconnect</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="portal-main">
+        <header class="header" style="background: linear-gradient(180deg, var(--accent-primary) 0%, #2b447a 100%); padding: 1.5rem 2rem; color: white;">
+            <div>
+                <h1 style="font-family: 'Outfit'; margin: 0;">librika.in Admin</h1>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 5px 0 0 0;">System Management Center</p>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button class="btn-alt" onclick="openModal('dataHubModal')" style="border-color: rgba(255,255,255,0.4); color: white; background: rgba(255,255,255,0.1);">Data Hub</button>
+                <a href="/billing" class="btn-alt" style="border-color: rgba(255,255,255,0.4); color: white; background: rgba(255,255,255,0.1);">💳 Billing & Plan</a>
+                <a href="/admin/settings" class="btn-alt" style="border-color: rgba(255,255,255,0.4); color: white; background: rgba(255,255,255,0.1);">Settings</a>
+                {% if 'manage_books' in session.get('permissions', []) %}
+                <a href="/admin/scanner" class="btn-neon" style="width: auto; background: linear-gradient(135deg, var(--accent-primary), #d946ef);">✨ Smart Scan</a>
+                <a href="/admin/add_book" class="btn-alt" style="width: auto; border-color: rgba(255,255,255,0.4); color: white; background: rgba(255,255,255,0.1);">+ Manual Asset</a>
+                {% endif %}
+                {% if 'manage_transactions' in session.get('permissions', []) %}
+                <a href="/admin/issue" class="btn-alt" style="border-color: rgba(255,255,255,0.4); color: white; background: rgba(255,255,255,0.1);">Issue Logic</a>
+                {% endif %}
+            </div>
+        </header>
+        
+        <div class="content" style="padding: 2rem; display: flex; flex-direction: column; gap: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
                 <div>
                     <p style="margin: 0; font-size: 0.75rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px;">Library Network</p>
@@ -255,8 +316,8 @@
             </div>
             {% endif %}
 
-        </section>
-    </main>
+        </div>
+    </div>
 </div>
 
 <!-- Data Hub Modal -->

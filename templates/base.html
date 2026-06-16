@@ -150,16 +150,173 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script>
+        const html = document.documentElement;
+
+        function updateAllThemeIcons(theme) {
+            const iconSymbol = theme === 'dark' ? '🌙' : '☀️';
+            
+            // 1. Base floater icon
+            const baseIcon = document.getElementById('themeIcon');
+            if (baseIcon) baseIcon.innerText = iconSymbol;
+            
+            // 2. Super Admin sidebar icon
+            const saIcon = document.getElementById('superAdminThemeIcon');
+            if (saIcon) saIcon.innerText = iconSymbol;
+            
+            // 3. Dynamic embedded sidebar icon
+            const embeddedIcon = document.getElementById('embeddedThemeIcon');
+            if (embeddedIcon) embeddedIcon.innerText = iconSymbol;
+            
+            // 4. Dynamic embedded mobile sidebar icon
+            const mobEmbeddedIcon = document.getElementById('mobEmbeddedThemeIcon');
+            if (mobEmbeddedIcon) mobEmbeddedIcon.innerText = iconSymbol;
+        }
+
+        function toggleTheme() {
+            const currentTheme = html.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateAllThemeIcons(newTheme);
+        }
+
         function updateGlobalNavVisibility() {
             const isVisible = localStorage.getItem('globalNavVisible') !== 'false';
             const nav = document.querySelector('.global-nav-container');
             if (nav) {
-                nav.style.display = isVisible ? 'flex' : 'none';
+                const hasSidebar = !!(document.querySelector('.desktop-sidebar') || document.querySelector('.sa-bottom-nav') || document.getElementById('portalSidebar'));
+                if (hasSidebar) {
+                    nav.style.setProperty('display', 'none', 'important');
+                } else {
+                    nav.style.display = isVisible ? 'flex' : 'none';
+                }
             }
         }
         window.updateGlobalNavVisibility = updateGlobalNavVisibility;
-        updateGlobalNavVisibility();
-        document.addEventListener('DOMContentLoaded', updateGlobalNavVisibility);
+
+        function setupDynamicDashboardNav() {
+            updateGlobalNavVisibility();
+            
+            const studentSidebar = document.querySelector('.desktop-sidebar');
+            const superAdminSidebar = document.querySelector('.sa-bottom-nav');
+            const mobileSidebar = document.getElementById('portalSidebar');
+            
+            // 1. Student / Admin desktop sidebar injection
+            if (studentSidebar) {
+                const menu = studentSidebar.querySelector('.sidebar-menu');
+                if (menu && !menu.querySelector('.embedded-nav-controls')) {
+                    const container = document.createElement('div');
+                    container.className = 'embedded-nav-controls';
+                    container.style.display = 'flex';
+                    container.style.flexDirection = 'column';
+                    container.style.gap = '6px';
+                    container.style.marginBottom = '1rem';
+                    
+                    const backBtn = document.createElement('button');
+                    backBtn.className = 'sidebar-link';
+                    backBtn.innerHTML = '<span class="link-icon">⬅️</span><span>Go Back</span>';
+                    backBtn.onclick = () => window.history.back();
+                    backBtn.type = 'button';
+                    
+                    const homeBtn = document.createElement('button');
+                    homeBtn.className = 'sidebar-link';
+                    homeBtn.innerHTML = '<span class="link-icon">🏠</span><span>Go Home</span>';
+                    homeBtn.onclick = () => window.location.href = '/';
+                    homeBtn.type = 'button';
+                    
+                    const themeBtn = document.createElement('button');
+                    themeBtn.className = 'sidebar-link';
+                    themeBtn.id = 'embeddedThemeToggle';
+                    themeBtn.type = 'button';
+                    const currentTheme = html.getAttribute('data-theme') || 'dark';
+                    const themeIconSymbol = currentTheme === 'dark' ? '🌙' : '☀️';
+                    themeBtn.innerHTML = `<span class="link-icon" id="embeddedThemeIcon">${themeIconSymbol}</span><span>Appearance</span>`;
+                    themeBtn.onclick = toggleTheme;
+                    
+                    container.appendChild(backBtn);
+                    container.appendChild(homeBtn);
+                    container.appendChild(themeBtn);
+                    
+                    menu.insertBefore(container, menu.firstChild);
+                    
+                    const divider = document.createElement('hr');
+                    divider.className = 'sidebar-divider';
+                    menu.insertBefore(divider, container.nextSibling);
+                }
+            }
+            
+            // 2. Student / Admin mobile sidebar drawer injection
+            if (mobileSidebar) {
+                const menu = mobileSidebar.querySelector('.sidebar-menu') || mobileSidebar;
+                if (menu && !menu.querySelector('.embedded-nav-controls')) {
+                    const container = document.createElement('div');
+                    container.className = 'embedded-nav-controls';
+                    container.style.display = 'flex';
+                    container.style.flexDirection = 'column';
+                    container.style.gap = '6px';
+                    container.style.padding = '1rem 1.5rem';
+                    
+                    const backBtn = document.createElement('a');
+                    backBtn.className = 'sidebar-link';
+                    backBtn.href = '#';
+                    backBtn.innerHTML = '<span class="link-icon">⬅️</span><span>Go Back</span>';
+                    backBtn.onclick = (e) => { e.preventDefault(); window.history.back(); };
+                    
+                    const homeBtn = document.createElement('a');
+                    homeBtn.className = 'sidebar-link';
+                    homeBtn.href = '/';
+                    homeBtn.innerHTML = '<span class="link-icon">🏠</span><span>Go Home</span>';
+                    
+                    const themeBtn = document.createElement('a');
+                    themeBtn.className = 'sidebar-link';
+                    themeBtn.href = '#';
+                    themeBtn.id = 'mobEmbeddedThemeToggle';
+                    const currentTheme = html.getAttribute('data-theme') || 'dark';
+                    const themeIconSymbol = currentTheme === 'dark' ? '🌙' : '☀️';
+                    themeBtn.innerHTML = `<span class="link-icon" id="mobEmbeddedThemeIcon">${themeIconSymbol}</span><span>Appearance</span>`;
+                    themeBtn.onclick = (e) => { e.preventDefault(); toggleTheme(); };
+                    
+                    container.appendChild(backBtn);
+                    container.appendChild(homeBtn);
+                    container.appendChild(themeBtn);
+                    
+                    const brand = mobileSidebar.querySelector('.sidebar-brand');
+                    if (brand) {
+                        brand.parentNode.insertBefore(container, brand.nextSibling);
+                        const divider = document.createElement('hr');
+                        divider.className = 'sidebar-divider';
+                        divider.style.margin = '0 1.5rem';
+                        brand.parentNode.insertBefore(divider, container.nextSibling);
+                    } else {
+                        menu.insertBefore(container, menu.firstChild);
+                    }
+                }
+            }
+            
+            // 3. Super Admin theme toggle sync
+            const saThemeToggle = document.getElementById('superAdminThemeToggle');
+            if (saThemeToggle) {
+                saThemeToggle.onclick = (e) => {
+                    e.preventDefault();
+                    toggleTheme();
+                };
+            }
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        html.setAttribute('data-theme', savedTheme);
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAllThemeIcons(savedTheme);
+            setupDynamicDashboardNav();
+            
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+            }
+        });
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -209,23 +366,6 @@
             });
             document.getElementById('customModal').style.display = 'flex';
         }
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
-
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        html.setAttribute('data-theme', savedTheme);
-        themeIcon.innerText = savedTheme === 'dark' ? '🌙' : '☀️';
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            themeIcon.innerText = newTheme === 'dark' ? '🌙' : '☀️';
-        });
 
         // Saved Accounts Logic
         function saveAccount(name, admin_no, phone) {
