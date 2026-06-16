@@ -692,20 +692,75 @@
         font-size: 0.95rem;
     }
 
-    /* Mobile bottom-nav overrides */
+    /* Mobile bottom-nav — full styles */
     .bottom-nav {
-        background: var(--sp-white) !important;
-        border-top: 1px solid var(--sp-border) !important;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.02) !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 72px;
+        background: var(--sp-white);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid var(--sp-border);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.04);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 0.5rem;
+        z-index: 1000;
     }
 
     .bottom-nav-item {
-        color: var(--sp-text-muted) !important;
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        color: var(--sp-text-muted);
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.6rem;
+        font-weight: 700;
+        transition: color 0.2s, background 0.2s;
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .bottom-nav-icon {
+        font-size: 1.3rem;
+        transition: transform 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bottom-nav-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
+    .bottom-nav-item:hover {
+        color: var(--sp-purple);
     }
 
     .bottom-nav-item.active {
-        color: var(--sp-purple) !important;
-        background: var(--sp-purple-light) !important;
+        color: var(--sp-purple);
+        background: var(--sp-purple-light);
+    }
+
+    .bottom-nav-item.active .bottom-nav-icon {
+        transform: scale(1.1);
+    }
+
+    /* Hide on desktop - show sidebar instead */
+    @media (min-width: 768px) {
+        .bottom-nav {
+            display: none !important;
+        }
     }
 
     /* Live search overlay block */
@@ -1207,13 +1262,13 @@
                 </span>
                 <span class="bottom-nav-label">Community</span>
             </a>
-            <a href="/student/publish" class="bottom-nav-item">
+            <a href="/student/bookmarks" class="bottom-nav-item active">
                 <span class="bottom-nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                 </span>
-                <span class="bottom-nav-label">Creator Hub</span>
+                <span class="bottom-nav-label">Saved</span>
             </a>
-            <a href="/student/profile" class="bottom-nav-item active">
+            <a href="/student/profile" class="bottom-nav-item">
                 <span class="bottom-nav-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </span>
