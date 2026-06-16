@@ -14,8 +14,6 @@
         --pp-green-light: #dcfce7;
         --pp-orange: #f97316;
         --pp-orange-light: #fff7ed;
-        --pp-blue: #3b82f6;
-        --pp-blue-light: #eff6ff;
         --pp-teal: #06b6d4;
         --pp-teal-light: #ecfeff;
         --pp-text-dark: #0f172a;
@@ -26,7 +24,6 @@
         --pp-border: #e2e8f0;
         --pp-card-shadow: 0 2px 16px rgba(0,0,0,0.06);
     }
-
     [data-theme="dark"] {
         --pp-text-dark: #f1f5f9;
         --pp-text-mid: #94a3b8;
@@ -37,7 +34,6 @@
         --pp-purple-light: rgba(92,60,243,0.15);
         --pp-green-light: rgba(34,197,94,0.12);
         --pp-orange-light: rgba(249,115,22,0.12);
-        --pp-blue-light: rgba(59,130,246,0.12);
         --pp-teal-light: rgba(6,182,212,0.12);
         --pp-card-shadow: 0 2px 16px rgba(0,0,0,0.3);
     }
@@ -49,15 +45,83 @@
         min-height: 100vh;
     }
 
-    .pp-wrapper {
-        max-width: 480px;
-        margin: 0 auto;
+    /* ─── Portal Shell (matches bookmarks/student pages) ─── */
+    .portal-wrapper {
+        display: flex;
         min-height: 100vh;
         background: var(--pp-bg);
-        padding-bottom: 100px;
     }
 
-    /* ── Top Bar ── */
+    /* Desktop Sidebar */
+    .desktop-sidebar {
+        display: none;
+        width: 260px;
+        background: var(--pp-white);
+        border-right: 1px solid var(--pp-border);
+        flex-direction: column;
+        padding: 2rem 1.5rem;
+        box-sizing: border-box;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 100;
+    }
+    .sidebar-brand {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 2rem;
+    }
+    .brand-icon { font-size: 1.6rem; }
+    .brand-info h4 {
+        margin: 0; font-size: 0.9rem; font-weight: 800;
+        font-family: 'Outfit', sans-serif; color: var(--pp-text-dark);
+    }
+    .brand-info p { margin: 0; font-size: 0.7rem; color: var(--pp-text-muted); font-weight: 500; }
+
+    .sidebar-menu { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .sidebar-link {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; border-radius: 12px;
+        text-decoration: none; color: var(--pp-text-mid);
+        font-size: 0.85rem; font-weight: 600;
+        transition: all 0.2s; background: none; border: none; cursor: pointer;
+        width: 100%; text-align: left;
+    }
+    .sidebar-link:hover { background: var(--pp-purple-light); color: var(--pp-purple); }
+    .sidebar-link.active { background: var(--pp-purple-light); color: var(--pp-purple); font-weight: 700; }
+    .link-icon { font-size: 1.1rem; width: 20px; text-align: center; flex-shrink: 0; }
+    .sidebar-divider { border: none; border-top: 1px solid var(--pp-border); margin: 0.75rem 0; }
+    .logout-link:hover { background: rgba(244,63,94,0.08); color: #f43f5e; }
+
+    .sidebar-profile-card {
+        margin-top: auto;
+        padding: 0.75rem;
+        background: var(--pp-purple-light);
+        border-radius: 14px;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .profile-card-avatar {
+        width: 38px; height: 38px; border-radius: 50%;
+        background: var(--pp-purple); color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1rem; flex-shrink: 0;
+    }
+    .profile-card-info h5 { margin: 0; font-size: 0.82rem; font-weight: 700; color: var(--pp-text-dark); }
+    .profile-card-info p  { margin: 0; font-size: 0.7rem; color: var(--pp-text-muted); font-weight: 500; }
+
+    /* Main content area */
+    .portal-main {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: var(--pp-bg);
+        overflow-y: auto;
+        padding-bottom: 90px;
+    }
+
+    /* ─── Mobile Top Bar ─── */
     .pp-topbar {
         background: var(--pp-white);
         padding: 1rem 1.25rem;
@@ -69,896 +133,670 @@
         top: 0;
         z-index: 100;
     }
-
-    .pp-brand {
-        display: flex; align-items: center; gap: 8px;
-    }
-    .pp-brand-icon {
-        width: 36px; height: 36px;
+    .pp-topbar-brand { display: flex; align-items: center; gap: 8px; }
+    .pp-topbar-brand-icon {
+        width: 34px; height: 34px;
         background: var(--pp-purple-light);
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
-    .pp-brand-text h4 {
-        margin: 0; font-size: 0.9rem; font-weight: 800;
-        font-family: 'Outfit', sans-serif;
-        color: var(--pp-text-dark);
-    }
-    .pp-brand-text p {
-        margin: 0; font-size: 0.65rem; color: var(--pp-text-muted); font-weight: 500;
-    }
-    .pp-topbar-actions {
-        display: flex; gap: 10px; align-items: center;
-    }
+    .pp-topbar-brand h4 { margin: 0; font-size: 0.88rem; font-weight: 800; font-family:'Outfit',sans-serif; color:var(--pp-text-dark); }
+    .pp-topbar-brand p  { margin: 0; font-size: 0.62rem; color: var(--pp-text-muted); font-weight: 500; }
     .pp-notif-btn {
-        position: relative;
-        width: 40px; height: 40px;
-        border-radius: 50%;
-        background: var(--pp-white);
-        border: 1px solid var(--pp-border);
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer;
-        color: var(--pp-text-mid);
+        position: relative; width: 38px; height: 38px;
+        border-radius: 50%; background: var(--pp-white); border: 1px solid var(--pp-border);
+        display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--pp-text-mid);
     }
     .pp-notif-badge {
         position: absolute; top: -3px; right: -3px;
         background: #ef4444; color: white;
-        font-size: 0.6rem; font-weight: 800;
-        width: 16px; height: 16px; border-radius: 50%;
+        font-size: 0.55rem; font-weight: 800;
+        width: 15px; height: 15px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         border: 2px solid var(--pp-white);
     }
 
-    /* ── Page Header ── */
-    .pp-header {
-        padding: 1.5rem 1.25rem 1rem;
+    /* ─── Page Header ─── */
+    .pp-page-header {
+        padding: 1.5rem 1.5rem 1rem;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
     }
-    .pp-header-left h1 {
+    .pp-page-header h1 {
         font-family: 'Outfit', sans-serif;
-        font-size: 1.55rem;
-        font-weight: 800;
-        color: var(--pp-text-dark);
-        margin: 0 0 4px;
+        font-size: 1.5rem; font-weight: 800;
+        color: var(--pp-text-dark); margin: 0 0 4px;
     }
-    .pp-header-left p {
-        font-size: 0.78rem;
-        color: var(--pp-text-muted);
-        margin: 0;
-        font-weight: 500;
-    }
+    .pp-page-header p { font-size: 0.78rem; color: var(--pp-text-muted); margin: 0; font-weight: 500; }
+
     .pp-back-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: var(--pp-white);
-        border: 1px solid var(--pp-border);
-        border-radius: 12px;
-        padding: 8px 14px;
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: var(--pp-text-dark);
-        text-decoration: none;
-        white-space: nowrap;
-        box-shadow: var(--pp-card-shadow);
-        transition: all 0.2s;
-        flex-shrink: 0;
+        display: inline-flex; align-items: center; gap: 6px;
+        background: var(--pp-white); border: 1px solid var(--pp-border);
+        border-radius: 12px; padding: 8px 14px;
+        font-size: 0.78rem; font-weight: 700; color: var(--pp-text-dark);
+        text-decoration: none; white-space: nowrap;
+        box-shadow: var(--pp-card-shadow); transition: all 0.2s; flex-shrink: 0;
     }
-    .pp-back-btn:hover {
-        background: var(--pp-purple-light);
-        color: var(--pp-purple);
-        border-color: var(--pp-purple);
+    .pp-back-btn:hover { background: var(--pp-purple-light); color: var(--pp-purple); border-color: var(--pp-purple); }
+
+    /* ─── Content Grid (Desktop 2-col, Mobile 1-col) ─── */
+    .pp-content-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        padding: 0 1.5rem 1.5rem;
     }
 
-    /* ── Profile Hero Card ── */
+    /* ─── Hero Card ─── */
     .pp-hero-card {
-        margin: 0 1.25rem 1.25rem;
         background: linear-gradient(135deg, #ede9fe 0%, #f5f3ff 60%, #e0f2fe 100%);
         border-radius: 20px;
         padding: 1.5rem;
         display: flex;
         align-items: center;
-        gap: 1.25rem;
+        gap: 1.5rem;
         position: relative;
         overflow: hidden;
         border: 1px solid rgba(92,60,243,0.1);
     }
-
     [data-theme="dark"] .pp-hero-card {
         background: linear-gradient(135deg, rgba(92,60,243,0.2) 0%, rgba(30,41,59,0.9) 100%);
         border-color: rgba(92,60,243,0.2);
     }
-
     .pp-hero-card::before {
         content: '';
-        position: absolute;
-        top: -30px; right: -30px;
-        width: 120px; height: 120px;
-        background: rgba(92,60,243,0.08);
-        border-radius: 50%;
+        position: absolute; top: -30px; right: -30px;
+        width: 140px; height: 140px;
+        background: rgba(92,60,243,0.06); border-radius: 50%;
     }
-
-    .pp-avatar-wrapper {
-        position: relative; flex-shrink: 0;
-    }
+    .pp-avatar-wrapper { position: relative; flex-shrink: 0; }
     .pp-avatar {
-        width: 82px; height: 82px;
-        border-radius: 50%;
-        background: var(--pp-purple);
-        color: white;
-        font-size: 2rem;
-        font-weight: 800;
-        font-family: 'Outfit', sans-serif;
+        width: 90px; height: 90px; border-radius: 50%;
+        background: var(--pp-purple); color: white;
+        font-size: 2.2rem; font-weight: 800; font-family: 'Outfit', sans-serif;
         display: flex; align-items: center; justify-content: center;
         border: 3px solid white;
-        box-shadow: 0 4px 16px rgba(92,60,243,0.25);
-        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(92,60,243,0.25); overflow: hidden;
     }
-    .pp-avatar img {
-        width: 100%; height: 100%; object-fit: cover;
-    }
+    .pp-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .pp-camera-btn {
-        position: absolute;
-        bottom: 2px; right: 2px;
-        width: 26px; height: 26px;
-        background: var(--pp-purple);
-        border-radius: 50%;
+        position: absolute; bottom: 2px; right: 2px;
+        width: 28px; height: 28px;
+        background: var(--pp-purple); border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        border: 2px solid white;
-        cursor: pointer;
-        color: white;
-        font-size: 0.65rem;
+        border: 2px solid white; cursor: pointer; color: white; font-size: 0.7rem;
     }
-
-    .pp-hero-info { flex: 1; min-width: 0; }
-    .pp-hero-name {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: var(--pp-text-dark);
-        margin: 0 0 4px;
-    }
+    .pp-hero-name { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--pp-text-dark); margin: 0 0 4px; }
     .pp-hero-role {
-        display: inline-block;
-        background: var(--pp-purple);
-        color: white;
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 2px 10px;
-        border-radius: 20px;
-        margin-bottom: 8px;
-        letter-spacing: 0.02em;
+        display: inline-block; background: var(--pp-purple); color: white;
+        font-size: 0.65rem; font-weight: 700; padding: 2px 12px;
+        border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.02em;
     }
-    .pp-hero-meta {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-    .pp-hero-meta-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.75rem;
-        color: var(--pp-text-mid);
-        font-weight: 600;
-    }
-    .pp-hero-meta-row svg { flex-shrink: 0; }
+    .pp-hero-meta { display: flex; flex-direction: column; gap: 4px; }
+    .pp-hero-meta-row { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; color: var(--pp-text-mid); font-weight: 600; }
 
-    /* ── Section Card ── */
-    .pp-section-card {
-        margin: 0 1.25rem 1.25rem;
+    /* ─── Section Cards ─── */
+    .pp-card {
         background: var(--pp-white);
         border-radius: 20px;
         border: 1px solid var(--pp-border);
         box-shadow: var(--pp-card-shadow);
         overflow: hidden;
     }
-
-    .pp-section-header {
-        padding: 1rem 1.25rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    .pp-card-header {
+        padding: 1rem 1.5rem;
+        display: flex; align-items: center; justify-content: space-between;
         border-bottom: 1px solid var(--pp-border);
     }
+    .pp-card-title-wrap { display: flex; align-items: center; gap: 10px; }
+    .pp-card-icon {
+        width: 34px; height: 34px; background: var(--pp-purple-light);
+        border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--pp-purple);
+    }
+    .pp-card-title { font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 800; color: var(--pp-text-dark); margin: 0; }
+    .pp-card-subtitle { margin: 0; font-size: 0.7rem; color: var(--pp-text-muted); font-weight: 500; }
 
-    .pp-section-title-wrap {
-        display: flex; align-items: center; gap: 8px;
-    }
-    .pp-section-icon {
-        width: 32px; height: 32px;
-        background: var(--pp-purple-light);
-        border-radius: 9px;
-        display: flex; align-items: center; justify-content: center;
-        color: var(--pp-purple);
-    }
-    .pp-section-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.95rem;
-        font-weight: 800;
-        color: var(--pp-text-dark);
-        margin: 0;
-    }
-
-    .pp-active-badge {
-        background: var(--pp-green-light);
-        color: var(--pp-green);
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 3px 10px;
-        border-radius: 20px;
-    }
-
+    .pp-active-badge { background: var(--pp-green-light); color: var(--pp-green); font-size: 0.7rem; font-weight: 700; padding: 3px 12px; border-radius: 20px; }
     .pp-edit-btn {
         display: flex; align-items: center; gap: 5px;
-        background: none; border: none;
-        color: var(--pp-purple);
-        font-size: 0.8rem;
-        font-weight: 700;
-        cursor: pointer;
-        padding: 4px 0;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: none; border: none; color: var(--pp-purple);
+        font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 6px 10px;
+        border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif;
+        transition: background 0.2s;
     }
+    .pp-edit-btn:hover { background: var(--pp-purple-light); }
 
-    /* ── Account Overview Rows ── */
+    /* Info rows */
     .pp-info-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.9rem 1.25rem;
-        border-bottom: 1px solid var(--pp-border);
-        gap: 1rem;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.9rem 1.5rem; border-bottom: 1px solid var(--pp-border); gap: 1rem;
     }
     .pp-info-row:last-child { border-bottom: none; }
-
-    .pp-info-left {
-        display: flex; align-items: center; gap: 10px;
-        color: var(--pp-text-mid);
-        font-size: 0.82rem;
-        font-weight: 600;
-    }
-    .pp-info-left svg { color: var(--pp-text-muted); flex-shrink: 0; }
-
-    .pp-info-right {
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--pp-text-dark);
-        text-align: right;
-        word-break: break-all;
-    }
-
+    .pp-info-left { display: flex; align-items: center; gap: 10px; color: var(--pp-text-mid); font-size: 0.82rem; font-weight: 600; }
+    .pp-info-right { font-size: 0.82rem; font-weight: 600; color: var(--pp-text-dark); text-align: right; word-break: break-all; }
     .pp-verified-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: var(--pp-green-light);
-        color: var(--pp-green);
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 3px 10px;
-        border-radius: 20px;
+        display: inline-flex; align-items: center; gap: 4px;
+        background: var(--pp-green-light); color: var(--pp-green);
+        font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
     }
 
-    /* ── Stats Row ── */
-    .pp-stats-row {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0;
-        padding: 0;
-    }
-
+    /* ─── Stats ─── */
+    .pp-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); }
     .pp-stat-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        padding: 1.25rem 0.5rem;
-        border-right: 1px solid var(--pp-border);
-        border-bottom: none;
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        padding: 1.25rem 0.5rem; border-right: 1px solid var(--pp-border);
     }
     .pp-stat-item:last-child { border-right: none; }
+    .pp-stat-icon { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; }
+    .pp-stat-icon.books  { background: var(--pp-purple-light); color: var(--pp-purple); }
+    .pp-stat-icon.saved  { background: var(--pp-green-light);  color: var(--pp-green);  }
+    .pp-stat-icon.pubs   { background: var(--pp-orange-light); color: var(--pp-orange); }
+    .pp-stat-icon.streak { background: var(--pp-teal-light);   color: var(--pp-teal);   }
+    .pp-stat-value { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--pp-text-dark); line-height: 1; }
+    .pp-stat-label { font-size: 0.62rem; font-weight: 700; color: var(--pp-text-muted); text-align: center; line-height: 1.3; }
 
-    .pp-stat-icon {
-        width: 36px; height: 36px;
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem;
-    }
-    .pp-stat-icon.books { background: var(--pp-purple-light); color: var(--pp-purple); }
-    .pp-stat-icon.saved { background: var(--pp-green-light); color: var(--pp-green); }
-    .pp-stat-icon.pubs  { background: var(--pp-orange-light); color: var(--pp-orange); }
-    .pp-stat-icon.streak{ background: var(--pp-teal-light); color: var(--pp-teal); }
-
-    .pp-stat-value {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.35rem;
-        font-weight: 800;
-        color: var(--pp-text-dark);
-        line-height: 1;
-    }
-    .pp-stat-label {
-        font-size: 0.62rem;
-        font-weight: 700;
-        color: var(--pp-text-muted);
-        text-align: center;
-        line-height: 1.3;
-    }
-
-    /* ── Personal Info Form ── */
-    .pp-form-section {
-        padding: 0;
-    }
-
+    /* ─── Form Fields ─── */
     .pp-field-row {
-        display: flex;
-        align-items: center;
-        padding: 0.85rem 1.25rem;
-        border-bottom: 1px solid var(--pp-border);
-        gap: 1rem;
+        display: flex; align-items: center;
+        padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--pp-border); gap: 1rem;
+        transition: background 0.2s;
     }
     .pp-field-row:last-child { border-bottom: none; }
-
-    .pp-field-icon {
-        width: 32px; height: 32px;
-        display: flex; align-items: center; justify-content: center;
-        color: var(--pp-text-muted);
-        flex-shrink: 0;
-    }
-
-    .pp-field-label {
-        width: 130px;
-        flex-shrink: 0;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: var(--pp-text-mid);
-    }
-
-    .pp-field-value {
-        flex: 1;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--pp-text-dark);
-        text-align: right;
-    }
-
-    /* Edit Mode */
-    .pp-field-input {
-        flex: 1;
-        border: none;
-        outline: none;
-        background: transparent;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--pp-text-dark);
-        text-align: right;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        width: 100%;
+    body.editing-mode .pp-field-row { background: rgba(92,60,243,0.02); }
+    .pp-field-icon { width: 30px; display: flex; align-items: center; justify-content: center; color: var(--pp-text-muted); flex-shrink: 0; }
+    .pp-field-label { width: 140px; flex-shrink: 0; font-size: 0.78rem; font-weight: 600; color: var(--pp-text-mid); }
+    .pp-field-value { flex: 1; font-size: 0.82rem; font-weight: 600; color: var(--pp-text-dark); text-align: right; }
+    .pp-field-input, .pp-field-select {
+        flex: 1; border: none; outline: none; background: transparent;
+        font-size: 0.82rem; font-weight: 600; color: var(--pp-text-dark);
+        text-align: right; font-family: 'Plus Jakarta Sans', sans-serif; width: 100%;
     }
     .pp-field-input::placeholder { color: var(--pp-text-muted); }
+    .pp-field-select { direction: rtl; cursor: pointer; appearance: none; -webkit-appearance: none; }
 
-    .pp-field-select {
-        flex: 1;
-        border: none;
-        outline: none;
-        background: transparent;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--pp-text-dark);
-        text-align: right;
-        direction: rtl;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        cursor: pointer;
-        padding-right: 0;
-        appearance: none;
-        -webkit-appearance: none;
-    }
-
-    .pp-field-cal {
-        color: var(--pp-text-muted); cursor: pointer; flex-shrink: 0;
-    }
-
-    .pp-field-row.editing {
-        background: rgba(92,60,243,0.03);
-    }
-
-    /* ── Save / Change Password Section ── */
-    .pp-action-section {
-        padding: 1.25rem;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .pp-save-btn {
-        width: 100%;
-        padding: 14px;
-        background: var(--pp-purple);
-        color: white;
-        border: none;
-        border-radius: 14px;
-        font-size: 0.9rem;
-        font-weight: 800;
-        cursor: pointer;
-        font-family: 'Outfit', sans-serif;
-        letter-spacing: 0.02em;
-        transition: all 0.2s;
-        box-shadow: 0 4px 16px rgba(92,60,243,0.25);
-    }
-    .pp-save-btn:hover {
-        background: var(--pp-purple-mid);
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(92,60,243,0.35);
-    }
-
-    .pp-pass-row {
-        display: flex; gap: 8px;
-    }
-    .pp-pass-input {
-        flex: 1;
-        padding: 12px 14px;
-        border: 1.5px solid var(--pp-border);
-        border-radius: 12px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        background: var(--pp-bg);
-        color: var(--pp-text-dark);
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        outline: none;
-    }
-    .pp-pass-input:focus {
-        border-color: var(--pp-purple);
-        box-shadow: 0 0 0 3px rgba(92,60,243,0.08);
-    }
-    .pp-pass-btn {
-        padding: 12px 16px;
-        border: 1.5px solid var(--pp-purple);
-        border-radius: 12px;
-        background: var(--pp-purple-light);
-        color: var(--pp-purple);
-        font-size: 0.78rem;
-        font-weight: 700;
-        cursor: pointer;
-        white-space: nowrap;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
-    .pp-danger-section {
-        margin: 0 1.25rem 1.25rem;
-        display: flex;
-        gap: 8px;
-    }
-
-    .pp-logout-btn {
-        flex: 1;
-        padding: 12px;
-        border: 1.5px solid #f43f5e;
-        border-radius: 14px;
-        background: rgba(244,63,94,0.06);
-        color: #f43f5e;
-        font-size: 0.82rem;
-        font-weight: 700;
-        cursor: pointer;
-        display: flex; align-items: center; justify-content: center; gap: 6px;
-        text-decoration: none;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        transition: all 0.2s;
-    }
-    .pp-logout-btn:hover {
-        background: rgba(244,63,94,0.12);
-    }
-
-    /* ── Bottom Nav ── */
-    .pp-bottom-nav {
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        height: 72px;
-        background: var(--pp-white);
-        border-top: 1px solid var(--pp-border);
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        padding: 0 0.5rem;
-        z-index: 1000;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-    }
-    .pp-nav-item {
-        display: flex; flex-direction: column;
-        align-items: center; gap: 3px;
-        text-decoration: none;
-        color: var(--pp-text-muted);
-        font-size: 0.6rem; font-weight: 700;
-        padding: 8px 14px; border-radius: 12px;
-        transition: all 0.2s;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .pp-nav-item.active {
-        color: var(--pp-purple);
-        background: var(--pp-purple-light);
-    }
-    .pp-nav-item svg { transition: transform 0.2s; }
-    .pp-nav-item.active svg { transform: scale(1.1); }
-
-    /* Edit toggle state - hide/show */
-    .view-state { display: block; }
+    .view-state  { display: block; }
     .edit-state  { display: none; }
     body.editing-mode .view-state { display: none; }
-    body.editing-mode .edit-state  { display: block; }
-    body.editing-mode .pp-field-row { background: rgba(92,60,243,0.02); }
-    body.editing-mode .pp-section-header { background: rgba(92,60,243,0.03); }
+    body.editing-mode .edit-state { display: block; }
 
-    @media (min-width: 768px) {
-        .pp-wrapper { max-width: 600px; }
-        .pp-bottom-nav { display: none; }
+    /* ─── Form Actions ─── */
+    .pp-action-section {
+        padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 10px;
+        border-top: 1px solid var(--pp-border);
+    }
+    .pp-save-btn {
+        width: 100%; padding: 13px; background: var(--pp-purple); color: white;
+        border: none; border-radius: 14px; font-size: 0.88rem; font-weight: 800;
+        cursor: pointer; font-family: 'Outfit', sans-serif; letter-spacing: 0.02em;
+        transition: all 0.2s; box-shadow: 0 4px 16px rgba(92,60,243,0.25);
+    }
+    .pp-save-btn:hover { background: var(--pp-purple-mid); transform: translateY(-1px); }
+    .pp-cancel-btn {
+        width: 100%; padding: 12px; background: transparent; color: var(--pp-text-mid);
+        border: 1.5px solid var(--pp-border); border-radius: 14px; font-size: 0.82rem;
+        font-weight: 700; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;
+        transition: all 0.2s;
+    }
+    .pp-cancel-btn:hover { background: var(--pp-bg); }
+    .pp-pass-row { display: flex; gap: 8px; }
+    .pp-pass-input {
+        flex: 1; padding: 11px 14px; border: 1.5px solid var(--pp-border);
+        border-radius: 12px; font-size: 0.82rem; font-weight: 600;
+        background: var(--pp-bg); color: var(--pp-text-dark);
+        font-family: 'Plus Jakarta Sans', sans-serif; outline: none;
+    }
+    .pp-pass-input:focus { border-color: var(--pp-purple); box-shadow: 0 0 0 3px rgba(92,60,243,0.08); }
+    .pp-pass-btn {
+        padding: 11px 14px; border: 1.5px solid var(--pp-purple); border-radius: 12px;
+        background: var(--pp-purple-light); color: var(--pp-purple);
+        font-size: 0.78rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* Hide global floating buttons */
+    /* ─── Danger ─── */
+    .pp-logout-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 20px; border: 1.5px solid #f43f5e;
+        border-radius: 14px; background: rgba(244,63,94,0.06); color: #f43f5e;
+        font-size: 0.82rem; font-weight: 700; cursor: pointer;
+        text-decoration: none; font-family: 'Plus Jakarta Sans', sans-serif;
+        transition: all 0.2s;
+    }
+    .pp-logout-btn:hover { background: rgba(244,63,94,0.12); }
+
+    /* ─── Mobile Bottom Nav ─── */
+    .pp-bottom-nav {
+        position: fixed; bottom: 0; left: 0; right: 0; height: 72px;
+        background: var(--pp-white); border-top: 1px solid var(--pp-border);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+        display: flex; justify-content: space-around; align-items: center;
+        padding: 0 0.5rem; z-index: 1000;
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .pp-nav-item {
+        display: flex; flex-direction: column; align-items: center; gap: 3px;
+        text-decoration: none; color: var(--pp-text-muted);
+        font-size: 0.6rem; font-weight: 700; padding: 8px 12px; border-radius: 12px;
+        transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .pp-nav-item.active { color: var(--pp-purple); background: var(--pp-purple-light); }
+    .pp-nav-item.active svg { transform: scale(1.1); }
+
+    /* ─── DESKTOP LAYOUT ─── */
+    @media (min-width: 768px) {
+        /* Show sidebar, hide mobile topbar & bottom nav */
+        .desktop-sidebar { display: flex !important; }
+        .pp-topbar       { display: none !important; }
+        .pp-bottom-nav   { display: none !important; }
+
+        .portal-main { padding-bottom: 2rem; }
+
+        .pp-page-header {
+            padding: 2rem 2rem 1.25rem;
+            align-items: center;
+        }
+        .pp-page-header h1 { font-size: 1.8rem; }
+
+        .pp-content-grid {
+            padding: 0 2rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto;
+            gap: 1.5rem;
+        }
+
+        /* Hero spans full width */
+        .pp-hero-card { grid-column: 1 / -1; }
+        .pp-hero-card { padding: 2rem; }
+        .pp-avatar { width: 100px; height: 100px; font-size: 2.5rem; }
+        .pp-hero-name { font-size: 1.6rem; }
+        .pp-hero-meta-row { font-size: 0.85rem; }
+
+        /* Stats row also full width */
+        .pp-stats-card { grid-column: 1 / -1; }
+
+        /* Account overview on left, form on right */
+        .pp-account-card { grid-column: 1 / 2; align-self: start; }
+        .pp-form-card     { grid-column: 2 / 3; grid-row: 3 / 5; }
+
+        /* Danger zone spans full width */
+        .pp-danger-zone { grid-column: 1 / -1; }
+
+        .pp-card-header { padding: 1.25rem 1.75rem; }
+        .pp-info-row    { padding: 0.9rem 1.75rem; }
+        .pp-field-row   { padding: 0.85rem 1.75rem; }
+        .pp-action-section { padding: 1.5rem 1.75rem; }
+    }
+
+    /* Hide global floaters */
     .global-nav-container { display: none !important; }
 </style>
 
-<div class="pp-wrapper">
-    <!-- Top Bar -->
-    <div class="pp-topbar">
-        <div class="pp-brand">
-            <div class="pp-brand-icon">📚</div>
-            <div class="pp-brand-text">
-                <h4>Librika</h4>
-                <p>Digital Library</p>
+<div class="portal-wrapper">
+    <!-- ══ Desktop Sidebar ══ -->
+    <aside class="desktop-sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">🌐</span>
+            <div class="brand-info">
+                <h4>{{ session.get('school_name', 'E-Pathshala') }}</h4>
+                <p>Student Portal</p>
             </div>
         </div>
-        <div class="pp-topbar-actions">
+        <nav class="sidebar-menu">
+            <a href="/student" class="sidebar-link">
+                <span class="link-icon">📊</span><span>Dashboard</span>
+            </a>
+            <a href="/student/browse" class="sidebar-link">
+                <span class="link-icon">📚</span><span>Digital Library</span>
+            </a>
+            <a href="/digital-library" class="sidebar-link">
+                <span class="link-icon">🌐</span><span>Community Library</span>
+            </a>
+            <a href="/student/publish" class="sidebar-link">
+                <span class="link-icon">✏️</span><span>Publish Content</span>
+            </a>
+            <a href="/student/my-publications" class="sidebar-link">
+                <span class="link-icon">📄</span><span>Publications</span>
+            </a>
+            <a href="/student/bookmarks" class="sidebar-link">
+                <span class="link-icon">🔖</span><span>Saved Items</span>
+            </a>
+            <a href="/student/profile" class="sidebar-link active">
+                <span class="link-icon">👤</span><span>My Profile</span>
+            </a>
+            <hr class="sidebar-divider">
+            <a href="/logout" class="sidebar-link logout-link">
+                <span class="link-icon">🚪</span><span>Log Out</span>
+            </a>
+        </nav>
+        <div class="sidebar-profile-card">
+            <div class="profile-card-avatar">
+                {{ session['user_name'][0]|upper if session.get('user_name') else 'S' }}
+            </div>
+            <div class="profile-card-info">
+                <h5>{{ session.get('user_name', 'Student') }}</h5>
+                <p>Class {{ session.get('class', '—') }}</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ══ Main Content ══ -->
+    <div class="portal-main">
+
+        <!-- Mobile Top Bar (hidden on desktop) -->
+        <div class="pp-topbar">
+            <div class="pp-topbar-brand">
+                <div class="pp-topbar-brand-icon">📚</div>
+                <div>
+                    <h4>Librika</h4>
+                    <p>Digital Library</p>
+                </div>
+            </div>
             <button class="pp-notif-btn" title="Notifications">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 <span class="pp-notif-badge">3</span>
             </button>
         </div>
-    </div>
 
-    <!-- Page Header -->
-    <div class="pp-header">
-        <div class="pp-header-left">
-            <h1>My Profile</h1>
-            <p>Manage your personal information and account settings</p>
-        </div>
-        <a href="/student" class="pp-back-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-            Back to Dashboard
-        </a>
-    </div>
-
-    <!-- Profile Hero Card -->
-    <div class="pp-hero-card">
-        <div class="pp-avatar-wrapper">
-            <div class="pp-avatar" id="avatarCircle">
-                {{ session['user_name'][0]|upper if session.get('user_name') else 'S' }}
+        <!-- Page Header -->
+        <div class="pp-page-header">
+            <div>
+                <h1>My Profile</h1>
+                <p>Manage your personal information and account settings</p>
             </div>
-            <label for="avatarUpload" class="pp-camera-btn" title="Change Photo">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            </label>
-            <input type="file" id="avatarUpload" accept="image/*" style="display:none" onchange="previewAvatar(this)">
-        </div>
-        <div class="pp-hero-info">
-            <h2 class="pp-hero-name">{{ user.name or 'Student' }}</h2>
-            <span class="pp-hero-role">Student</span>
-            <div class="pp-hero-meta">
-                <div class="pp-hero-meta-row">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                    Class {{ user.class or '—' }}
-                    {% set stream_val = user.stream if user.keys()|list|select('eq', 'stream')|list else '' %}
-                    {% if stream_val %}• {{ stream_val }}{% endif %}
-                </div>
-                <div class="pp-hero-meta-row">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    Member since {{ session.get('school_name', 'librika.in') }}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Account Overview Card -->
-    <div class="pp-section-card">
-        <div class="pp-section-header">
-            <div class="pp-section-title-wrap">
-                <div class="pp-section-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <h3 class="pp-section-title">Account Overview</h3>
-            </div>
-            <span class="pp-active-badge">Active</span>
+            <a href="/student" class="pp-back-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                Back to Dashboard
+            </a>
         </div>
 
-        <div class="pp-info-row">
-            <div class="pp-info-left">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                Email Address
-            </div>
-            <div class="pp-info-right">{{ user.email if user.keys()|list|select('eq','email')|list and user.email else 'Not set' }}</div>
-        </div>
-        <div class="pp-info-row">
-            <div class="pp-info-left">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.6 2.18L6.52 2a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.6 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                Primary Phone
-            </div>
-            <div class="pp-info-right">{{ '+91 ' + user.phone if user.phone else 'Not set' }}</div>
-        </div>
-        <div class="pp-info-row">
-            <div class="pp-info-left">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Email Verified
-            </div>
-            <div class="pp-info-right">
-                <span class="pp-verified-pill">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#22c55e" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    Verified
-                </span>
-            </div>
-        </div>
-        <div class="pp-info-row">
-            <div class="pp-info-left">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                Phone Verified
-            </div>
-            <div class="pp-info-right">
-                <span class="pp-verified-pill">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#22c55e" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    Verified
-                </span>
-            </div>
-        </div>
-    </div>
+        <div class="pp-content-grid">
 
-    <!-- Stats Card -->
-    <div class="pp-section-card">
-        <div class="pp-stats-row">
-            <div class="pp-stat-item">
-                <div class="pp-stat-icon books">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                </div>
-                <span class="pp-stat-value">{{ stats.total_read }}</span>
-                <span class="pp-stat-label">Books Read</span>
-            </div>
-            <div class="pp-stat-item">
-                <div class="pp-stat-icon saved">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                </div>
-                <span class="pp-stat-value">{{ stats.saved_count }}</span>
-                <span class="pp-stat-label">Saved Items</span>
-            </div>
-            <div class="pp-stat-item">
-                <div class="pp-stat-icon pubs">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                </div>
-                <span class="pp-stat-value">{{ stats.publications_count }}</span>
-                <span class="pp-stat-label">Publications</span>
-            </div>
-            <div class="pp-stat-item">
-                <div class="pp-stat-icon streak">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-5 6-5 11a5 5 0 0 0 10 0c0-5-5-11-5-11z"/><path d="M12 12c0 0-2 2.5-2 4a2 2 0 0 0 4 0c0-1.5-2-4-2-4z" fill="currentColor"/></svg>
-                </div>
-                <span class="pp-stat-value">{{ stats.days_streak }}</span>
-                <span class="pp-stat-label">Days Streak</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Personal Information Card -->
-    <form method="POST" id="profileForm">
-        <div class="pp-section-card">
-            <div class="pp-section-header">
-                <div class="pp-section-title-wrap">
-                    <div class="pp-section-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <!-- ── Hero Card ── -->
+            <div class="pp-hero-card pp-card">
+                <div class="pp-avatar-wrapper">
+                    <div class="pp-avatar" id="avatarCircle">
+                        {{ session['user_name'][0]|upper if session.get('user_name') else 'S' }}
                     </div>
-                    <div>
-                        <h3 class="pp-section-title" style="color: var(--pp-purple);">Personal Information</h3>
-                        <p style="margin:0; font-size:0.7rem; color: var(--pp-text-muted); font-weight:500;">Update your personal details</p>
+                    <label for="avatarUpload" class="pp-camera-btn" title="Change Photo">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </label>
+                    <input type="file" id="avatarUpload" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+                </div>
+                <div style="flex:1; min-width:0;">
+                    <h2 class="pp-hero-name">{{ user.name or 'Student' }}</h2>
+                    <span class="pp-hero-role">Student</span>
+                    <div class="pp-hero-meta">
+                        <div class="pp-hero-meta-row">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                            Class {{ user.class or '—' }}
+                            {% set stream_val = '' %}{% for k in user.keys() %}{% if k == 'stream' %}{% set stream_val = user[k] %}{% endif %}{% endfor %}
+                            {% if stream_val %} &bull; {{ stream_val }}{% endif %}
+                        </div>
+                        <div class="pp-hero-meta-row">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            {{ session.get('school_name', 'librika.in') }} Network
+                        </div>
                     </div>
                 </div>
-                <button type="button" class="pp-edit-btn" onclick="toggleEditMode()" id="editToggleBtn">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Edit
-                </button>
             </div>
 
-            <div class="pp-form-section">
-                <!-- Full Name -->
-                <div class="pp-field-row">
-                    <div class="pp-field-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <!-- ── Stats Card ── -->
+            <div class="pp-card pp-stats-card">
+                <div class="pp-stats-row">
+                    <div class="pp-stat-item">
+                        <div class="pp-stat-icon books">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        </div>
+                        <span class="pp-stat-value">{{ stats.total_read }}</span>
+                        <span class="pp-stat-label">Books Read</span>
                     </div>
-                    <span class="pp-field-label">Full Name</span>
-                    <span class="pp-field-value view-state">{{ user.name or '—' }}</span>
-                    <input type="text" name="name" class="pp-field-input edit-state" value="{{ user.name or '' }}" placeholder="Enter full name">
+                    <div class="pp-stat-item">
+                        <div class="pp-stat-icon saved">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <span class="pp-stat-value">{{ stats.saved_count }}</span>
+                        <span class="pp-stat-label">Saved Items</span>
+                    </div>
+                    <div class="pp-stat-item">
+                        <div class="pp-stat-icon pubs">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        </div>
+                        <span class="pp-stat-value">{{ stats.publications_count }}</span>
+                        <span class="pp-stat-label">Publications</span>
+                    </div>
+                    <div class="pp-stat-item">
+                        <div class="pp-stat-icon streak">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-5 6-5 11a5 5 0 0 0 10 0c0-5-5-11-5-11z"/><path d="M12 12c0 0-2 2.5-2 4a2 2 0 0 0 4 0c0-1.5-2-4-2-4z" fill="currentColor"/></svg>
+                        </div>
+                        <span class="pp-stat-value">{{ stats.days_streak }}</span>
+                        <span class="pp-stat-label">Days Streak</span>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Admission No -->
-                <div class="pp-field-row">
-                    <div class="pp-field-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <!-- ── Account Overview Card ── -->
+            <div class="pp-card pp-account-card">
+                <div class="pp-card-header">
+                    <div class="pp-card-title-wrap">
+                        <div class="pp-card-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                        <h3 class="pp-card-title">Account Overview</h3>
                     </div>
-                    <span class="pp-field-label">Admission No.</span>
-                    <span class="pp-field-value view-state">{{ user.admission_no or '—' }}</span>
-                    <input type="text" name="admission_no" class="pp-field-input edit-state" value="{{ user.admission_no or '' }}" placeholder="e.g. LIB2411007">
+                    <span class="pp-active-badge">Active</span>
                 </div>
-
-                <!-- Academic Class -->
-                <div class="pp-field-row">
-                    <div class="pp-field-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                {% set email_raw = '' %}{% for k in user.keys() %}{% if k == 'email' %}{% set email_raw = user[k] %}{% endif %}{% endfor %}
+                <div class="pp-info-row">
+                    <div class="pp-info-left">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        Email Address
                     </div>
-                    <span class="pp-field-label">Academic Class</span>
-                    <span class="pp-field-value view-state">{{ 'Class ' + user.class if user.class else '—' }}</span>
-                    <select name="class" class="pp-field-select edit-state">
-                        {% for c in range(1, 13) %}
-                        <option value="{{ c }}" {% if user.class and user.class|string == c|string %}selected{% endif %}>Class {{ c }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="pp-info-right">{{ email_raw or 'Not set' }}</div>
                 </div>
-
-                <!-- Stream -->
-                <div class="pp-field-row">
-                    <div class="pp-field-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <div class="pp-info-row">
+                    <div class="pp-info-left">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.6 2.18L6.52 2a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.6 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        Primary Phone
                     </div>
-                    <span class="pp-field-label">Stream</span>
-                    <span class="pp-field-value view-state" id="streamViewVal">
-                        {% set stream_raw = '' %}
-                        {% for k in user.keys() %}{% if k == 'stream' %}{% set stream_raw = user[k] %}{% endif %}{% endfor %}
-                        {{ stream_raw or '—' }}
+                    <div class="pp-info-right">{{ '+91 ' + user.phone if user.phone else 'Not set' }}</div>
+                </div>
+                <div class="pp-info-row">
+                    <div class="pp-info-left">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Email Verified
+                    </div>
+                    <span class="pp-verified-pill">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="#22c55e" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Verified
                     </span>
-                    <select name="stream" class="pp-field-select edit-state">
-                        <option value="">— Select —</option>
-                        {% set stream_raw = '' %}
-                        {% for k in user.keys() %}{% if k == 'stream' %}{% set stream_raw = user[k] %}{% endif %}{% endfor %}
-                        <option value="Science" {% if stream_raw == 'Science' %}selected{% endif %}>Science</option>
-                        <option value="Commerce" {% if stream_raw == 'Commerce' %}selected{% endif %}>Commerce</option>
-                        <option value="Arts" {% if stream_raw == 'Arts' %}selected{% endif %}>Arts</option>
-                        <option value="General" {% if stream_raw == 'General' %}selected{% endif %}>General</option>
-                    </select>
                 </div>
-
-                <!-- Date of Birth -->
-                <div class="pp-field-row">
-                    <div class="pp-field-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div class="pp-info-row">
+                    <div class="pp-info-left">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        Phone Verified
                     </div>
-                    <span class="pp-field-label">Date of Birth</span>
-                    {% set dob_raw = '' %}
-                    {% for k in user.keys() %}{% if k == 'dob' %}{% set dob_raw = user[k] %}{% endif %}{% endfor %}
-                    <span class="pp-field-value view-state">{{ dob_raw or '—' }}</span>
-                    <input type="date" name="dob" class="pp-field-input edit-state" value="{{ dob_raw or '' }}" style="text-align:right;">
-                </div>
-
-                <!-- Email -->
-                <div class="pp-field-row">
-                    <div class="pp-field-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    </div>
-                    <span class="pp-field-label">Email Address</span>
-                    {% set email_raw = '' %}
-                    {% for k in user.keys() %}{% if k == 'email' %}{% set email_raw = user[k] %}{% endif %}{% endfor %}
-                    <span class="pp-field-value view-state">{{ email_raw or '—' }}</span>
-                    <input type="email" name="email" class="pp-field-input edit-state" value="{{ email_raw or '' }}" placeholder="you@email.com">
-                </div>
-
-                <!-- Phone (Read only) -->
-                <div class="pp-field-row">
-                    <div class="pp-field-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.6 2.18L6.52 2a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.6 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    </div>
-                    <span class="pp-field-label">Phone</span>
-                    <span class="pp-field-value">{{ user.phone or '—' }}</span>
+                    <span class="pp-verified-pill">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="#22c55e" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Verified
+                    </span>
                 </div>
             </div>
 
-            <!-- Save + Change Password (inside edit mode) -->
-            <div class="pp-action-section edit-state" style="border-top: 1px solid var(--pp-border);">
-                <div class="pp-pass-row">
-                    <input type="password" name="password" class="pp-pass-input" placeholder="New password (leave blank to keep)">
-                    <button type="button" class="pp-pass-btn" onclick="togglePassVisibility()">Show</button>
+            <!-- ── Personal Info Card (Form) ── -->
+            <form method="POST" id="profileForm">
+                <div class="pp-card pp-form-card">
+                    <div class="pp-card-header">
+                        <div class="pp-card-title-wrap">
+                            <div class="pp-card-icon" style="background:var(--pp-purple-light); color:var(--pp-purple);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="pp-card-title" style="color:var(--pp-purple);">Personal Information</h3>
+                                <p class="pp-card-subtitle">Update your personal details</p>
+                            </div>
+                        </div>
+                        <button type="button" class="pp-edit-btn" onclick="toggleEditMode()" id="editToggleBtn">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Edit
+                        </button>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="pp-field-row">
+                        <div class="pp-field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                        <span class="pp-field-label">Full Name</span>
+                        <span class="pp-field-value view-state">{{ user.name or '—' }}</span>
+                        <input type="text" name="name" class="pp-field-input edit-state" value="{{ user.name or '' }}" placeholder="Enter full name">
+                    </div>
+                    <!-- Admission No -->
+                    <div class="pp-field-row">
+                        <div class="pp-field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+                        <span class="pp-field-label">Admission No.</span>
+                        <span class="pp-field-value view-state">{{ user.admission_no or '—' }}</span>
+                        <input type="text" name="admission_no" class="pp-field-input edit-state" value="{{ user.admission_no or '' }}" placeholder="e.g. LIB2411007">
+                    </div>
+                    <!-- Class -->
+                    <div class="pp-field-row">
+                        <div class="pp-field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+                        <span class="pp-field-label">Academic Class</span>
+                        <span class="pp-field-value view-state">{{ 'Class ' + user.class if user.class else '—' }}</span>
+                        <select name="class" class="pp-field-select edit-state">
+                            {% for c in range(1, 13) %}
+                            <option value="{{ c }}" {% if user.class and user.class|string == c|string %}selected{% endif %}>Class {{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Stream -->
+                    <div class="pp-field-row">
+                        <div class="pp-field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+                        <span class="pp-field-label">Stream</span>
+                        {% set stream_raw = '' %}{% for k in user.keys() %}{% if k == 'stream' %}{% set stream_raw = user[k] %}{% endif %}{% endfor %}
+                        <span class="pp-field-value view-state">{{ stream_raw or '—' }}</span>
+                        <select name="stream" class="pp-field-select edit-state">
+                            <option value="">— Select —</option>
+                            <option value="Science"  {% if stream_raw == 'Science'  %}selected{% endif %}>Science</option>
+                            <option value="Commerce" {% if stream_raw == 'Commerce' %}selected{% endif %}>Commerce</option>
+                            <option value="Arts"     {% if stream_raw == 'Arts'     %}selected{% endif %}>Arts</option>
+                            <option value="General"  {% if stream_raw == 'General'  %}selected{% endif %}>General</option>
+                        </select>
+                    </div>
+                    <!-- Date of Birth -->
+                    <div class="pp-field-row">
+                        <div class="pp-field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                        <span class="pp-field-label">Date of Birth</span>
+                        {% set dob_raw = '' %}{% for k in user.keys() %}{% if k == 'dob' %}{% set dob_raw = user[k] %}{% endif %}{% endfor %}
+                        <span class="pp-field-value view-state">{{ dob_raw or '—' }}</span>
+                        <input type="date" name="dob" class="pp-field-input edit-state" value="{{ dob_raw or '' }}" style="text-align:right; color-scheme: light dark;">
+                    </div>
+                    <!-- Email -->
+                    <div class="pp-field-row">
+                        <div class="pp-field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                        <span class="pp-field-label">Email Address</span>
+                        {% set email_raw = '' %}{% for k in user.keys() %}{% if k == 'email' %}{% set email_raw = user[k] %}{% endif %}{% endfor %}
+                        <span class="pp-field-value view-state">{{ email_raw or '—' }}</span>
+                        <input type="email" name="email" class="pp-field-input edit-state" value="{{ email_raw or '' }}" placeholder="you@email.com">
+                    </div>
+                    <!-- Phone (read-only) -->
+                    <div class="pp-field-row">
+                        <div class="pp-field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.6 2.18L6.52 2a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.6 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+                        <span class="pp-field-label">Phone</span>
+                        <span class="pp-field-value">{{ user.phone or '—' }}</span>
+                    </div>
+
+                    <!-- Save actions (edit mode) -->
+                    <div class="pp-action-section edit-state">
+                        <div class="pp-pass-row">
+                            <input type="password" name="password" id="passInput" class="pp-pass-input" placeholder="New password (leave blank to keep)">
+                            <button type="button" class="pp-pass-btn" onclick="togglePassVisibility()">Show</button>
+                        </div>
+                        <button type="submit" class="pp-save-btn">✅ Save Changes</button>
+                        <button type="button" class="pp-cancel-btn" onclick="toggleEditMode()">Cancel</button>
+                    </div>
                 </div>
-                <button type="submit" class="pp-save-btn">
-                    ✅ Save Changes
-                </button>
-                <button type="button" class="pp-save-btn" style="background: transparent; color: var(--pp-text-mid); box-shadow: none; border: 1.5px solid var(--pp-border);" onclick="toggleEditMode()">
-                    Cancel
-                </button>
+            </form>
+
+            <!-- ── Danger Zone ── -->
+            <div class="pp-danger-zone" style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a href="/logout" class="pp-logout-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Log Out
+                </a>
             </div>
-        </div>
-    </form>
 
-    <!-- Danger Zone -->
-    <div class="pp-danger-section">
-        <a href="/logout" class="pp-logout-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Log Out
-        </a>
-    </div>
+        </div><!-- end grid -->
 
-    <!-- Bottom Nav -->
-    <nav class="pp-bottom-nav">
-        <a href="/student" class="pp-nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span>Home</span>
-        </a>
-        <a href="/student/browse" class="pp-nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            <span>Library</span>
-        </a>
-        <a href="/digital-library" class="pp-nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            <span>Community</span>
-        </a>
-        <a href="/student/publish" class="pp-nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            <span>Creator Hub</span>
-        </a>
-        <a href="/student/profile" class="pp-nav-item active">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span>Profile</span>
-        </a>
-    </nav>
-</div>
+        <!-- ── Mobile Bottom Nav ── -->
+        <nav class="pp-bottom-nav">
+            <a href="/student" class="pp-nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span>Home</span>
+            </a>
+            <a href="/student/browse" class="pp-nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span>Library</span>
+            </a>
+            <a href="/digital-library" class="pp-nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span>Community</span>
+            </a>
+            <a href="/student/publish" class="pp-nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <span>Creator Hub</span>
+            </a>
+            <a href="/student/profile" class="pp-nav-item active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+    </div><!-- end portal-main -->
+</div><!-- end portal-wrapper -->
 
 <script>
-    // Toggle edit / view mode
     function toggleEditMode() {
         const body = document.body;
         const btn = document.getElementById('editToggleBtn');
-        if (body.classList.contains('editing-mode')) {
-            body.classList.remove('editing-mode');
-            btn.innerHTML = `
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit`;
+        const isEditing = body.classList.toggle('editing-mode');
+        if (isEditing) {
+            btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel`;
         } else {
-            body.classList.add('editing-mode');
-            btn.innerHTML = `
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                Cancel`;
+            btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit`;
         }
     }
 
-    // Toggle password visibility
     function togglePassVisibility() {
-        const input = document.querySelector('input[name="password"]');
-        const btn = event.target;
-        if (input.type === 'password') {
-            input.type = 'text';
-            btn.textContent = 'Hide';
-        } else {
-            input.type = 'password';
-            btn.textContent = 'Show';
-        }
+        const input = document.getElementById('passInput');
+        const btn = event.currentTarget;
+        if (input.type === 'password') { input.type = 'text';  btn.textContent = 'Hide'; }
+        else                           { input.type = 'password'; btn.textContent = 'Show'; }
     }
 
-    // Avatar preview from file upload
     function previewAvatar(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const avatar = document.getElementById('avatarCircle');
-                avatar.innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
+            reader.onload = e => {
+                const av = document.getElementById('avatarCircle');
+                av.innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    // Animate stats on load
+    // Animate stat counters
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.pp-stat-value').forEach(el => {
             const target = parseInt(el.textContent) || 0;
-            let current = 0;
-            if (target === 0) return;
+            if (!target) return;
+            let cur = 0;
             const step = Math.ceil(target / 20);
-            const interval = setInterval(() => {
-                current = Math.min(current + step, target);
-                el.textContent = current;
-                if (current >= target) clearInterval(interval);
+            const iv = setInterval(() => {
+                cur = Math.min(cur + step, target);
+                el.textContent = cur;
+                if (cur >= target) clearInterval(iv);
             }, 40);
         });
     });
