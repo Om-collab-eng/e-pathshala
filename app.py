@@ -1665,8 +1665,14 @@ def student_my_publications():
     s_code = session.get('school_code')
     user_id = session.get('user_id')
     
-    conn = get_db_connection()
-    pubs = conn.execute('SELECT * FROM digital_content WHERE student_id = ? AND school_code = ? ORDER BY id DESC', (user_id, s_code)).fetchall()
+    query = '''
+        SELECT d.*, 
+               (SELECT COUNT(*) FROM reading_progress rp WHERE rp.content_id = d.id) as bookmarks_count
+        FROM digital_content d
+        WHERE d.student_id = ? AND d.school_code = ?
+        ORDER BY d.id DESC
+    '''
+    pubs = conn.execute(query, (user_id, s_code)).fetchall()
     conn.close()
     
     return render_template('student_my_publications.html', publications=pubs)
