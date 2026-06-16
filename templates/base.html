@@ -179,6 +179,16 @@
             }, 3000);
         }
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            document.addEventListener('DOMContentLoaded', () => {
+              {% for category, message in messages %}
+                showToast("{{ message|e }}", "{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}");
+              {% endfor %}
+            });
+          {% endif %}
+        {% endwith %}
+
         function showModal(title, desc, buttons) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalDesc').innerText = desc;

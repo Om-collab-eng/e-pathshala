@@ -1,5 +1,5 @@
 import os, uuid
-from flask import Flask, render_template, request, redirect, session, url_for, has_request_context, jsonify, Response
+from flask import Flask, render_template, request, redirect, session, url_for, has_request_context, jsonify, Response, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
@@ -18,8 +18,7 @@ from barcode.writer import ImageWriter
 
 import threading
 import time
-import firebase_admin
-from firebase_admin import credentials, storage
+import requests
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -45,56 +44,125 @@ if not os.path.exists(DIGITAL_CONTENT_DIR):
 if not os.path.exists(UPLOADS_DIR):
     os.makedirs(UPLOADS_DIR)
 
-# --- FIREBASE PERSISTENCE SYNC FOR SERVERLESS ---
-try:
-    # On Cloud Functions, firebase_admin is already initialized by the environment usually,
-    # but we initialize it if it isn't.
-    if not firebase_admin._apps:
-        cred = credentials.Certificate(os.path.join(BASE_DIR, 'firebase-key.json'))
-        firebase_admin.initialize_app(cred, {
-            'storageBucket': 'e-pathshala-39d28.firebasestorage.app'
-        })
-    print("Firebase initialized successfully.")
-    
-    # We download on cold start exactly once
-    bucket = storage.bucket()
-    blob = bucket.blob('backups/library_v3.db')
-    if blob.exists():
-        blob.download_to_filename(DB_FILE)
-        print("Restored library_v3.db from Firebase Storage (Cold Start).")
-        
-    # Download digital content on cold start
-    blobs = bucket.list_blobs(prefix="backups/digital_content/")
-    for blob in blobs:
-        filename = blob.name.split("/")[-1]
-        if filename:
-            blob.download_to_filename(os.path.join(DIGITAL_CONTENT_DIR, filename))
+# --- SUPABASE PERSISTENCE SYNC FOR SERVERLESS ---
+SUPABASE_URL = os.environ.get('SUPABASE_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+SUPABASE_BUCKET = 'library-backups'
 
+def upload_to_supabase(local_path, remote_path):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return False
+    base_url = SUPABASE_URL.rstrip('/')
+    url = f"{base_url}/storage/v1/object/{SUPABASE_BUCKET}/{remote_path}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey": SUPABASE_KEY,
+        "x-upsert": "true"
+    }
+    try:
+        with open(local_path, 'rb') as f:
+            files = {'file': f}
+            response = requests.post(url, headers=headers, files=files)
+            if response.status_code in [200, 201]:
+                return True
+            else:
+                print(f"Supabase Upload Error to {remote_path}: Status {response.status_code}, Body: {response.text}")
+                return False
+    except Exception as e:
+        print(f"Supabase Upload Exception to {remote_path}: {e}")
+        return False
+
+def download_from_supabase(remote_path, local_path):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return False
+    base_url = SUPABASE_URL.rstrip('/')
+    url = f"{base_url}/storage/v1/object/authenticated/{SUPABASE_BUCKET}/{remote_path}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey": SUPABASE_KEY
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            with open(local_path, 'wb') as f:
+                f.write(response.content)
+            return True
+        elif response.status_code == 404:
+            print(f"Supabase Download Info: No file found at {remote_path} (404).")
+            return False
+        else:
+            print(f"Supabase Download Error from {remote_path}: Status {response.status_code}, Body: {response.text}")
+            return False
+    except Exception as e:
+        print(f"Supabase Download Exception from {remote_path}: {e}")
+        return False
+
+def list_supabase_files(prefix):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return []
+    base_url = SUPABASE_URL.rstrip('/')
+    url = f"{base_url}/storage/v1/object/list/{SUPABASE_BUCKET}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json"
+    }
+    body = {
+        "prefix": prefix,
+        "limit": 100
+    }
+    try:
+        response = requests.post(url, headers=headers, json=body)
+        if response.status_code == 200:
+            items = response.json()
+            return [item['name'] for item in items if isinstance(item, dict) and 'name' in item]
+        else:
+            print(f"Supabase List Error: Status {response.status_code}, Body: {response.text}")
+            return []
+    except Exception as e:
+        print(f"Supabase List Exception: {e}")
+        return []
+
+if SUPABASE_URL and SUPABASE_KEY:
+    print("Supabase configured successfully. Starting download/restore process...")
+    # Restoring database on startup
+    if download_from_supabase('backups/library_v3.db', DB_FILE):
+        print("Restored library_v3.db from Supabase Storage (Cold Start).")
+    
+    # Restoring digital content on startup
+    try:
+        remote_files = list_supabase_files("backups/digital_content")
+        for filename in remote_files:
+            if filename != ".emptyFolderPlaceholder" and filename:
+                remote_path = f"backups/digital_content/{filename}"
+                local_path = os.path.join(DIGITAL_CONTENT_DIR, filename)
+                download_from_supabase(remote_path, local_path)
+        print("Restored digital content from Supabase Storage.")
+    except Exception as files_err:
+        print(f"Warning: Could not restore digital content from Supabase Storage: {files_err}")
+
+    # Register lifecycle hook
     @app.after_request
-    def sync_to_firebase_after_request(response):
-        # If the request was a POST, PUT, or DELETE, data was likely modified
+    def sync_to_supabase_after_request(response):
         if request.method in ["POST", "PUT", "DELETE"]:
             try:
                 # Sync Database
                 if os.path.exists(DB_FILE):
-                    blob = bucket.blob('backups/library_v3.db')
-                    blob.upload_from_filename(DB_FILE)
+                    upload_to_supabase(DB_FILE, 'backups/library_v3.db')
                 
-                # We could sync files here too, but they are usually uploaded in specific routes.
-                # For safety, let's do a quick sync of the folders.
+                # Sync digital content files
                 for root, _, files in os.walk(DIGITAL_CONTENT_DIR):
                     for file in files:
                         local_path = os.path.join(root, file)
-                        blob = bucket.blob(f"backups/digital_content/{file}")
-                        blob.upload_from_filename(local_path)
-                        
-                print("Lifecycle Sync: Synced DB and files to Firebase Storage.")
+                        remote_path = f"backups/digital_content/{file}"
+                        upload_to_supabase(local_path, remote_path)
+                print("Lifecycle Sync: Synced DB and files to Supabase Storage.")
             except Exception as e:
-                print(f"Firebase Lifecycle Sync Error: {e}")
+                print(f"Supabase Lifecycle Sync Error: {e}")
         return response
-    
-except Exception as e:
-    print(f"Firebase Initialization Error: {e}")
+else:
+    print("WARNING: Supabase credentials not found. App is running without cloud persistence.")
 # --------------------------------------------
 
 from flask import Flask, render_template, request, redirect, session, url_for, has_request_context
@@ -1006,14 +1074,20 @@ def super_admin_wipe_data():
 @app.route('/super-admin/force-backup', methods=['POST'])
 def super_admin_force_backup():
     if session.get('role') != 'super_admin': return redirect('/login')
-    # Trigger an immediate Firebase backup
+    # Trigger an immediate Supabase backup
     try:
-        if os.path.exists(DB_FILE):
-            bucket = storage.bucket()
-            blob = bucket.blob('backups/library_v3.db')
-            blob.upload_from_filename(DB_FILE)
-    except:
-        pass
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            flash("Backup failed: Supabase credentials not configured.", "error")
+        elif os.path.exists(DB_FILE):
+            success = upload_to_supabase(DB_FILE, 'backups/library_v3.db')
+            if success:
+                flash("Backup succeeded!", "success")
+            else:
+                flash("Backup failed: Check server logs for details.", "error")
+        else:
+            flash("Backup failed: Database file not found.", "error")
+    except Exception as e:
+        flash(f"Backup failed: {e}", "error")
     return redirect('/super-admin')
 
 @app.route('/super-admin/settings', methods=['POST'])
