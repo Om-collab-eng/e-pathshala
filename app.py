@@ -1211,33 +1211,43 @@ def admin_add_student():
     
     s_code = session.get('school_code')
     name = request.form.get('name')
-    admission_no = request.form.get('admission_no', '')
-    phone = request.form.get('phone')
+    admission_no = request.form.get('admission_no', '').strip()
+    phone = request.form.get('phone', '').strip()
     cls = request.form.get('class', '')
     password = request.form.get('password')
     email = request.form.get('reqEmail', '')
     role = request.form.get('role', 'student')
-    school_code = request.form.get('school_code', s_code)
-    if not school_code:
-        school_code = s_code
     
+    school_code = request.form.get('school_code', s_code).strip().upper()
+    if not school_code:
+        school_code = s_code.strip().upper()
+    
+    from flask import flash
     conn = get_db_connection()
     try:
+        # Check if phone is already registered
+        dup_phone = conn.execute('SELECT id FROM users WHERE phone = ?', (phone,)).fetchone()
+        if dup_phone:
+            flash("Error: Phone number is already in use by another member.", "error")
+            return redirect('/admin?section=members')
+
         if role == 'student':
             from billing import get_school_subscription
             sub = get_school_subscription(school_code)
             student_count = conn.execute('SELECT COUNT(*) FROM users WHERE role="student" AND school_code=?', (school_code,)).fetchone()[0]
             if sub['max_students'] != float('inf') and student_count >= sub['max_students']:
-                return "Upgrade your school subscription to add more students.", 403
+                flash("Upgrade your school subscription to add more students.", "error")
+                return redirect('/admin?section=members')
             
         conn.execute('INSERT INTO users (name, admission_no, phone, class, role, password, school_code, email, is_banned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)',
                      (name, admission_no, phone, cls, role, password, school_code, email))
         conn.commit()
+        flash("Member successfully registered!", "success")
     except sqlite3.IntegrityError:
-        pass # phone might be duplicate
+        flash("Error: Database integrity constraint failed (possibly duplicate details).", "error")
     finally:
         conn.close()
-    return redirect('/admin')
+    return redirect('/admin?section=members')
 
 @app.route('/admin/student/<int:id>/toggle-ban', methods=['POST'])
 def admin_toggle_student_ban(id):
