@@ -475,6 +475,9 @@
                         <div class="sa-settings-icon" style="color:#ef4444; background:#fef2f2;">⚠️</div>
                         <div class="sa-settings-text">
                             <div class="sa-settings-title" style="color:#ef4444;">WIPE ALL SYSTEM DATA</div>
+                            <div class="sa-settings-desc" style="color: #6b7280; font-size: 0.75rem; margin-top: 4px;">
+                                Authentication passcode: <strong id="settingsWipeCode" style="font-family: monospace; font-size: 0.9rem; color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 2px 6px; border-radius: 4px; letter-spacing: 1px;">------</strong> (expires in <span id="settingsWipeTimer">15</span>s)
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -719,12 +722,20 @@
 
 <div id="wipeOtpModal" class="modal-overlay" style="display: none; z-index: 10000;">
     <div class="modal-content glow-box" style="max-width: 450px; width: 100%; text-align: center; background: white;">
-        <h2 style="margin: 0 0 1rem 0; color: #ef4444;">⚠️ Authentication Required</h2>
-        <p style="color: #6b7280; margin-bottom: 1.5rem;">Please contact OM for the 6-digit passcode.</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+            <h2 style="margin: 0; color: #ef4444;">⚠️ Authentication Required</h2>
+            <button type="button" onclick="closeModal('wipeOtpModal')" style="background: none; border: none; color: #6b7280; font-size: 1.8rem; cursor: pointer; line-height: 1; padding: 0;">&times;</button>
+        </div>
+        <p style="color: #6b7280; margin-bottom: 1.5rem;">
+            Current passcode: <strong id="modalWipeCode" style="font-family: monospace; font-size: 1.2rem; color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 2px 8px; border-radius: 4px; letter-spacing: 1px;">------</strong> (expires in <span id="modalWipeTimer">15</span>s)
+        </p>
         <div id="wipeOtpInputArea">
             <form action="/super-admin/wipe-data" method="POST">
                 <input type="text" name="otp" required placeholder="Enter 6-digit OTP" style="width: 100%; padding: 0.8rem; margin-bottom: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb; background: #f8f9fc; color: #1a1c23; font-size: 1.2rem; text-align: center; letter-spacing: 5px;">
-                <button type="submit" class="btn-sa-primary" style="background: #ef4444; color:white; width:100%; justify-content:center;">Confirm Wipe</button>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-sa-primary" onclick="closeModal('wipeOtpModal')" style="flex: 1; background: white; color: #374151; border: 1px solid #d1d5db; justify-content: center;">Back</button>
+                    <button type="submit" class="btn-sa-primary" style="flex: 1; background: #ef4444; color:white; justify-content:center;">Confirm Wipe</button>
+                </div>
             </form>
         </div>
         <div id="wipeOtpErrorArea" style="display: none;">
@@ -1210,20 +1221,33 @@
         }
     }
 
-    {% if session.get('name') == 'OM' %}
     function updateOmTotp() {
         fetch('/super-admin/om-otp')
             .then(r => r.json())
             .then(data => {
                 if(data.status === 'success') {
-                    document.getElementById('omTotpDisplay').innerText = data.otp;
-                    document.getElementById('omTotpTimer').innerText = data.remaining;
+                    const omDisplay = document.getElementById('omTotpDisplay');
+                    if (omDisplay) omDisplay.innerText = data.otp;
+                    
+                    const omTimer = document.getElementById('omTotpTimer');
+                    if (omTimer) omTimer.innerText = data.remaining;
+                    
+                    const settingsWipeCode = document.getElementById('settingsWipeCode');
+                    if (settingsWipeCode) settingsWipeCode.innerText = data.otp;
+                    
+                    const settingsWipeTimer = document.getElementById('settingsWipeTimer');
+                    if (settingsWipeTimer) settingsWipeTimer.innerText = data.remaining;
+
+                    const modalWipeCode = document.getElementById('modalWipeCode');
+                    if (modalWipeCode) modalWipeCode.innerText = data.otp;
+                    
+                    const modalWipeTimer = document.getElementById('modalWipeTimer');
+                    if (modalWipeTimer) modalWipeTimer.innerText = data.remaining;
                 }
             });
     }
     setInterval(updateOmTotp, 1000);
     updateOmTotp();
-    {% endif %}
 
     // Hub handlers
     async function handleImport() {
