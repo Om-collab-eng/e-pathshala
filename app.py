@@ -193,6 +193,15 @@ def check_maintenance_mode():
         pass # system_settings might not exist yet
     return None
 
+@app.after_request
+def add_header(response):
+    if request.path.startswith('/static'):
+        return response
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 from permissions import get_school_plan, get_school_permissions, get_school_limits, PLANS, require_permission
 
 @app.context_processor
