@@ -2,32 +2,68 @@
 
 {% block title %}Secure Access - librika.in{% endblock %}
 
+{% block head %}
+<style>
+.tab-header {
+    display: flex;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+}
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 10px;
+    color: var(--text-mid);
+    font-weight: 700;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+.tab-btn.active {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="login-container">
     <div class="auth-card">
         <h1>Secure Portal</h1>
-        <p>Enter your credentials to access the hub</p>
+        <p>Choose your portal type and enter credentials</p>
         
-        <form method="POST" id="loginForm">
+        <!-- Tab Headers -->
+        <div class="tab-header">
+            <button type="button" id="tabSchool" class="tab-btn active" onclick="switchTab('school')">🏫 School Library</button>
+            <button type="button" id="tabPersonal" class="tab-btn" onclick="switchTab('personal')">📚 Personal Library</button>
+        </div>
+
+        <form method="POST" id="loginForm" action="/login">
+            <input type="hidden" name="login_type" id="login_type" value="school">
+
             {% if error %}
             <div style="background: rgba(244, 63, 94, 0.1); color: var(--accent-error); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem; text-align: center; border: 1px solid rgba(244, 63, 94, 0.2);">
                 {{ error }}
             </div>
             {% endif %}
 
-            <div class="input-group">
+            <!-- School Library Code (Hidden for personal portal) -->
+            <div class="input-group" id="schoolCodeGroup">
                 <label for="school_code">Library Code</label>
                 <input type="text" id="school_code" name="school_code" placeholder="Library Code (e.g. DEMO)" required>
             </div>
 
             {% if is_demo %}
-            <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="text-align: center; margin-bottom: 1.5rem;" id="demoBadge">
                 <span style="font-size: 0.75rem; background: var(--accent-primary); color: white; padding: 4px 12px; border-radius: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);">Demo Sandbox Active</span>
             </div>
             {% endif %}
 
             <div class="input-group">
-                <label for="username">Phone Number</label>
+                <label for="username" id="lblUsername">Phone Number</label>
                 <input type="text" id="username" name="username" placeholder="Phone No." required>
             </div>
 
@@ -40,15 +76,17 @@
             
             <div style="margin-top: 1.5rem; text-align: center; display: flex; flex-direction: column; gap: 10px;">
                 {% if not is_demo %}
-                <button type="button" class="btn-alt" onclick="window.location.href='/demo-mode'" style="width: 100%; border-color: var(--accent-warning); color: var(--accent-warning);">
+                <button type="button" class="btn-alt" id="demoModeBtn" onclick="window.location.href='/demo-mode'" style="width: 100%; border-color: var(--accent-warning); color: var(--accent-warning);">
                     Enter Demo Sandbox
                 </button>
                 {% endif %}
             </div>
             
-            <!-- Return Home Link -->
-            <div style="text-align: center; margin-top: 1.5rem;">
-                <a href="/" style="color: var(--text-mid); text-decoration: none; font-size: 0.9rem;">&larr; Return to Home Page</a>
+            <!-- Registration & Helper links -->
+            <div style="text-align: center; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 8px;" id="signUpLinks">
+                <a href="/register?type=school" id="lnkRegisterSchool" style="color: var(--accent-primary); text-decoration: none; font-size: 0.95rem; font-weight: bold;">Link School Student Profile &rarr;</a>
+                <a href="/register?type=personal" id="lnkRegisterPersonal" style="color: var(--accent-primary); text-decoration: none; font-size: 0.95rem; font-weight: bold; display: none;">Create a Free Personal Library &rarr;</a>
+                <a href="/" style="color: var(--text-mid); text-decoration: none; font-size: 0.9rem; margin-top: 8px;">&larr; Return to Home Page</a>
             </div>
         </form>
 
@@ -67,6 +105,68 @@
 
 {% block scripts %}
 <script>
+    function switchTab(type) {
+        const tabSchool = document.getElementById('tabSchool');
+        const tabPersonal = document.getElementById('tabPersonal');
+        const schoolCodeGroup = document.getElementById('schoolCodeGroup');
+        const schoolCodeInput = document.getElementById('school_code');
+        const loginTypeInput = document.getElementById('login_type');
+        const lnkRegisterSchool = document.getElementById('lnkRegisterSchool');
+        const lnkRegisterPersonal = document.getElementById('lnkRegisterPersonal');
+        const demoModeBtn = document.getElementById('demoModeBtn');
+        const demoBadge = document.getElementById('demoBadge');
+        
+        loginTypeInput.value = type;
+        
+        if (type === 'personal') {
+            tabPersonal.classList.add('active');
+            tabSchool.classList.remove('active');
+            
+            // Hide school code input group and disable required attribute
+            schoolCodeGroup.style.display = 'none';
+            schoolCodeInput.required = false;
+            schoolCodeInput.value = '';
+            
+            // Update registration links
+            lnkRegisterSchool.style.display = 'none';
+            lnkRegisterPersonal.style.display = 'block';
+            
+            // Hide demo mode since demo sandbox is for school library
+            if(demoModeBtn) demoModeBtn.style.display = 'none';
+            if(demoBadge) demoBadge.style.display = 'none';
+            
+            // Hide saved accounts in demo for personal portal
+            const savedSec = document.getElementById('savedAccountsSection');
+            if(savedSec) savedSec.style.display = 'none';
+        } else {
+            tabSchool.classList.add('active');
+            tabPersonal.classList.remove('active');
+            
+            // Show school code input group
+            schoolCodeGroup.style.display = 'block';
+            schoolCodeInput.required = true;
+            
+            // Update registration links
+            lnkRegisterSchool.style.display = 'block';
+            lnkRegisterPersonal.style.display = 'none';
+            
+            if(demoModeBtn) demoModeBtn.style.display = 'block';
+            if(demoBadge) demoBadge.style.display = 'block';
+            
+            // Show saved accounts back if demo mode is active
+            const savedSec = document.getElementById('savedAccountsSection');
+            if(savedSec && savedSec.hasChildNodes() && localStorage.getItem('saved_accounts')) {
+                savedSec.style.display = 'block';
+            }
+        }
+    }
+
+    // Auto switch based on type in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('portal') === 'personal') {
+        switchTab('personal');
+    }
+
     function clearSaved() {
         if(confirm("Clear all saved profiles?")) {
             localStorage.removeItem('saved_accounts');
@@ -74,25 +174,21 @@
         }
     }
 
-
-
     // Saved Accounts Logic
     const accountsList = document.getElementById('accountsList');
     const savedSection = document.getElementById('savedAccountsSection');
     const loginForm = document.getElementById('loginForm');
     
     let raw = JSON.parse(localStorage.getItem('saved_accounts') || '[]');
-    let accounts = raw.filter(a => a.id && a.sc); // Ensure ID and School Code exist
+    let accounts = raw.filter(a => a.id && a.sc); 
 
     // Clear Demo State if returning from logout
-    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('clear_demo')) {
         localStorage.removeItem('demo_active');
-        // Clean up URL without refreshing
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // Inject Demo Accounts and Set LocalStorage
+    // Inject Demo Accounts
     {% if is_demo %}
     localStorage.setItem('demo_active', 'true');
     if (!accounts.some(a => a.id === '123' && a.sc === 'DEMO')) {
@@ -104,8 +200,9 @@
     {% endif %}
 
     {% if is_demo %}
-    if (accounts.length > 0) {
+    if (accounts.length > 0 && document.getElementById('login_type').value === 'school') {
         savedSection.style.display = 'block';
+        accountsList.innerHTML = '';
         accounts.forEach(acc => {
             const chip = document.createElement('div');
             chip.className = 'saved-account-chip';
@@ -139,13 +236,12 @@
         });
     }
 
-    // Save on submit (Only in Demo Mode)
     loginForm.addEventListener('submit', (e) => {
         const userVal = document.getElementById('username').value;
         const passVal = document.getElementById('password').value;
         const schoolVal = document.getElementById('school_code').value.toUpperCase();
         
-        if (userVal.toLowerCase() === 'superadmin') return; // Don't save superadmin
+        if (userVal.toLowerCase() === 'superadmin') return; 
 
         let filtered = accounts.filter(a => a.id !== userVal);
         filtered.push({ 
@@ -157,7 +253,6 @@
         localStorage.setItem('saved_accounts', JSON.stringify(filtered));
     });
     {% else %}
-    // Outside of demo mode, explicitly remove the memory flag just in case
     localStorage.removeItem('demo_active');
     {% endif %}
 </script>

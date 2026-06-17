@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Publish Digital Book - Personal Library{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.form-container {
+    max-width: 800px;
+}
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+@media (max-width: 768px) {
+    .input-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="personal-layout">
+    <!-- Sidebar -->
+    <aside class="personal-sidebar">
+        <div class="personal-brand">
+            <span>📚</span>
+            <span>Librika Personal</span>
+        </div>
+        <!-- Active Library Selector -->
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="window.location.href='/personal/libraries/switch/' + this.value" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    {% for lib in personal_my_libraries %}
+                    <option value="{{ lib.id }}" {% if personal_active_library and personal_active_library.id == lib.id %}selected{% endif %}>{{ lib.library_name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% if personal_shared_libraries %}
+                <optgroup label="Shared with Me">
+                    {% for lib in personal_shared_libraries %}
+                    <option value="{{ lib.id }}" {% if personal_active_library and personal_active_library.id == lib.id %}selected{% endif %}>🤝 {{ lib.library_name }} ({{ lib.owner_name }})</option>
+                    {% endfor %}
+                </optgroup>
+                {% endif %}
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link">
+                <span>🏠</span> Dashboard
+            </a>
+            <a href="/personal/books" class="personal-nav-link">
+                <span>📖</span> My Books
+            </a>
+            <a href="/personal/reading" class="personal-nav-link">
+                <span>⏱️</span> Reading Tracker
+            </a>
+            <a href="/personal/borrowing" class="personal-nav-link">
+                <span>🤝</span> Lending System
+            </a>
+            <a href="/personal/wishlist" class="personal-nav-link">
+                <span>✨</span> Wishlist
+            </a>
+            <a href="/personal/favorites" class="personal-nav-link">
+                <span>⭐</span> Favorites
+            </a>
+            <a href="/personal/elibrary" class="personal-nav-link active">
+                <span>🌐</span> E-Library
+            </a>
+            <a href="/personal/scan" class="personal-nav-link">
+                <span>📷</span> AI Scanner
+            </a>
+            <a href="/personal/settings" class="personal-nav-link">
+                <span>⚙️</span> Settings & Plan
+            </a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: var(--accent-error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="{{ lib.profile_photo or 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' }}" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ session.user_name }}</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;">{{ lib.plan_name }} PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="personal-content">
+        <div style="margin-bottom: 2rem;">
+            <a href="/personal/elibrary" style="color: var(--neon-purple); text-decoration: none; font-weight: 600;">&larr; Back to E-Library</a>
+            <h1 style="margin: 10px 0 0 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Publish Digital Book
+            </h1>
+            <p style="color: #9ca3af; margin: 4px 0 0 0;">Upload and share your private work or public domain books in the personal library network.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                    <div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem;
+                        {% if category == 'success' %} background: rgba(16, 185, 129, 0.1); color: var(--accent-success); border: 1px solid rgba(16, 185, 129, 0.2);
+                        {% else %} background: rgba(244, 63, 94, 0.1); color: var(--accent-error); border: 1px solid rgba(244, 63, 94, 0.2); {% endif %}">
+                        {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="personal-card form-container">
+            <form method="POST" action="/personal/elibrary/publish" enctype="multipart/form-data">
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="title">Book Title</label>
+                        <input type="text" id="title" name="title" required placeholder="E.g. Pygmalion">
+                    </div>
+                    <div class="input-group">
+                        <label for="subject">Author / Writer</label>
+                        <input type="text" id="subject" name="subject" required placeholder="E.g. George Bernard Shaw">
+                    </div>
+                    <div class="input-group">
+                        <label for="category">Category / Genre</label>
+                        <input type="text" id="category" name="category" required placeholder="E.g. Plays, Literature">
+                    </div>
+                    <div class="input-group">
+                        <label for="tags">Tags (Comma-separated)</label>
+                        <input type="text" id="tags" name="tags" placeholder="E.g. classic, comedy, drama">
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin-top: 15px;">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" placeholder="Describe the book content..."></textarea>
+                </div>
+
+                <div class="input-grid" style="margin-top: 15px;">
+                    <div class="input-group">
+                        <label for="cover">Cover Image (Optional)</label>
+                        <input type="file" id="cover" name="cover" accept="image/*">
+                        <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">PNG, JPG, or WEBP cover file</div>
+                    </div>
+                    <div class="input-group">
+                        <label for="document">Document (PDF File) *</label>
+                        <input type="file" id="document" name="document" accept=".pdf" required>
+                        <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">PDF ebook file to read/download</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <button type="submit" class="btn-primary" style="background: var(--premium-gradient); border: none; padding: 12px 24px; border-radius: 10px; color: white; font-weight: bold; cursor: pointer;">
+                        📤 Publish to E-Library
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

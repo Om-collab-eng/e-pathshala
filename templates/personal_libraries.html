@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Collections - Personal Library{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.lib-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+@media (max-width: 992px) {
+    .lib-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.collection-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+.collection-card.active {
+    border-color: var(--neon-purple);
+    background: rgba(139, 92, 246, 0.04);
+}
+.collection-info {
+    flex: 1;
+}
+.collection-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+.collection-meta {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="personal-layout">
+    <!-- Sidebar -->
+    <aside class="personal-sidebar">
+        <!-- Active Library Selector dropdown automatically injected here by update_sidebars.py -->
+        <!-- Navigation Links -->
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link">
+                <span>🏠</span> Dashboard
+            </a>
+            <a href="/personal/books" class="personal-nav-link">
+                <span>📖</span> My Books
+            </a>
+            <a href="/personal/reading" class="personal-nav-link">
+                <span>⏱️</span> Reading Tracker
+            </a>
+            <a href="/personal/borrowing" class="personal-nav-link">
+                <span>🤝</span> Lending System
+            </a>
+            <a href="/personal/wishlist" class="personal-nav-link">
+                <span>✨</span> Wishlist
+            </a>
+            <a href="/personal/favorites" class="personal-nav-link">
+                <span>⭐</span> Favorites
+            </a>
+            <a href="/personal/libraries" class="personal-nav-link active">
+                <span>📂</span> Collections
+            </a>
+            <a href="/personal/elibrary" class="personal-nav-link">
+                <span>🌐</span> E-Library
+            </a>
+            <a href="/personal/scan" class="personal-nav-link">
+                <span>📷</span> AI Scanner
+            </a>
+            <a href="/personal/settings" class="personal-nav-link">
+                <span>⚙️</span> Settings & Plan
+            </a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: var(--accent-error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="{{ lib.profile_photo or 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' }}" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ session.user_name }}</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;">{{ lib.plan_name }} PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="personal-content">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Manage Collections
+            </h1>
+            <p style="color: #9ca3af; margin: 4px 0 0 0;">Create and organize multiple collections, or share them with friends.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                    <div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem;
+                        {% if category == 'success' %} background: rgba(16, 185, 129, 0.1); color: var(--accent-success); border: 1px solid rgba(16, 185, 129, 0.2);
+                        {% else %} background: rgba(244, 63, 94, 0.1); color: var(--accent-error); border: 1px solid rgba(244, 63, 94, 0.2); {% endif %}">
+                        {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="lib-grid">
+            <!-- Left panel: Owned Collections List -->
+            <div>
+                <div class="personal-card" style="margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="margin: 0; color: white; font-size: 1.3rem;">My Book Collections</h2>
+                        <span style="font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                            Used: <strong>{{ my_libraries|length }}</strong> / {{ max_libraries }}
+                        </span>
+                    </div>
+
+                    {% for item in my_libraries %}
+                    <div class="collection-card {% if personal_active_library and personal_active_library.id == item.id %}active{% endif %}">
+                        <div class="collection-info">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <h3 class="collection-name">{{ item.library_name }}</h3>
+                                {% if personal_active_library and personal_active_library.id == item.id %}
+                                <span style="font-size: 0.7rem; background: rgba(139, 92, 246, 0.2); color: var(--neon-purple); border: 1px solid rgba(139, 92, 246, 0.3); padding: 2px 8px; border-radius: 10px; font-weight: bold;">ACTIVE</span>
+                                {% endif %}
+                            </div>
+                            <div class="collection-meta">
+                                📅 Created on {{ item.created_at }} | 📚 {{ item.book_count }} Books
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            {% if not personal_active_library or personal_active_library.id != item.id %}
+                            <a href="/personal/libraries/switch/{{ item.id }}" class="btn-alt" style="font-size: 0.8rem; padding: 6px 12px;">Activate</a>
+                            {% endif %}
+                            
+                            <!-- Rename form toggle -->
+                            <button class="btn-alt" onclick="toggleRenameForm({{ item.id }})" style="font-size: 0.8rem; padding: 6px 12px;">Rename</button>
+                            
+                            {% if my_libraries|length > 1 %}
+                            <form method="POST" action="/personal/libraries/delete/{{ item.id }}" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this collection and ALL books inside it?');">
+                                <button type="submit" class="btn-alt" style="font-size: 0.8rem; padding: 6px 12px; color: var(--accent-error); border-color: var(--accent-error);">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Rename Form (Hidden by default) -->
+                    <div id="renameForm-{{ item.id }}" class="personal-card" style="display: none; margin-bottom: 15px; padding: 1.2rem; background: rgba(255,255,255,0.01);">
+                        <form method="POST" action="/personal/libraries/rename/{{ item.id }}">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" name="library_name" value="{{ item.library_name }}" required style="flex:1; background:#0f0f15; color:white; border:1px solid var(--glass-border); border-radius:8px; padding:8px;">
+                                <button type="submit" class="btn-primary" style="background: var(--premium-gradient); border:none; padding:8px 16px; border-radius:8px; color:white; font-weight:bold;">Save</button>
+                                <button type="button" class="btn-alt" onclick="toggleRenameForm({{ item.id }})" style="padding:8px 12px; border-radius:8px;">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Shared Collections list -->
+                <div class="personal-card">
+                    <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: white; font-size: 1.3rem;">Libraries Shared With Me</h2>
+                    {% if shared_libraries %}
+                    {% for item in shared_libraries %}
+                    <div class="collection-card {% if personal_active_library and personal_active_library.id == item.id %}active{% endif %}">
+                        <div class="collection-info">
+                            <h3 class="collection-name">🤝 {{ item.library_name }}</h3>
+                            <div class="collection-meta">
+                                Owned by <strong>{{ item.owner_name }}</strong> | 📚 {{ item.book_count }} Books
+                            </div>
+                        </div>
+                        <div>
+                            {% if not personal_active_library or personal_active_library.id != item.id %}
+                            <a href="/personal/libraries/switch/{{ item.id }}" class="btn-alt" style="font-size: 0.8rem; padding: 6px 12px;">Switch View</a>
+                            {% else %}
+                            <span style="font-size: 0.75rem; color: #9ca3af; font-weight: bold; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 8px;">Viewing Read-Only</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p style="color: #9ca3af; font-size: 0.9rem; text-align: center; margin-top: 1.5rem;">No shared libraries available.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right panel: Create & Share tools -->
+            <div style="display: flex; flex-direction: column; gap: 25px;">
+                <!-- Create Form -->
+                {% if my_libraries|length < max_libraries %}
+                <div class="personal-card">
+                    <h3 style="margin-top: 0; color: white;">Add New Collection</h3>
+                    <form method="POST" action="/personal/libraries/create">
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <label for="new_library_name">Collection Name</label>
+                            <input type="text" id="new_library_name" name="library_name" required placeholder="E.g. Research Papers">
+                        </div>
+                        <button type="submit" class="btn-primary" style="background: var(--premium-gradient); border:none; width:100%; padding:10px; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">
+                            ➕ Create Collection
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="personal-card" style="border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.02);">
+                    <h3 style="margin-top: 0; color: var(--accent-warning);">Collection Limit Reached</h3>
+                    <p style="font-size: 0.8rem; color: #9ca3af; line-height: 1.4; margin-bottom: 1.5rem;">
+                        You have reached the maximum collections limit ({{ max_libraries }}) for the <strong>{{ lib.plan_name }} Plan</strong>.
+                    </p>
+                    <a href="/personal/settings" class="btn-primary" style="background: var(--premium-gradient); text-align:center; display:block; text-decoration:none; padding:10px; border-radius:10px; color:white; font-weight:bold;">Upgrade Plan</a>
+                </div>
+                {% endif %}
+
+                <!-- Share Collection Form -->
+                <div class="personal-card">
+                    <h3 style="margin-top: 0; color: white;">Share a Collection</h3>
+                    
+                    {% if lib.plan_name == 'FREE' %}
+                    <div style="background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.15); padding: 15px; border-radius: 12px; text-align: center;">
+                        <span style="font-size: 1.8rem; display:block; margin-bottom: 8px;">🔒</span>
+                        <strong style="color: white; font-size: 0.9rem;">Sharing Locked</strong>
+                        <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px; line-height: 1.4;">
+                            Upgrade to Basic or Pro plan to share your collections and collaborate with friends!
+                        </p>
+                        <a href="/personal/settings" class="btn-alt" style="border-color: var(--accent-warning); color: var(--accent-warning); width:100%; box-sizing:border-box; margin-top: 10px; display:inline-block; text-decoration:none; padding:6px; font-size:0.8rem; text-align:center;">View Pricing</a>
+                    </div>
+                    {% else %}
+                    <form method="POST" action="/personal/libraries/share">
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label for="share_library_id">Select Collection</label>
+                            <select id="share_library_id" name="library_id" required style="width:100%; background:#0f0f15; color:white; border:1px solid var(--glass-border); border-radius:8px; padding:8px;">
+                                {% for item in my_libraries %}
+                                <option value="{{ item.id }}">{{ item.library_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <label for="share_phone">Friend's Phone / Email</label>
+                            <input type="text" id="share_phone" name="share_identity" required placeholder="E.g. phone or email">
+                            <div style="font-size:0.7rem; color:#9ca3af; margin-top:4px;">Enter the login phone or email of the friend.</div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="background: var(--premium-gradient); border:none; width:100%; padding:10px; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">
+                            📤 Share Collection
+                        </button>
+                    </form>
+                    
+                    {% if shared_out_records %}
+                    <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+                    <h4 style="color: white; margin-top: 0; margin-bottom: 10px;">Active Shares</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        {% for s in shared_out_records %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem;">
+                            <div>
+                                <strong style="color:white;">{{ s.library_name }}</strong>
+                                <div style="font-size:0.7rem; color:#9ca3af;">Shared with {{ s.friend_name }}</div>
+                            </div>
+                            <form method="POST" action="/personal/libraries/revoke/{{ s.share_id }}" style="margin:0;">
+                                <button type="submit" class="btn-alt" style="padding: 4px 8px; font-size: 0.7rem; color: var(--accent-error); border-color: var(--accent-error);">Revoke</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleRenameForm(id) {
+    const form = document.getElementById('renameForm-' + id);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

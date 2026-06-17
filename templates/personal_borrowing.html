@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Lending System - Personal Library{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.badge-returned {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent-success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.badge-issued {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-secondary);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.badge-overdue {
+    background: rgba(244, 63, 94, 0.1);
+    color: var(--accent-error);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="personal-layout">
+    <!-- Sidebar -->
+    <aside class="personal-sidebar">
+        <div class="personal-brand">
+            <span>📚</span>
+            <span>Librika Personal</span>
+        </div>
+        <!-- Active Library Selector -->
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="window.location.href='/personal/libraries/switch/' + this.value" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    {% for lib in personal_my_libraries %}
+                    <option value="{{ lib.id }}" {% if personal_active_library and personal_active_library.id == lib.id %}selected{% endif %}>{{ lib.library_name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% if personal_shared_libraries %}
+                <optgroup label="Shared with Me">
+                    {% for lib in personal_shared_libraries %}
+                    <option value="{{ lib.id }}" {% if personal_active_library and personal_active_library.id == lib.id %}selected{% endif %}>🤝 {{ lib.library_name }} ({{ lib.owner_name }})</option>
+                    {% endfor %}
+                </optgroup>
+                {% endif %}
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link">
+                <span>🏠</span> Dashboard
+            </a>
+            <a href="/personal/books" class="personal-nav-link">
+                <span>📖</span> My Books
+            </a>
+            <a href="/personal/reading" class="personal-nav-link">
+                <span>⏱️</span> Reading Tracker
+            </a>
+            <a href="/personal/borrowing" class="personal-nav-link active">
+                <span>🤝</span> Lending System
+            </a>
+            <a href="/personal/wishlist" class="personal-nav-link">
+                <span>✨</span> Wishlist
+            </a>
+            <a href="/personal/favorites" class="personal-nav-link">
+                <span>⭐</span> Favorites
+            </a>
+            <a href="/personal/elibrary" class="personal-nav-link">
+                <span>🌐</span> E-Library
+            </a>
+            <a href="/personal/scan" class="personal-nav-link">
+                <span>📷</span> AI Scanner
+            </a>
+            <a href="/personal/settings" class="personal-nav-link">
+                <span>⚙️</span> Settings & Plan
+            </a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: var(--accent-error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="{{ lib.profile_photo or 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' }}" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ session.user_name }}</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;">{{ lib.plan_name }} PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="personal-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                    <div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem;
+                        {% if category == 'success' %} background: rgba(16, 185, 129, 0.1); color: var(--accent-success); border: 1px solid rgba(16, 185, 129, 0.2);
+                        {% else %} background: rgba(244, 63, 94, 0.1); color: var(--accent-error); border: 1px solid rgba(244, 63, 94, 0.2); {% endif %}">
+                        {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h1 style="margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Book Lending
+                </h1>
+                <p style="color: #9ca3af; margin: 4px 0 0 0;">Lend books to friends and track return status / overdue records</p>
+            </div>
+            <button class="btn-neon" onclick="document.getElementById('lendBookModal').style.display='flex'">🤝 Lend a Book</button>
+        </div>
+
+        <!-- Borrowing Records Section -->
+        <div class="personal-card" style="margin-bottom: 30px;">
+            <h3 style="margin-top: 0; color: white;">Active Loans</h3>
+            {% if active_loans %}
+            <div style="overflow-x: auto;">
+                <table class="responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Borrower</th>
+                            <th>Phone Number</th>
+                            <th>Lent Date</th>
+                            <th>Expected Return</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loan in active_loans %}
+                        <tr>
+                            <td style="color: white; font-weight: 600;">{{ loan.title }}</td>
+                            <td>{{ loan.borrower_name }}</td>
+                            <td>{{ loan.phone_number or 'N/A' }}</td>
+                            <td>{{ loan.issue_date }}</td>
+                            <td>{{ loan.expected_return_date }}</td>
+                            <td>
+                                <span class="
+                                    {% if loan.status == 'Overdue' %}badge-overdue
+                                    {% else %}badge-issued{% endif %}">
+                                    {{ loan.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <form action="/personal/borrowing/return/{{ loan.id }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-neon" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; color: black !important;">Mark Returned</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: #9ca3af; text-align: center; padding: 2rem 0;">No active book loans at the moment.</p>
+            {% endif %}
+        </div>
+
+        <div class="personal-card">
+            <h3 style="margin-top: 0; color: white;">Lending History (Returned Books)</h3>
+            {% if returned_loans %}
+            <div style="overflow-x: auto;">
+                <table class="responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Borrower</th>
+                            <th>Lent Date</th>
+                            <th>Expected Return</th>
+                            <th>Actual Return</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loan in returned_loans %}
+                        <tr>
+                            <td style="color: white; font-weight: 600;">{{ loan.title }}</td>
+                            <td>{{ loan.borrower_name }}</td>
+                            <td>{{ loan.issue_date }}</td>
+                            <td>{{ loan.expected_return_date }}</td>
+                            <td>{{ loan.actual_return_date }}</td>
+                            <td>
+                                <span class="badge-returned">Returned</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: #9ca3af; text-align: center; padding: 2rem 0;">No lending history logs found.</p>
+            {% endif %}
+        </div>
+
+        <!-- Lend Book Modal -->
+        <div id="lendBookModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <div class="personal-card" style="width: 450px;">
+                <h2 style="margin-top: 0; color: white;">Lend a Book</h2>
+                <form action="/personal/borrowing/lend" method="POST" style="margin-top: 1.5rem;">
+                    <div class="input-group">
+                        <label for="book_id">Select Available Book</label>
+                        <select id="book_id" name="book_id" required style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: white;">
+                            {% for book in available_books %}
+                            <option value="{{ book.id }}">{{ book.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="borrower_name">Borrower Name</label>
+                        <input type="text" id="borrower_name" name="borrower_name" required placeholder="E.g. Jane Smith">
+                    </div>
+                    <div class="input-group">
+                        <label for="phone_number">Phone Number</label>
+                        <input type="tel" id="phone_number" name="phone_number" placeholder="E.g. 9876543210">
+                    </div>
+                    <div class="input-group">
+                        <label for="expected_return_date">Expected Return Date</label>
+                        <input type="date" id="expected_return_date" name="expected_return_date" required value="{{ (datetime.now() + timedelta(days=14)).strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button type="button" class="btn-alt" onclick="document.getElementById('lendBookModal').style.display='none'">Cancel</button>
+                        <button type="submit" class="btn-neon">Confirm Loan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}

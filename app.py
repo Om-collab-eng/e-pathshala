@@ -216,12 +216,180 @@ def get_db_connection():
         if session.get('is_demo'):
             use_db = DEMO_DB_FILE
     
+    print("CONNECTING TO DB:", os.path.basename(use_db))
     conn = sqlite3.connect(use_db)
     conn.row_factory = sqlite3.Row
     return conn
 
+def init_personal_tables(conn):
+    # 1. Add plan_name column to users table if it doesn't exist
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN plan_name TEXT DEFAULT 'FREE'")
+    except sqlite3.OperationalError:
+        pass
+        
+    # 2. Check and recreate personal_libraries without UNIQUE constraint
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(personal_libraries)")
+    cols = [col[1] for col in cursor.fetchall()]
+    if cols:
+        schema_query = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='personal_libraries'").fetchone()
+        schema_sql = schema_query[0] if schema_query else ""
+        if "UNIQUE" in schema_sql or "owner_id INTEGER UNIQUE" in schema_sql:
+            conn.execute("ALTER TABLE personal_libraries RENAME TO old_personal_libraries")
+            conn.execute('''CREATE TABLE personal_libraries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_id INTEGER,
+                library_name TEXT NOT NULL,
+                profile_photo TEXT,
+                plan_name TEXT DEFAULT 'FREE',
+                subscription_status TEXT DEFAULT 'active',
+                expiry_date TEXT,
+                created_at TEXT
+            )''')
+            # Copy data
+            conn.execute('''INSERT INTO personal_libraries (id, owner_id, library_name, profile_photo, plan_name, subscription_status, expiry_date, created_at)
+                            SELECT id, owner_id, library_name, profile_photo, plan_name, subscription_status, expiry_date, created_at FROM old_personal_libraries''')
+            conn.execute("DROP TABLE old_personal_libraries")
+    else:
+        conn.execute('''CREATE TABLE IF NOT EXISTS personal_libraries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            owner_id INTEGER,
+            library_name TEXT NOT NULL,
+            profile_photo TEXT,
+            plan_name TEXT DEFAULT 'FREE',
+            subscription_status TEXT DEFAULT 'active',
+            expiry_date TEXT,
+            created_at TEXT
+        )''')
+        
+    # 3. Create personal_books table
+    conn.execute('''CREATE TABLE IF NOT EXISTS personal_books (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_id INTEGER NOT NULL,
+        library_id INTEGER,
+        title TEXT NOT NULL,
+        author TEXT,
+        category TEXT,
+        publisher TEXT,
+        isbn TEXT,
+        language TEXT,
+        description TEXT,
+        cover_image_url TEXT,
+        quantity INTEGER DEFAULT 1,
+        book_condition TEXT,
+        purchase_date TEXT,
+        status TEXT DEFAULT 'Available',
+        created_at TEXT
+    )''')
+    
+    # Add library_id column to personal_books if it was created previously without it
+    try:
+        conn.execute("ALTER TABLE personal_books ADD COLUMN library_id INTEGER")
+    except sqlite3.OperationalError:
+        pass
+        
+    # Auto-populate library_id for orphan books pointing to their owner's first library
+    conn.execute('''
+        UPDATE personal_books 
+        SET library_id = (
+            SELECT id FROM personal_libraries 
+            WHERE personal_libraries.owner_id = personal_books.owner_id 
+            LIMIT 1
+        )
+        WHERE library_id IS NULL
+    ''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS personal_reading_tracker (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_id INTEGER NOT NULL,
+        book_id INTEGER NOT NULL,
+        start_date TEXT,
+        finish_date TEXT,
+        current_page INTEGER DEFAULT 0,
+        total_pages INTEGER DEFAULT 0,
+        reading_status TEXT DEFAULT 'Not Started',
+        updated_at TEXT,
+        FOREIGN KEY(book_id) REFERENCES personal_books(id) ON DELETE CASCADE
+    )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS personal_borrowings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_id INTEGER NOT NULL,
+        book_id INTEGER NOT NULL,
+        borrower_name TEXT NOT NULL,
+        phone_number TEXT,
+        issue_date TEXT NOT NULL,
+        expected_return_date TEXT NOT NULL,
+        actual_return_date TEXT,
+        status TEXT DEFAULT 'Issued',
+        FOREIGN KEY(book_id) REFERENCES personal_books(id) ON DELETE CASCADE
+    )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS personal_wishlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        author TEXT,
+        priority TEXT DEFAULT 'Medium',
+        price REAL,
+        purchase_link TEXT,
+        notes TEXT,
+        created_at TEXT
+    )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS personal_favorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_id INTEGER NOT NULL,
+        item_type TEXT NOT NULL,
+        item_value TEXT NOT NULL,
+        created_at TEXT
+    )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS personal_activity_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS personal_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_id INTEGER NOT NULL,
+        setting_key TEXT,
+        setting_value TEXT,
+        UNIQUE(owner_id, setting_key)
+    )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS personal_library_shares (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        library_id INTEGER NOT NULL,
+        shared_with_user_id INTEGER NOT NULL,
+        permission_level TEXT DEFAULT 'view',
+        created_at TEXT,
+        FOREIGN KEY(library_id) REFERENCES personal_libraries(id) ON DELETE CASCADE,
+        FOREIGN KEY(shared_with_user_id) REFERENCES users(id) ON DELETE CASCADE
+    )''')
+    
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_lib_owner ON personal_libraries(owner_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_books_owner ON personal_books(owner_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_read_owner ON personal_reading_tracker(owner_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_borrow_owner ON personal_borrowings(owner_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_wish_owner ON personal_wishlist(owner_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_favs_owner ON personal_favorites(owner_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_logs_owner ON personal_activity_logs(owner_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_settings_owner ON personal_settings(owner_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_p_shares_lib ON personal_library_shares(library_id)')
+    
+    # Self-healing database cleanup of orphan records
+    try:
+        conn.execute("DELETE FROM personal_libraries WHERE owner_id NOT IN (SELECT id FROM users)")
+        conn.execute("DELETE FROM personal_books WHERE owner_id NOT IN (SELECT id FROM users)")
+        conn.execute("DELETE FROM personal_reading_tracker WHERE owner_id NOT IN (SELECT id FROM users)")
+        conn.execute("DELETE FROM personal_borrowings WHERE owner_id NOT IN (SELECT id FROM users)")
+        conn.execute("DELETE FROM personal_wishlist WHERE owner_id NOT IN (SELECT id FROM users)")
+        conn.execute("DELETE FROM personal_favorites WHERE owner_id NOT IN (SELECT id FROM users)")
+        conn.execute("DELETE FROM personal_activity_logs WHERE owner_id NOT IN (SELECT id FROM users)")
+        conn.execute("DELETE FROM personal_settings WHERE owner_id NOT IN (SELECT id FROM users)")
+    except Exception as e:
+        print("Self-healing cleanup warning:", e)
+
 def init_db():
     conn = get_db_connection()
+    init_personal_tables(conn)
     # Schools Table
     conn.execute('''CREATE TABLE IF NOT EXISTS schools 
                  (id INTEGER PRIMARY KEY, name TEXT, school_code TEXT UNIQUE, 
@@ -457,6 +625,7 @@ def init_db():
     # Ensure demo admin has all permissions
     dconn.execute('UPDATE users SET permissions = \'["manage_books", "manage_students", "manage_transactions", "approve_content"]\' WHERE role = "admin" AND (permissions IS NULL OR permissions = "[]")')
     
+    init_personal_tables(dconn)
     dconn.commit()
     dconn.close()
 
@@ -547,6 +716,7 @@ def index():
         if session.get('role') == 'admin': return redirect('/admin')
         if session.get('role') == 'super_admin' or session.get('user_id') == -1: return redirect('/super-admin')
         if session.get('role') == 'student': return redirect('/student')
+        if session.get('role') == 'owner': return redirect('/personal/dashboard')
     return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -555,14 +725,18 @@ def login():
         if session.get('role') == 'admin': return redirect('/admin')
         if session.get('role') == 'super_admin' or session.get('user_id') == -1: return redirect('/super-admin')
         if session.get('role') == 'student': return redirect('/student')
+        if session.get('role') == 'owner': return redirect('/personal/dashboard')
         
     error = None
     is_demo_session = session.get('is_demo')
     
     if request.method == 'POST':
+        login_type = request.form.get('login_type', 'school')
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         school_code = request.form.get('school_code', '').strip().upper()
+        if login_type == 'personal' or not school_code:
+            school_code = f"PERS_{username}"
         conn = get_db_connection()
         
         # Hard Super Admin Bypass
@@ -621,6 +795,7 @@ def login():
 
             if user['role'] == 'super_admin': return redirect('/super-admin')
             if user['role'] == 'admin': return redirect('/admin')
+            if user['role'] == 'owner': return redirect('/personal/dashboard')
             
             if user['role'] == 'student' and not user.get('name'):
                 return redirect('/complete-profile')
@@ -640,41 +815,82 @@ def register():
         if session.get('role') == 'admin': return redirect('/admin')
         if session.get('role') == 'super_admin' or session.get('user_id') == -1: return redirect('/super-admin')
         if session.get('role') == 'student': return redirect('/student')
+        if session.get('role') == 'owner': return redirect('/personal/dashboard')
         
     # Detect if user wants to register for a school or just for the app
     type = request.args.get('type', 'app') # 'school' or 'app'
     
     if request.method == 'POST':
-        phone = request.form.get('phone')
-        password = request.form.get('password')
-        school_code = request.form.get('school_code', '').strip().upper()
-        name = request.form.get('name')
+        account_type = request.form.get('account_type', 'school')
+        phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '').strip()
+        name = request.form.get('name', '').strip()
         
         if not phone.isdigit():
             return "Error: Phone must only contain digits.", 400
         
         conn = get_db_connection()
         try:
-            if school_code:
-                # School Registration (Student)
-                school = conn.execute('SELECT * FROM schools WHERE school_code = ?', (school_code,)).fetchone()
-                if not school and school_code != "DEFAULT":
-                    return f"Error: School Code '{school_code}' not found.", 404
+            # Check if phone number is already registered
+            existing_user = conn.execute('SELECT id, phone, name, school_code FROM users WHERE phone = ?', (phone,)).fetchone()
+            print("REGISTER FORM PHONE RECEIVED:", phone)
+            if existing_user:
+                print("FOUND EXISTING USER ROW:", dict(existing_user))
+                return "Phone number already in use.", 412
+
+            if account_type == 'personal':
+                library_name = request.form.get('library_name', '').strip()
+                email = request.form.get('email', '').strip()
                 
-                from billing import get_school_subscription
-                sub = get_school_subscription(school_code)
-                student_count = conn.execute('SELECT COUNT(*) FROM users WHERE role="student" AND school_code=?', (school_code,)).fetchone()[0]
-                if student_count >= sub['max_students']:
-                    return f"Registration Blocked: This institution has reached its student limit on the {sub['plan_name']} plan.", 403
+                profile_photo = request.files.get('profile_photo')
+                photo_url = None
+                if profile_photo and profile_photo.filename:
+                    ext = profile_photo.filename.split('.')[-1]
+                    filename = f"profile_{uuid.uuid4().hex[:8]}.{ext}"
+                    photo_path = os.path.join(UPLOADS_DIR, filename)
+                    profile_photo.save(photo_path)
+                    photo_url = f"/static/uploads/{filename}"
                 
-                conn.execute('INSERT INTO users (phone, password, role, school_code, name) VALUES (?,?,?,?,?)',
-                             (phone, password, 'student', school_code, name))
+                cursor = conn.cursor()
+                cursor.execute('INSERT INTO users (phone, password, role, school_code, name, email) VALUES (?,?,?,?,?,?)',
+                             (phone, password, 'owner', f'PERS_{phone}', name, email))
+                user_id = cursor.lastrowid
+                
+                # Create Library Profile
+                conn.execute('INSERT INTO personal_libraries (owner_id, library_name, profile_photo, plan_name, subscription_status, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+                             (user_id, library_name, photo_url, 'FREE', 'active', datetime.now().strftime('%Y-%m-%d %H:%M')))
+                
+                # Create Default Settings
+                conn.execute('INSERT INTO personal_settings (owner_id, setting_key, setting_value) VALUES (?, ?, ?)', (user_id, 'theme', 'dark'))
+                conn.execute('INSERT INTO personal_settings (owner_id, setting_key, setting_value) VALUES (?, ?, ?)', (user_id, 'language', 'English'))
+                conn.execute('INSERT INTO personal_settings (owner_id, setting_key, setting_value) VALUES (?, ?, ?)', (user_id, 'notifications', 'enabled'))
+                
+                # Log signup activity
+                conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                             (user_id, 'Created Personal Library account', datetime.now().strftime('%Y-%m-%d %H:%M')))
             else:
-                return "Institution Code is required.", 400
+                school_code = request.form.get('school_code', '').strip().upper()
+                if school_code:
+                    # School Registration (Student)
+                    school = conn.execute('SELECT * FROM schools WHERE school_code = ?', (school_code,)).fetchone()
+                    if not school and school_code != "DEFAULT":
+                        return f"Error: School Code '{school_code}' not found.", 404
+                    
+                    from billing import get_school_subscription
+                    sub = get_school_subscription(school_code)
+                    student_count = conn.execute('SELECT COUNT(*) FROM users WHERE role="student" AND school_code=?', (school_code,)).fetchone()[0]
+                    if student_count >= sub['max_students']:
+                        return f"Registration Blocked: This institution has reached its student limit on the {sub['plan_name']} plan.", 403
+                    
+                    conn.execute('INSERT INTO users (phone, password, role, school_code, name) VALUES (?,?,?,?,?)',
+                                 (phone, password, 'student', school_code, name))
+                else:
+                    return "Institution Code is required.", 400
             
             conn.commit()
             return redirect('/login')
-        except sqlite3.IntegrityError:
+        except sqlite3.IntegrityError as e:
+            print("SQLITE INTEGRITY ERROR DURING REGISTER:", str(e))
             return "Phone number already in use.", 412
         finally:
             conn.close()
@@ -785,6 +1001,31 @@ def super_admin_panel():
     stats['total_revenue'] = total_revenue
     stats['active_subs'] = active_subs
     
+    # Fetch all personal owners (users with role = 'owner')
+    personal_owners_raw = conn.execute('''
+        SELECT u.*, pl.plan_name as active_plan, pl.library_name as default_lib_name
+        FROM users u
+        LEFT JOIN personal_libraries pl ON u.id = pl.owner_id
+        WHERE u.role = 'owner'
+        GROUP BY u.id
+        ORDER BY u.id DESC
+    ''').fetchall()
+    
+    personal_owners = []
+    for po in personal_owners_raw:
+        owner = dict(po)
+        # Fetch all libraries owned by this user
+        owner_libs = conn.execute('''
+            SELECT pl.*, COUNT(pb.id) as book_count
+            FROM personal_libraries pl
+            LEFT JOIN personal_books pb ON pl.id = pb.library_id
+            WHERE pl.owner_id = ?
+            GROUP BY pl.id
+            ORDER BY pl.id ASC
+        ''', (owner['id'],)).fetchall()
+        owner['libraries'] = [dict(lib) for lib in owner_libs]
+        personal_owners.append(owner)
+        
     conn.close()
     return render_template('super_admin.html', 
                            stats=stats, 
@@ -796,7 +1037,8 @@ def super_admin_panel():
                            pending_requests=pending_requests,
                            recent_payments=recent_payments,
                            org_requests=org_requests,
-                           plans=plans)
+                           plans=plans,
+                           personal_owners=personal_owners)
 
 import csv
 from flask import Response
@@ -984,6 +1226,171 @@ def super_admin_update_user(id):
                  (name, phone, role, school_code, id))
     conn.commit()
     conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/personal/user/create', methods=['POST'])
+def super_admin_personal_user_create():
+    if session.get('role') != 'super_admin': return redirect('/login')
+    name = request.form.get('name', '').strip()
+    email = request.form.get('email', '').strip()
+    phone = request.form.get('phone', '').strip()
+    password = request.form.get('password', '').strip()
+    library_name = request.form.get('library_name', '').strip()
+    plan_name = request.form.get('plan_name', 'FREE').upper()
+    
+    if not name or not phone or not password or not library_name:
+        flash("Name, phone, password, and default library name are required.", "error")
+        return redirect('/super-admin')
+        
+    conn = get_db_connection()
+    try:
+        # Check if phone number already exists
+        exists = conn.execute("SELECT id FROM users WHERE phone = ?", (phone,)).fetchone()
+        if exists:
+            flash("Phone number is already registered.", "error")
+            return redirect('/super-admin')
+            
+        school_code = f"PERS_{phone}"
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (name, phone, email, password, role, school_code, plan_name) VALUES (?, ?, ?, ?, 'owner', ?, ?)",
+                     (name, phone, email, password, school_code, plan_name))
+        owner_id = cursor.lastrowid
+        
+        # Create default library
+        cursor.execute("INSERT INTO personal_libraries (owner_id, library_name, plan_name, subscription_status, created_at) VALUES (?, ?, ?, 'active', ?)",
+                     (owner_id, library_name, plan_name, datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        flash("Successfully created Personal Owner and default library!", "success")
+    except Exception as e:
+        flash(f"Error: {e}", "error")
+    finally:
+        conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/personal/user/edit/<int:user_id>', methods=['POST'])
+def super_admin_personal_user_edit(user_id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    name = request.form.get('name', '').strip()
+    email = request.form.get('email', '').strip()
+    phone = request.form.get('phone', '').strip()
+    password = request.form.get('password', '').strip()
+    plan_name = request.form.get('plan_name', 'FREE').upper()
+    
+    if not name or not phone:
+        flash("Name and phone are required.", "error")
+        return redirect('/super-admin')
+        
+    conn = get_db_connection()
+    try:
+        # Check if phone is taken by another user
+        exists = conn.execute("SELECT id FROM users WHERE phone = ? AND id != ?", (phone, user_id)).fetchone()
+        if exists:
+            flash("Phone number is already in use by another user.", "error")
+            return redirect('/super-admin')
+            
+        school_code = f"PERS_{phone}"
+        if password:
+            conn.execute("UPDATE users SET name = ?, email = ?, phone = ?, password = ?, school_code = ?, plan_name = ? WHERE id = ?",
+                         (name, email, phone, password, school_code, plan_name, user_id))
+        else:
+            conn.execute("UPDATE users SET name = ?, email = ?, phone = ?, school_code = ?, plan_name = ? WHERE id = ?",
+                         (name, email, phone, school_code, plan_name, user_id))
+            
+        # Also update all user's libraries plan_name
+        conn.execute("UPDATE personal_libraries SET plan_name = ? WHERE owner_id = ?", (plan_name, user_id))
+        conn.commit()
+        flash("Successfully updated Personal Owner details and plan!", "success")
+    except Exception as e:
+        flash(f"Error: {e}", "error")
+    finally:
+        conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/personal/user/toggle-ban/<int:user_id>', methods=['POST'])
+def super_admin_personal_user_toggle_ban(user_id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    conn = get_db_connection()
+    try:
+        user = conn.execute("SELECT is_banned FROM users WHERE id = ?", (user_id,)).fetchone()
+        if user:
+            new_ban = 0 if user['is_banned'] else 1
+            conn.execute("UPDATE users SET is_banned = ? WHERE id = ?", (new_ban, user_id))
+            conn.commit()
+            status_text = "banned" if new_ban else "unbanned"
+            flash(f"Successfully {status_text} user account.", "success")
+        else:
+            flash("User not found.", "error")
+    finally:
+        conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/personal/user/delete/<int:user_id>', methods=['POST'])
+def super_admin_personal_user_delete(user_id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    conn = get_db_connection()
+    try:
+        # Wipe everything belonging to the personal user
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_libraries WHERE owner_id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_books WHERE owner_id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_reading_tracker WHERE owner_id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_borrowings WHERE owner_id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_wishlist WHERE owner_id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_favorites WHERE owner_id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_activity_logs WHERE owner_id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_settings WHERE owner_id = ?", (user_id,))
+        conn.execute("DELETE FROM personal_library_shares WHERE shared_with_user_id = ? OR library_id IN (SELECT id FROM personal_libraries WHERE owner_id = ?)", (user_id, user_id))
+        conn.commit()
+        flash("Successfully deleted Personal Owner account and all associated collections/books.", "success")
+    except Exception as e:
+        flash(f"Error: {e}", "error")
+    finally:
+        conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/personal/library/edit/<int:lib_id>', methods=['POST'])
+def super_admin_personal_library_edit(lib_id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    library_name = request.form.get('library_name', '').strip()
+    if not library_name:
+        flash("Collection name cannot be empty.", "error")
+        return redirect('/super-admin')
+        
+    conn = get_db_connection()
+    try:
+        conn.execute("UPDATE personal_libraries SET library_name = ? WHERE id = ?", (library_name, lib_id))
+        conn.commit()
+        flash("Successfully updated library name.", "success")
+    except Exception as e:
+        flash(f"Error: {e}", "error")
+    finally:
+        conn.close()
+    return redirect('/super-admin')
+
+@app.route('/super-admin/personal/library/delete/<int:lib_id>', methods=['POST'])
+def super_admin_personal_library_delete(lib_id):
+    if session.get('role') != 'super_admin': return redirect('/login')
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT owner_id FROM personal_libraries WHERE id = ?", (lib_id,)).fetchone()
+        if lib:
+            # Verify they have at least one other library
+            count = conn.execute("SELECT COUNT(*) FROM personal_libraries WHERE owner_id = ?", (lib['owner_id'],)).fetchone()[0]
+            if count <= 1:
+                flash("Cannot delete the user's last library.", "error")
+                return redirect('/super-admin')
+                
+            conn.execute("DELETE FROM personal_libraries WHERE id = ?", (lib_id,))
+            conn.execute("DELETE FROM personal_books WHERE library_id = ?", (lib_id,))
+            conn.execute("DELETE FROM personal_library_shares WHERE library_id = ?", (lib_id,))
+            conn.commit()
+            flash("Successfully deleted library collection and its books.", "success")
+        else:
+            flash("Library not found.", "error")
+    except Exception as e:
+        flash(f"Error: {e}", "error")
+    finally:
+        conn.close()
     return redirect('/super-admin')
 
 @app.route('/super-admin/book/<int:id>/delete', methods=['POST'])
@@ -2606,6 +3013,1437 @@ def reject_org_request(req_id):
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+# ---------------------------------------------------------
+# PERSONAL LIBRARY MODULE ROUTES
+# ---------------------------------------------------------
+def personal_owner_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or session.get('role') != 'owner':
+            flash("Unauthorized. Personal Owner login required.", "error")
+            return redirect('/login')
+            
+        # Ensure active_library_id is set
+        if 'active_library_id' not in session:
+            conn = get_db_connection()
+            try:
+                # Find first library owned
+                lib = conn.execute("SELECT id FROM personal_libraries WHERE owner_id = ? ORDER BY id ASC LIMIT 1", (session['user_id'],)).fetchone()
+                if lib:
+                    session['active_library_id'] = lib['id']
+                else:
+                    # Create one if none exists
+                    cursor = conn.cursor()
+                    cursor.execute("INSERT INTO personal_libraries (owner_id, library_name, plan_name, created_at) VALUES (?, ?, 'FREE', ?)",
+                                 (session['user_id'], "My Private Library", datetime.now().strftime('%Y-%m-%d %H:%M')))
+                    conn.commit()
+                    session['active_library_id'] = cursor.lastrowid
+            finally:
+                conn.close()
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.context_processor
+def inject_personal_libraries():
+    if 'user_id' in session and session.get('role') == 'owner':
+        conn = get_db_connection()
+        try:
+            owner_id = session['user_id']
+            # Fetch user's own libraries
+            my_libs = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ? ORDER BY id ASC", (owner_id,)).fetchall()
+            
+            # Fetch libraries shared with this user
+            shared_libs = conn.execute('''
+                SELECT pl.*, u.name as owner_name
+                FROM personal_libraries pl
+                JOIN personal_library_shares pls ON pl.id = pls.library_id
+                JOIN users u ON pl.owner_id = u.id
+                WHERE pls.shared_with_user_id = ?
+                ORDER BY pl.id ASC
+            ''', (owner_id,)).fetchall()
+            
+            # Find active library info
+            active_lib = None
+            active_id = session.get('active_library_id')
+            if active_id:
+                # First check own libraries
+                for lib in my_libs:
+                    if lib['id'] == active_id:
+                        active_lib = dict(lib)
+                        active_lib['is_shared'] = False
+                        break
+                # Then check shared libraries
+                if not active_lib:
+                    for lib in shared_libs:
+                        if lib['id'] == active_id:
+                            active_lib = dict(lib)
+                            active_lib['is_shared'] = True
+                            break
+            else:
+                if my_libs:
+                    active_lib = dict(my_libs[0])
+                    active_lib['is_shared'] = False
+                            
+            return dict(
+                personal_my_libraries=my_libs,
+                personal_shared_libraries=shared_libs,
+                personal_active_library=active_lib
+            )
+        finally:
+            conn.close()
+    return {}
+
+@app.route('/personal/dashboard')
+@personal_owner_required
+def personal_dashboard():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        if not lib:
+            # Fallback if profile wasn't created
+            conn.execute('INSERT OR IGNORE INTO personal_libraries (owner_id, library_name, plan_name, subscription_status, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+                         (owner_id, f"{session.get('user_name')}'s Library", 'FREE', 'active', datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+            
+        lib = dict(lib)
+        
+        # Dashboard stats
+        total_books = conn.execute("SELECT COUNT(*) FROM personal_books WHERE owner_id = ? AND status != 'Archived'", (owner_id,)).fetchone()[0]
+        books_read = conn.execute("SELECT COUNT(*) FROM personal_reading_tracker WHERE owner_id = ? AND reading_status = 'Completed'", (owner_id,)).fetchone()[0]
+        books_reading = conn.execute("SELECT COUNT(*) FROM personal_reading_tracker WHERE owner_id = ? AND reading_status = 'Reading'", (owner_id,)).fetchone()[0]
+        wishlist_count = conn.execute("SELECT COUNT(*) FROM personal_wishlist WHERE owner_id = ?", (owner_id,)).fetchone()[0]
+        
+        # Overdue loans
+        overdue_loans = conn.execute('''
+            SELECT b.*, bk.title 
+            FROM personal_borrowings b
+            JOIN personal_books bk ON b.book_id = bk.id
+            WHERE b.owner_id = ? AND b.status = 'Issued' AND b.expected_return_date < ?
+        ''', (owner_id, datetime.now().strftime('%Y-%m-%d'))).fetchall()
+        
+        # Favorites
+        favorites = conn.execute("SELECT * FROM personal_favorites WHERE owner_id = ? ORDER BY id DESC", (owner_id,)).fetchall()
+        
+        # Reading Tracker Insights
+        # 1. Books read this month
+        current_month = datetime.now().strftime('%Y-%m')
+        read_this_month = conn.execute('''
+            SELECT COUNT(*) FROM personal_reading_tracker 
+            WHERE owner_id = ? AND reading_status = 'Completed' AND SUBSTR(finish_date, 1, 7) = ?
+        ''', (owner_id, current_month)).fetchone()[0]
+        
+        # 2. Pages read
+        pages_read = conn.execute("SELECT SUM(current_page) FROM personal_reading_tracker WHERE owner_id = ?", (owner_id,)).fetchone()[0] or 0
+        
+        # 3. Completion rate
+        total_tracked = conn.execute("SELECT COUNT(*) FROM personal_reading_tracker WHERE owner_id = ?", (owner_id,)).fetchone()[0]
+        completion_rate = int((books_read / total_tracked) * 100) if total_tracked > 0 else 0
+        
+        # Activity Logs
+        activity_logs = conn.execute("SELECT * FROM personal_activity_logs WHERE owner_id = ? ORDER BY id DESC LIMIT 10", (owner_id,)).fetchall()
+        
+        # Streak calculation
+        log_dates = conn.execute('''
+            SELECT DISTINCT SUBSTR(created_at, 1, 10) as log_date 
+            FROM personal_activity_logs 
+            WHERE owner_id = ? 
+            ORDER BY log_date DESC LIMIT 30
+        ''', (owner_id,)).fetchall()
+        
+        streak = 0
+        if log_dates:
+            dates = [datetime.strptime(row['log_date'], '%Y-%m-%d').date() for row in log_dates]
+            today = datetime.now().date()
+            yesterday = today - timedelta(days=1)
+            
+            if dates[0] == today or dates[0] == yesterday:
+                streak = 1
+                for i in range(len(dates) - 1):
+                    if (dates[i] - dates[i+1]).days == 1:
+                        streak += 1
+                    elif (dates[i] - dates[i+1]).days == 0:
+                        continue
+                    else:
+                        break
+        
+        return render_template('personal_dashboard.html',
+                               lib=lib,
+                               total_books=total_books,
+                               books_read=books_read,
+                               books_reading=books_reading,
+                               wishlist_count=wishlist_count,
+                               overdue_loans=overdue_loans,
+                               favorites=favorites,
+                               read_this_month=read_this_month,
+                               pages_read=pages_read,
+                               completion_rate=completion_rate,
+                               activity_logs=activity_logs,
+                               streak=streak,
+                               datetime=datetime)
+    finally:
+        conn.close()
+
+def check_personal_book_limit(conn, owner_id):
+    lib = conn.execute("SELECT plan_name FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+    plan = lib['plan_name'] if lib else 'FREE'
+    
+    limit = 500
+    if plan == 'BASIC':
+        limit = 5000
+    elif plan == 'PRO':
+        limit = 99999999
+        
+    current_count = conn.execute("SELECT COUNT(*) FROM personal_books WHERE owner_id = ?", (owner_id,)).fetchone()[0]
+    return current_count < limit
+
+@app.route('/personal/books')
+@personal_owner_required
+def personal_books_list():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        active_id = session.get('active_library_id')
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE id = ?", (active_id,)).fetchone()
+        is_shared = False
+        if lib:
+            if lib['owner_id'] != owner_id:
+                # Check if shared
+                share = conn.execute("SELECT id FROM personal_library_shares WHERE library_id = ? AND shared_with_user_id = ?", (active_id, owner_id)).fetchone()
+                if not share:
+                    session.pop('active_library_id', None)
+                    return redirect('/personal/dashboard')
+                is_shared = True
+        else:
+            return redirect('/personal/dashboard')
+            
+        books = conn.execute('''
+            SELECT pb.*, 
+                   (SELECT 1 FROM personal_favorites pf 
+                    WHERE pf.owner_id = ? AND pf.item_type = 'book' AND pf.item_value = CAST(pb.id AS TEXT)) as is_fav
+            FROM personal_books pb
+            WHERE pb.library_id = ?
+            ORDER BY pb.id DESC
+        ''', (owner_id, active_id)).fetchall()
+        return render_template('personal_books.html', lib=lib, books=books, is_shared=is_shared)
+    finally:
+        conn.close()
+
+@app.route('/personal/books/add', methods=['GET', 'POST'])
+@personal_owner_required
+def personal_books_add():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        active_id = session.get('active_library_id')
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE id = ?", (active_id,)).fetchone()
+        if not lib or lib['owner_id'] != owner_id:
+            flash("Unauthorized: Shared collections are read-only.", "error")
+            return redirect('/personal/books')
+            
+        if request.method == 'POST':
+            if not check_personal_book_limit(conn, owner_id):
+                flash(f"Upgrade your plan! You have reached the limit of books allowed on the {lib['plan_name']} plan.", "error")
+                return redirect('/personal/books')
+                
+            title = request.form.get('title')
+            author = request.form.get('author')
+            category = request.form.get('category')
+            publisher = request.form.get('publisher')
+            isbn = request.form.get('isbn')
+            language = request.form.get('language')
+            description = request.form.get('description')
+            cover_image_url = request.form.get('cover_image_url')
+            quantity = int(request.form.get('quantity', 1))
+            book_condition = request.form.get('book_condition')
+            purchase_date = request.form.get('purchase_date')
+            
+            conn.execute('''
+                INSERT INTO personal_books (owner_id, library_id, title, author, category, publisher, isbn, language, description, cover_image_url, quantity, book_condition, purchase_date, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Available', ?)
+            ''', (owner_id, active_id, title, author, category, publisher, isbn, language, description, cover_image_url, quantity, book_condition, purchase_date, datetime.now().strftime('%Y-%m-%d %H:%M')))
+            
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Added book: '{title}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            
+            flash("Book added to collection successfully!", "success")
+            return redirect('/personal/books')
+            
+        return render_template('personal_book_form.html', lib=lib, book=None)
+    finally:
+        conn.close()
+
+@app.route('/personal/books/edit/<int:book_id>', methods=['GET', 'POST'])
+@personal_owner_required
+def personal_books_edit(book_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        book = conn.execute("SELECT * FROM personal_books WHERE id = ? AND owner_id = ?", (book_id, owner_id)).fetchone()
+        if not book:
+            flash("Book not found.", "error")
+            return redirect('/personal/books')
+            
+        active_id = book['library_id']
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE id = ?", (active_id,)).fetchone()
+        if not lib or lib['owner_id'] != owner_id:
+            flash("Unauthorized: Shared collections are read-only.", "error")
+            return redirect('/personal/books')
+            
+        if request.method == 'POST':
+            title = request.form.get('title')
+            author = request.form.get('author')
+            category = request.form.get('category')
+            publisher = request.form.get('publisher')
+            isbn = request.form.get('isbn')
+            language = request.form.get('language')
+            description = request.form.get('description')
+            cover_image_url = request.form.get('cover_image_url')
+            quantity = int(request.form.get('quantity', 1))
+            book_condition = request.form.get('book_condition')
+            purchase_date = request.form.get('purchase_date')
+            
+            conn.execute('''
+                UPDATE personal_books 
+                SET title = ?, author = ?, category = ?, publisher = ?, isbn = ?, language = ?, description = ?, cover_image_url = ?, quantity = ?, book_condition = ?, purchase_date = ?
+                WHERE id = ? AND owner_id = ?
+            ''', (title, author, category, publisher, isbn, language, description, cover_image_url, quantity, book_condition, purchase_date, book_id, owner_id))
+            
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Edited book: '{title}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            
+            flash("Book updated successfully!", "success")
+            return redirect('/personal/books')
+            
+        return render_template('personal_book_form.html', lib=lib, book=book)
+    finally:
+        conn.close()
+
+@app.route('/personal/books/delete/<int:book_id>', methods=['POST'])
+@personal_owner_required
+def personal_books_delete(book_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        book = conn.execute("SELECT * FROM personal_books WHERE id = ? AND owner_id = ?", (book_id, owner_id)).fetchone()
+        if book:
+            active_id = book['library_id']
+            lib = conn.execute("SELECT * FROM personal_libraries WHERE id = ?", (active_id,)).fetchone()
+            if not lib or lib['owner_id'] != owner_id:
+                flash("Unauthorized: Shared collections are read-only.", "error")
+                return redirect('/personal/books')
+                
+            conn.execute("DELETE FROM personal_books WHERE id = ? AND owner_id = ?", (book_id, owner_id))
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Deleted book: '{book['title']}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash("Book removed from collection.", "success")
+        return redirect('/personal/books')
+    finally:
+        conn.close()
+
+@app.route('/personal/books/archive/<int:book_id>', methods=['POST'])
+@personal_owner_required
+def personal_books_archive(book_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        book = conn.execute("SELECT * FROM personal_books WHERE id = ? AND owner_id = ?", (book_id, owner_id)).fetchone()
+        if book:
+            conn.execute("UPDATE personal_books SET status = 'Archived' WHERE id = ? AND owner_id = ?", (book_id, owner_id))
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Archived book: '{book['title']}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash("Book archived.", "success")
+        return redirect('/personal/books')
+    finally:
+        conn.close()
+
+@app.route('/personal/books/restore/<int:book_id>', methods=['POST'])
+@personal_owner_required
+def personal_books_restore(book_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        book = conn.execute("SELECT * FROM personal_books WHERE id = ? AND owner_id = ?", (book_id, owner_id)).fetchone()
+        if book:
+            conn.execute("UPDATE personal_books SET status = 'Available' WHERE id = ? AND owner_id = ?", (book_id, owner_id))
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Restored book: '{book['title']}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash("Book restored to catalog.", "success")
+        return redirect('/personal/books')
+    finally:
+        conn.close()
+
+@app.route('/personal/reading')
+@personal_owner_required
+def personal_reading_tracker_list():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        
+        # Tracked books details
+        tracked_books = conn.execute('''
+            SELECT pr.*, pb.title, pb.author, pb.cover_image_url
+            FROM personal_reading_tracker pr
+            JOIN personal_books pb ON pr.book_id = pb.id
+            WHERE pr.owner_id = ?
+            ORDER BY pr.updated_at DESC
+        ''', (owner_id,)).fetchall()
+        
+        # Available books to track (not already tracked)
+        available_books = conn.execute('''
+            SELECT id, title, author FROM personal_books
+            WHERE owner_id = ? AND status != 'Archived' AND id NOT IN (
+                SELECT book_id FROM personal_reading_tracker WHERE owner_id = ?
+            )
+            ORDER BY title ASC
+        ''', (owner_id, owner_id)).fetchall()
+        
+        return render_template('personal_reading.html', lib=lib, tracked_books=tracked_books, available_books=available_books, datetime=datetime)
+    finally:
+        conn.close()
+
+@app.route('/personal/reading/add', methods=['POST'])
+@personal_owner_required
+def personal_reading_tracker_add():
+    owner_id = session['user_id']
+    book_id = int(request.form.get('book_id'))
+    total_pages = int(request.form.get('total_pages', 0))
+    start_date = request.form.get('start_date')
+    
+    conn = get_db_connection()
+    try:
+        book = conn.execute("SELECT title FROM personal_books WHERE id = ? AND owner_id = ?", (book_id, owner_id)).fetchone()
+        if book:
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+            conn.execute('''
+                INSERT INTO personal_reading_tracker (owner_id, book_id, start_date, total_pages, reading_status, updated_at)
+                VALUES (?, ?, ?, ?, 'Reading', ?)
+            ''', (owner_id, book_id, start_date, total_pages, now_str))
+            
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Started reading: '{book['title']}'", now_str))
+            conn.commit()
+            flash(f"Started tracking progress for: '{book['title']}'!", "success")
+        return redirect('/personal/reading')
+    finally:
+        conn.close()
+
+@app.route('/personal/reading/update', methods=['POST'])
+@personal_owner_required
+def personal_reading_tracker_update():
+    owner_id = session['user_id']
+    track_id = int(request.form.get('track_id'))
+    current_page = int(request.form.get('current_page', 0))
+    total_pages = int(request.form.get('total_pages', 1))
+    reading_status = request.form.get('reading_status')
+    start_date = request.form.get('start_date')
+    finish_date = request.form.get('finish_date')
+    
+    if current_page >= total_pages:
+        reading_status = 'Completed'
+        if not finish_date:
+            finish_date = datetime.now().strftime('%Y-%m-%d')
+            
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+    conn = get_db_connection()
+    try:
+        track = conn.execute('''
+            SELECT pr.book_id, pb.title 
+            FROM personal_reading_tracker pr
+            JOIN personal_books pb ON pr.book_id = pb.id
+            WHERE pr.id = ? AND pr.owner_id = ?
+        ''', (track_id, owner_id)).fetchone()
+        
+        if track:
+            conn.execute('''
+                UPDATE personal_reading_tracker
+                SET current_page = ?, total_pages = ?, reading_status = ?, start_date = ?, finish_date = ?, updated_at = ?
+                WHERE id = ? AND owner_id = ?
+            ''', (current_page, total_pages, reading_status, start_date, finish_date, now_str, track_id, owner_id))
+            
+            log_msg = f"Updated reading progress for '{track['title']}' (page {current_page}/{total_pages})"
+            if reading_status == 'Completed':
+                log_msg = f"Finished reading: '{track['title']}'! 🎉"
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, log_msg, now_str))
+            conn.commit()
+            flash(f"Progress updated for: '{track['title']}'!", "success")
+        return redirect('/personal/reading')
+    finally:
+        conn.close()
+
+@app.route('/personal/borrowing')
+@personal_owner_required
+def personal_borrowing_list():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        
+        # Automatically mark overdue loans
+        conn.execute('''
+            UPDATE personal_borrowings 
+            SET status = 'Overdue' 
+            WHERE owner_id = ? AND status = 'Issued' AND expected_return_date < ?
+        ''', (owner_id, datetime.now().strftime('%Y-%m-%d')))
+        conn.commit()
+        
+        # Fetch active loans
+        active_loans = conn.execute('''
+            SELECT pb.*, bk.title 
+            FROM personal_borrowings pb
+            JOIN personal_books bk ON pb.book_id = bk.id
+            WHERE pb.owner_id = ? AND pb.status IN ('Issued', 'Overdue')
+            ORDER BY pb.expected_return_date ASC
+        ''', (owner_id,)).fetchall()
+        
+        # Fetch returned loans
+        returned_loans = conn.execute('''
+            SELECT pb.*, bk.title 
+            FROM personal_borrowings pb
+            JOIN personal_books bk ON pb.book_id = bk.id
+            WHERE pb.owner_id = ? AND pb.status = 'Returned'
+            ORDER BY pb.actual_return_date DESC
+        ''', (owner_id,)).fetchall()
+        
+        # Available books to lend (status is 'Available')
+        available_books = conn.execute('''
+            SELECT id, title FROM personal_books
+            WHERE owner_id = ? AND status = 'Available'
+            ORDER BY title ASC
+        ''', (owner_id,)).fetchall()
+        
+        return render_template('personal_borrowing.html',
+                               lib=lib,
+                               active_loans=active_loans,
+                               returned_loans=returned_loans,
+                               available_books=available_books,
+                               timedelta=timedelta,
+                               datetime=datetime)
+    finally:
+        conn.close()
+
+@app.route('/personal/borrowing/lend', methods=['POST'])
+@personal_owner_required
+def personal_borrowing_lend():
+    owner_id = session['user_id']
+    book_id = int(request.form.get('book_id'))
+    borrower_name = request.form.get('borrower_name')
+    phone_number = request.form.get('phone_number')
+    expected_return_date = request.form.get('expected_return_date')
+    
+    conn = get_db_connection()
+    try:
+        book = conn.execute("SELECT title, status FROM personal_books WHERE id = ? AND owner_id = ?", (book_id, owner_id)).fetchone()
+        if book and book['status'] == 'Available':
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+            # Insert lending record
+            conn.execute('''
+                INSERT INTO personal_borrowings (owner_id, book_id, borrower_name, phone_number, issue_date, expected_return_date, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'Issued')
+            ''', (owner_id, book_id, borrower_name, phone_number, datetime.now().strftime('%Y-%m-%d'), expected_return_date))
+            
+            # Update book status to 'Lent'
+            conn.execute("UPDATE personal_books SET status = 'Lent' WHERE id = ? AND owner_id = ?", (book_id, owner_id))
+            
+            # Log action
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Lent book '{book['title']}' to {borrower_name}", now_str))
+            conn.commit()
+            flash(f"Book '{book['title']}' successfully lent to {borrower_name}!", "success")
+        else:
+            flash("Error: Book is not available for lending.", "error")
+        return redirect('/personal/borrowing')
+    finally:
+        conn.close()
+
+@app.route('/personal/borrowing/return/<int:loan_id>', methods=['POST'])
+@personal_owner_required
+def personal_borrowing_return(loan_id):
+    owner_id = session['user_id']
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+    conn = get_db_connection()
+    try:
+        loan = conn.execute("SELECT book_id, borrower_name FROM personal_borrowings WHERE id = ? AND owner_id = ?", (loan_id, owner_id)).fetchone()
+        if loan:
+            book_id = loan['book_id']
+            book = conn.execute("SELECT title FROM personal_books WHERE id = ? AND owner_id = ?", (book_id, owner_id)).fetchone()
+            
+            # Update lending record to Returned
+            conn.execute('''
+                UPDATE personal_borrowings
+                SET status = 'Returned', actual_return_date = ?
+                WHERE id = ? AND owner_id = ?
+            ''', (datetime.now().strftime('%Y-%m-%d'), loan_id, owner_id))
+            
+            # Update book status back to Available
+            conn.execute("UPDATE personal_books SET status = 'Available' WHERE id = ? AND owner_id = ?", (book_id, owner_id))
+            
+            # Log action
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Friend {loan['borrower_name']} returned book: '{book['title']}'", now_str))
+            conn.commit()
+            flash(f"Book '{book['title']}' has been marked as returned.", "success")
+        return redirect('/personal/borrowing')
+    finally:
+        conn.close()
+
+@app.route('/personal/wishlist')
+@personal_owner_required
+def personal_wishlist_list():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        wishlist = conn.execute("SELECT * FROM personal_wishlist WHERE owner_id = ? ORDER BY id DESC", (owner_id,)).fetchall()
+        return render_template('personal_wishlist.html', lib=lib, wishlist=wishlist, datetime=datetime)
+    finally:
+        conn.close()
+
+@app.route('/personal/wishlist/add', methods=['POST'])
+@personal_owner_required
+def personal_wishlist_add():
+    owner_id = session['user_id']
+    title = request.form.get('title')
+    author = request.form.get('author')
+    priority = request.form.get('priority')
+    price = request.form.get('price')
+    price = float(price) if price else None
+    purchase_link = request.form.get('purchase_link')
+    notes = request.form.get('notes')
+    
+    conn = get_db_connection()
+    try:
+        now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+        conn.execute('''
+            INSERT INTO personal_wishlist (owner_id, title, author, priority, price, purchase_link, notes, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (owner_id, title, author, priority, price, purchase_link, notes, now_str))
+        
+        conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                     (owner_id, f"Added to wishlist: '{title}'", now_str))
+        conn.commit()
+        flash(f"Book '{title}' added to your wishlist!", "success")
+        return redirect('/personal/wishlist')
+    finally:
+        conn.close()
+
+@app.route('/personal/wishlist/delete/<int:item_id>', methods=['POST'])
+@personal_owner_required
+def personal_wishlist_delete(item_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        item = conn.execute("SELECT title FROM personal_wishlist WHERE id = ? AND owner_id = ?", (item_id, owner_id)).fetchone()
+        if item:
+            conn.execute("DELETE FROM personal_wishlist WHERE id = ? AND owner_id = ?", (item_id, owner_id))
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Removed from wishlist: '{item['title']}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash("Item removed from wishlist.", "success")
+        return redirect('/personal/wishlist')
+    finally:
+        conn.close()
+
+@app.route('/personal/wishlist/buy/<int:item_id>', methods=['POST'])
+@personal_owner_required
+def personal_wishlist_buy(item_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        item = conn.execute("SELECT * FROM personal_wishlist WHERE id = ? AND owner_id = ?", (item_id, owner_id)).fetchone()
+        if item:
+            title = item['title']
+            author = item['author']
+            
+            # Delete from wishlist
+            conn.execute("DELETE FROM personal_wishlist WHERE id = ? AND owner_id = ?", (item_id, owner_id))
+            conn.commit()
+            flash(f"Book '{title}' marked as purchased! Let's catalog it in your library.", "success")
+            return redirect(url_for('personal_books_add', title=title, author=author))
+        return redirect('/personal/wishlist')
+    finally:
+        conn.close()
+
+@app.route('/personal/favorites')
+@personal_owner_required
+def personal_favorites_list():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        
+        fav_books = conn.execute('''
+            SELECT pf.id as fav_id, pb.title, pb.author
+            FROM personal_favorites pf
+            JOIN personal_books pb ON pf.item_value = CAST(pb.id AS TEXT)
+            WHERE pf.owner_id = ? AND pf.item_type = 'book'
+            ORDER BY pf.id DESC
+        ''', (owner_id,)).fetchall()
+        
+        fav_authors = conn.execute("SELECT * FROM personal_favorites WHERE owner_id = ? AND item_type = 'author' ORDER BY id DESC", (owner_id,)).fetchall()
+        fav_categories = conn.execute("SELECT * FROM personal_favorites WHERE owner_id = ? AND item_type = 'category' ORDER BY id DESC", (owner_id,)).fetchall()
+        
+        return render_template('personal_favorites.html', lib=lib, fav_books=fav_books, fav_authors=fav_authors, fav_categories=fav_categories)
+    finally:
+        conn.close()
+
+@app.route('/personal/favorites/add', methods=['POST'])
+@personal_owner_required
+def personal_favorites_add():
+    owner_id = session['user_id']
+    item_type = request.form.get('item_type')
+    item_value = request.form.get('item_value', '').strip()
+    
+    if item_value:
+        conn = get_db_connection()
+        try:
+            # Check if already exists
+            exists = conn.execute("SELECT id FROM personal_favorites WHERE owner_id = ? AND item_type = ? AND item_value = ?", (owner_id, item_type, item_value)).fetchone()
+            if not exists:
+                conn.execute("INSERT INTO personal_favorites (owner_id, item_type, item_value, created_at) VALUES (?, ?, ?, ?)",
+                             (owner_id, item_type, item_value, datetime.now().strftime('%Y-%m-%d %H:%M')))
+                # Log action
+                conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                             (owner_id, f"Added favorite {item_type}: '{item_value}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+                conn.commit()
+                flash(f"Added to favorite {item_type}s!", "success")
+            else:
+                flash(f"This {item_type} is already in your favorites.", "info")
+        finally:
+            conn.close()
+    return redirect('/personal/favorites')
+
+@app.route('/personal/favorites/toggle', methods=['POST'])
+@personal_owner_required
+def personal_favorites_toggle():
+    owner_id = session['user_id']
+    item_type = request.form.get('item_type')
+    item_value = request.form.get('item_value') # Book ID
+    
+    conn = get_db_connection()
+    try:
+        exists = conn.execute("SELECT id FROM personal_favorites WHERE owner_id = ? AND item_type = ? AND item_value = ?", (owner_id, item_type, item_value)).fetchone()
+        if exists:
+            conn.execute("DELETE FROM personal_favorites WHERE id = ?", (exists['id'],))
+            flash("Removed from favorites.", "success")
+        else:
+            conn.execute("INSERT INTO personal_favorites (owner_id, item_type, item_value, created_at) VALUES (?, ?, ?, ?)",
+                         (owner_id, item_type, item_value, datetime.now().strftime('%Y-%m-%d %H:%M')))
+            # Get book title for log
+            book = conn.execute("SELECT title FROM personal_books WHERE id = ?", (item_value,)).fetchone()
+            b_title = book['title'] if book else f"Book #{item_value}"
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Starred book: '{b_title}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            flash("Added to favorites!", "success")
+        conn.commit()
+    finally:
+        conn.close()
+    return redirect(request.referrer or '/personal/books')
+
+@app.route('/personal/favorites/delete/<int:fav_id>', methods=['POST'])
+@personal_owner_required
+def personal_favorites_delete(fav_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        fav = conn.execute("SELECT * FROM personal_favorites WHERE id = ? AND owner_id = ?", (fav_id, owner_id)).fetchone()
+        if fav:
+            conn.execute("DELETE FROM personal_favorites WHERE id = ? AND owner_id = ?", (fav_id, owner_id))
+            # Log action
+            val = fav['item_value']
+            if fav['item_type'] == 'book':
+                book = conn.execute("SELECT title FROM personal_books WHERE id = ?", (val,)).fetchone()
+                val = book['title'] if book else f"Book #{val}"
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Removed favorite {fav['item_type']}: '{val}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash("Removed from favorites.", "success")
+        return redirect('/personal/favorites')
+    finally:
+        conn.close()
+
+def get_personal_library_limit(plan_name):
+    plan_name = (plan_name or 'FREE').upper()
+    if plan_name == 'BASIC':
+        return 100
+    elif plan_name in ['PRO', 'PROFESSIONAL']:
+        return 1000
+    else:
+        return 2
+
+@app.route('/personal/libraries')
+@personal_owner_required
+def personal_libraries_list():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        # Get owner's first personal library record for general plan details
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        plan = lib['plan_name'] if lib else 'FREE'
+        max_libraries = get_personal_library_limit(plan)
+        
+        my_libraries = conn.execute('''
+            SELECT pl.*, COUNT(pb.id) as book_count
+            FROM personal_libraries pl
+            LEFT JOIN personal_books pb ON pl.id = pb.library_id
+            WHERE pl.owner_id = ?
+            GROUP BY pl.id
+            ORDER BY pl.id ASC
+        ''', (owner_id,)).fetchall()
+        
+        shared_libraries = conn.execute('''
+            SELECT pl.*, COUNT(pb.id) as book_count, u.name as owner_name
+            FROM personal_libraries pl
+            JOIN personal_library_shares pls ON pl.id = pls.library_id
+            JOIN users u ON pl.owner_id = u.id
+            LEFT JOIN personal_books pb ON pl.id = pb.library_id
+            WHERE pls.shared_with_user_id = ?
+            GROUP BY pl.id
+            ORDER BY pl.id ASC
+        ''', (owner_id,)).fetchall()
+        
+        shared_out_records = conn.execute('''
+            SELECT pls.id as share_id, pl.library_name, u.name as friend_name
+            FROM personal_library_shares pls
+            JOIN personal_libraries pl ON pls.library_id = pl.id
+            JOIN users u ON pls.shared_with_user_id = u.id
+            WHERE pl.owner_id = ?
+            ORDER BY pls.id DESC
+        ''', (owner_id,)).fetchall()
+        
+        return render_template('personal_libraries.html', 
+                               lib=lib, 
+                               my_libraries=my_libraries, 
+                               shared_libraries=shared_libraries, 
+                               shared_out_records=shared_out_records, 
+                               max_libraries=max_libraries)
+    finally:
+        conn.close()
+
+@app.route('/personal/libraries/create', methods=['POST'])
+@personal_owner_required
+def personal_libraries_create():
+    owner_id = session['user_id']
+    library_name = request.form.get('library_name', '').strip()
+    if not library_name:
+        flash("Library name cannot be empty.", "error")
+        return redirect('/personal/libraries')
+        
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT plan_name FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        plan = lib['plan_name'] if lib else 'FREE'
+        max_libraries = get_personal_library_limit(plan)
+        
+        # Check count
+        count = conn.execute("SELECT COUNT(*) FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()[0]
+        if count >= max_libraries:
+            flash("Collection limit reached! Upgrading plan allows more libraries.", "error")
+            return redirect('/personal/libraries')
+            
+        conn.execute("INSERT INTO personal_libraries (owner_id, library_name, plan_name, created_at) VALUES (?, ?, ?, ?)",
+                     (owner_id, library_name, plan, datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                     (owner_id, f"Created collection '{library_name}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        flash("New collection created successfully!", "success")
+    finally:
+        conn.close()
+    return redirect('/personal/libraries')
+
+@app.route('/personal/libraries/rename/<int:lib_id>', methods=['POST'])
+@personal_owner_required
+def personal_libraries_rename(lib_id):
+    owner_id = session['user_id']
+    library_name = request.form.get('library_name', '').strip()
+    if not library_name:
+        flash("Collection name cannot be empty.", "error")
+        return redirect('/personal/libraries')
+        
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE id = ? AND owner_id = ?", (lib_id, owner_id)).fetchone()
+        if not lib:
+            flash("Collection not found or unauthorized.", "error")
+            return redirect('/personal/libraries')
+            
+        conn.execute("UPDATE personal_libraries SET library_name = ? WHERE id = ?", (library_name, lib_id))
+        conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                     (owner_id, f"Renamed collection '{lib['library_name']}' to '{library_name}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        flash("Collection renamed successfully!", "success")
+    finally:
+        conn.close()
+    return redirect('/personal/libraries')
+
+@app.route('/personal/libraries/delete/<int:lib_id>', methods=['POST'])
+@personal_owner_required
+def personal_libraries_delete(lib_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE id = ? AND owner_id = ?", (lib_id, owner_id)).fetchone()
+        if not lib:
+            flash("Collection not found or unauthorized.", "error")
+            return redirect('/personal/libraries')
+            
+        # Do not allow deleting the last collection
+        count = conn.execute("SELECT COUNT(*) FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()[0]
+        if count <= 1:
+            flash("You cannot delete your only collection.", "error")
+            return redirect('/personal/libraries')
+            
+        # Remove library, books, and shares
+        conn.execute("DELETE FROM personal_libraries WHERE id = ?", (lib_id,))
+        conn.execute("DELETE FROM personal_books WHERE library_id = ?", (lib_id,))
+        conn.execute("DELETE FROM personal_library_shares WHERE library_id = ?", (lib_id,))
+        
+        # If deleted library was active, switch to first library
+        if session.get('active_library_id') == lib_id:
+            first_lib = conn.execute("SELECT id FROM personal_libraries WHERE owner_id = ? ORDER BY id ASC LIMIT 1", (owner_id,)).fetchone()
+            if first_lib:
+                session['active_library_id'] = first_lib['id']
+            else:
+                session.pop('active_library_id', None)
+                
+        conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                     (owner_id, f"Deleted collection '{lib['library_name']}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        flash("Collection deleted successfully.", "success")
+    finally:
+        conn.close()
+    return redirect('/personal/libraries')
+
+@app.route('/personal/libraries/switch/<int:lib_id>')
+@personal_owner_required
+def personal_libraries_switch(lib_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        # Verify ownership or sharing status
+        lib = conn.execute("SELECT owner_id FROM personal_libraries WHERE id = ?", (lib_id,)).fetchone()
+        if not lib:
+            flash("Collection not found.", "error")
+            return redirect('/personal/libraries')
+            
+        if lib['owner_id'] != owner_id:
+            # Check sharing status
+            share = conn.execute("SELECT id FROM personal_library_shares WHERE library_id = ? AND shared_with_user_id = ?", (lib_id, owner_id)).fetchone()
+            if not share:
+                flash("Unauthorized view access to collection.", "error")
+                return redirect('/personal/libraries')
+                
+        session['active_library_id'] = lib_id
+        flash("Switched active collection view.", "success")
+    finally:
+        conn.close()
+    return redirect('/personal/dashboard')
+
+@app.route('/personal/libraries/share', methods=['POST'])
+@personal_owner_required
+def personal_libraries_share():
+    owner_id = session['user_id']
+    lib_id = request.form.get('library_id')
+    share_identity = request.form.get('share_identity', '').strip()
+    
+    if not lib_id or not share_identity:
+        flash("Missing collection or friend info.", "error")
+        return redirect('/personal/libraries')
+        
+    conn = get_db_connection()
+    try:
+        # Validate ownership of the library to share
+        lib = conn.execute("SELECT plan_name, library_name FROM personal_libraries WHERE id = ? AND owner_id = ?", (lib_id, owner_id)).fetchone()
+        if not lib:
+            flash("Collection not found or unauthorized.", "error")
+            return redirect('/personal/libraries')
+            
+        # Verify sharing is blocked on Free plan
+        if lib['plan_name'] == 'FREE':
+            flash("Sharing is blocked on the Free Plan. Upgrade to share.", "error")
+            return redirect('/personal/libraries')
+            
+        # Find user by phone or email
+        friend = conn.execute("SELECT id, name FROM users WHERE role = 'owner' AND (phone = ? OR email = ?)", (share_identity, share_identity)).fetchone()
+        if not friend:
+            flash("Friend not found. Ensure they registered for a Personal Library.", "error")
+            return redirect('/personal/libraries')
+            
+        if friend['id'] == owner_id:
+            flash("You cannot share a collection with yourself.", "error")
+            return redirect('/personal/libraries')
+            
+        # Check if already shared
+        exists = conn.execute("SELECT id FROM personal_library_shares WHERE library_id = ? AND shared_with_user_id = ?", (lib_id, friend['id'])).fetchone()
+        if exists:
+            flash("Already shared with this user.", "error")
+            return redirect('/personal/libraries')
+            
+        conn.execute("INSERT INTO personal_library_shares (library_id, shared_with_user_id, permission_level, created_at) VALUES (?, ?, 'view', ?)",
+                     (lib_id, friend['id'], datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                     (owner_id, f"Shared collection '{lib['library_name']}' with {friend['name']}", datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        flash(f"Successfully shared collection with {friend['name']}!", "success")
+    finally:
+        conn.close()
+    return redirect('/personal/libraries')
+
+@app.route('/personal/libraries/revoke/<int:share_id>', methods=['POST'])
+@personal_owner_required
+def personal_libraries_revoke(share_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        # Find share and verify ownership of the library
+        share = conn.execute('''
+            SELECT pls.*, pl.library_name, u.name as friend_name
+            FROM personal_library_shares pls
+            JOIN personal_libraries pl ON pls.library_id = pl.id
+            JOIN users u ON pls.shared_with_user_id = u.id
+            WHERE pls.id = ? AND pl.owner_id = ?
+        ''', (share_id, owner_id)).fetchone()
+        
+        if not share:
+            flash("Share record not found or unauthorized.", "error")
+            return redirect('/personal/libraries')
+            
+        conn.execute("DELETE FROM personal_library_shares WHERE id = ?", (share_id,))
+        conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                     (owner_id, f"Revoked share of collection '{share['library_name']}' with {share['friend_name']}", datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        flash("Share revoked successfully.", "success")
+    finally:
+        conn.close()
+    return redirect('/personal/libraries')
+
+@app.route('/personal/scan')
+@personal_owner_required
+def personal_scan():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        plan = lib['plan_name'] if lib else 'FREE'
+        if plan == 'FREE':
+            flash("AI Cover Scanner is not available on the Free Plan. Please upgrade to Basic or Pro.", "error")
+            return redirect('/personal/dashboard')
+        return render_template('personal_scanner.html', lib=lib)
+    finally:
+        conn.close()
+
+@app.route('/personal/settings')
+@personal_owner_required
+def personal_settings_view():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        user = conn.execute("SELECT * FROM users WHERE id = ?", (owner_id,)).fetchone()
+        return render_template('personal_settings.html', lib=lib, user=user)
+    finally:
+        conn.close()
+
+@app.route('/personal/settings/update', methods=['POST'])
+@personal_owner_required
+def personal_settings_update():
+    owner_id = session['user_id']
+    library_name = request.form.get('library_name', '').strip()
+    name = request.form.get('owner_name', '').strip()
+    email = request.form.get('email', '').strip()
+    phone = request.form.get('phone', '').strip()
+    password = request.form.get('password', '').strip()
+    profile_photo = request.files.get('profile_photo')
+    
+    conn = get_db_connection()
+    try:
+        # Check if phone number is in use by another user
+        exists = conn.execute("SELECT id FROM users WHERE phone = ? AND id != ?", (phone, owner_id)).fetchone()
+        if exists:
+            flash("Phone number is already in use by another user.", "error")
+            return redirect('/personal/settings')
+            
+        # Update users table
+        if password:
+            conn.execute("UPDATE users SET name = ?, email = ?, phone = ?, password = ? WHERE id = ?",
+                         (name, email, phone, password, owner_id))
+        else:
+            conn.execute("UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?",
+                         (name, email, phone, owner_id))
+        
+        # Update session username
+        session['user_name'] = name
+        
+        # Profile photo handling
+        photo_url = None
+        if profile_photo and profile_photo.filename:
+            ext = profile_photo.filename.split('.')[-1]
+            filename = f"profile_{uuid.uuid4().hex[:8]}.{ext}"
+            photo_path = os.path.join(UPLOADS_DIR, filename)
+            profile_photo.save(photo_path)
+            photo_url = f"/static/uploads/{filename}"
+            
+        # Update personal_libraries
+        if photo_url:
+            conn.execute("UPDATE personal_libraries SET library_name = ?, profile_photo = ? WHERE owner_id = ?",
+                         (library_name, photo_url, owner_id))
+        else:
+            conn.execute("UPDATE personal_libraries SET library_name = ? WHERE owner_id = ?",
+                         (library_name, owner_id))
+            
+        # Log activity
+        conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                     (owner_id, "Updated library settings & profile", datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        flash("Settings updated successfully!", "success")
+        return redirect('/personal/settings')
+    finally:
+        conn.close()
+
+@app.route('/personal/settings/update_plan', methods=['POST'])
+@personal_owner_required
+def personal_settings_update_plan():
+    owner_id = session['user_id']
+    plan_name = request.form.get('plan_name', 'FREE').upper()
+    if plan_name not in ['FREE', 'BASIC', 'PRO']:
+        flash("Invalid plan name.", "error")
+        return redirect('/personal/settings')
+        
+    conn = get_db_connection()
+    try:
+        conn.execute("UPDATE personal_libraries SET plan_name = ? WHERE owner_id = ?", (plan_name, owner_id))
+        conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                     (owner_id, f"Changed subscription plan to {plan_name}", datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        flash(f"Successfully switched to the {plan_name} plan!", "success")
+        return redirect('/personal/settings')
+    finally:
+        conn.close()
+
+@app.route('/personal/export/<module>')
+@personal_owner_required
+def personal_export(module):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT plan_name FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        plan = lib['plan_name'] if lib else 'FREE'
+        if plan == 'FREE':
+            flash("CSV Export is not available on the Free Plan. Please upgrade.", "error")
+            return redirect('/personal/settings')
+            
+        import csv
+        import io
+        from flask import Response
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        if module == 'books':
+            writer.writerow(['title', 'author', 'category', 'publisher', 'isbn', 'language', 'description', 'cover_image_url', 'quantity', 'book_condition', 'purchase_date', 'status'])
+            books = conn.execute("SELECT * FROM personal_books WHERE owner_id = ?", (owner_id,)).fetchall()
+            for b in books:
+                writer.writerow([b['title'], b['author'], b['category'], b['publisher'], b['isbn'], b['language'], b['description'], b['cover_image_url'], b['quantity'], b['book_condition'], b['purchase_date'], b['status']])
+            filename = "personal_books.csv"
+            
+        elif module == 'reading':
+            writer.writerow(['book_title', 'book_author', 'start_date', 'finish_date', 'current_page', 'total_pages', 'reading_status'])
+            records = conn.execute('''
+                SELECT pr.*, pb.title, pb.author 
+                FROM personal_reading_tracker pr
+                JOIN personal_books pb ON pr.book_id = pb.id
+                WHERE pr.owner_id = ?
+            ''', (owner_id,)).fetchall()
+            for r in records:
+                writer.writerow([r['title'], r['author'], r['start_date'], r['finish_date'], r['current_page'], r['total_pages'], r['reading_status']])
+            filename = "personal_reading_history.csv"
+            
+        elif module == 'borrowing':
+            writer.writerow(['borrower_name', 'phone_number', 'book_title', 'issue_date', 'expected_return_date', 'actual_return_date', 'status'])
+            records = conn.execute('''
+                SELECT pl.*, pb.title 
+                FROM personal_borrowings pl
+                JOIN personal_books pb ON pl.book_id = pb.id
+                WHERE pl.owner_id = ?
+            ''', (owner_id,)).fetchall()
+            for r in records:
+                writer.writerow([r['borrower_name'], r['phone_number'], r['title'], r['issue_date'], r['expected_return_date'], r['actual_return_date'], r['status']])
+            filename = "personal_borrowing_records.csv"
+            
+        elif module == 'wishlist':
+            writer.writerow(['title', 'author', 'priority', 'price', 'purchase_link', 'notes'])
+            records = conn.execute("SELECT * FROM personal_wishlist WHERE owner_id = ?", (owner_id,)).fetchall()
+            for r in records:
+                writer.writerow([r['title'], r['author'], r['priority'], r['price'], r['purchase_link'], r['notes']])
+            filename = "personal_wishlist.csv"
+            
+        else:
+            flash("Invalid export module specified.", "error")
+            return redirect('/personal/settings')
+            
+        csv_data = output.getvalue()
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-disposition": f"attachment; filename={filename}"}
+        )
+    finally:
+        conn.close()
+
+@app.route('/personal/import/<module>', methods=['POST'])
+@personal_owner_required
+def personal_import(module):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT plan_name FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        plan = lib['plan_name'] if lib else 'FREE'
+        if plan == 'FREE':
+            flash("CSV Import is not available on the Free Plan. Please upgrade.", "error")
+            return redirect('/personal/settings')
+            
+        csv_file = request.files.get('csv_file')
+        if not csv_file or not csv_file.filename.endswith('.csv'):
+            flash("Please upload a valid CSV file.", "error")
+            return redirect('/personal/settings')
+            
+        import csv
+        import io
+        
+        file_data = csv_file.read().decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(file_data))
+        
+        imported_count = 0
+        skipped_count = 0
+        
+        if module == 'books':
+            for row in csv_reader:
+                if not check_personal_book_limit(conn, owner_id):
+                    flash(f"Import stopped: Reached book limits for the {plan} plan after importing {imported_count} books.", "warning")
+                    break
+                
+                title = row.get('title', '').strip()
+                if not title:
+                    skipped_count += 1
+                    continue
+                author = row.get('author', '').strip()
+                category = row.get('category', 'General').strip()
+                publisher = row.get('publisher', '').strip()
+                isbn = row.get('isbn', '').strip()
+                language = row.get('language', 'English').strip()
+                description = row.get('description', '').strip()
+                cover_image_url = row.get('cover_image_url', '').strip()
+                quantity = int(row.get('quantity', 1) or 1)
+                book_condition = row.get('book_condition', 'Good').strip()
+                purchase_date = row.get('purchase_date', '').strip()
+                status = row.get('status', 'Available').strip()
+                
+                conn.execute('''
+                    INSERT INTO personal_books (owner_id, title, author, category, publisher, isbn, language, description, cover_image_url, quantity, book_condition, purchase_date, status, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (owner_id, title, author, category, publisher, isbn, language, description, cover_image_url, quantity, book_condition, purchase_date, status, datetime.now().strftime('%Y-%m-%d %H:%M')))
+                imported_count += 1
+                
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Imported {imported_count} books via CSV", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash(f"Successfully imported {imported_count} books! (Skipped {skipped_count} invalid rows)", "success")
+            
+        elif module == 'reading':
+            for row in csv_reader:
+                title = row.get('book_title', '').strip()
+                author = row.get('book_author', '').strip()
+                if not title:
+                    skipped_count += 1
+                    continue
+                
+                book = conn.execute("SELECT id FROM personal_books WHERE owner_id = ? AND title = ?", (owner_id, title)).fetchone()
+                if book:
+                    book_id = book['id']
+                else:
+                    if not check_personal_book_limit(conn, owner_id):
+                        skipped_count += 1
+                        continue
+                    cursor = conn.cursor()
+                    cursor.execute('''
+                        INSERT INTO personal_books (owner_id, title, author, category, status, created_at)
+                        VALUES (?, ?, ?, ?, 'Available', ?)
+                    ''', (owner_id, title, author, 'General', datetime.now().strftime('%Y-%m-%d %H:%M')))
+                    book_id = cursor.lastrowid
+                    imported_count += 1
+                
+                start_date = row.get('start_date', '').strip()
+                finish_date = row.get('finish_date', '').strip()
+                current_page = int(row.get('current_page', 0) or 0)
+                total_pages = int(row.get('total_pages', 0) or 0)
+                reading_status = row.get('reading_status', 'Reading').strip()
+                
+                conn.execute('''
+                    INSERT INTO personal_reading_tracker (owner_id, book_id, start_date, finish_date, current_page, total_pages, reading_status, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (owner_id, book_id, start_date, finish_date, current_page, total_pages, reading_status, datetime.now().strftime('%Y-%m-%d %H:%M')))
+                
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Imported reading records via CSV", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash("Successfully imported reading records!", "success")
+            
+        elif module == 'wishlist':
+            for row in csv_reader:
+                title = row.get('title', '').strip()
+                if not title:
+                    skipped_count += 1
+                    continue
+                author = row.get('author', '').strip()
+                priority = row.get('priority', 'Medium').strip()
+                price = float(row.get('price', 0.0) or 0.0)
+                purchase_link = row.get('purchase_link', '').strip()
+                notes = row.get('notes', '').strip()
+                
+                conn.execute('''
+                    INSERT INTO personal_wishlist (owner_id, title, author, priority, price, purchase_link, notes, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (owner_id, title, author, priority, price, purchase_link, notes, datetime.now().strftime('%Y-%m-%d %H:%M')))
+                imported_count += 1
+                
+            conn.execute('INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)',
+                         (owner_id, f"Imported {imported_count} wishlist entries via CSV", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash(f"Successfully imported {imported_count} wishlist entries!", "success")
+            
+        else:
+            flash("Invalid import module specified.", "error")
+            
+        return redirect('/personal/settings')
+    finally:
+        conn.close()
+
+@app.route('/personal/elibrary')
+@personal_owner_required
+def personal_elibrary():
+    owner_id = session['user_id']
+    q = request.args.get('q', '').strip()
+    
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        
+        if q:
+            query = '''
+                SELECT * FROM digital_content 
+                WHERE status = 'Published' 
+                  AND (school_code LIKE 'PERS_%' OR school_code = 'GLOBAL' OR school_code = 'GLOBAL_PERSONAL')
+                  AND (title LIKE ? OR category LIKE ? OR subject LIKE ? OR tags LIKE ?)
+                ORDER BY featured DESC, id DESC
+            '''
+            like_val = f"%{q}%"
+            books = conn.execute(query, (like_val, like_val, like_val, like_val)).fetchall()
+        else:
+            query = '''
+                SELECT * FROM digital_content 
+                WHERE status = 'Published' 
+                  AND (school_code LIKE 'PERS_%' OR school_code = 'GLOBAL' OR school_code = 'GLOBAL_PERSONAL')
+                ORDER BY featured DESC, id DESC
+            '''
+            books = conn.execute(query).fetchall()
+            
+        my_publications = conn.execute("SELECT * FROM digital_content WHERE student_id = ? AND school_code LIKE 'PERS_%'", (owner_id,)).fetchall()
+        
+        return render_template('personal_elibrary.html', lib=lib, books=books, my_publications=my_publications, query=q)
+    finally:
+        conn.close()
+
+@app.route('/personal/elibrary/publish', methods=['GET', 'POST'])
+@personal_owner_required
+def personal_elibrary_publish():
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        lib = conn.execute("SELECT * FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
+        plan = lib['plan_name'] if lib else 'FREE'
+        
+        if plan in ['FREE', 'BASIC']:
+            flash("Publishing rights are only available on the Pro Plan. Please upgrade.", "error")
+            return redirect('/personal/elibrary')
+            
+        if request.method == 'POST':
+            title = request.form.get('title')
+            subject = request.form.get('subject')
+            category = request.form.get('category')
+            description = request.form.get('description')
+            tags = request.form.get('tags')
+            
+            cover_file = request.files.get('cover')
+            doc_file = request.files.get('document')
+            
+            cover_url = ""
+            file_url = ""
+            
+            import time
+            from werkzeug.utils import secure_filename
+            
+            if cover_file and cover_file.filename:
+                cover_filename = f"c_{owner_id}_{int(time.time())}_{secure_filename(cover_file.filename)}"
+                cover_path = os.path.join(UPLOADS_DIR, cover_filename)
+                cover_file.save(cover_path)
+                cover_url = f"/static/uploads/{cover_filename}"
+                
+            if doc_file and doc_file.filename:
+                doc_filename = f"d_{owner_id}_{int(time.time())}_{secure_filename(doc_file.filename)}"
+                doc_path = os.path.join(DIGITAL_CONTENT_DIR, doc_filename)
+                doc_file.save(doc_path)
+                file_url = f"/static/digital_content/{doc_filename}"
+                
+            if not file_url:
+                flash("Document PDF is required.", "error")
+                return redirect('/personal/elibrary/publish')
+                
+            user = conn.execute("SELECT phone FROM users WHERE id = ?", (owner_id,)).fetchone()
+            school_code = f"PERS_{user['phone']}" if user else "PERS_UNKNOWN"
+            
+            conn.execute('''
+                INSERT INTO digital_content (title, category, description, subject, tags, cover_url, file_url, student_id, school_code, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Published', ?, ?)
+            ''', (title, category, description, subject, tags, cover_url, file_url, owner_id, school_code, datetime.now().strftime('%Y-%m-%d %H:%M'), datetime.now().strftime('%Y-%m-%d %H:%M')))
+            
+            conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                         (owner_id, f"Published digital book: '{title}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash("Book published successfully to the E-Library!", "success")
+            return redirect('/personal/elibrary')
+            
+        return render_template('personal_elibrary_publish.html', lib=lib)
+    finally:
+        conn.close()
+
+@app.route('/personal/elibrary/delete/<int:content_id>', methods=['POST'])
+@personal_owner_required
+def personal_elibrary_delete(content_id):
+    owner_id = session['user_id']
+    conn = get_db_connection()
+    try:
+        content = conn.execute("SELECT * FROM digital_content WHERE id = ? AND student_id = ? AND school_code LIKE 'PERS_%'", (content_id, owner_id)).fetchone()
+        if content:
+            conn.execute("DELETE FROM digital_content WHERE id = ?", (content_id,))
+            conn.execute("INSERT INTO personal_activity_logs (owner_id, action, created_at) VALUES (?, ?, ?)",
+                         (owner_id, f"Removed publication: '{content['title']}'", datetime.now().strftime('%Y-%m-%d %H:%M')))
+            conn.commit()
+            flash("Publication deleted successfully.", "success")
+        else:
+            flash("Content not found or unauthorized.", "error")
+        return redirect('/personal/elibrary')
     finally:
         conn.close()
 

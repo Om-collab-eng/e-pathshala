@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}AI Cover Scanner - Personal Library{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/personal.css">
+<!-- Load Puter SDK for AI Vision -->
+<script src="https://js.puter.com/v2/"></script>
+<style>
+.scan-area {
+    border: 2px dashed var(--neon-purple);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: rgba(139, 92, 246, 0.02);
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.scan-area:hover {
+    background: rgba(139, 92, 246, 0.05);
+    border-color: var(--neon-pink);
+}
+.pulse-glow {
+    animation: glow-pulse 2s infinite alternate;
+}
+@keyframes glow-pulse {
+    0% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+    100% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.4); }
+}
+.loader-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255,255,255,0.1);
+    border-top-color: var(--neon-purple);
+    border-radius: 50%;
+    animation: spin 1s infinite linear;
+    margin: 20px auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="personal-layout">
+    <!-- Sidebar -->
+    <aside class="personal-sidebar">
+        <div class="personal-brand">
+            <span>📚</span>
+            <span>Librika Personal</span>
+        </div>
+        <!-- Active Library Selector -->
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="window.location.href='/personal/libraries/switch/' + this.value" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    {% for lib in personal_my_libraries %}
+                    <option value="{{ lib.id }}" {% if personal_active_library and personal_active_library.id == lib.id %}selected{% endif %}>{{ lib.library_name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% if personal_shared_libraries %}
+                <optgroup label="Shared with Me">
+                    {% for lib in personal_shared_libraries %}
+                    <option value="{{ lib.id }}" {% if personal_active_library and personal_active_library.id == lib.id %}selected{% endif %}>🤝 {{ lib.library_name }} ({{ lib.owner_name }})</option>
+                    {% endfor %}
+                </optgroup>
+                {% endif %}
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link">
+                <span>🏠</span> Dashboard
+            </a>
+            <a href="/personal/books" class="personal-nav-link">
+                <span>📖</span> My Books
+            </a>
+            <a href="/personal/reading" class="personal-nav-link">
+                <span>⏱️</span> Reading Tracker
+            </a>
+            <a href="/personal/borrowing" class="personal-nav-link">
+                <span>🤝</span> Lending System
+            </a>
+            <a href="/personal/wishlist" class="personal-nav-link">
+                <span>✨</span> Wishlist
+            </a>
+            <a href="/personal/favorites" class="personal-nav-link">
+                <span>⭐</span> Favorites
+            </a>
+            <a href="/personal/elibrary" class="personal-nav-link">
+                <span>🌐</span> E-Library
+            </a>
+            <a href="/personal/scan" class="personal-nav-link active">
+                <span>📷</span> AI Scanner
+            </a>
+            <a href="/personal/settings" class="personal-nav-link">
+                <span>⚙️</span> Settings & Plan
+            </a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: var(--accent-error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="{{ lib.profile_photo or 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' }}" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ session.user_name }}</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;">{{ lib.plan_name }} PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="personal-content">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                AI Cover Scanner
+            </h1>
+            <p style="color: #9ca3af; margin: 4px 0 0 0;">Scan front or back cover of any book to automatically catalogue it</p>
+        </div>
+
+        {% if lib.plan_name == 'FREE' %}
+        <!-- Upgrade Requirement Banner -->
+        <div class="personal-card text-center" style="padding: 4rem 2rem; text-align: center;">
+            <span style="font-size: 4rem;">🔒</span>
+            <h2 style="color: white; margin-top: 1rem;">AI Scanner is a Premium Feature</h2>
+            <p style="color: #9ca3af; max-width: 500px; margin: 10px auto 2rem auto;">
+                The AI Cover Scanner uses Google Gemini and GPT-4o Vision models to extract book details in seconds. Upgrade to Basic or Pro plan to unlock it!
+            </p>
+            <a href="/personal/settings" class="btn-neon">View Plans & Upgrade</a>
+        </div>
+        {% else %}
+        <!-- Active Scan Interface -->
+        <div class="personal-card">
+            <div id="dropZone" class="scan-area" onclick="document.getElementById('coverInput').click()">
+                <span style="font-size: 3rem;">📸</span>
+                <h3 style="color: white; margin: 15px 0 5px 0;">Click or Drag & Drop Cover Photo</h3>
+                <p style="color: #9ca3af; font-size: 0.9rem;">Supports PNG, JPG, WebP images</p>
+                <input type="file" id="coverInput" accept="image/*" style="display: none;" onchange="startScan(this.files[0])">
+            </div>
+
+            <!-- Scanning overlay -->
+            <div id="scanningState" style="display: none; text-align: center; padding: 3rem 0;">
+                <div class="loader-spinner"></div>
+                <h3 style="color: white;" id="scanStatusText">Uploading image...</h3>
+                <p style="color: #9ca3af; font-size: 0.9rem;">Please wait while E-Pathshala AI processes the cover details.</p>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if lib.plan_name != 'FREE' %}
+<script>
+async function startScan(file) {
+    if (!file) return;
+    
+    const dropZone = document.getElementById('dropZone');
+    const scanningState = document.getElementById('scanningState');
+    const statusText = document.getElementById('scanStatusText');
+    
+    dropZone.style.display = 'none';
+    scanningState.style.display = 'block';
+    
+    const formData = new FormData();
+    formData.append('front', file);
+
+    try {
+        statusText.innerText = "⚡ Uploading cover image...";
+        const uploadRes = await fetch('/admin/api/upload-cover', {
+            method: 'POST',
+            body: formData
+        });
+        const uploadData = await uploadRes.json();
+        
+        if (uploadData.status !== 'success') {
+            throw new Error("Upload failed: " + uploadData.message);
+        }
+
+        statusText.innerText = "🧠 AI is extracting book details...";
+        const absoluteCoverUrl = window.location.origin + uploadData.cover_url;
+
+        const prompt = `You are a highly advanced Library AI. Look at the provided front cover image of a book.
+        Extract all text (OCR) exactly as seen. Then, analyze the text and generate a rich set of metadata.
+        
+        Return ONLY a strictly valid JSON object matching this schema exactly. DO NOT wrap it in markdown. Do not include any conversational text.
+        {
+          "title": "Extracted title",
+          "author": "Extracted author name",
+          "publisher": "Extracted publisher",
+          "isbn": "Extracted or inferred ISBN",
+          "language": "English (or inferred)",
+          "category": "Main Category (e.g., Self Help)",
+          "description": "A detailed 100-200 word description suitable for library catalog"
+        }`;
+
+        const aiResponse = await puter.ai.chat(prompt, absoluteCoverUrl, { model: 'gpt-4o' });
+        let metadata = {};
+        
+        try {
+            let text = aiResponse.toString();
+            if (text.includes("```json")) {
+                text = text.split("```json")[1].split("```")[0];
+            } else if (text.includes("```")) {
+                text = text.split("```")[1].split("```")[0];
+            }
+            metadata = JSON.parse(text.trim());
+        } catch (parseErr) {
+            console.error("AI JSON Parse Error: ", parseErr, aiResponse);
+            throw new Error("AI extraction response was not in expected JSON format. Proceeding to form manually.");
+        }
+
+        statusText.innerText = "✅ Redirecting to catalog form...";
+        
+        // Build redirect URL with pre-filled query params
+        const params = new URLSearchParams();
+        if (metadata.title) params.append('title', metadata.title);
+        if (metadata.author) params.append('author', metadata.author);
+        if (metadata.category) params.append('category', metadata.category);
+        if (metadata.publisher) params.append('publisher', metadata.publisher);
+        if (metadata.isbn) params.append('isbn', metadata.isbn);
+        if (metadata.language) params.append('language', metadata.language);
+        if (metadata.description) params.append('description', metadata.description);
+        params.append('cover_image_url', absoluteCoverUrl);
+
+        window.location.href = `/personal/books/add?${params.toString()}`;
+    } catch (err) {
+        console.error(err);
+        alert("Scan failed: " + err.message + "\nWe will redirect you to the manual entry form.");
+        window.location.href = "/personal/books/add";
+    }
+}
+
+// Drag & drop support
+const dropZone = document.getElementById('dropZone');
+if (dropZone) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--neon-pink)';
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--neon-purple)';
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files[0];
+        startScan(file);
+    });
+}
+</script>
+{% endif %}
+{% endblock %}
