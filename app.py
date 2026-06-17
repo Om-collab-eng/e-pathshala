@@ -870,7 +870,7 @@ def register():
                              (user_id, library_name, photo_url, 'FREE', 'active', datetime.now().strftime('%Y-%m-%d %H:%M')))
                 
                 # Create Default Settings
-                conn.execute('INSERT INTO personal_settings (owner_id, setting_key, setting_value) VALUES (?, ?, ?)', (user_id, 'theme', 'dark'))
+                conn.execute('INSERT INTO personal_settings (owner_id, setting_key, setting_value) VALUES (?, ?, ?)', (user_id, 'theme', 'light'))
                 conn.execute('INSERT INTO personal_settings (owner_id, setting_key, setting_value) VALUES (?, ?, ?)', (user_id, 'language', 'English'))
                 conn.execute('INSERT INTO personal_settings (owner_id, setting_key, setting_value) VALUES (?, ?, ?)', (user_id, 'notifications', 'enabled'))
                 
