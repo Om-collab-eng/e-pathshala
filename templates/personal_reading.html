@@ -33,14 +33,14 @@
 <div class="personal-layout">
     <!-- Sidebar -->
     <aside class="personal-sidebar">
-        <div class="personal-brand">
+                <div class="personal-brand">
             <span>📚</span>
             <span>Librika Personal</span>
         </div>
         <!-- Active Library Selector -->
         <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
             <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
-            <select onchange="window.location.href='/personal/libraries/switch/' + this.value" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+            <select onchange="if(this.value === 'manage_collections') { window.location.href='/personal/libraries'; } else { window.location.href='/personal/libraries/switch/' + this.value; }" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
                 <optgroup label="My Libraries">
                     {% for lib in personal_my_libraries %}
                     <option value="{{ lib.id }}" {% if personal_active_library and personal_active_library.id == lib.id %}selected{% endif %}>{{ lib.library_name }}</option>
@@ -53,6 +53,9 @@
                     {% endfor %}
                 </optgroup>
                 {% endif %}
+                <optgroup label="Actions">
+                    <option value="manage_collections">📂 Manage Collections (+)</option>
+                </optgroup>
             </select>
         </div>
         <nav class="personal-nav">
@@ -73,6 +76,9 @@
             </a>
             <a href="/personal/favorites" class="personal-nav-link">
                 <span>⭐</span> Favorites
+            </a>
+            <a href="/personal/libraries" class="personal-nav-link">
+                <span>📂</span> Collections
             </a>
             <a href="/personal/elibrary" class="personal-nav-link">
                 <span>🌐</span> E-Library
