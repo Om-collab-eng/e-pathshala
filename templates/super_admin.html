@@ -475,9 +475,11 @@
                         <div class="sa-settings-icon" style="color:#ef4444; background:#fef2f2;">⚠️</div>
                         <div class="sa-settings-text">
                             <div class="sa-settings-title" style="color:#ef4444;">WIPE ALL SYSTEM DATA</div>
+                            {% if session.get('name') == 'OM' %}
                             <div class="sa-settings-desc" style="color: #6b7280; font-size: 0.75rem; margin-top: 4px;">
                                 Authentication passcode: <strong id="settingsWipeCode" style="font-family: monospace; font-size: 0.9rem; color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 2px 6px; border-radius: 4px; letter-spacing: 1px;">------</strong> (expires in <span id="settingsWipeTimer">15</span>s)
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -726,9 +728,13 @@
             <h2 style="margin: 0; color: #ef4444;">⚠️ Authentication Required</h2>
             <button type="button" onclick="closeModal('wipeOtpModal')" style="background: none; border: none; color: #6b7280; font-size: 1.8rem; cursor: pointer; line-height: 1; padding: 0;">&times;</button>
         </div>
+        {% if session.get('name') == 'OM' %}
         <p style="color: #6b7280; margin-bottom: 1.5rem;">
             Current passcode: <strong id="modalWipeCode" style="font-family: monospace; font-size: 1.2rem; color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 2px 8px; border-radius: 4px; letter-spacing: 1px;">------</strong> (expires in <span id="modalWipeTimer">15</span>s)
         </p>
+        {% else %}
+        <p style="color: #6b7280; margin-bottom: 1.5rem;">Please contact OM for the 6-digit passcode.</p>
+        {% endif %}
         <div id="wipeOtpInputArea">
             <form action="/super-admin/wipe-data" method="POST">
                 <input type="text" name="otp" required placeholder="Enter 6-digit OTP" style="width: 100%; padding: 0.8rem; margin-bottom: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb; background: #f8f9fc; color: #1a1c23; font-size: 1.2rem; text-align: center; letter-spacing: 5px;">
@@ -1221,6 +1227,7 @@
         }
     }
 
+    {% if session.get('name') == 'OM' %}
     function updateOmTotp() {
         fetch('/super-admin/om-otp')
             .then(r => r.json())
@@ -1244,10 +1251,12 @@
                     const modalWipeTimer = document.getElementById('modalWipeTimer');
                     if (modalWipeTimer) modalWipeTimer.innerText = data.remaining;
                 }
-            });
+            })
+            .catch(e => console.log("OTP update error:", e));
     }
     setInterval(updateOmTotp, 1000);
     updateOmTotp();
+    {% endif %}
 
     // Hub handlers
     async function handleImport() {

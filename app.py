@@ -1478,7 +1478,7 @@ def get_om_totp(offset=0):
 
 @app.route('/super-admin/om-otp', methods=['GET'])
 def get_om_otp():
-    if session.get('role') != 'super_admin':
+    if session.get('role') != 'super_admin' or session.get('name') != 'OM':
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
     import time
     otp = get_om_totp(0)
