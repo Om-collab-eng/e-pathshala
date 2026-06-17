@@ -418,8 +418,8 @@
         };
     </script>
 
-    {% if session.get('user_id') %}
-    <!-- AI Assistant Widget -->
+    {% if session.get('user_id') and school_perms.get('canUseAIChat') %}
+    <!-- AI Assistant Widget (BASIC & PROFESSIONAL plans only) -->
     <div id="aiChatWidget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
         <!-- Chat Window -->
         <div id="aiChatWindow" style="display: none; width: 90vw; max-width: 350px; height: 70vh; max-height: 450px; background: var(--bg-card); border-radius: 12px; box-shadow: var(--shadow-premium); backdrop-filter: var(--glass-blur); flex-direction: column; overflow: hidden; border: 1px solid var(--border-light); margin-bottom: 10px;">

@@ -140,11 +140,36 @@
         {% else %}
         <!-- Active Scan Interface -->
         <div class="personal-card">
-            <div id="dropZone" class="scan-area" onclick="document.getElementById('coverInput').click()">
-                <span style="font-size: 3rem;">📸</span>
-                <h3 style="color: white; margin: 15px 0 5px 0;">Click or Drag & Drop Cover Photo</h3>
-                <p style="color: #9ca3af; font-size: 0.9rem;">Supports PNG, JPG, WebP images</p>
-                <input type="file" id="coverInput" accept="image/*" style="display: none;" onchange="startScan(this.files[0])">
+            <!-- Mode picker -->
+            <div id="scanModePicker">
+                <div style="text-align:center; margin-bottom:1.5rem;">
+                    <p style="color:#9ca3af; font-size:0.85rem;">Choose how you want to scan the book cover</p>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; max-width:380px; margin:0 auto;">
+                    <button onclick="openCameraModal()" style="
+                        background:rgba(255,255,255,0.04); border:2px solid rgba(139,92,246,0.3); border-radius:16px;
+                        padding:2rem 1rem; cursor:pointer; transition:all 0.2s;
+                        display:flex; flex-direction:column; align-items:center; gap:12px; color:white;
+                    " onmouseover="this.style.borderColor='var(--neon-purple)';this.style.background='rgba(139,92,246,0.1)'" onmouseout="this.style.borderColor='rgba(139,92,246,0.3)';this.style.background='rgba(255,255,255,0.04)'">
+                        <div style="font-size:2.5rem;">📷</div>
+                        <div>
+                            <div style="font-weight:800; font-size:1rem;">Camera</div>
+                            <div style="font-size:0.72rem; color:#9ca3af; margin-top:3px;">Use live camera</div>
+                        </div>
+                    </button>
+                    <button onclick="document.getElementById('coverInput').click()" style="
+                        background:rgba(255,255,255,0.04); border:2px solid rgba(139,92,246,0.3); border-radius:16px;
+                        padding:2rem 1rem; cursor:pointer; transition:all 0.2s;
+                        display:flex; flex-direction:column; align-items:center; gap:12px; color:white;
+                    " onmouseover="this.style.borderColor='var(--neon-purple)';this.style.background='rgba(139,92,246,0.1)'" onmouseout="this.style.borderColor='rgba(139,92,246,0.3)';this.style.background='rgba(255,255,255,0.04)'">
+                        <div style="font-size:2.5rem;">📁</div>
+                        <div>
+                            <div style="font-weight:800; font-size:1rem;">Upload</div>
+                            <div style="font-size:0.72rem; color:#9ca3af; margin-top:3px;">Choose from device</div>
+                        </div>
+                    </button>
+                </div>
+                <input type="file" id="coverInput" accept="image/*" style="display:none;" onchange="startScan(this.files[0])">
             </div>
 
             <!-- Scanning overlay -->
@@ -155,21 +180,104 @@
             </div>
         </div>
         {% endif %}
-    </main>
-</div>
-{% endblock %}
 
-{% block scripts %}
+        <!-- Camera Modal -->
+        <div id="cameraModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:99999; flex-direction:column; align-items:center; justify-content:center;">
+            <div style="width:100%; max-width:500px; padding:1.5rem; display:flex; flex-direction:column; align-items:center; gap:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <span style="color:white; font-weight:800; font-size:1.1rem;">📷 Camera</span>
+                    <button onclick="closeCameraModal()" style="background:rgba(255,255,255,0.1); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">✕</button>
+                </div>
+                <!-- Video stream -->
+                <div style="width:100%; border-radius:16px; overflow:hidden; background:#000; position:relative;">
+                    <video id="cameraStream" autoplay playsinline style="width:100%; display:block; border-radius:16px; max-height:55vh; object-fit:cover;"></video>
+                    <div style="position:absolute; inset:0; border:2px solid rgba(139,92,246,0.5); border-radius:16px; pointer-events:none;"></div>
+                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:60%; height:60%; border:2px dashed rgba(255,255,255,0.3); border-radius:8px; pointer-events:none;"></div>
+                </div>
+                <!-- Permission denied state -->
+                <div id="cameraPermDenied" style="display:none; text-align:center; padding:2rem; color:white;">
+                    <div style="font-size:3rem; margin-bottom:1rem;">🚫</div>
+                    <h3 style="margin-bottom:0.5rem;">Camera Access Denied</h3>
+                    <p style="color:rgba(255,255,255,0.6); font-size:0.88rem; margin-bottom:1.5rem;">
+                        Please allow camera access in your browser settings, then try again.
+                        You can still <strong>Upload</strong> a photo instead.
+                    </p>
+                    <button onclick="closeCameraModal(); document.getElementById('coverInput').click()" style="background:var(--neon-purple); color:white; border:none; border-radius:10px; padding:10px 20px; cursor:pointer; font-weight:700;">📁 Upload Instead</button>
+                </div>
+                <!-- Shutter -->
+                <button id="shutterBtn" onclick="captureFrame()" style="
+                    width:70px; height:70px; border-radius:50%;
+                    background:white; border:5px solid rgba(255,255,255,0.3);
+                    cursor:pointer; display:flex; align-items:center; justify-content:center;
+                    transition:transform 0.1s; flex-shrink:0;
+                " onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                    <div style="width:48px; height:48px; background:var(--neon-purple); border-radius:50%;"></div>
+                </button>
+                <p style="color:rgba(255,255,255,0.5); font-size:0.78rem; margin-top:-0.5rem;">Tap to capture</p>
+            </div>
+            <canvas id="captureCanvas" style="display:none;"></canvas>
+        </div>
+
+    </main>
+
+</div><!-- end personal-layout -->
+
 {% if lib.plan_name != 'FREE' %}
 <script>
+let cameraStream = null;
+
+async function openCameraModal() {
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraStream');
+    const denied = document.getElementById('cameraPermDenied');
+    const shutterBtn = document.getElementById('shutterBtn');
+    modal.style.display = 'flex';
+    denied.style.display = 'none';
+    video.style.display = 'block';
+    shutterBtn.style.display = 'flex';
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+        });
+        video.srcObject = cameraStream;
+    } catch (err) {
+        console.warn('Camera error:', err);
+        video.style.display = 'none';
+        shutterBtn.style.display = 'none';
+        denied.style.display = 'block';
+    }
+}
+
+function closeCameraModal() {
+    document.getElementById('cameraModal').style.display = 'none';
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+    }
+    document.getElementById('cameraStream').srcObject = null;
+}
+
+function captureFrame() {
+    const video = document.getElementById('cameraStream');
+    const canvas = document.getElementById('captureCanvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    canvas.toBlob(blob => {
+        closeCameraModal();
+        startScan(new File([blob], 'camera_capture.jpg', { type: 'image/jpeg' }));
+    }, 'image/jpeg', 0.92);
+}
+
 async function startScan(file) {
     if (!file) return;
     
-    const dropZone = document.getElementById('dropZone');
+    const picker = document.getElementById('scanModePicker');
     const scanningState = document.getElementById('scanningState');
     const statusText = document.getElementById('scanStatusText');
     
-    dropZone.style.display = 'none';
+    picker.style.display = 'none';
     scanningState.style.display = 'block';
     
     const formData = new FormData();
@@ -222,7 +330,6 @@ async function startScan(file) {
 
         statusText.innerText = "✅ Redirecting to catalog form...";
         
-        // Build redirect URL with pre-filled query params
         const params = new URLSearchParams();
         if (metadata.title) params.append('title', metadata.title);
         if (metadata.author) params.append('author', metadata.author);
@@ -239,29 +346,6 @@ async function startScan(file) {
         alert("Scan failed: " + err.message + "\nWe will redirect you to the manual entry form.");
         window.location.href = "/personal/books/add";
     }
-}
-
-// Drag & drop support
-const dropZone = document.getElementById('dropZone');
-if (dropZone) {
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            dropZone.style.borderColor = 'var(--neon-pink)';
-        }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            dropZone.style.borderColor = 'var(--neon-purple)';
-        }, false);
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        const file = e.dataTransfer.files[0];
-        startScan(file);
-    });
 }
 </script>
 {% endif %}

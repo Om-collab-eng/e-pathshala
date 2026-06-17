@@ -10,7 +10,8 @@ PLANS = {
             "canUseAdvancedAnalytics": False,
             "canUsePublishing": False,
             "canUseMultiBranch": False,
-            "canUseAPI": False
+            "canUseAPI": False,
+            "canUseAIChat": False
         }
     },
     "BASIC": {
@@ -24,7 +25,8 @@ PLANS = {
             "canUseAdvancedAnalytics": False,
             "canUsePublishing": False,
             "canUseMultiBranch": False,
-            "canUseAPI": False
+            "canUseAPI": False,
+            "canUseAIChat": True
         }
     },
     "PROFESSIONAL": {
@@ -38,7 +40,8 @@ PLANS = {
             "canUseAdvancedAnalytics": True,
             "canUsePublishing": True,
             "canUseMultiBranch": True,
-            "canUseAPI": True
+            "canUseAPI": True,
+            "canUseAIChat": True
         }
     }
 }

@@ -401,26 +401,57 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 </div>
             </div>
 
-            <!-- =================== STEP 1: UPLOAD =================== -->
-            <div id="uploadSection" class="ld-panel" style="max-width: 650px; margin: 0 auto; width: 100%;">
-                <div style="text-align: center; margin-bottom: 0.5rem;">
-                    <h3 class="ld-panel-title" style="font-size: 1.35rem; margin-bottom: 0.25rem;">Upload Asset Cover Image</h3>
-                    <p style="font-size: 0.8rem; color: var(--muted); max-width: 500px; margin: 0 auto; line-height: 1.4;">
-                        Upload the book's front cover. Our Puter AI engine will read the text, classify the genre, extract metadata, and generate custom catalog descriptions automatically.
+            <!-- =================== STEP 1: SCAN MODE PICKER =================== -->
+            <div id="uploadSection" class="ld-panel" style="max-width: 620px; margin: 0 auto; width: 100%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h3 class="ld-panel-title" style="font-size: 1.35rem; margin-bottom: 0.25rem;">Scan Book Cover</h3>
+                    <p style="font-size: 0.8rem; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.4;">
+                        Our AI engine will read the cover, classify the genre, extract metadata and generate catalog descriptions automatically.
                     </p>
                 </div>
 
-                <div style="max-width: 420px; width: 100%; margin: 0 auto;">
-                    <div class="ld-upload-zone" id="frontZone">
-                        <div class="ld-upload-icon">📷</div>
-                        <span class="ld-upload-text">Click or drag Front Cover to upload</span>
-                        <span class="ld-upload-subtext">Supports PNG, JPG or WEBP formats</span>
-                        <input type="file" id="frontInput" accept="image/*" capture="environment" style="display:none;">
-                        <img id="frontPreview" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;">
+                <!-- Mode picker cards -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 420px; margin: 0 auto 1.5rem auto;">
+                    <!-- Camera option -->
+                    <button id="pickCameraBtn" onclick="openCameraModal()" style="
+                        background: var(--white); border: 2px solid var(--border); border-radius: 16px;
+                        padding: 2rem 1rem; cursor: pointer; transition: all 0.2s;
+                        display: flex; flex-direction: column; align-items: center; gap: 12px;
+                        color: var(--text);
+                    " onmouseover="this.style.borderColor='var(--lp)';this.style.background='var(--lp-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
+                        <div style="width:56px;height:56px;border-radius:14px;background:var(--lp-light);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">📷</div>
+                        <div>
+                            <div style="font-weight:800;font-size:1rem;font-family:'Outfit';">Camera</div>
+                            <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Use live camera</div>
+                        </div>
+                    </button>
+                    <!-- Upload option -->
+                    <button id="pickUploadBtn" onclick="document.getElementById('frontInput').click()" style="
+                        background: var(--white); border: 2px solid var(--border); border-radius: 16px;
+                        padding: 2rem 1rem; cursor: pointer; transition: all 0.2s;
+                        display: flex; flex-direction: column; align-items: center; gap: 12px;
+                        color: var(--text);
+                    " onmouseover="this.style.borderColor='var(--lp)';this.style.background='var(--lp-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
+                        <div style="width:56px;height:56px;border-radius:14px;background:var(--lb-light);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">📁</div>
+                        <div>
+                            <div style="font-weight:800;font-size:1rem;font-family:'Outfit';">Upload</div>
+                            <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Choose from device</div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Hidden file input for upload mode -->
+                <input type="file" id="frontInput" accept="image/*" style="display:none;">
+
+                <!-- Preview after image is selected -->
+                <div id="previewArea" style="display:none; max-width:420px; margin:0 auto; text-align:center;">
+                    <img id="frontPreview" style="width:100%; max-height:280px; object-fit:contain; border-radius:12px; border:1px solid var(--border);">
+                    <div style="margin-top:0.5rem; font-size:0.8rem; color:var(--muted);">
+                        <button onclick="resetScanMode()" style="background:none;border:none;color:var(--lp);cursor:pointer;font-weight:700;font-size:0.82rem;">← Rescan</button>
                     </div>
                 </div>
 
-                <div style="text-align: center; margin-top: 0.5rem;">
+                <div style="text-align: center; margin-top: 1rem;">
                     <button id="processBtn" class="ld-btn" style="padding: 12px 32px; font-size: 0.95rem; width: 100%; max-width: 300px;" disabled>Process With AI ✨</button>
                 </div>
 
@@ -431,6 +462,49 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     <p style="color: var(--muted); font-size: 0.78rem;">Extracting texts, inferring Dewey Decimal, and generating summaries...</p>
                 </div>
             </div>
+
+            <!-- =================== CAMERA MODAL =================== -->
+            <div id="cameraModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:99999; flex-direction:column; align-items:center; justify-content:center;">
+                <div style="width:100%; max-width:500px; padding:1.5rem; display:flex; flex-direction:column; align-items:center; gap:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <span style="color:white; font-family:'Outfit'; font-weight:800; font-size:1.1rem;">📷 Camera</span>
+                        <button onclick="closeCameraModal()" style="background:rgba(255,255,255,0.1); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">✕</button>
+                    </div>
+
+                    <!-- Video stream -->
+                    <div style="width:100%; border-radius:16px; overflow:hidden; background:#000; position:relative;">
+                        <video id="cameraStream" autoplay playsinline style="width:100%; display:block; border-radius:16px; max-height:55vh; object-fit:cover;"></video>
+                        <!-- Viewfinder overlay -->
+                        <div style="position:absolute; inset:0; border:2px solid rgba(92,60,243,0.5); border-radius:16px; pointer-events:none;"></div>
+                        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:60%; height:60%; border:2px dashed rgba(255,255,255,0.3); border-radius:8px; pointer-events:none;"></div>
+                    </div>
+
+                    <!-- Permission denied state -->
+                    <div id="cameraPermDenied" style="display:none; text-align:center; padding:2rem; color:white;">
+                        <div style="font-size:3rem; margin-bottom:1rem;">🚫</div>
+                        <h3 style="margin-bottom:0.5rem;">Camera Access Denied</h3>
+                        <p style="color:rgba(255,255,255,0.6); font-size:0.88rem; margin-bottom:1.5rem; max-width:320px;">
+                            Please allow camera access in your browser settings, then try again.
+                            You can still use the <strong>Upload</strong> option instead.
+                        </p>
+                        <button onclick="closeCameraModal(); document.getElementById('frontInput').click()" style="background:var(--lp); color:white; border:none; border-radius:10px; padding:10px 20px; cursor:pointer; font-weight:700;">📁 Upload Instead</button>
+                    </div>
+
+                    <!-- Shutter button -->
+                    <button id="shutterBtn" onclick="captureFrame()" style="
+                        width:70px; height:70px; border-radius:50%;
+                        background:white; border:5px solid rgba(255,255,255,0.3);
+                        cursor:pointer; display:flex; align-items:center; justify-content:center;
+                        transition:transform 0.1s; flex-shrink:0;
+                    " onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <div style="width:48px; height:48px; background:var(--lp); border-radius:50%;"></div>
+                    </button>
+                    <p style="color:rgba(255,255,255,0.5); font-size:0.78rem; margin-top:-0.5rem;">Tap the button to capture</p>
+                </div>
+                <!-- Hidden canvas for capturing -->
+                <canvas id="captureCanvas" style="display:none;"></canvas>
+            </div>
+
 
             <!-- =================== STEP 2: REVIEW & EDIT =================== -->
             <div id="reviewSection" style="display: none;">
@@ -611,6 +685,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 <script src="https://js.puter.com/v2/"></script>
 <script>
     let frontFile = null;
+    let cameraStream = null;
 
     // Adjust grids responsiveness dynamically for review layout
     function adjustResponsiveLayout() {
@@ -624,58 +699,80 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     window.addEventListener('resize', adjustResponsiveLayout);
     document.addEventListener('DOMContentLoaded', adjustResponsiveLayout);
 
-    function setupUpload(inputId, zoneId, previewId) {
-        const input = document.getElementById(inputId);
-        const zone = document.getElementById(zoneId);
-        const preview = document.getElementById(previewId);
-
-        zone.addEventListener('click', () => input.click());
-
-        zone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            zone.style.borderColor = 'var(--lp)';
-            zone.style.background = 'var(--lp-light)';
-        });
-
-        zone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            zone.style.borderColor = 'rgba(92,60,243,0.3)';
-            zone.style.background = 'var(--bg)';
-        });
-
-        zone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            zone.style.borderColor = 'rgba(92,60,243,0.3)';
-            zone.style.background = 'var(--bg)';
-            if (e.dataTransfer.files.length) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
-
-        input.addEventListener('change', (e) => {
-            if (e.target.files.length) {
-                handleFile(e.target.files[0]);
-            }
-        });
-
-        function handleFile(file) {
-            if (!file.type.startsWith('image/')) {
-                showToast("Please upload an image file.", "error");
-                return;
-            }
-            frontFile = file;
-            document.getElementById('processBtn').disabled = false;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
+    // ── Camera Modal ──
+    async function openCameraModal() {
+        const modal = document.getElementById('cameraModal');
+        const video = document.getElementById('cameraStream');
+        const denied = document.getElementById('cameraPermDenied');
+        const shutterBtn = document.getElementById('shutterBtn');
+        modal.style.display = 'flex';
+        denied.style.display = 'none';
+        video.style.display = 'block';
+        shutterBtn.style.display = 'flex';
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            video.srcObject = cameraStream;
+        } catch (err) {
+            console.warn('Camera error:', err);
+            video.style.display = 'none';
+            shutterBtn.style.display = 'none';
+            denied.style.display = 'block';
         }
     }
 
-    setupUpload('frontInput', 'frontZone', 'frontPreview');
+    function closeCameraModal() {
+        const modal = document.getElementById('cameraModal');
+        modal.style.display = 'none';
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+        }
+        document.getElementById('cameraStream').srcObject = null;
+    }
+
+    function captureFrame() {
+        const video = document.getElementById('cameraStream');
+        const canvas = document.getElementById('captureCanvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob(blob => {
+            closeCameraModal();
+            handleSelectedFile(blob, 'camera_capture.jpg');
+        }, 'image/jpeg', 0.92);
+    }
+
+    // ── Upload file input ──
+    document.getElementById('frontInput').addEventListener('change', (e) => {
+        if (e.target.files.length) handleSelectedFile(e.target.files[0]);
+    });
+
+    function handleSelectedFile(fileOrBlob, name) {
+        const file = fileOrBlob instanceof File ? fileOrBlob : new File([fileOrBlob], name || 'capture.jpg', { type: 'image/jpeg' });
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file.', 'error');
+            return;
+        }
+        frontFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('frontPreview').src = e.target.result;
+            document.getElementById('previewArea').style.display = 'block';
+            document.getElementById('processBtn').disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetScanMode() {
+        frontFile = null;
+        document.getElementById('frontPreview').src = '';
+        document.getElementById('previewArea').style.display = 'none';
+        document.getElementById('processBtn').disabled = true;
+        document.getElementById('frontInput').value = '';
+    }
 
     document.getElementById('processBtn').addEventListener('click', async () => {
         if (!frontFile) {
