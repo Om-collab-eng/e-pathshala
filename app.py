@@ -2727,7 +2727,12 @@ def api_chat():
         try:
             from permissions import get_school_permissions
             perms = get_school_permissions(conn, session.get('school_code'))
-            if model == 'meta-llama/llama-3.2-11b-vision-instruct:free':
+            is_vision = model in [
+                'meta-llama/llama-3.2-11b-vision-instruct:free',
+                'nvidia/nemotron-nano-12b-v2-vl:free',
+                'google/gemma-4-31b-it:free'
+            ]
+            if is_vision:
                 if not perms.get('canUseAIScanner'):
                     return jsonify({"error": "AI Scanner is not enabled for your school subscription."}), 403
             else:
@@ -2737,6 +2742,8 @@ def api_chat():
             conn.close()
 
     openrouter_key = os.environ.get('OPENROUTER_API_KEY')
+    if openrouter_key:
+        openrouter_key = openrouter_key.strip()
     if not openrouter_key:
         return jsonify({"error": "OpenRouter API Key not configured on server."}), 500
         
