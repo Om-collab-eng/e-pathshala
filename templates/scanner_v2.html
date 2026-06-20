@@ -842,7 +842,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
           }
         }`;
 
-            const aiResponse = await puter.ai.chat(prompt, absoluteCoverUrl, { model: 'gpt-4o' });
+            const aiResponse = await puter.ai.chat(prompt, frontFile, { model: 'gpt-4o' });
 
             // Robust extraction
             let rawText = "";

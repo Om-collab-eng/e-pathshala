@@ -256,7 +256,7 @@ async function handleAiScan(e) {
           "description": "A detailed 100-200 word description suitable for catalog"
         }`;
 
-        const aiResponse = await puter.ai.chat(prompt, absoluteCoverUrl, { model: 'gpt-4o' });
+        const aiResponse = await puter.ai.chat(prompt, file, { model: 'gpt-4o' });
         let metadata = {};
         
         try {
