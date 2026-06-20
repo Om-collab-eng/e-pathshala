@@ -2362,9 +2362,402 @@ def chat_action():
             conn.close()
             return {"status": "error", "message": "School code or phone might already exist."}
 
+    elif action_type == 'platform_stats':
+        if session.get('role') != 'super_admin':
+            conn.close()
+            return {"status": "error", "message": "Unauthorized"}
+        
+        total_schools = conn.execute('SELECT COUNT(*) FROM schools').fetchone()[0]
+        active_schools = conn.execute("SELECT COUNT(*) FROM schools WHERE subscriptionStatus = 'active'").fetchone()[0]
+        suspended_schools = conn.execute("SELECT COUNT(*) FROM schools WHERE subscriptionStatus != 'active'").fetchone()[0]
+        total_students = conn.execute('SELECT COUNT(*) FROM users WHERE role="student"').fetchone()[0]
+        total_librarians = conn.execute('SELECT COUNT(*) FROM users WHERE role="admin"').fetchone()[0]
+        total_books = conn.execute('SELECT SUM(total_copies) FROM books').fetchone()[0] or 0
+        issued_books = conn.execute('SELECT COUNT(*) FROM transactions WHERE return_date IS NULL').fetchone()[0]
+        
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        overdue_books = conn.execute('SELECT COUNT(*) FROM transactions WHERE return_date IS NULL AND due_date < ?', (today_str,)).fetchone()[0]
+        
+        elibrary_books = conn.execute('SELECT COUNT(*) FROM digital_content').fetchone()[0]
+        revenue = conn.execute('SELECT SUM(amount) FROM invoices').fetchone()[0] or 0
+        
+        recent_logs = conn.execute('SELECT action, created_at FROM logs ORDER BY id DESC LIMIT 5').fetchall()
+        logs_str = "<br>".join([f"• {l['action']} ({l['created_at']})" for l in recent_logs]) if recent_logs else "No recent activity logged."
+        
+        stats_msg = f"""
+        📊 <b>Platform Dashboard Overview</b><br>
+        ------------------------------------<br>
+        🏫 Total Schools: <b>{total_schools}</b> (Active: <span style='color:var(--accent-success);'>{active_schools}</span> | Suspended: <span style='color:var(--accent-error);'>{suspended_schools}</span>)<br>
+        👨‍🎓 Total Students: <b>{total_students}</b><br>
+        🔑 Total Librarians: <b>{total_librarians}</b><br>
+        📚 Total Books: <b>{total_books}</b><br>
+        📖 Issued Books: <b>{issued_books}</b> (Overdue: <span style='color:var(--accent-warning);'>{overdue_books}</span>)<br>
+        🌐 E-library Content: <b>{elibrary_books} items</b><br>
+        💳 Subscription Revenue: <b>₹{revenue}</b><br>
+        ⚡ System Health: <span style='color:var(--accent-success);'>Healthy (All systems operational)</span><br><br>
+        📈 <b>Recent Activity Logs:</b><br>{logs_str}
+        """
+        conn.close()
+        return {"status": "success", "message": stats_msg}
+
+    elif action_type == 'school_control':
+        if session.get('role') != 'super_admin':
+            conn.close()
+            return {"status": "error", "message": "Unauthorized"}
+        action = data.get('action')
+        code = data.get('code')
+        
+        if not action or not code:
+            conn.close()
+            return {"status": "error", "message": "Action and School Code are required."}
+            
+        school = conn.execute('SELECT * FROM schools WHERE school_code = ?', (code,)).fetchone()
+        if not school:
+            conn.close()
+            return {"status": "error", "message": f"School with code '{code}' not found."}
+            
+        if action == 'suspend':
+            conn.execute('UPDATE schools SET subscriptionStatus = "suspended" WHERE school_code = ?', (code,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"School '{code}' has been suspended successfully."}
+        elif action == 'reactivate':
+            conn.execute('UPDATE schools SET subscriptionStatus = "active" WHERE school_code = ?', (code,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"School '{code}' has been reactivated."}
+        elif action == 'delete':
+            conn.execute('DELETE FROM schools WHERE school_code = ?', (code,))
+            conn.execute('DELETE FROM users WHERE school_code = ?', (code,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"School '{code}' and all associated users have been permanently deleted."}
+        else:
+            conn.close()
+            return {"status": "error", "message": f"Unknown school control action '{action}'."}
+
+    elif action_type == 'school_limits':
+        if session.get('role') != 'super_admin':
+            conn.close()
+            return {"status": "error", "message": "Unauthorized"}
+        code = data.get('code')
+        book_limit = data.get('book_limit')
+        student_limit = data.get('student_limit')
+        librarian_limit = data.get('librarian_limit')
+        admin_limit = data.get('admin_limit')
+        
+        if not code:
+            conn.close()
+            return {"status": "error", "message": "School code is required."}
+            
+        school = conn.execute('SELECT * FROM schools WHERE school_code = ?', (code,)).fetchone()
+        if not school:
+            conn.close()
+            return {"status": "error", "message": f"School with code '{code}' not found."}
+            
+        if book_limit is not None:
+            conn.execute('UPDATE schools SET max_books = ? WHERE school_code = ?', (book_limit, code))
+        if student_limit is not None:
+            conn.execute('UPDATE schools SET studentLimit = ? WHERE school_code = ?', (student_limit, code))
+        if librarian_limit is not None:
+            conn.execute('UPDATE schools SET librarianLimit = ? WHERE school_code = ?', (librarian_limit, code))
+        if admin_limit is not None:
+            conn.execute('UPDATE schools SET adminLimit = ? WHERE school_code = ?', (admin_limit, code))
+            
+        conn.commit()
+        conn.close()
+        return {"status": "success", "message": f"Limits updated successfully for school '{code}'."}
+
+    elif action_type == 'user_control':
+        if session.get('role') != 'super_admin' and (session.get('role') != 'admin' or 'manage_students' not in session.get('permissions', [])):
+            conn.close()
+            return {"status": "error", "message": "Unauthorized."}
+            
+        action = data.get('action')
+        phone = data.get('phone')
+        
+        if not action or not phone:
+            conn.close()
+            return {"status": "error", "message": "Action and Phone are required."}
+            
+        user = conn.execute('SELECT * FROM users WHERE phone = ?', (phone,)).fetchone()
+        if not user:
+            conn.close()
+            return {"status": "error", "message": f"User with phone '{phone}' not found."}
+            
+        if action == 'reset_password':
+            new_pass = data.get('new_password', 'reset123')
+            conn.execute('UPDATE users SET password = ? WHERE phone = ?', (new_pass, phone))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Password for user with phone '{phone}' has been reset to '{new_pass}'."}
+        elif action == 'suspend':
+            conn.execute('UPDATE users SET is_banned = 1 WHERE phone = ?', (phone,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"User account with phone '{phone}' has been suspended."}
+        elif action == 'reactivate':
+            conn.execute('UPDATE users SET is_banned = 0 WHERE phone = ?', (phone,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"User account with phone '{phone}' has been reactivated."}
+        elif action == 'delete':
+            conn.execute('DELETE FROM users WHERE phone = ?', (phone,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"User account with phone '{phone}' has been deleted."}
+        else:
+            conn.close()
+            return {"status": "error", "message": f"Unknown user control action '{action}'."}
+
+    elif action_type == 'book_control':
+        if session.get('role') != 'super_admin' and (session.get('role') != 'admin' or 'manage_books' not in session.get('permissions', [])):
+            conn.close()
+            return {"status": "error", "message": "Unauthorized."}
+            
+        action = data.get('action')
+        book_id = data.get('book_id')
+        
+        if not action or not book_id:
+            conn.close()
+            return {"status": "error", "message": "Action and Book ID are required."}
+            
+        book = conn.execute('SELECT * FROM books WHERE id = ?', (book_id,)).fetchone()
+        if not book:
+            conn.close()
+            return {"status": "error", "message": f"Book with ID '{book_id}' not found."}
+            
+        if action == 'edit':
+            title = data.get('title', book['title'])
+            author = data.get('author', book['author'])
+            conn.execute('UPDATE books SET title = ?, author = ? WHERE id = ?', (title, author, book_id))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Book ID '{book_id}' updated successfully."}
+        elif action == 'remove':
+            conn.execute('UPDATE books SET is_banned = 1 WHERE id = ?', (book_id,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Book ID '{book_id}' has been flagged as inappropriate/removed."}
+        elif action == 'restore':
+            conn.execute('UPDATE books SET is_banned = 0 WHERE id = ?', (book_id,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Book ID '{book_id}' has been restored."}
+        else:
+            conn.close()
+            return {"status": "error", "message": f"Unknown book control action '{action}'."}
+
+    elif action_type == 'transaction_control':
+        if session.get('role') != 'super_admin' and (session.get('role') != 'admin' or 'manage_transactions' not in session.get('permissions', [])):
+            conn.close()
+            return {"status": "error", "message": "Unauthorized."}
+            
+        action = data.get('action')
+        tx_id = data.get('transaction_id')
+        
+        if not action or not tx_id:
+            conn.close()
+            return {"status": "error", "message": "Action and Transaction ID are required."}
+            
+        tx = conn.execute('SELECT * FROM transactions WHERE id = ?', (tx_id,)).fetchone()
+        if not tx:
+            conn.close()
+            return {"status": "error", "message": f"Transaction with ID '{tx_id}' not found."}
+            
+        if action == 'force_close':
+            today_str = datetime.now().strftime('%Y-%m-%d')
+            conn.execute('UPDATE transactions SET return_date = ?, fine = 0 WHERE id = ?', (today_str, tx_id))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Transaction '{tx_id}' force-closed (returned without fine)."}
+        else:
+            conn.close()
+            return {"status": "error", "message": f"Unknown transaction control action '{action}'."}
+
+    elif action_type == 'elibrary_control':
+        if session.get('role') != 'super_admin' and (session.get('role') != 'admin' or 'approve_content' not in session.get('permissions', [])):
+            conn.close()
+            return {"status": "error", "message": "Unauthorized."}
+            
+        action = data.get('action')
+        content_id = data.get('content_id')
+        
+        if not action or not content_id:
+            conn.close()
+            return {"status": "error", "message": "Action and Content ID are required."}
+            
+        content = conn.execute('SELECT * FROM digital_content WHERE id = ?', (content_id,)).fetchone()
+        if not content:
+            conn.close()
+            return {"status": "error", "message": f"Digital content with ID '{content_id}' not found."}
+            
+        if action == 'approve':
+            conn.execute('UPDATE digital_content SET status = "Approved" WHERE id = ?', (content_id,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Digital book '{content['title']}' approved successfully."}
+        elif action == 'reject':
+            reason = data.get('reason', 'Inappropriate content')
+            conn.execute('UPDATE digital_content SET status = "Rejected", rejection_reason = ? WHERE id = ?', (reason, content_id))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Digital book '{content['title']}' rejected. Reason: '{reason}'."}
+        elif action == 'feature':
+            conn.execute('UPDATE digital_content SET featured = 1 WHERE id = ?', (content_id,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Digital book '{content['title']}' featured."}
+        else:
+            conn.close()
+            return {"status": "error", "message": f"Unknown e-library control action '{action}'."}
+
+    elif action_type == 'ai_control':
+        if session.get('role') != 'super_admin':
+            conn.close()
+            return {"status": "error", "message": "Only Super Admin can control global AI configurations."}
+            
+        action = data.get('action')
+        if action == 'toggle':
+            enabled = data.get('enabled')
+            val = 'true' if enabled else 'false'
+            conn.execute("INSERT OR REPLACE INTO settings (setting_key, setting_value, school_code) VALUES ('ai_global_enabled', ?, 'GLOBAL')", (val,))
+            conn.commit()
+            conn.close()
+            status_text = "enabled" if enabled else "disabled"
+            return {"status": "success", "message": f"AI features have been {status_text} globally."}
+        else:
+            conn.close()
+            return {"status": "error", "message": "Unknown AI control action."}
+
+    elif action_type == 'billing_control':
+        if session.get('role') != 'super_admin':
+            conn.close()
+            return {"status": "error", "message": "Only Super Admin can access billing controls."}
+            
+        action = data.get('action')
+        code = data.get('code')
+        
+        if not action or not code:
+            conn.close()
+            return {"status": "error", "message": "Action and School Code are required."}
+            
+        school = conn.execute('SELECT * FROM schools WHERE school_code = ?', (code,)).fetchone()
+        if not school:
+            conn.close()
+            return {"status": "error", "message": f"School with code '{code}' not found."}
+            
+        if action == 'change_plan':
+            plan = data.get('plan', 'FREE').upper()
+            from permissions import PLANS
+            if plan not in PLANS:
+                conn.close()
+                return {"status": "error", "message": f"Invalid plan: {plan}"}
+                
+            limits = PLANS[plan]['limits']
+            conn.execute('''
+                UPDATE schools 
+                SET activePlan = ?, studentLimit = ?, librarianLimit = ?, adminLimit = ?
+                WHERE school_code = ?
+            ''', (plan, limits['studentLimit'], limits['librarianLimit'], limits['adminLimit'], code))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Subscription plan for school '{code}' upgraded to {plan} successfully."}
+        else:
+            conn.close()
+            return {"status": "error", "message": "Unknown billing control action."}
+
+    elif action_type == 'notification_control':
+        if session.get('role') != 'super_admin':
+            conn.close()
+            return {"status": "error", "message": "Only Super Admin can send platform notifications."}
+            
+        message = data.get('message')
+        scope = data.get('scope', 'global')
+        
+        if not message:
+            conn.close()
+            return {"status": "error", "message": "Notification message is required."}
+            
+        created = datetime.now().strftime('%Y-%m-%d %H:%M')
+        if scope == 'global':
+            users = conn.execute('SELECT id FROM users').fetchall()
+            for u in users:
+                conn.execute('INSERT INTO notifications (user_id, message, type, created_at, school_code) VALUES (?, ?, "announcement", ?, "GLOBAL")', (u['id'], message, created))
+        else:
+            users = conn.execute('SELECT id FROM users WHERE school_code = ?', (scope,)).fetchall()
+            for u in users:
+                conn.execute('INSERT INTO notifications (user_id, message, type, created_at, school_code) VALUES (?, ?, "announcement", ?, ?)', (u['id'], message, created, scope))
+                
+        conn.commit()
+        conn.close()
+        return {"status": "success", "message": f"Notification successfully broadcasted to scope: '{scope}'."}
+
+    elif action_type == 'system_control':
+        if session.get('role') != 'super_admin':
+            conn.close()
+            return {"status": "error", "message": "Only Super Admin can change system settings."}
+            
+        platform_name = data.get('platform_name')
+        if platform_name:
+            conn.execute("INSERT OR REPLACE INTO settings (setting_key, setting_value, school_code) VALUES ('platform_name', ?, 'GLOBAL')", (platform_name,))
+            conn.commit()
+            conn.close()
+            return {"status": "success", "message": f"Platform name updated to '{platform_name}'."}
+        else:
+            conn.close()
+            return {"status": "error", "message": "Platform name must be provided."}
+
     conn.close()
     return {"status": "error", "message": "Unknown action type."}
-    return {"status": "error", "message": "Action not recognized."}
+
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    role = session.get('role')
+    # Require AI chat permission unless super admin
+    if role != 'super_admin':
+        conn = get_db_connection()
+        try:
+            from permissions import get_school_permissions
+            perms = get_school_permissions(conn, session.get('school_code'))
+            if not perms.get('canUseAIChat'):
+                return jsonify({"error": "AI Chat is not enabled for your school subscription."}), 403
+        finally:
+            conn.close()
+
+    data = request.json
+    messages = data.get('messages', [])
+    
+    openrouter_key = os.environ.get('OPENROUTER_API_KEY')
+    if not openrouter_key:
+        return jsonify({"error": "OpenRouter API Key not configured on server."}), 500
+        
+    try:
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            json={
+                "model": "cohere/north-mini-code:free",
+                "messages": messages
+            },
+            headers={
+                "Authorization": f"Bearer {openrouter_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://librika.in",
+                "X-Title": "Librika Chatbot"
+            },
+            timeout=15
+        )
+        if response.status_code != 200:
+            return jsonify({"error": f"OpenRouter returned error: {response.text}"}), 500
+            
+        res_data = response.json()
+        reply = res_data['choices'][0]['message']['content']
+        return jsonify({"reply": reply})
+    except Exception as e:
+        return jsonify({"error": f"Failed to connect to AI: {str(e)}"}), 500
 
 @app.route('/super-admin/approve/<int:req_id>')
 def approve_request(req_id):

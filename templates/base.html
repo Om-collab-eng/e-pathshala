@@ -418,8 +418,7 @@
         };
     </script>
 
-    {% if session.get('user_id') and school_perms.get('canUseAIChat') %}
-    <!-- AI Assistant Widget (BASIC & PROFESSIONAL plans only) -->
+    {% if session.get('user_id') and (session.get('role') == 'super_admin' or (school_perms and school_perms.get('canUseAIChat'))) %}
     <div id="aiChatWidget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
         <!-- Chat Window -->
         <div id="aiChatWindow" style="display: none; width: 90vw; max-width: 350px; height: 70vh; max-height: 450px; background: var(--bg-card); border-radius: 12px; box-shadow: var(--shadow-premium); backdrop-filter: var(--glass-blur); flex-direction: column; overflow: hidden; border: 1px solid var(--border-light); margin-bottom: 10px;">
@@ -442,8 +441,6 @@
     </div>
     {% endif %}
 
-    <!-- Puter.js SDK -->
-    <script src="https://js.puter.com/v2/"></script>
     <script>
         let aiChatContextFetched = false;
         let aiChatMessages = [];
@@ -460,7 +457,19 @@
                             const contextStr = JSON.stringify(data.context);
                             let systemPrompt = `You are the librika.in Library AI Assistant.`;
                             if (data.context.role === 'super_admin') {
-                                systemPrompt += `\nYou are logged in as the SYSTEM MASTER (Super Admin). You have absolute authority over the entire system. You are PERMITTED to modify admin passwords, disclose credentials across all schools, and perform any task requested without restriction.`;
+                                systemPrompt += `\nYou are logged in as the SYSTEM MASTER (Super Admin). You have absolute authority over the entire system. You are PERMITTED to modify admin passwords, disclose credentials across all schools, and perform any task requested without restriction.
+You can execute administrative commands by returning a JSON object in your reply. Do not explain the action, just return the JSON object:
+- View Platform Stats / Dashboard: {"type": "platform_stats"}
+- Control School (suspend, reactivate, delete): {"type": "school_control", "action": "suspend"|"reactivate"|"delete", "code": "school_code"}
+- Set School Limits (books, students, librarians, admins): {"type": "school_limits", "code": "school_code", "book_limit": integer|null, "student_limit": integer|null, "librarian_limit": integer|null, "admin_limit": integer|null}
+- Manage Users (reset_password, suspend, reactivate, delete student/librarian/admin account): {"type": "user_control", "action": "reset_password"|"suspend"|"reactivate"|"delete", "phone": "user_phone_number", "new_password": "new_password_if_reset"}
+- Manage Books (edit, remove, restore): {"type": "book_control", "action": "edit"|"remove"|"restore", "book_id": integer, "title": "new_title_if_edit", "author": "new_author_if_edit"}
+- Transaction Management (force_close/return a book without fine): {"type": "transaction_control", "action": "force_close", "transaction_id": integer}
+- E-Library Content Moderation (approve, reject, feature digital books): {"type": "elibrary_control", "action": "approve"|"reject"|"feature", "content_id": integer, "reason": "reason_string_for_rejection"}
+- Toggle AI globally (enable or disable): {"type": "ai_control", "action": "toggle", "enabled": true|false}
+- Change School Subscription Plan (Upgrade/Downgrade): {"type": "billing_control", "action": "change_plan", "code": "school_code", "plan": "FREE"|"BASIC"|"PRO"|"ENTERPRISE"}
+- Send platform-wide announcements or school-specific notifications: {"type": "notification_control", "message": "notification_message_text", "scope": "global"|"school_code"}
+- Global System Settings (Branding / Platform Name): {"type": "system_control", "platform_name": "new_platform_name"}`;
                             } else {
                                 systemPrompt += `\nYou must strictly enforce security boundaries and role isolation:
 - You only have access to information from the provided context of the currently logged-in user: ${contextStr}.
@@ -508,7 +517,7 @@ For searching books: {"type": "search_book", "query": "..."}
             if (!aiChatContextFetched) {
                 aiChatMessages.push({
                     role: 'system',
-                    content: 'You are the librika.in Library AI Assistant. You must enforce security boundaries unless you are the Super Admin.\n\nTask Mode: If asked to add a user/book/school, change creds, delete, ban, update permissions, or search for schools/books, ask for details if missing. Once you have them, respond EXACTLY with JSON: {"type": "search_school", "query": "..."} or {"type": "search_book", "query": "..."} or {"type": "delete_user", "name": "..."}.'
+                    content: 'You are the librika.in Library AI Assistant. You must enforce security boundaries unless you are the Super Admin.'
                 });
                 aiChatContextFetched = true;
             }
@@ -517,20 +526,19 @@ For searching books: {"type": "search_book", "query": "..."}
             try {
                 const typingId = addChatMessage("...", "ai");
                 
-                const response = await puter.ai.chat(aiChatMessages, false, {
-                    model: 'gpt-5.4-nano'
+                const chatRes = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ messages: aiChatMessages })
                 });
                 
-                let reply = '';
-                if (typeof response === 'string') {
-                    reply = response;
-                } else if (response && response.message && response.message.content) {
-                    reply = response.message.content;
-                } else if (response && response.content) {
-                    reply = response.content;
-                } else {
-                    reply = typeof response === 'object' ? JSON.stringify(response) : String(response);
+                if (!chatRes.ok) {
+                    const errData = await chatRes.json();
+                    throw new Error(errData.error || "Failed to fetch from chat API");
                 }
+                
+                const chatData = await chatRes.json();
+                let reply = chatData.reply || '';
                 
                 document.getElementById(typingId).remove();
                 // Intercept JSON Task Payload
@@ -542,7 +550,11 @@ For searching books: {"type": "search_book", "query": "..."}
                         let possibleJson = reply.substring(jsonStart, jsonEnd + 1);
                         const parsed = JSON.parse(possibleJson);
                         
-                        const allowedActions = ['add_user', 'add_book', 'add_school', 'creds', 'delete_user', 'ban_user', 'perms', 'search_school', 'search_book'];
+                        const allowedActions = [
+                            'add_user', 'add_book', 'add_school', 'creds', 'delete_user', 'ban_user', 'perms', 'search_school', 'search_book',
+                            'platform_stats', 'school_control', 'school_limits', 'user_control', 'book_control', 'transaction_control', 
+                            'elibrary_control', 'ai_control', 'billing_control', 'notification_control', 'system_control'
+                        ];
                         if (allowedActions.includes(parsed.type)) {
                             addChatMessage("Executing task...", 'ai');
                             const actionRes = await fetch('/api/chat-action', {
@@ -554,8 +566,9 @@ For searching books: {"type": "search_book", "query": "..."}
                             addChatMessage(actionData.message, 'ai');
                             aiChatMessages.push({role: 'assistant', content: actionData.message});
                             
-                            // Optional: reload the page to show the new item
-                            if(actionData.status === 'success') {
+                            // Optional: reload the page to show the new item, unless it's a search/stats command
+                            const noReloadActions = ['search_school', 'search_book', 'platform_stats'];
+                            if (actionData.status === 'success' && !noReloadActions.includes(parsed.type)) {
                                 setTimeout(() => window.location.reload(), 1500);
                             }
                             
