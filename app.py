@@ -2716,21 +2716,26 @@ def api_chat():
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
     
+    data = request.json or {}
+    messages = data.get('messages', [])
+    model = data.get('model', 'cohere/north-mini-code:free')
+    
     role = session.get('role')
-    # Require AI chat permission unless super admin
+    # Require AI permission unless super admin
     if role != 'super_admin':
         conn = get_db_connection()
         try:
             from permissions import get_school_permissions
             perms = get_school_permissions(conn, session.get('school_code'))
-            if not perms.get('canUseAIChat'):
-                return jsonify({"error": "AI Chat is not enabled for your school subscription."}), 403
+            if model == 'meta-llama/llama-3.2-11b-vision-instruct:free':
+                if not perms.get('canUseAIScanner'):
+                    return jsonify({"error": "AI Scanner is not enabled for your school subscription."}), 403
+            else:
+                if not perms.get('canUseAIChat'):
+                    return jsonify({"error": "AI Chat is not enabled for your school subscription."}), 403
         finally:
             conn.close()
 
-    data = request.json
-    messages = data.get('messages', [])
-    
     openrouter_key = os.environ.get('OPENROUTER_API_KEY')
     if not openrouter_key:
         return jsonify({"error": "OpenRouter API Key not configured on server."}), 500
@@ -2739,7 +2744,7 @@ def api_chat():
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             json={
-                "model": "cohere/north-mini-code:free",
+                "model": model,
                 "messages": messages
             },
             headers={
@@ -2748,7 +2753,7 @@ def api_chat():
                 "HTTP-Referer": "https://librika.in",
                 "X-Title": "Librika Chatbot"
             },
-            timeout=15
+            timeout=25
         )
         if response.status_code != 200:
             return jsonify({"error": f"OpenRouter returned error: {response.text}"}), 500
