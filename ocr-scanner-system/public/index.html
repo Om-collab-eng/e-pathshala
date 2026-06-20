@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBPS Library - OCR Book Scanner System</title>
+    <!-- Outfit & Plus Jakarta Sans Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <span class="logo-icon">📚</span>
+                <h2>VBPS Library</h2>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" onclick="showTab('dashboard')">
+                    <span class="icon">📊</span> Dashboard
+                </button>
+                <button class="nav-item" onclick="showTab('scanner')">
+                    <span class="icon">📷</span> Scan New Book
+                </button>
+                <button class="nav-item" onclick="showTab('inventory')">
+                    <span class="icon">🔎</span> Inventory Search
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Panel -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>OCR Scanner & Metadata System</h1>
+                <div class="system-status">
+                    <span class="status-dot"></span> System Online
+                </div>
+            </header>
+
+            <!-- Dashboard Tab -->
+            <section id="tab-dashboard" class="tab-pane active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-details">
+                            <h3>Total Books</h3>
+                            <p id="stat-total-books">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: var(--accent-success); background: rgba(16, 185, 129, 0.15);">✅</div>
+                        <div class="stat-details">
+                            <h3>Successful Scans</h3>
+                            <p id="stat-success-scans">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: var(--accent-error); background: rgba(244, 63, 94, 0.15);">❌</div>
+                        <div class="stat-details">
+                            <h3>Failed Scans</h3>
+                            <p id="stat-failed-scans">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: var(--accent-secondary); background: rgba(14, 165, 233, 0.15);">⚡</div>
+                        <div class="stat-details">
+                            <h3>Success Rate</h3>
+                            <p id="stat-success-rate">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-flex-row">
+                    <!-- Recently Added Books -->
+                    <div class="flex-card recent-books-card">
+                        <h2>Recently Added Books</h2>
+                        <div class="recent-list-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Book ID</th>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Category</th>
+                                        <th>Added Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-books-list">
+                                    <tr>
+                                        <td colspan="5" class="table-empty">No books added yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scanner Tab -->
+            <section id="tab-scanner" class="tab-pane">
+                <div class="scanner-layout">
+                    <!-- Scanning Pane -->
+                    <div class="scan-pane-card">
+                        <h2>Upload Cover Page</h2>
+                        <p class="section-desc">Upload, drag-and-drop, or use your camera to scan a book cover.</p>
+
+                        <!-- Dropzone Area -->
+                        <div class="upload-dropzone" id="dropzone" onclick="triggerFileInput()">
+                            <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                            <div class="dropzone-inner">
+                                <span class="dropzone-icon">📥</span>
+                                <p class="dropzone-text">Drag & Drop Cover Image here</p>
+                                <span class="dropzone-or">or</span>
+                                <button type="button" class="btn-primary">Browse Files</button>
+                                <p class="file-info-limit">Supports JPG, PNG, WEBP (Max 5MB)</p>
+                            </div>
+                        </div>
+
+                        <!-- Camera Action Bar -->
+                        <div class="camera-controls">
+                            <button type="button" class="btn-alt" onclick="openCamera()"><span class="icon">📷</span> Capture via Web Camera</button>
+                        </div>
+
+                        <!-- Web Camera Stream overlay modal -->
+                        <div class="camera-modal" id="camera-modal">
+                            <div class="camera-modal-content">
+                                <div class="camera-modal-header">
+                                    <h3>Capture Cover Image</h3>
+                                    <button class="btn-close" onclick="closeCamera()">&times;</button>
+                                </div>
+                                <video id="video-feed" autoplay playsinline></video>
+                                <canvas id="capture-canvas" style="display: none;"></canvas>
+                                <div class="camera-modal-actions">
+                                    <button type="button" class="btn-primary" onclick="captureImage()"><span class="icon">📸</span> Take Snapshot</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Processing overlay loading indicator -->
+                        <div class="processing-overlay" id="loading-overlay">
+                            <div class="spinner"></div>
+                            <h3 id="loading-step-title">Uploading cover image...</h3>
+                            <p id="loading-step-desc">This may take a few seconds.</p>
+                        </div>
+                    </div>
+
+                    <!-- Metadata Verification Pane -->
+                    <div class="verification-pane-card" id="verification-pane" style="display: none;">
+                        <h2>Verify Extracted Details</h2>
+                        
+                        <!-- Low Confidence Alert Banner -->
+                        <div class="alert-banner warning-banner" id="low-confidence-alert" style="display: none;">
+                            <span class="alert-icon">⚠️</span>
+                            <div class="alert-text">
+                                <strong>Low OCR Confidence (<span id="alert-confidence-val">0</span>%)</strong>
+                                <p>Extracted text might contain inaccuracies. Please verify and manually correct the details below, or retake the cover image.</p>
+                            </div>
+                        </div>
+
+                        <div class="verification-grid">
+                            <!-- Image preview -->
+                            <div class="book-preview-column">
+                                <div class="cover-image-preview-wrapper">
+                                    <img id="scanned-image-preview" src="" alt="Scanned Book Cover">
+                                </div>
+                                <div class="raw-ocr-textarea-wrapper">
+                                    <label>Raw Extracted OCR Text</label>
+                                    <textarea id="raw-ocr-text" readonly></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Correction Form -->
+                            <div class="book-details-column">
+                                <form id="verify-form" onsubmit="saveVerifiedBook(event)">
+                                    <input type="hidden" id="metadata-image-path">
+                                    
+                                    <div class="form-group">
+                                        <label for="form-title">Book Title <span class="required">*</span></label>
+                                        <input type="text" id="form-title" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="form-author">Author(s)</label>
+                                        <input type="text" id="form-author">
+                                    </div>
+                                    <div class="form-group-row">
+                                        <div class="form-group">
+                                            <label for="form-publisher">Publisher</label>
+                                            <input type="text" id="form-publisher">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="form-isbn">ISBN Code</label>
+                                            <input type="text" id="form-isbn">
+                                        </div>
+                                    </div>
+                                    <div class="form-group-row">
+                                        <div class="form-group">
+                                            <label for="form-category">Category <span class="required">*</span></label>
+                                            <select id="form-category" required>
+                                                <option value="Science">Science</option>
+                                                <option value="Mathematics">Mathematics</option>
+                                                <option value="English">English</option>
+                                                <option value="Hindi">Hindi</option>
+                                                <option value="Sanskrit">Sanskrit</option>
+                                                <option value="Social Science">Social Science</option>
+                                                <option value="Computer Science">Computer Science</option>
+                                                <option value="Fiction">Fiction</option>
+                                                <option value="Non Fiction">Non Fiction</option>
+                                                <option value="Biography">Biography</option>
+                                                <option value="Reference">Reference</option>
+                                                <option value="Exam Preparation">Exam Preparation</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="form-subject">Subject</label>
+                                            <input type="text" id="form-subject">
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" class="btn-alt" onclick="resetScanner()">Discard & Retake</button>
+                                        <button type="submit" class="btn-neon">Save to Library Database</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory Tab -->
+            <section id="tab-inventory" class="tab-pane">
+                <div class="search-panel-card">
+                    <h2>Search Books Database</h2>
+                    
+                    <div class="search-bar-row">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔎</span>
+                            <input type="text" id="search-input" placeholder="Search by title, author, or ISBN..." onkeyup="executeSearch()">
+                        </div>
+                        <div class="search-dropdown-wrapper">
+                            <select id="search-category" onchange="executeSearch()">
+                                <option value="">All Categories</option>
+                                <option value="Science">Science</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="Sanskrit">Sanskrit</option>
+                                <option value="Social Science">Social Science</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Fiction">Fiction</option>
+                                <option value="Non Fiction">Non Fiction</option>
+                                <option value="Biography">Biography</option>
+                                <option value="Reference">Reference</option>
+                                <option value="Exam Preparation">Exam Preparation</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn-primary" onclick="executeSearch()">Filter</button>
+                    </div>
+
+                    <div class="inventory-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Book ID</th>
+                                    <th>Cover</th>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Publisher</th>
+                                    <th>ISBN</th>
+                                    <th>Category</th>
+                                    <th>Subject</th>
+                                    <th>Added Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-list">
+                                <tr>
+                                    <td colspan="9" class="table-empty">Loading inventory...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Alert / Toast Popup Notifications -->
+    <div class="toast" id="toast-notification">
+        <span id="toast-message"></span>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

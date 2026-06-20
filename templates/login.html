@@ -26,12 +26,192 @@
     color: var(--accent-primary);
     border-color: var(--accent-primary);
 }
+
+/* Demo Profile Selector Custom Styling */
+.demo-profile-card {
+    flex: 1;
+    min-width: 280px;
+    max-width: 320px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 2rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.demo-card-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    opacity: 0.5;
+}
+
+.demo-profile-card:hover {
+    transform: translateY(-8px);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.demo-profile-card.student-card:hover {
+    border-color: rgba(14, 165, 233, 0.4);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(14, 165, 233, 0.15);
+}
+
+.demo-profile-card.librarian-card:hover {
+    border-color: rgba(92, 60, 243, 0.4);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(92, 60, 243, 0.15);
+}
+
+.demo-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    transition: transform 0.4s ease;
+}
+
+.demo-profile-card:hover .demo-avatar {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.demo-profile-card h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-high);
+    margin-bottom: 0.5rem;
+}
+
+.demo-profile-card .badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.demo-profile-card p {
+    color: var(--text-mid);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.demo-enter-btn {
+    width: 100%;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.demo-profile-card:hover .demo-enter-btn {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.exit-demo-link {
+    color: var(--text-low);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.exit-demo-link:hover {
+    color: var(--accent-error) !important;
+    transform: translateX(-4px);
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="login-container">
-    <div class="auth-card">
+    <div class="auth-card" {% if is_demo %}style="max-width: 720px; padding: 3rem;"{% endif %}>
+        {% if is_demo %}
+        <!-- Beautiful Demo Profile Selector -->
+        <h1 style="font-family: 'Outfit', sans-serif; font-size: 2rem; margin-bottom: 0.5rem; text-align: center; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">Demo Sandbox</h1>
+        <p style="color: var(--text-mid); text-align: center; margin-bottom: 2.5rem; font-size: 0.95rem;">Select your profile below to enter the library system with all Professional features enabled.</p>
+        
+        {% if error %}
+        <div style="background: rgba(244, 63, 94, 0.1); color: var(--accent-error); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem; text-align: center; border: 1px solid rgba(244, 63, 94, 0.2);">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 2rem; justify-content: center;">
+            <!-- Student Demo Card -->
+            <div class="demo-profile-card student-card" onclick="loginDemoUser('555001', 'demo123', 'DEMO')">
+                <div class="demo-card-glow" style="background: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15), transparent 70%);"></div>
+                <div class="demo-card-content">
+                    <div class="demo-avatar" style="background: rgba(14, 165, 233, 0.1); color: var(--accent-secondary);">👨‍🎓</div>
+                    <h3>Student Demo</h3>
+                    <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: var(--accent-secondary);">Student Portal</span>
+                    <p>Browse & search the catalog, view digital books, write reviews, request reservations, track progress, and chat with AI Librarian.</p>
+                </div>
+                <button class="demo-enter-btn" style="background: var(--accent-secondary); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">Enter Student Portal &rarr;</button>
+            </div>
+
+            <!-- Librarian Demo Card -->
+            <div class="demo-profile-card librarian-card" onclick="loginDemoUser('123', 'admin123', 'DEMO')">
+                <div class="demo-card-glow" style="background: radial-gradient(circle at 50% 0%, rgba(92, 60, 243, 0.15), transparent 70%);"></div>
+                <div class="demo-card-content">
+                    <div class="demo-avatar" style="background: rgba(92, 60, 243, 0.1); color: #818cf8;">🔑</div>
+                    <h3>Librarian Demo</h3>
+                    <span class="badge" style="background: rgba(92, 60, 243, 0.15); color: #818cf8;">Librarian / Admin</span>
+                    <p>Full administration access. Issue & return books, manage inventory, auto-catalog books with AI scan, view rich analytics, and configure rules.</p>
+                </div>
+                <button class="demo-enter-btn" style="background: var(--accent-primary); box-shadow: 0 4px 12px rgba(92, 60, 243, 0.3);">Enter Librarian Panel &rarr;</button>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="/exit-demo" class="exit-demo-link">
+                <span>&larr; Exit Demo Sandbox</span>
+            </a>
+        </div>
+
+        <!-- Hidden Form for Login Submission -->
+        <form method="POST" id="loginForm" action="/login" style="display: none;">
+            <input type="hidden" name="login_type" value="school">
+            <input type="text" id="school_code" name="school_code" value="DEMO">
+            <input type="text" id="username" name="username">
+            <input type="password" id="password" name="password">
+            <button type="submit" id="loginBtn"></button>
+        </form>
+        {% else %}
+        <!-- Default login card content (non-demo) -->
         <h1>Secure Portal</h1>
         <p>Choose your portal type and enter credentials</p>
         
@@ -56,12 +236,6 @@
                 <input type="text" id="school_code" name="school_code" placeholder="Library Code (e.g. DEMO)" required>
             </div>
 
-            {% if is_demo %}
-            <div style="text-align: center; margin-bottom: 1.5rem;" id="demoBadge">
-                <span style="font-size: 0.75rem; background: var(--accent-primary); color: white; padding: 4px 12px; border-radius: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);">Demo Sandbox Active</span>
-            </div>
-            {% endif %}
-
             <div class="input-group">
                 <label for="username" id="lblUsername">Phone Number</label>
                 <input type="text" id="username" name="username" placeholder="Phone No." required>
@@ -75,11 +249,9 @@
             <button type="submit" class="btn-neon" id="loginBtn">Authenticate & Enter</button>
             
             <div style="margin-top: 1.5rem; text-align: center; display: flex; flex-direction: column; gap: 10px;">
-                {% if not is_demo %}
                 <button type="button" class="btn-alt" id="demoModeBtn" onclick="window.location.href='/demo-mode'" style="width: 100%; border-color: var(--accent-warning); color: var(--accent-warning);">
                     Enter Demo Sandbox
                 </button>
-                {% endif %}
             </div>
             
             <!-- Registration & Helper links -->
@@ -89,15 +261,6 @@
                 <a href="/" style="color: var(--text-mid); text-decoration: none; font-size: 0.9rem; margin-top: 8px;">&larr; Return to Home Page</a>
             </div>
         </form>
-
-        {% if is_demo %}
-        <div id="savedAccountsSection" class="saved-accounts" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <p style="font-size: 0.8rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px; margin: 0;">Saved Profiles</p>
-                <button onclick="clearSaved()" style="background: none; border: none; color: var(--accent-error); font-size: 0.7rem; cursor: pointer;">Clear All</button>
-            </div>
-            <div id="accountsList"></div>
-        </div>
         {% endif %}
     </div>
 </div>
@@ -105,6 +268,29 @@
 
 {% block scripts %}
 <script>
+    {% if is_demo %}
+    localStorage.setItem('demo_active', 'true');
+    
+    function loginDemoUser(phone, password, schoolCode) {
+        const form = document.getElementById('loginForm');
+        document.getElementById('username').value = phone;
+        document.getElementById('password').value = password;
+        document.getElementById('school_code').value = schoolCode;
+        
+        // Save to local storage saved accounts
+        let raw = JSON.parse(localStorage.getItem('saved_accounts') || '[]');
+        let accounts = raw.filter(a => a.id !== phone);
+        accounts.push({
+            id: phone,
+            sc: schoolCode,
+            display: phone === '123' ? 'Admin Demo' : 'Student Demo',
+            p_data: btoa(password)
+        });
+        localStorage.setItem('saved_accounts', JSON.stringify(accounts));
+        
+        form.submit();
+    }
+    {% else %}
     function switchTab(type) {
         const tabSchool = document.getElementById('tabSchool');
         const tabPersonal = document.getElementById('tabPersonal');
@@ -114,7 +300,6 @@
         const lnkRegisterSchool = document.getElementById('lnkRegisterSchool');
         const lnkRegisterPersonal = document.getElementById('lnkRegisterPersonal');
         const demoModeBtn = document.getElementById('demoModeBtn');
-        const demoBadge = document.getElementById('demoBadge');
         
         loginTypeInput.value = type;
         
@@ -122,137 +307,37 @@
             tabPersonal.classList.add('active');
             tabSchool.classList.remove('active');
             
-            // Hide school code input group and disable required attribute
             schoolCodeGroup.style.display = 'none';
             schoolCodeInput.required = false;
             schoolCodeInput.value = '';
             
-            // Update registration links
             lnkRegisterSchool.style.display = 'none';
             lnkRegisterPersonal.style.display = 'block';
             
-            // Hide demo mode since demo sandbox is for school library
             if(demoModeBtn) demoModeBtn.style.display = 'none';
-            if(demoBadge) demoBadge.style.display = 'none';
-            
-            // Hide saved accounts in demo for personal portal
-            const savedSec = document.getElementById('savedAccountsSection');
-            if(savedSec) savedSec.style.display = 'none';
         } else {
             tabSchool.classList.add('active');
             tabPersonal.classList.remove('active');
             
-            // Show school code input group
             schoolCodeGroup.style.display = 'block';
             schoolCodeInput.required = true;
             
-            // Update registration links
             lnkRegisterSchool.style.display = 'block';
             lnkRegisterPersonal.style.display = 'none';
             
             if(demoModeBtn) demoModeBtn.style.display = 'block';
-            if(demoBadge) demoBadge.style.display = 'block';
-            
-            // Show saved accounts back if demo mode is active
-            const savedSec = document.getElementById('savedAccountsSection');
-            if(savedSec && savedSec.hasChildNodes() && localStorage.getItem('saved_accounts')) {
-                savedSec.style.display = 'block';
-            }
         }
     }
 
-    // Auto switch based on type in URL
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('portal') === 'personal') {
         switchTab('personal');
     }
 
-    function clearSaved() {
-        if(confirm("Clear all saved profiles?")) {
-            localStorage.removeItem('saved_accounts');
-            location.reload();
-        }
-    }
-
-    // Saved Accounts Logic
-    const accountsList = document.getElementById('accountsList');
-    const savedSection = document.getElementById('savedAccountsSection');
-    const loginForm = document.getElementById('loginForm');
-    
-    let raw = JSON.parse(localStorage.getItem('saved_accounts') || '[]');
-    let accounts = raw.filter(a => a.id && a.sc); 
-
-    // Clear Demo State if returning from logout
     if (urlParams.has('clear_demo')) {
         localStorage.removeItem('demo_active');
         window.history.replaceState({}, document.title, window.location.pathname);
     }
-
-    // Inject Demo Accounts
-    {% if is_demo %}
-    localStorage.setItem('demo_active', 'true');
-    if (!accounts.some(a => a.id === '123' && a.sc === 'DEMO')) {
-        accounts.unshift({ id: '123', sc: 'DEMO', display: 'Admin Demo', p_data: btoa('admin123') });
-    }
-    if (!accounts.some(a => a.id === '555001' && a.sc === 'DEMO')) {
-        accounts.unshift({ id: '555001', sc: 'DEMO', display: 'Student Demo', p_data: btoa('demo123') });
-    }
-    {% endif %}
-
-    {% if is_demo %}
-    if (accounts.length > 0 && document.getElementById('login_type').value === 'school') {
-        savedSection.style.display = 'block';
-        accountsList.innerHTML = '';
-        accounts.forEach(acc => {
-            const chip = document.createElement('div');
-            chip.className = 'saved-account-chip';
-            chip.innerHTML = `
-                <div style="width: 32px; height: 32px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: white;">
-                    ${acc.display[0].toUpperCase()}
-                </div>
-                <div style="flex: 1;">
-                    <div style="font-size: 0.9rem; font-weight: 600;">${acc.display}</div>
-                    <div style="font-size: 0.7rem; color: var(--text-low);">${acc.sc} | ${acc.id}</div>
-                </div>
-                <div style="font-size: 1rem;">⚡</div>
-            `;
-            if (acc.sc === 'DEMO') {
-                chip.style.animation = 'glow 2s infinite alternate';
-                chip.style.borderColor = 'var(--accent-primary)';
-            }
-            
-            chip.onclick = () => {
-                document.getElementById('username').value = acc.id;
-                document.getElementById('school_code').value = acc.sc;
-                if (acc.p_data) {
-                    document.getElementById('password').value = atob(acc.p_data);
-                    document.getElementById('loginBtn').innerText = "⚡ Authenticating...";
-                    setTimeout(() => loginForm.submit(), 300);
-                } else {
-                    document.getElementById('password').focus();
-                }
-            };
-            accountsList.appendChild(chip);
-        });
-    }
-
-    loginForm.addEventListener('submit', (e) => {
-        const userVal = document.getElementById('username').value;
-        const passVal = document.getElementById('password').value;
-        const schoolVal = document.getElementById('school_code').value.toUpperCase();
-        
-        if (userVal.toLowerCase() === 'superadmin') return; 
-
-        let filtered = accounts.filter(a => a.id !== userVal);
-        filtered.push({ 
-            id: userVal,
-            sc: schoolVal,
-            display: userVal, 
-            p_data: btoa(passVal) 
-        });
-        localStorage.setItem('saved_accounts', JSON.stringify(filtered));
-    });
-    {% else %}
     localStorage.removeItem('demo_active');
     {% endif %}
 </script>

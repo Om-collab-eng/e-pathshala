@@ -206,12 +206,14 @@ from permissions import get_school_plan, get_school_permissions, get_school_limi
 
 @app.context_processor
 def inject_permissions():
-    if session.get('school_code') and session.get('school_code') != 'APP':
+    is_demo = session.get('is_demo')
+    if is_demo or (session.get('school_code') and session.get('school_code') != 'APP'):
         conn = get_db_connection()
         try:
-            plan = get_school_plan(conn, session.get('school_code'))
-            perms = get_school_permissions(conn, session.get('school_code'))
-            limits = get_school_limits(conn, session.get('school_code'))
+            school_code = session.get('school_code') or 'DEMO'
+            plan = get_school_plan(conn, school_code)
+            perms = get_school_permissions(conn, school_code)
+            limits = get_school_limits(conn, school_code)
             return dict(school_plan=plan, school_perms=perms, school_limits=limits)
         except Exception as e:
             pass
@@ -3199,6 +3201,8 @@ def personal_dashboard():
         conn.close()
 
 def check_personal_book_limit(conn, owner_id):
+    if session.get('is_demo'):
+        return True
     lib = conn.execute("SELECT plan_name FROM personal_libraries WHERE owner_id = ?", (owner_id,)).fetchone()
     plan = lib['plan_name'] if lib else 'FREE'
     

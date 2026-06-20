@@ -57,6 +57,17 @@ def process_checkout(school_code, plan_id, billing_cycle):
     return {"status": "success", "message": f"Successfully upgraded to {plan_id} Plan!"}
 
 def get_school_subscription(school_code):
+    from flask import session, has_request_context
+    if has_request_context() and session.get('is_demo'):
+        return {
+            "status": "active",
+            "plan_name": "PROFESSIONAL",
+            "plan_id": "PROFESSIONAL",
+            "max_students": PLANS["PROFESSIONAL"]["limits"]["studentLimit"],
+            "max_books": PLANS["PROFESSIONAL"]["limits"]["max_books"],
+            "current_period_end": "Never (Demo Sandbox)"
+        }
+
     conn = get_db_connection()
     school = conn.execute('SELECT activePlan, subscriptionStatus, expiryDate FROM schools WHERE school_code = ?', (school_code,)).fetchone()
     conn.close()

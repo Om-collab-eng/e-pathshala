@@ -47,6 +47,9 @@ PLANS = {
 }
 
 def get_school_plan(conn, school_code):
+    from flask import session, has_request_context
+    if has_request_context() and session.get('is_demo'):
+        return "PROFESSIONAL"
     if not school_code or school_code == 'APP':
         return "FREE"
     school = conn.execute("SELECT activePlan FROM schools WHERE school_code = ?", (school_code,)).fetchone()

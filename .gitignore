@@ -11,3 +11,6 @@ scratch/test_gemini.js
 
 # SQLite Databases
 *.db
+
+# Virtual environments
+my_mac_env/
