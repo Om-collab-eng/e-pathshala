@@ -676,6 +676,22 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     </div>
 </div>
 
+<!-- Duplicate Book Action Modal -->
+<div id="bookExistsModal" class="ld-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 12000;">
+    <div class="ld-modal-content" style="max-width: 440px; width: 90%; text-align: center; background: var(--white); box-shadow: 0 15px 40px rgba(0,0,0,0.2);">
+        <button class="ld-modal-close" onclick="closeModal('bookExistsModal')">✕</button>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+        <h3 id="existsBookTitle" class="ld-modal-title" style="margin-bottom: 0.5rem; font-family: 'Outfit'; font-weight: 800; color: var(--text);">Book Already Exists</h3>
+        <p id="existsBookMeta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1.8rem; line-height: 1.5;">This book is already cataloged in your library database.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+            <button onclick="handleExistsIssue()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--lb); color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">📖 Issue Book</button>
+            <button onclick="handleExistsAddCopy()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--lg); color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">➕ Add a Copy</button>
+            <button id="existsDeleteBtn" onclick="handleExistsDeleteClick()" class="ld-btn ld-btn-danger" style="width: 100%; justify-content: center; padding: 12px 16px; border-radius: 12px; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">🗑️ Delete Book</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Modal Helpers
     function openModal(modalId) {
@@ -852,7 +868,11 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             const meta = scanData.metadata || {};
             meta.ocrRawText = ocrText;
             
-            populateReviewScreen(meta, data.cover_url);
+            if (scanData.existing_book) {
+                showExistingBookPopup(scanData.existing_book);
+            } else {
+                populateReviewScreen(meta, data.cover_url);
+            }
 
         } catch (err) {
             console.error(err);
@@ -935,6 +955,84 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             }
         } catch (e) {
             showToast("Network connection error.", "error");
+        }
+    }
+
+    let currentExistsBook = null;
+    let deleteConfirmCount = 0;
+
+    function showExistingBookPopup(book) {
+        currentExistsBook = book;
+        deleteConfirmCount = 0;
+        
+        document.getElementById('existsBookTitle').innerText = book.title;
+        document.getElementById('existsBookMeta').innerHTML = `Author: <strong>${book.author}</strong><br>In Stock: <strong>${book.total_copies}</strong> (Available: ${book.available_copies})`;
+        
+        // Reset delete button state
+        const delBtn = document.getElementById('existsDeleteBtn');
+        delBtn.innerText = "🗑️ Delete Book";
+        delBtn.style.background = "";
+        delBtn.style.color = "";
+        
+        openModal('bookExistsModal');
+        // Stop loading spinner
+        document.getElementById('processBtn').style.display = 'inline-block';
+        document.getElementById('loadingState').style.display = 'none';
+    }
+
+    function handleExistsIssue() {
+        if (!currentExistsBook) return;
+        window.location.href = `/admin/issue?book_id=${currentExistsBook.id}`;
+    }
+
+    async function handleExistsAddCopy() {
+        if (!currentExistsBook) return;
+        try {
+            const res = await fetch(`/admin/api/add-copy/${currentExistsBook.id}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast(`Added a copy successfully! Stock increased.`, "success");
+                closeModal('bookExistsModal');
+                resetScanMode();
+            } else {
+                showToast("Error adding copy: " + data.message, "error");
+            }
+        } catch (e) {
+            showToast("Network error.", "error");
+        }
+    }
+
+    async function handleExistsDeleteClick() {
+        if (!currentExistsBook) return;
+        const delBtn = document.getElementById('existsDeleteBtn');
+        
+        if (deleteConfirmCount === 0) {
+            deleteConfirmCount = 1;
+            delBtn.innerText = "⚠️ Click again to confirm delete";
+            delBtn.style.background = "#ef4444";
+            delBtn.style.color = "white";
+            return;
+        }
+        
+        // Double confirmed!
+        try {
+            const res = await fetch(`/admin/api/delete-scanned-book/${currentExistsBook.id}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast("Book deleted successfully.", "success");
+                closeModal('bookExistsModal');
+                resetScanMode();
+            } else {
+                showToast("Error deleting: " + data.message, "error");
+            }
+        } catch (e) {
+            showToast("Network error.", "error");
         }
     }
 </script>

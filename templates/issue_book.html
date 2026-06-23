@@ -37,7 +37,7 @@
                 <select name="book_id">
                     <option value="">-- No selection --</option>
                     {% for book in books %}
-                    <option value="{{ book.id }}">{{ book.title }} ({{ book.barcode_id }})</option>
+                    <option value="{{ book.id }}" {% if selected_book_id == book.id %}selected{% endif %}>{{ book.title }} ({{ book.barcode_id }})</option>
                     {% endfor %}
                 </select>
             </div>

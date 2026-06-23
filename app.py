@@ -1789,10 +1789,11 @@ def issue_book():
             conn.commit()
             conn.close()
             return redirect('/admin')
+    selected_book_id = request.args.get('book_id', type=int)
     students = conn.execute('SELECT * FROM users WHERE role = "student" AND school_code = ?', (s_code,)).fetchall()
     books = conn.execute('SELECT * FROM books WHERE available_copies > 0 AND school_code = ?', (s_code,)).fetchall()
     conn.close()
-    return render_template('issue_book.html', students=students, books=books)
+    return render_template('issue_book.html', students=students, books=books, selected_book_id=selected_book_id)
 
 @app.route('/admin/return/<int:tx_id>')
 def return_book(tx_id):
@@ -3011,10 +3012,36 @@ JSON Schema:
                             val_metadata = json.loads(val_match.group(0))
                             book_metadata.update(val_metadata)
                             
+        s_code = session.get('school_code')
+        existing_data = None
+        if s_code:
+            conn = get_db_connection()
+            isbn = book_metadata.get('isbn')
+            title = book_metadata.get('title')
+            author = book_metadata.get('author')
+            
+            existing_book = None
+            if isbn:
+                clean_isbn = str(isbn).replace(' ', '').replace('-', '').strip()
+                existing_book = conn.execute('SELECT * FROM books WHERE (REPLACE(REPLACE(isbn, " ", ""), "-", "")) = ? AND school_code = ?', (clean_isbn, s_code)).fetchone()
+            if not existing_book and title:
+                existing_book = conn.execute('SELECT * FROM books WHERE LOWER(TRIM(title)) = ? AND school_code = ?', (str(title).lower().strip(), s_code)).fetchone()
+            
+            if existing_book:
+                existing_data = {
+                    'id': existing_book['id'],
+                    'title': existing_book['title'],
+                    'author': existing_book['author'],
+                    'total_copies': existing_book['total_copies'],
+                    'available_copies': existing_book['available_copies']
+                }
+            conn.close()
+
         return jsonify({
             "success": True,
             "metadata": book_metadata,
-            "cover_url": cover_url
+            "cover_url": cover_url,
+            "existing_book": existing_data
         })
         
     except Exception as e:
@@ -3430,6 +3457,40 @@ def api_save_scanned():
         conn.commit()
         conn.close()
         return {"status": "success", "book_id": book_id}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.route('/admin/api/add-copy/<int:book_id>', methods=['POST'])
+def api_add_copy(book_id):
+    if session.get('role') not in ['admin', 'demo_admin']: return {"status": "error", "message": "Unauthorized"}
+    s_code = session.get('school_code')
+    try:
+        conn = get_db_connection()
+        book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+        if not book:
+            conn.close()
+            return {"status": "error", "message": "Book not found"}
+        conn.execute('UPDATE books SET total_copies = total_copies + 1, available_copies = available_copies + 1 WHERE id = ?', (book_id,))
+        conn.commit()
+        conn.close()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.route('/admin/api/delete-scanned-book/<int:book_id>', methods=['POST'])
+def api_delete_scanned_book(book_id):
+    if session.get('role') not in ['admin', 'demo_admin']: return {"status": "error", "message": "Unauthorized"}
+    s_code = session.get('school_code')
+    try:
+        conn = get_db_connection()
+        book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+        if not book:
+            conn.close()
+            return {"status": "error", "message": "Book not found"}
+        conn.execute('DELETE FROM books WHERE id = ?', (book_id,))
+        conn.commit()
+        conn.close()
+        return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
