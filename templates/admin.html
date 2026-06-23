@@ -1605,7 +1605,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     document.getElementById('editPublisher').value   = b.publisher   || '';
                     document.getElementById('editIsbn').value        = b.isbn        || '';
                     document.getElementById('editGenre').value       = b.genre       || '';
-                    document.getElementById('editClass').value       = b.class_level || b.class || '';
+                    document.getElementById('editClass').value       = b['class']    || '';
                     document.getElementById('editSubject').value     = b.subject     || '';
                     document.getElementById('editLanguage').value    = b.language    || '';
                     document.getElementById('editDescription').value = b.description || '';

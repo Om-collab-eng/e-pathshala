@@ -3358,7 +3358,7 @@ def api_update_book(book_id):
                 publisher   = ?,
                 isbn        = ?,
                 genre       = ?,
-                class_level = ?,
+                "class"     = ?,
                 subject     = ?,
                 language    = ?,
                 description = ?
@@ -3376,6 +3376,7 @@ def api_update_book(book_id):
         return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         conn.close()
+
 
 @app.route('/admin/api/add-copy/<int:book_id>', methods=['POST'])
 def api_add_copy(book_id):
