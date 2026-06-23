@@ -791,7 +791,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     <div class="ld-panel-header">
                         <div>
                             <h3 class="ld-panel-title">See Books (Repository)</h3>
-                            <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Manage catalog inventory, copies, and download barcodes.</p>
+                            <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Manage catalog inventory, copies, and download barcodes. Click any row to edit or manage.</p>
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <a href="/admin/add_book" class="ld-btn">+ Add Book</a>
@@ -808,6 +808,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                         <table class="ld-table" id="booksTable">
                             <thead>
                                 <tr>
+                                    <th style="width:52px;">Cover</th>
                                     <th>Asset Details</th>
                                     <th>Barcode ID</th>
                                     <th>Allocation Progress</th>
@@ -817,7 +818,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                             </thead>
                             <tbody>
                                 {% for book in books %}
-                                <tr>
+                                <tr onclick="openBookMenu({{ book.id }}, '{{ book.title|replace("'", "\\'")|e }}', '{{ book.author|replace("'", "\\'")|e }}', '{{ book.cover_url or '' }}', '{{ book.barcode_id }}', {{ book.total_copies }}, {{ book.available_copies }})" style="cursor:pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--lp-light)'" onmouseout="this.style.background=''">
+                                    <td>
+                                        {% if book.cover_url %}
+                                            <img src="{{ book.cover_url }}" alt="cover" style="width:40px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
+                                        {% else %}
+                                            <div style="width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <div style="font-weight: 700; color: var(--text);">{{ book.title }}</div>
                                         <div style="font-size: 0.72rem; color: var(--muted); margin-top: 1px;">by {{ book.author }}</div>
@@ -840,9 +848,9 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                                             {{ book.available_copies }} of {{ book.total_copies }} left
                                         </span>
                                     </td>
-                                    <td style="text-align:right;">
+                                    <td style="text-align:right;" onclick="event.stopPropagation()">
                                         <div style="display:inline-flex; gap:6px;">
-                                            <a href="/static/barcodes/{{ book.barcode_id }}.png" download class="ld-btn-alt" style="font-size: 0.7rem; padding: 6px 12px;">Export Barcode</a>
+                                            <a href="/static/barcodes/{{ book.barcode_id }}.png" download class="ld-btn-alt" style="font-size: 0.7rem; padding: 6px 12px;">Barcode</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -855,6 +863,110 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     </div>
                 </div>
             </div>
+
+            <!-- =================== BOOK ACTION MODAL =================== -->
+            <div id="bookActionModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)closeBookMenu()">
+                <div class="ld-modal-content" style="max-width:440px; padding:0; overflow:hidden; border-radius:20px;">
+
+                    <!-- Header with cover -->
+                    <div id="bamHeader" style="background: linear-gradient(135deg, var(--lp), #7c3aed); padding: 1.5rem; display:flex; gap:1rem; align-items:center;">
+                        <img id="bamCover" src="" alt="cover" style="width:54px;height:72px;object-fit:cover;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.3); background:#fff; flex-shrink:0;" onerror="this.style.display='none';document.getElementById('bamCoverFallback').style.display='flex'">
+                        <div id="bamCoverFallback" style="display:none;width:54px;height:72px;background:rgba(255,255,255,0.2);border-radius:8px;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">📖</div>
+                        <div style="flex:1; min-width:0;">
+                            <div id="bamTitle" style="color:white;font-family:'Outfit';font-weight:800;font-size:1.05rem;line-height:1.3; word-break:break-word;"></div>
+                            <div id="bamAuthor" style="color:rgba(255,255,255,0.75);font-size:0.78rem;margin-top:3px;"></div>
+                            <div id="bamCopies" style="color:rgba(255,255,255,0.9);font-size:0.72rem;margin-top:6px;font-weight:700;"></div>
+                        </div>
+                        <button onclick="closeBookMenu()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;align-self:flex-start;flex-shrink:0;">✕</button>
+                    </div>
+
+                    <!-- Action buttons grid -->
+                    <div id="bamActions" style="padding: 1.25rem; display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                        <button onclick="bamEdit()" style="background:var(--lp-light);border:2px solid var(--lp);border-radius:14px;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='var(--lp)';this.querySelector('div').style.color='white';this.querySelector('span').style.color='white'" onmouseout="this.style.background='var(--lp-light)';this.querySelector('div').style.color='var(--lp)';this.querySelector('span').style.color='var(--muted)'">
+                            <div style="font-size:1.5rem;">✏️</div>
+                            <div>
+                                <div style="font-weight:800;font-size:0.85rem;color:var(--lp);font-family:'Outfit';">Edit Book</div>
+                                <span style="font-size:0.68rem;color:var(--muted);">Update details</span>
+                            </div>
+                        </button>
+                        <button onclick="bamAddCopy()" style="background:var(--lg-light);border:2px solid var(--lg);border-radius:14px;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='var(--lg)';this.querySelector('div:first-child').style.opacity='1'" onmouseout="this.style.background='var(--lg-light)'">
+                            <div style="font-size:1.5rem;">➕</div>
+                            <div>
+                                <div style="font-weight:800;font-size:0.85rem;color:var(--lg);font-family:'Outfit';">Add Copy</div>
+                                <span style="font-size:0.68rem;color:var(--muted);">Increase stock</span>
+                            </div>
+                        </button>
+                        <button onclick="bamIssue()" style="background:#fff7ed;border:2px solid #f97316;border-radius:14px;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;">
+                            <div style="font-size:1.5rem;">📤</div>
+                            <div>
+                                <div style="font-weight:800;font-size:0.85rem;color:#f97316;font-family:'Outfit';">Issue Book</div>
+                                <span style="font-size:0.68rem;color:var(--muted);">Lend to member</span>
+                            </div>
+                        </button>
+                        <button onclick="bamView()" style="background:var(--lb-light);border:2px solid var(--lb);border-radius:14px;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;">
+                            <div style="font-size:1.5rem;">👁️</div>
+                            <div>
+                                <div style="font-weight:800;font-size:0.85rem;color:var(--lb);font-family:'Outfit';">View Details</div>
+                                <span style="font-size:0.68rem;color:var(--muted);">Full catalog info</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================== EDIT BOOK MODAL =================== -->
+            <div id="editBookModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('editBookModal').style.display='none'">
+                <div class="ld-modal-content" style="max-width:520px;">
+                    <button class="ld-modal-close" onclick="document.getElementById('editBookModal').style.display='none'">✕</button>
+                    <h3 class="ld-modal-title">✏️ Edit Book</h3>
+                    <form id="editBookForm" onsubmit="submitEditBook(event)">
+                        <input type="hidden" id="editBookId">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                            <div style="grid-column:1/-1;">
+                                <label class="ld-label">Title</label>
+                                <input class="ld-input" id="editTitle" placeholder="Book title" required>
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <label class="ld-label">Author</label>
+                                <input class="ld-input" id="editAuthor" placeholder="Author name" required>
+                            </div>
+                            <div>
+                                <label class="ld-label">Publisher</label>
+                                <input class="ld-input" id="editPublisher" placeholder="Publisher">
+                            </div>
+                            <div>
+                                <label class="ld-label">ISBN</label>
+                                <input class="ld-input" id="editIsbn" placeholder="ISBN">
+                            </div>
+                            <div>
+                                <label class="ld-label">Genre / Category</label>
+                                <input class="ld-input" id="editGenre" placeholder="Genre">
+                            </div>
+                            <div>
+                                <label class="ld-label">Class / Grade</label>
+                                <input class="ld-input" id="editClass" placeholder="e.g. IX, 10">
+                            </div>
+                            <div>
+                                <label class="ld-label">Subject</label>
+                                <input class="ld-input" id="editSubject" placeholder="Subject">
+                            </div>
+                            <div>
+                                <label class="ld-label">Language</label>
+                                <input class="ld-input" id="editLanguage" placeholder="Language">
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <label class="ld-label">Description</label>
+                                <textarea class="ld-input" id="editDescription" rows="3" placeholder="Short description"></textarea>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
+                            <button type="button" onclick="document.getElementById('editBookModal').style.display='none'" class="ld-btn-alt" style="flex:1;">Cancel</button>
+                            <button type="submit" class="ld-btn" style="flex:2;" id="editBookSaveBtn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
 
             <!-- =================== 3. MEMBERS TAB =================== -->
             <div id="tab-members" class="tab-content" style="display: none;">
@@ -1446,6 +1558,136 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             tr[i].style.display = matchFound ? "" : "none";
         }
     }
+
+    // ── Book Action Modal ─────────────────────────────────────────────────────
+    let _bamBookId = null, _bamBarcodeId = null;
+
+    function openBookMenu(id, title, author, coverUrl, barcodeId, totalCopies, availCopies) {
+        _bamBookId    = id;
+        _bamBarcodeId = barcodeId;
+
+        document.getElementById('bamTitle').textContent  = title;
+        document.getElementById('bamAuthor').textContent = 'by ' + author;
+        document.getElementById('bamCopies').textContent = availCopies + ' of ' + totalCopies + ' copies available';
+
+        const img = document.getElementById('bamCover');
+        const fb  = document.getElementById('bamCoverFallback');
+        if (coverUrl) {
+            img.src = coverUrl;
+            img.style.display = 'block';
+            fb.style.display  = 'none';
+        } else {
+            img.style.display = 'none';
+            fb.style.display  = 'flex';
+        }
+
+        document.getElementById('editBookId').value = id;
+        document.getElementById('editTitle').value  = title;
+        document.getElementById('editAuthor').value = author;
+
+        document.getElementById('bookActionModal').style.display = 'flex';
+    }
+
+    function closeBookMenu() {
+        document.getElementById('bookActionModal').style.display = 'none';
+    }
+
+    function bamEdit() {
+        closeBookMenu();
+        fetch('/admin/api/book/' + _bamBookId)
+            .then(r => r.json())
+            .then(d => {
+                if (d.book) {
+                    const b = d.book;
+                    document.getElementById('editBookId').value      = b.id;
+                    document.getElementById('editTitle').value       = b.title       || '';
+                    document.getElementById('editAuthor').value      = b.author      || '';
+                    document.getElementById('editPublisher').value   = b.publisher   || '';
+                    document.getElementById('editIsbn').value        = b.isbn        || '';
+                    document.getElementById('editGenre').value       = b.genre       || '';
+                    document.getElementById('editClass').value       = b['class']    || '';
+                    document.getElementById('editSubject').value     = b.subject     || '';
+                    document.getElementById('editLanguage').value    = b.language    || '';
+                    document.getElementById('editDescription').value = b.description || '';
+                }
+            })
+            .catch(() => {});
+        document.getElementById('editBookModal').style.display = 'flex';
+    }
+
+    function bamAddCopy() {
+        if (!confirm('Add 1 more copy to this book?')) return;
+        fetch('/admin/api/add-copy/' + _bamBookId, { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    showBamAlert('Copy added! Total copies: ' + d.total_copies, 'success');
+                    closeBookMenu();
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showBamAlert(d.message || 'Failed to add copy', 'error');
+                }
+            });
+    }
+
+    function bamIssue() {
+        closeBookMenu();
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        const txTab = document.querySelector('[data-tab="tab-tx"]');
+        if (txTab) txTab.click();
+        const bcInput = document.getElementById('txBookBarcode');
+        if (bcInput) { bcInput.value = _bamBarcodeId; bcInput.focus(); }
+    }
+
+    function bamView() {
+        closeBookMenu();
+        window.open('/admin/book/' + _bamBookId, '_blank');
+    }
+
+    async function submitEditBook(e) {
+        e.preventDefault();
+        const btn = document.getElementById('editBookSaveBtn');
+        btn.textContent = 'Saving...'; btn.disabled = true;
+
+        const payload = {
+            title:       document.getElementById('editTitle').value,
+            author:      document.getElementById('editAuthor').value,
+            publisher:   document.getElementById('editPublisher').value,
+            isbn:        document.getElementById('editIsbn').value,
+            genre:       document.getElementById('editGenre').value,
+            class:       document.getElementById('editClass').value,
+            subject:     document.getElementById('editSubject').value,
+            language:    document.getElementById('editLanguage').value,
+            description: document.getElementById('editDescription').value,
+        };
+
+        const res  = await fetch('/admin/api/update-book/' + document.getElementById('editBookId').value, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        btn.textContent = 'Save Changes'; btn.disabled = false;
+
+        if (data.status === 'success') {
+            document.getElementById('editBookModal').style.display = 'none';
+            showBamAlert('Book updated!', 'success');
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            showBamAlert(data.message || 'Update failed', 'error');
+        }
+    }
+
+    function showBamAlert(msg, type) {
+        const el = document.createElement('div');
+        const bg = type === 'success' ? 'var(--lg)' : 'var(--lr)';
+        el.style.cssText = `position:fixed;top:1.5rem;right:1.5rem;z-index:99999;background:${bg};color:white;padding:12px 20px;border-radius:12px;font-weight:700;font-size:0.88rem;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:opacity 0.4s;`;
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 2500);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     // Modal Control
     function openModal(modalId) {
