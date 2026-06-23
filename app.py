@@ -1715,10 +1715,6 @@ def admin_panel():
     template_name = 'demo_admin.html' if session.get('is_demo') else 'admin.html'
     return render_template(template_name, transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=total_students_val, total_issued=total_issued, total_returned=total_returned, reservations=reservations)
 
-@app.route('/admin/student/add', methods=['POST'])
-def admin_add_student():
-    if session.get('role') != 'admin': return redirect('/login')
-    if 'manage_students' not in session.get('permissions', []): return redirect('/admin')
 
 # ── Reservation approve / reject ─────────────────────────────────────────────
 @app.route('/admin/api/reservation/<int:res_id>/approve', methods=['POST'])
