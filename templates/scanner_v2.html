@@ -1067,11 +1067,11 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         }
 
         // Special handling for arrays
-        if (json.targetAudience && Array.isArray(json.targetAudience)) {
-            document.getElementById('f_audience').value = json.targetAudience.join(', ');
+        if (json.targetAudience) {
+            document.getElementById('f_audience').value = Array.isArray(json.targetAudience) ? json.targetAudience.join(', ') : json.targetAudience;
         }
-        if (json.tags && Array.isArray(json.tags)) {
-            document.getElementById('f_tags').value = json.tags.join(', ');
+        if (json.tags) {
+            document.getElementById('f_tags').value = Array.isArray(json.tags) ? json.tags.join(', ') : json.tags;
         }
     }
 
