@@ -83,8 +83,9 @@ def require_permission(perm_key):
                 perms = PLANS["FREE"]["perms"]
 
             if not perms.get(perm_key):
-                if request.headers.get('Accept') == 'application/json' or request.is_json:
-                    return jsonify({'status': 'error', 'message': f'Upgrade your school subscription to access {perm_key}.'}), 403
+                # Always return JSON for /api/ routes (AJAX calls like multipart uploads also need JSON)
+                if '/api/' in request.path or request.headers.get('Accept') == 'application/json' or request.is_json:
+                    return jsonify({'status': 'error', 'message': f'Upgrade your plan to access this feature (missing: {perm_key}). Visit /billing to upgrade.'}), 403
                 return "Upgrade your school subscription to access this feature.", 403
             return f(*args, **kwargs)
         return decorated_function

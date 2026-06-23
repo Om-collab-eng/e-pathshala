@@ -878,9 +878,15 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 method: 'POST',
                 body: formData
             });
-            const uploadData = await uploadRes.json();
-            if (uploadData.status !== 'success') {
-                throw new Error(uploadData.message || "Upload failed");
+            // Safely parse JSON — server may return plain-text 403 for plan restrictions
+            let uploadData;
+            try { uploadData = await uploadRes.json(); } catch(_) {
+                throw new Error('⬆️ Plan upgrade required to use the AI Scanner. Visit /billing to upgrade.');
+            }
+            if (!uploadRes.ok || uploadData.status !== 'success') {
+                const msg = uploadData.message || uploadData.error || 'Upload failed';
+                if (uploadRes.status === 403) throw new Error('⬆️ ' + msg);
+                throw new Error(msg);
             }
             
             const coverUrl = uploadData.cover_url;
@@ -995,10 +1001,15 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 method: 'POST',
                 body: formData
             });
-            const data = await res.json();
-            
-            if (data.status !== 'success') {
-                throw new Error("Upload failed: " + data.message);
+            // Safely parse JSON — server may return plain-text 403 for plan restrictions
+            let data;
+            try { data = await res.json(); } catch(_) {
+                throw new Error('⬆️ Plan upgrade required to use the AI Scanner. Visit /billing to upgrade.');
+            }
+            if (!res.ok || data.status !== 'success') {
+                const msg = data.message || data.error || 'Upload failed';
+                if (res.status === 403) throw new Error('⬆️ ' + msg);
+                throw new Error('Upload failed: ' + msg);
             }
 
             // 2. Call backend endpoint to identify book details with NVIDIA Vision AI
