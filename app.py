@@ -3124,9 +3124,8 @@ Rules:
                 "max_tokens": 4096,
                 "extra_body": {
                     "chat_template_kwargs": {
-                        "enable_thinking": True
-                    },
-                    "reasoning_budget": 1024
+                        "enable_thinking": False
+                    }
                 },
                 "stream": False
             },
