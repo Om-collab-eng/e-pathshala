@@ -1237,6 +1237,7 @@
         }
     }
 
+    {% if session.get('name') == 'OM' %}
     function toggleMobileView() {
         const isMobileView = localStorage.getItem('forceMobileView') === 'true';
         const newStatus = !isMobileView;

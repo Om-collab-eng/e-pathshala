@@ -3924,7 +3924,22 @@ def personal_books_add():
             flash("Book added to collection successfully!", "success")
             return redirect('/personal/books')
             
-        return render_template('personal_book_form.html', lib=lib, book=None)
+        mock_book = None
+        if request.args:
+            mock_book = {
+                'title': request.args.get('title', ''),
+                'author': request.args.get('author', ''),
+                'category': request.args.get('category', ''),
+                'publisher': request.args.get('publisher', ''),
+                'isbn': request.args.get('isbn', ''),
+                'language': request.args.get('language', 'English'),
+                'description': request.args.get('description', ''),
+                'cover_image_url': request.args.get('cover_image_url', ''),
+                'quantity': 1,
+                'book_condition': 'Good',
+                'purchase_date': datetime.now().strftime('%Y-%m-%d')
+            }
+        return render_template('personal_book_form.html', lib=lib, book=mock_book)
     finally:
         conn.close()
 

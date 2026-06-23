@@ -172,7 +172,10 @@
                     </div>
                     <div class="input-group">
                         <label for="cover_image_url">Cover Image URL</label>
-                        <input type="url" id="cover_image_url" name="cover_image_url" value="{{ book.cover_image_url if book else '' }}" required placeholder="E.g. https://domain.com/cover.jpg">
+                        <input type="url" id="cover_image_url" name="cover_image_url" value="{{ book.cover_image_url if book else '' }}" required placeholder="E.g. https://domain.com/cover.jpg" oninput="updateCoverPreview(this.value)">
+                        <div id="cover_preview_container" style="margin-top: 10px; display: {% if book and book.cover_image_url %}block{% else %}none{% endif %};">
+                            <img id="cover_preview" src="{{ book.cover_image_url if book else '' }}" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--border); display: block;" alt="Cover Preview">
+                        </div>
                     </div>
                     <div class="input-group">
                         <label for="quantity">Quantity In Stock</label>
@@ -235,7 +238,9 @@ async function handleAiScan(e) {
         }
 
         // 2. Display cover URL in form cover field
-        document.getElementById('cover_image_url').value = window.location.origin + uploadData.cover_url;
+        const absoluteCoverUrl = window.location.origin + uploadData.cover_url;
+        document.getElementById('cover_image_url').value = absoluteCoverUrl;
+        updateCoverPreview(absoluteCoverUrl);
 
         // 3. Perform local Tesseract.js OCR
         statusEl.innerHTML = "⚡ Extracting text from cover...";
@@ -290,6 +295,17 @@ async function handleAiScan(e) {
     } catch (err) {
         console.error(err);
         statusEl.innerHTML = `<span style='color: var(--accent-error); font-weight: 700;'>❌ Scan Failed: ${err.message}</span>`;
+    }
+}
+
+function updateCoverPreview(url) {
+    const preview = document.getElementById('cover_preview');
+    const container = document.getElementById('cover_preview_container');
+    if (url && url.trim().length > 0) {
+        preview.src = url;
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
     }
 }
 </script>
