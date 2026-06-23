@@ -3075,129 +3075,28 @@ def api_scan_vision():
     if nvidia_key:
         nvidia_key = nvidia_key.strip()
         
-    prompt = """You are a professional librarian and cataloging assistant.
+    prompt = """Analyze this book cover image and extract the following information.
 
-Analyze the uploaded book cover image and any visible text. Extract as much information as possible from the image.
-
-Return ONLY valid JSON.
+Book Title:
+Subtitle:
+Author(s):
+Publisher:
+Publication Year:
+ISBN:
+Language:
+Category:
+Subject:
+Class/Grade:
+Target Audience:
+Quantity:
+50 words Summary:
+20 words Description:
+Tags:
 
 Rules:
-- Do not invent information.
-- If a field cannot be determined, return "".
-- Infer subject, category, class level, and audience when reasonably obvious.
-- Generate a short summary and detailed description.
-- Extract author names exactly as written.
-- Detect educational board/class if visible.
-- Return confidence score (0-100) for each extracted field.
-
-JSON Schema:
-
-{
-  "book_title": {
-    "value": "",
-    "confidence": 0
-  },
-  "subtitle": {
-    "value": "",
-    "confidence": 0
-  },
-  "authors": {
-    "value": [],
-    "confidence": 0
-  },
-  "publisher": {
-    "value": "",
-    "confidence": 0
-  },
-  "publication_year": {
-    "value": "",
-    "confidence": 0
-  },
-  "isbn": {
-    "value": "",
-    "confidence": 0
-  },
-  "language": {
-    "value": "",
-    "confidence": 0
-  },
-  "primary_category": {
-    "value": "",
-    "confidence": 0
-  },
-  "subject": {
-    "value": "",
-    "confidence": 0
-  },
-  "class_grade": {
-    "value": "",
-    "confidence": 0
-  },
-  "dewey_decimal": {
-    "value": "",
-    "confidence": 0
-  },
-  "target_audience": {
-    "value": "",
-    "confidence": 0
-  },
-  "reading_level": {
-    "value": "",
-    "confidence": 0
-  },
-  "quantity": {
-    "value": 1,
-    "confidence": 100
-  },
-  "summary_50_words": {
-    "value": "",
-    "confidence": 0
-  },
-  "detailed_description": {
-    "value": "",
-    "confidence": 0
-  },
-  "search_tags": {
-    "value": [],
-    "confidence": 0
-  },
-  "raw_ocr_text": {
-    "value": "",
-    "confidence": 100
-  }
-}
-
-Additional Cataloging Rules:
-
-Educational Books:
-- Detect class/grade (VI, VII, VIII, IX, X, XI, XII).
-- Detect board (CBSE, ICSE, State Board) if visible.
-- Subject examples:
-  Biology
-  Physics
-  Chemistry
-  Mathematics
-  English
-  Hindi
-  SST
-  Computer Science
-
-Dewey Suggestions:
-- Biology → 570
-- Physics → 530
-- Chemistry → 540
-- Mathematics → 510
-- Computer Science → 004
-- History → 900
-- Geography → 910
-- Literature → 800
-
-Generate:
-1. A concise 50-word library summary.
-2. A detailed catalog description.
-3. 10 searchable tags.
-
-Return ONLY JSON.
+- Leave blank if unknown.
+- Do not explain anything.
+- Return only the fields above.
 """
     messages = [
         {
@@ -3249,63 +3148,59 @@ Return ONLY JSON.
                 return jsonify({"error": "NVIDIA Vision model did not return any content. Response: " + json.dumps(res_data)}), 500
         ai_reply = ai_reply.strip()
         
-        # Parse JSON
-        if "```json" in ai_reply:
-            ai_reply = ai_reply.split("```json")[1].split("```")[0].strip()
-        elif "```" in ai_reply:
-            ai_reply = ai_reply.split("```")[1].split("```")[0].strip()
-            
+        parsed_data = {}
+        # 1. Try to parse as JSON first
         try:
-            vlm_data = json.loads(ai_reply)
+            clean_reply = ai_reply
+            if "```json" in clean_reply:
+                clean_reply = clean_reply.split("```json")[1].split("```")[0].strip()
+            elif "```" in clean_reply:
+                clean_reply = clean_reply.split("```")[1].split("```")[0].strip()
+            parsed_data = json.loads(clean_reply)
         except Exception:
-            match = re.search(r'\{[\s\S]*?\}', ai_reply)
-            if match:
-                vlm_data = json.loads(match.group(0))
-            else:
-                raise ValueError("Failed to parse AI response as JSON: " + ai_reply)
+            # 2. Fallback to key-value line parsing
+            lines = ai_reply.split('\n')
+            for line in lines:
+                if ':' in line:
+                    parts = line.split(':', 1)
+                    k = parts[0].strip()
+                    v = parts[1].strip()
+                    parsed_data[k] = v
 
-        # Helper lambda/mapping to translate new schema to standard review fields
-        def map_vlm_to_standard(data):
-            if "book_title" not in data and "title" in data:
-                return data
-                
-            return {
-                "title": data.get("book_title", {}).get("value") if isinstance(data.get("book_title"), dict) else data.get("book_title", data.get("title", "")),
-                "subtitle": data.get("subtitle", {}).get("value") if isinstance(data.get("subtitle"), dict) else data.get("subtitle", data.get("subtitle", "")),
-                "author": ", ".join(data.get("authors", {}).get("value")) if isinstance(data.get("authors"), dict) and isinstance(data.get("authors", {}).get("value"), list) else (", ".join(data.get("authors")) if isinstance(data.get("authors"), list) else (data.get("authors", {}).get("value") if isinstance(data.get("authors"), dict) else data.get("authors", data.get("author", "")))),
-                "publisher": data.get("publisher", {}).get("value") if isinstance(data.get("publisher"), dict) else data.get("publisher", data.get("publisher", "")),
-                "publicationYear": data.get("publication_year", {}).get("value") if isinstance(data.get("publication_year"), dict) else data.get("publication_year", data.get("publicationYear", "")),
-                "isbn": data.get("isbn", {}).get("value") if isinstance(data.get("isbn"), dict) else data.get("isbn", data.get("isbn", "")),
-                "language": data.get("language", {}).get("value") if isinstance(data.get("language"), dict) else data.get("language", data.get("language", "")),
-                "category": data.get("primary_category", {}).get("value") if isinstance(data.get("primary_category"), dict) else data.get("primary_category", data.get("category", "")),
-                "subject": data.get("subject", {}).get("value") if isinstance(data.get("subject"), dict) else data.get("subject", data.get("subject", "")),
-                "class": data.get("class_grade", {}).get("value") if isinstance(data.get("class_grade"), dict) else data.get("class_grade", data.get("class", "")),
-                "deweyDecimal": data.get("dewey_decimal", {}).get("value") if isinstance(data.get("dewey_decimal"), dict) else data.get("dewey_decimal", data.get("deweyDecimal", "")),
-                "targetAudience": data.get("target_audience", {}).get("value") if isinstance(data.get("target_audience"), dict) else data.get("target_audience", data.get("targetAudience", "")),
-                "difficultyLevel": data.get("reading_level", {}).get("value") if isinstance(data.get("reading_level"), dict) else data.get("reading_level", data.get("difficultyLevel", "")),
-                "summary50Words": data.get("summary_50_words", {}).get("value") if isinstance(data.get("summary_50_words"), dict) else data.get("summary_50_words", data.get("summary50Words", "")),
-                "description": data.get("detailed_description", {}).get("value") if isinstance(data.get("detailed_description"), dict) else data.get("detailed_description", data.get("description", "")),
-                "tags": data.get("search_tags", {}).get("value") if isinstance(data.get("search_tags"), dict) and isinstance(data.get("search_tags", {}).get("value"), list) else (data.get("search_tags") if isinstance(data.get("search_tags"), list) else data.get("tags", [])),
-                "confidenceScores": {
-                    "title": data.get("book_title", {}).get("confidence", 100) if isinstance(data.get("book_title"), dict) else data.get("confidenceScores", {}).get("title", 100),
-                    "subtitle": data.get("subtitle", {}).get("confidence", 100) if isinstance(data.get("subtitle"), dict) else data.get("confidenceScores", {}).get("subtitle", 100),
-                    "author": data.get("authors", {}).get("confidence", 100) if isinstance(data.get("authors"), dict) else data.get("confidenceScores", {}).get("author", 100),
-                    "publisher": data.get("publisher", {}).get("confidence", 100) if isinstance(data.get("publisher"), dict) else data.get("confidenceScores", {}).get("publisher", 100),
-                    "publicationYear": data.get("publication_year", {}).get("confidence", 100) if isinstance(data.get("publication_year"), dict) else data.get("confidenceScores", {}).get("publicationYear", 100),
-                    "isbn": data.get("isbn", {}).get("confidence", 100) if isinstance(data.get("isbn"), dict) else data.get("confidenceScores", {}).get("isbn", 100),
-                    "language": data.get("language", {}).get("confidence", 100) if isinstance(data.get("language"), dict) else data.get("confidenceScores", {}).get("language", 100),
-                    "category": data.get("primary_category", {}).get("confidence", 100) if isinstance(data.get("primary_category"), dict) else data.get("confidenceScores", {}).get("category", 100),
-                    "subject": data.get("subject", {}).get("confidence", 100) if isinstance(data.get("subject"), dict) else data.get("confidenceScores", {}).get("subject", 100),
-                    "class": data.get("class_grade", {}).get("confidence", 100) if isinstance(data.get("class_grade"), dict) else data.get("confidenceScores", {}).get("class", 100),
-                    "deweyDecimal": data.get("dewey_decimal", {}).get("confidence", 100) if isinstance(data.get("dewey_decimal"), dict) else data.get("confidenceScores", {}).get("deweyDecimal", 100),
-                    "targetAudience": data.get("target_audience", {}).get("confidence", 100) if isinstance(data.get("target_audience"), dict) else data.get("confidenceScores", {}).get("targetAudience", 100),
-                    "difficultyLevel": data.get("reading_level", {}).get("confidence", 100) if isinstance(data.get("reading_level"), dict) else data.get("confidenceScores", {}).get("difficultyLevel", 100),
-                    "summary50Words": data.get("summary_50_words", {}).get("confidence", 100) if isinstance(data.get("summary_50_words"), dict) else data.get("confidenceScores", {}).get("summary50Words", 100),
-                    "description": data.get("detailed_description", {}).get("confidence", 100) if isinstance(data.get("detailed_description"), dict) else data.get("confidenceScores", {}).get("description", 100)
-                }
-            }
+        # Map various VLM keys (plain text or JSON) to standard frontend keys
+        key_mapping = {
+            "Book Title": "title", "title": "title", "book_title": "title",
+            "Subtitle": "subtitle", "subtitle": "subtitle",
+            "Author(s)": "author", "authors": "author", "author": "author",
+            "Publisher": "publisher", "publisher": "publisher",
+            "Publication Year": "publicationYear", "publication_year": "publicationYear", "publicationYear": "publicationYear",
+            "ISBN": "isbn", "isbn": "isbn",
+            "Language": "language", "language": "language",
+            "Category": "category", "primary_category": "category", "category": "category",
+            "Subject": "subject", "subject": "subject",
+            "Class/Grade": "class", "class_grade": "class", "class": "class",
+            "Target Audience": "targetAudience", "target_audience": "targetAudience", "targetAudience": "targetAudience",
+            "Quantity": "quantity", "quantity": "quantity",
+            "50 words Summary": "summary50Words", "summary_50_words": "summary50Words", "summary50Words": "summary50Words",
+            "20 words Description": "description", "detailed_description": "description", "description": "description",
+            "Tags": "tags", "search_tags": "tags", "tags": "tags"
+        }
+        
+        book_metadata = {}
+        # Seed default empty values
+        for std_key in ["title", "subtitle", "author", "publisher", "publicationYear", "isbn", "language", "category", "subject", "class", "deweyDecimal", "targetAudience", "difficultyLevel", "summary50Words", "description", "tags"]:
+            book_metadata[std_key] = ""
+            
+        for k, v in parsed_data.items():
+            val = v.get("value") if isinstance(v, dict) else v
+            std_key = key_mapping.get(k)
+            if std_key:
+                book_metadata[std_key] = val
 
-        book_metadata = map_vlm_to_standard(vlm_data)
+        # Handle confidence scores default block
+        book_metadata["confidenceScores"] = {}
+        for std_key in ["title", "subtitle", "author", "publisher", "publicationYear", "isbn", "language", "category", "subject", "class", "deweyDecimal", "targetAudience", "difficultyLevel", "summary50Words", "description"]:
+            book_metadata["confidenceScores"][std_key] = 100
                 
         # Check if missing crucial data
         is_missing = (
