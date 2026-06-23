@@ -1388,7 +1388,10 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             </div>
         </div>
 
-        <button class="ld-btn" onclick="closeModal('viewSchoolModal')" style="width: 100%; justify-content: center; margin-top: 1.5rem;">Close Details</button>
+        <div style="display: flex; gap: 10px; margin-top: 1.5rem; width: 100%;">
+            <a href="/logout" class="ld-btn ld-btn-danger" style="flex: 1; text-decoration: none; justify-content: center;">🚪 Log Out</a>
+            <button class="ld-btn" onclick="closeModal('viewSchoolModal')" style="flex: 1; justify-content: center; background: var(--bg); color: var(--text); border: 1px solid var(--border);">Close Details</button>
+        </div>
     </div>
 </div>
 
