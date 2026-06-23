@@ -3331,6 +3331,74 @@ def api_upload_cover():
 
     return {"status": "success", "cover_url": front_url}
 
+# ── Book Action API endpoints ─────────────────────────────────────────────────
+
+@app.route('/admin/api/book/<int:book_id>', methods=['GET'])
+def api_get_book(book_id):
+    if session.get('role') not in ['admin', 'demo_admin', 'librarian']:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db_connection()
+    book = conn.execute('SELECT * FROM books WHERE id = ?', (book_id,)).fetchone()
+    conn.close()
+    if not book:
+        return jsonify({"error": "Book not found"}), 404
+    return jsonify({"book": dict(book)})
+
+@app.route('/admin/api/update-book/<int:book_id>', methods=['POST'])
+def api_update_book(book_id):
+    if session.get('role') not in ['admin', 'demo_admin', 'librarian']:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+    data = request.json or {}
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            UPDATE books SET
+                title       = COALESCE(NULLIF(?, ''), title),
+                author      = COALESCE(NULLIF(?, ''), author),
+                publisher   = ?,
+                isbn        = ?,
+                genre       = ?,
+                class_level = ?,
+                subject     = ?,
+                language    = ?,
+                description = ?
+            WHERE id = ?
+        ''', (
+            data.get('title'),   data.get('author'),
+            data.get('publisher', ''), data.get('isbn', ''),
+            data.get('genre', ''),  data.get('class', ''),
+            data.get('subject', ''), data.get('language', ''),
+            data.get('description', ''), book_id
+        ))
+        conn.commit()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/admin/api/add-copy/<int:book_id>', methods=['POST'])
+def api_add_copy(book_id):
+    if session.get('role') not in ['admin', 'demo_admin', 'librarian']:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            UPDATE books SET
+                total_copies     = total_copies + 1,
+                available_copies = available_copies + 1
+            WHERE id = ?
+        ''', (book_id,))
+        conn.commit()
+        book = conn.execute('SELECT total_copies FROM books WHERE id = ?', (book_id,)).fetchone()
+        return jsonify({"status": "success", "total_copies": book['total_copies'] if book else 0})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 @app.route('/digital-library')
 def digital_library():
     if 'user_id' not in session: return redirect('/login')

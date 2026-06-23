@@ -425,46 +425,59 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 <div style="text-align: center; margin-bottom: 1.5rem;">
                     <h3 class="ld-panel-title" style="font-size: 1.35rem; margin-bottom: 0.25rem;">Scan Book Cover</h3>
                     <p style="font-size: 0.8rem; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.4;">
-                        Our AI engine will read the cover, classify the genre, extract metadata and generate catalog descriptions automatically.
+                        AI-powered scanner — pick your mode below.
                     </p>
                 </div>
 
-                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 1.5rem; background: var(--bg); padding: 8px 16px; border-radius: 12px; max-width: 240px; margin-left: auto; margin-right: auto; border: 1px solid var(--border);">
-                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--text);">Bulk Scan Mode</span>
-                    <label class="sa-toggle-switch" style="position: relative; display: inline-block; width: 44px; height: 22px; margin: 0;">
-                        <input type="checkbox" id="bulkModeToggle" style="opacity: 0; width: 0; height: 0;">
-                        <span class="sa-toggle-slider" style="position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .3s; border-radius: 22px;"></span>
-                    </label>
-                </div>
+                <!-- Hidden bulk toggle (controlled by JS) -->
+                <input type="checkbox" id="bulkModeToggle" style="display:none;">
 
-                <!-- Mode picker cards -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 420px; margin: 0 auto 1.5rem auto;">
-                    <!-- Camera option -->
-                    <button id="pickCameraBtn" onclick="openCameraModal()" style="
+                <!-- Mode picker cards: Camera · Bulk Scan · Upload -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; max-width: 500px; margin: 0 auto 1.5rem auto;">
+
+                    <!-- Single Camera -->
+                    <button id="pickCameraBtn" onclick="startSingleCamera()" style="
                         background: var(--white); border: 2px solid var(--border); border-radius: 16px;
-                        padding: 2rem 1rem; cursor: pointer; transition: all 0.2s;
-                        display: flex; flex-direction: column; align-items: center; gap: 12px;
+                        padding: 1.5rem 0.75rem; cursor: pointer; transition: all 0.2s;
+                        display: flex; flex-direction: column; align-items: center; gap: 10px;
                         color: var(--text);
                     " onmouseover="this.style.borderColor='var(--lp)';this.style.background='var(--lp-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
-                        <div style="width:56px;height:56px;border-radius:14px;background:var(--lp-light);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">📷</div>
+                        <div style="width:52px;height:52px;border-radius:14px;background:var(--lp-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">📷</div>
                         <div>
-                            <div style="font-weight:800;font-size:1rem;font-family:'Outfit';">Camera</div>
-                            <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Use live camera</div>
+                            <div style="font-weight:800;font-size:0.9rem;font-family:'Outfit';">Camera</div>
+                            <div style="font-size:0.68rem;color:var(--muted);margin-top:2px;">Single scan</div>
                         </div>
                     </button>
-                    <!-- Upload option -->
+
+                    <!-- Bulk Scan -->
+                    <button id="pickBulkBtn" onclick="startBulkCamera()" style="
+                        background: var(--white); border: 2px solid var(--border); border-radius: 16px;
+                        padding: 1.5rem 0.75rem; cursor: pointer; transition: all 0.2s;
+                        display: flex; flex-direction: column; align-items: center; gap: 10px;
+                        color: var(--text); position:relative;
+                    " onmouseover="this.style.borderColor='var(--lg)';this.style.background='var(--lg-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
+                        <div style="width:52px;height:52px;border-radius:14px;background:var(--lg-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">📸</div>
+                        <div>
+                            <div style="font-weight:800;font-size:0.9rem;font-family:'Outfit';">Bulk Scan</div>
+                            <div style="font-size:0.68rem;color:var(--muted);margin-top:2px;">Multiple books</div>
+                        </div>
+                        <span style="position:absolute;top:8px;right:8px;background:var(--lg);color:white;font-size:0.58rem;font-weight:800;padding:2px 6px;border-radius:6px;">NEW</span>
+                    </button>
+
+                    <!-- Upload -->
                     <button id="pickUploadBtn" onclick="document.getElementById('frontInput').click()" style="
                         background: var(--white); border: 2px solid var(--border); border-radius: 16px;
-                        padding: 2rem 1rem; cursor: pointer; transition: all 0.2s;
-                        display: flex; flex-direction: column; align-items: center; gap: 12px;
+                        padding: 1.5rem 0.75rem; cursor: pointer; transition: all 0.2s;
+                        display: flex; flex-direction: column; align-items: center; gap: 10px;
                         color: var(--text);
-                    " onmouseover="this.style.borderColor='var(--lp)';this.style.background='var(--lp-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
-                        <div style="width:56px;height:56px;border-radius:14px;background:var(--lb-light);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">📁</div>
+                    " onmouseover="this.style.borderColor='var(--lb)';this.style.background='var(--lb-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
+                        <div style="width:52px;height:52px;border-radius:14px;background:var(--lb-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">📁</div>
                         <div>
-                            <div style="font-weight:800;font-size:1rem;font-family:'Outfit';">Upload</div>
-                            <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Choose from device</div>
+                            <div style="font-weight:800;font-size:0.9rem;font-family:'Outfit';">Upload</div>
+                            <div style="font-size:0.68rem;color:var(--muted);margin-top:2px;">From device</div>
                         </div>
                     </button>
+
                 </div>
 
                 <!-- Hidden file input for upload mode -->
@@ -494,8 +507,9 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             <div id="cameraModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:99999; flex-direction:column; align-items:center; justify-content:center;">
                 <div style="width:100%; max-width:500px; padding:1.5rem; display:flex; flex-direction:column; align-items:center; gap:1rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                        <span style="color:white; font-family:'Outfit'; font-weight:800; font-size:1.1rem;">📷 Camera</span>
-                        <button onclick="closeCameraModal()" style="background:rgba(255,255,255,0.1); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">✕</button>
+                        <span style="color:white; font-family:'Outfit'; font-weight:800; font-size:1.1rem;" id="cameraModalTitle">📷 Camera</span>
+                        <!-- X = force close, go back to picker -->
+                        <button onclick="closeCameraModal(true)" title="Cancel and go back" style="background:rgba(255,255,255,0.15); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; transition: background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.7)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">✕</button>
                     </div>
                     
                     <div id="bulkStatusIndicator" style="display: none; color: white; background: var(--lp); padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; width: 100%; text-align: center; margin-top: -5px; box-shadow: 0 4px 12px rgba(92,60,243,0.25);">
@@ -798,8 +812,47 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         }
     }
 
-    function closeCameraModal() {
+    // ── Camera mode helpers ──────────────────────────────────────────────────
+    function startSingleCamera() {
+        document.getElementById('bulkModeToggle').checked = false;
+        document.getElementById('cameraModalTitle').textContent = '📷 Camera — Single Mode';
+        openCameraModal();
+    }
+    function startBulkCamera() {
+        document.getElementById('bulkModeToggle').checked = true;
+        document.getElementById('cameraModalTitle').textContent = '📸 Bulk Scan — Keep scanning!';
+        openCameraModal();
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    function closeCameraModal(force) {
         const isBulk = document.getElementById('bulkModeToggle').checked;
+
+        // FORCE CLOSE: immediately stop everything and go back to picker
+        if (force) {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraStream').srcObject = null;
+            document.getElementById('cameraModal').style.display = 'none';
+
+            // Reset all bulk state
+            duplicateQueue = [];
+            capturedCount = 0;
+            activeUploads = 0;
+            const statusInd = document.getElementById('bulkStatusIndicator');
+            statusInd.style.display = 'none';
+            statusInd.style.background = '';
+            statusInd.innerHTML = 'Captured: <span id="bulkCapturedCount">0</span> | Active Processes: <span id="bulkActiveCount">0</span>';
+
+            // Go back to picker
+            document.getElementById('uploadSection').style.display = 'block';
+            showToast('Scan cancelled. Pick a mode to start again.', 'info');
+            return;
+        }
+
+        // NORMAL CLOSE (bulk mode waiting for background uploads to finish)
         if (isBulk && activeUploads > 0) {
             if (cameraStream) {
                 cameraStream.getTracks().forEach(t => t.stop());
