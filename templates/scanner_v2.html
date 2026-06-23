@@ -956,12 +956,15 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 throw new Error(msg);
             }
             
-            const coverUrl = uploadData.cover_url;
+            // disk URL → used for AI vision (reads from server disk)
+            const coverUrlDisk = uploadData.cover_url;
+            // base64 data: URL → persistent, stored in DB
+            const coverUrlDb   = uploadData.cover_url_db || coverUrlDisk;
             
             const scanRes = await fetch('/api/scan-vision', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ cover_url: coverUrl })
+                body: JSON.stringify({ cover_url: coverUrlDisk })
             });
             if (!scanRes.ok) {
                 const errData = await scanRes.json();
@@ -973,7 +976,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             
             if (scanData.existing_book) {
                 duplicateQueue.push({
-                    cover_url: coverUrl,
+                    cover_url: coverUrlDb,   // store persistent cover
                     metadata: meta,
                     existing_book: scanData.existing_book
                 });
@@ -989,7 +992,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     subject: meta.subject || "",
                     description: meta.description || "",
                     total_copies: 1,
-                    cover_url: coverUrl,
+                    cover_url: coverUrlDb,   // ← persistent base64 stored in DB
                     language: meta.language || "English",
                     publication_year: meta.publicationYear || "",
                     tags: meta.tags ? (Array.isArray(meta.tags) ? meta.tags.join(', ') : meta.tags) : ""
@@ -1086,7 +1089,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    cover_url: data.cover_url
+                    cover_url: data.cover_url  // disk path for AI to read
                 })
             });
             
@@ -1098,10 +1101,13 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             const scanData = await scanRes.json();
             const meta = scanData.metadata || {};
             
+            // Use persistent base64 URL for DB; fall back to disk URL if unavailable
+            const persistentCoverUrl = data.cover_url_db || data.cover_url;
+            
             if (scanData.existing_book) {
                 showExistingBookPopup(scanData.existing_book);
             } else {
-                populateReviewScreen(meta, data.cover_url);
+                populateReviewScreen(meta, persistentCoverUrl);
             }
 
         } catch (err) {

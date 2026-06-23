@@ -3395,20 +3395,49 @@ def smart_scanner():
 @require_permission('canUseAIScanner')
 def api_upload_cover():
     if session.get('role') not in ['admin', 'demo_admin']: return {"status": "error", "message": "Unauthorized"}
-    
-    front_img = request.files.get('front')
-    if not front_img:
+
+    front_img_file = request.files.get('front')
+    if not front_img_file:
         return {"status": "error", "message": "Front cover is required"}
 
-    ext = front_img.filename.split('.')[-1]
-    filename = f"scan_{uuid.uuid4().hex[:8]}.{ext}"
-    cover_path = os.path.join('static', 'uploads', filename)
-    os.makedirs(os.path.dirname(cover_path), exist_ok=True)
-    front_img.seek(0)
-    front_img.save(cover_path)
-    front_url = f"/static/uploads/{filename}"
+    import base64, io
+    from PIL import Image as PILImage
 
-    return {"status": "success", "cover_url": front_url}
+    # ── Read & resize the image (keep it small for DB storage) ───────────────
+    try:
+        raw_bytes = front_img_file.read()
+        pil_img   = PILImage.open(io.BytesIO(raw_bytes)).convert('RGB')
+
+        # Resize: cap longest side at 600px to keep base64 manageable
+        max_side = 600
+        w, h = pil_img.size
+        if max(w, h) > max_side:
+            scale = max_side / max(w, h)
+            pil_img = pil_img.resize((int(w * scale), int(h * scale)), PILImage.LANCZOS)
+
+        # Encode to JPEG bytes
+        buf = io.BytesIO()
+        pil_img.save(buf, format='JPEG', quality=82)
+        jpeg_bytes = buf.getvalue()
+    except Exception as e:
+        return {"status": "error", "message": f"Image processing failed: {str(e)}"}
+
+    # ── Also save to disk so scan-vision can read it by path ─────────────────
+    filename  = f"scan_{uuid.uuid4().hex[:8]}.jpg"
+    cover_dir = os.path.join(BASE_DIR, 'static', 'uploads')
+    os.makedirs(cover_dir, exist_ok=True)
+    cover_path = os.path.join(cover_dir, filename)
+    with open(cover_path, 'wb') as f:
+        f.write(jpeg_bytes)
+    disk_url = f"/static/uploads/{filename}"
+
+    # ── Build a persistent base64 data: URL for DB storage ──────────────────
+    b64 = base64.b64encode(jpeg_bytes).decode('utf-8')
+    data_url = f"data:image/jpeg;base64,{b64}"
+
+    # Return disk_url so scan-vision (which reads file from disk) still works,
+    # and data_url as cover_url_db which is what gets stored in the DB.
+    return {"status": "success", "cover_url": disk_url, "cover_url_db": data_url}
 
 # ── Book Action API endpoints ─────────────────────────────────────────────────
 
