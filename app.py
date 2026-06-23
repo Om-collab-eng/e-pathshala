@@ -3047,6 +3047,231 @@ JSON Schema:
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/scan-vision', methods=['POST'])
+def api_scan_vision():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.json or {}
+    cover_url = data.get('cover_url', '')
+    
+    if not cover_url:
+        return jsonify({"error": "No cover image URL provided."}), 400
+        
+    import base64
+    base64_image = ""
+    try:
+        parsed_url = urllib.parse.urlparse(cover_url)
+        path_on_disk = parsed_url.path.lstrip('/')
+        if os.path.exists(path_on_disk):
+            with open(path_on_disk, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+        else:
+            return jsonify({"error": f"Cover image file not found on server: {path_on_disk}"}), 404
+    except Exception as e:
+        return jsonify({"error": f"Failed to read/encode cover image: {str(e)}"}), 500
+
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    if nvidia_key:
+        nvidia_key = nvidia_key.strip()
+        
+    prompt = """Analyze the attached book cover image.
+Extract the book details and return a minified JSON object matching the JSON schema below. DO NOT wrap it in markdown formatting, no extra text, explanations, or warnings.
+
+JSON Schema:
+{
+  "title": "Book Title",
+  "author": "Book Author",
+  "publisher": "Book Publisher",
+  "isbn": "10 or 13 digit ISBN number without spaces/hyphens (if visible on the cover, otherwise leave empty)",
+  "class": "Standard/Class name (e.g. VIII, 9, High School, etc.)",
+  "subject": "Subject or academic topic",
+  "category": "Genre or Category (e.g. Fiction, Reference, Science)",
+  "description": "A short 1-2 sentence description of the book"
+}
+"""
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}"
+                    }
+                }
+            ]
+        }
+    ]
+    
+    try:
+        response = requests.post(
+            "https://integrate.api.nvidia.com/v1/chat/completions",
+            json={
+                "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                "messages": messages,
+                "temperature": 0.2,
+                "top_p": 0.95,
+                "max_tokens": 4096,
+                "extra_body": {
+                    "chat_template_kwargs": {
+                        "enable_thinking": True
+                    },
+                    "reasoning_budget": 1024
+                },
+                "stream": False
+            },
+            headers={
+                "Authorization": f"Bearer {nvidia_key}",
+                "Content-Type": "application/json"
+            },
+            timeout=60
+        )
+        if response.status_code != 200:
+            return jsonify({"error": f"NVIDIA API returned error: {response.text}"}), 500
+            
+        res_data = response.json()
+        message_obj = res_data['choices'][0]['message']
+        ai_reply = message_obj.get('content')
+        if ai_reply is None:
+            ai_reply = message_obj.get('reasoning_content') or message_obj.get('reasoning')
+            if not ai_reply:
+                return jsonify({"error": "NVIDIA Vision model did not return any content. Response: " + json.dumps(res_data)}), 500
+        ai_reply = ai_reply.strip()
+        
+        # Parse JSON
+        if "```json" in ai_reply:
+            ai_reply = ai_reply.split("```json")[1].split("```")[0].strip()
+        elif "```" in ai_reply:
+            ai_reply = ai_reply.split("```")[1].split("```")[0].strip()
+            
+        try:
+            book_metadata = json.loads(ai_reply)
+        except Exception:
+            match = re.search(r'\{[\s\S]*?\}', ai_reply)
+            if match:
+                book_metadata = json.loads(match.group(0))
+            else:
+                raise ValueError("Failed to parse AI response as JSON: " + ai_reply)
+                
+        # Check if missing crucial data
+        is_missing = (
+            not book_metadata.get('title') or
+            not book_metadata.get('author') or
+            book_metadata.get('author', '').lower() in ['unknown', 'n/a', ''] or
+            not book_metadata.get('publisher') or
+            book_metadata.get('publisher', '').lower() in ['unknown', 'n/a', ''] or
+            not book_metadata.get('isbn') or
+            not book_metadata.get('class') or
+            not book_metadata.get('subject')
+        )
+        
+        if is_missing:
+            title_query = book_metadata.get('title') or "unknown book"
+            author_query = book_metadata.get('author') or ""
+            search_query = f"\"{title_query}\" {author_query} book publisher isbn class subject".strip()
+            search_results = search_web_py(search_query)
+            
+            if search_results:
+                validation_prompt = f"""We searched the web for details about the book: "{title_query}".
+Here are some search results:
+{search_results}
+
+We initially extracted these metadata details from the cover image:
+{json.dumps(book_metadata, indent=2)}
+
+Use the search results to fill in any missing details (such as author, publisher, subject, class, isbn, or description) and correct any incorrect fields.
+
+Return ONLY a valid, minified JSON object matching the JSON schema below. DO NOT wrap it in markdown formatting, no extra text, explanations, or warnings.
+
+JSON Schema:
+{{
+  "title": "Book Title",
+  "author": "Book Author",
+  "publisher": "Book Publisher",
+  "isbn": "10 or 13 digit ISBN number without spaces/hyphens",
+  "class": "Standard/Class name (e.g. VIII, 9, High School, etc.)",
+  "subject": "Subject or academic topic",
+  "category": "Genre or Category (e.g. Fiction, Reference, Science)",
+  "description": "A short description of the book"
+}}
+"""
+                val_response = requests.post(
+                    "https://integrate.api.nvidia.com/v1/chat/completions",
+                    json={
+                        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                        "messages": [
+                            {"role": "user", "content": validation_prompt}
+                        ],
+                        "temperature": 0.6,
+                        "top_p": 0.95,
+                        "max_tokens": 65536,
+                        "extra_body": {
+                            "chat_template_kwargs": {
+                                "enable_thinking": True
+                            },
+                            "reasoning_budget": 16384
+                        },
+                        "stream": False
+                    },
+                    headers={
+                        "Authorization": f"Bearer {nvidia_key}",
+                        "Content-Type": "application/json"
+                    },
+                    timeout=60
+                )
+                if val_response.status_code == 200:
+                    val_data = val_response.json()
+                    val_reply = val_data['choices'][0]['message']['content'].strip()
+                    if "```json" in val_reply:
+                        val_reply = val_reply.split("```json")[1].split("```")[0].strip()
+                    elif "```" in val_reply:
+                        val_reply = val_reply.split("```")[1].split("```")[0].strip()
+                    
+                    try:
+                        val_metadata = json.loads(val_reply)
+                        book_metadata.update(val_metadata)
+                    except Exception:
+                        val_match = re.search(r'\{[\s\S]*?\}', val_reply)
+                        if val_match:
+                            val_metadata = json.loads(val_match.group(0))
+                            book_metadata.update(val_metadata)
+                            
+        s_code = session.get('school_code')
+        existing_data = None
+        if s_code:
+            conn = get_db_connection()
+            isbn = book_metadata.get('isbn')
+            title = book_metadata.get('title')
+            
+            existing_book = None
+            if isbn:
+                clean_isbn = str(isbn).replace(' ', '').replace('-', '').strip()
+                existing_book = conn.execute('SELECT * FROM books WHERE (REPLACE(REPLACE(isbn, " ", ""), "-", "")) = ? AND school_code = ?', (clean_isbn, s_code)).fetchone()
+            if not existing_book and title:
+                existing_book = conn.execute('SELECT * FROM books WHERE LOWER(TRIM(title)) = ? AND school_code = ?', (str(title).lower().strip(), s_code)).fetchone()
+            
+            if existing_book:
+                existing_data = {
+                    'id': existing_book['id'],
+                    'title': existing_book['title'],
+                    'author': existing_book['author'],
+                    'total_copies': existing_book['total_copies'],
+                    'available_copies': existing_book['available_copies']
+                }
+            conn.close()
+
+        return jsonify({
+            "success": True,
+            "metadata": book_metadata,
+            "cover_url": cover_url,
+            "existing_book": existing_data
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/admin/scanner')
 @require_permission('canUseAIScanner')
 def smart_scanner():

@@ -31,6 +31,25 @@
     --shadow-hover: 0 10px 30px rgba(92, 60, 243, 0.08);
     --radius: 18px;
 }
+/* Toggle Switch styling */
+.sa-toggle-switch input:checked + .sa-toggle-slider {
+    background-color: var(--lp);
+}
+.sa-toggle-switch .sa-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+.sa-toggle-switch input:checked + .sa-toggle-slider:before {
+    transform: translateX(22px);
+}
+
 [data-theme="dark"] {
     --bg: #0f172a; --white: #1e293b; --border: #334155;
     --text: #f1f5f9; --mid: #94a3b8; --muted: #64748b;
@@ -410,6 +429,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     </p>
                 </div>
 
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 1.5rem; background: var(--bg); padding: 8px 16px; border-radius: 12px; max-width: 240px; margin-left: auto; margin-right: auto; border: 1px solid var(--border);">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--text);">Bulk Scan Mode</span>
+                    <label class="sa-toggle-switch" style="position: relative; display: inline-block; width: 44px; height: 22px; margin: 0;">
+                        <input type="checkbox" id="bulkModeToggle" style="opacity: 0; width: 0; height: 0;">
+                        <span class="sa-toggle-slider" style="position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .3s; border-radius: 22px;"></span>
+                    </label>
+                </div>
+
                 <!-- Mode picker cards -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 420px; margin: 0 auto 1.5rem auto;">
                     <!-- Camera option -->
@@ -469,6 +496,10 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                         <span style="color:white; font-family:'Outfit'; font-weight:800; font-size:1.1rem;">📷 Camera</span>
                         <button onclick="closeCameraModal()" style="background:rgba(255,255,255,0.1); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">✕</button>
+                    </div>
+                    
+                    <div id="bulkStatusIndicator" style="display: none; color: white; background: var(--lp); padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; width: 100%; text-align: center; margin-top: -5px; box-shadow: 0 4px 12px rgba(92,60,243,0.25);">
+                        Captured: <span id="bulkCapturedCount">0</span> | Active Processes: <span id="bulkActiveCount">0</span>
                     </div>
 
                     <!-- Video stream -->
@@ -688,6 +719,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             <button onclick="handleExistsIssue()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--lb); color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">📖 Issue Book</button>
             <button onclick="handleExistsAddCopy()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--lg); color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">➕ Add a Copy</button>
             <button id="existsDeleteBtn" onclick="handleExistsDeleteClick()" class="ld-btn ld-btn-danger" style="width: 100%; justify-content: center; padding: 12px 16px; border-radius: 12px; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">🗑️ Delete Book</button>
+            <button id="existsSkipBtn" onclick="handleExistsSkip()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">⏭️ Skip Book</button>
         </div>
     </div>
 </div>
@@ -709,10 +741,12 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
     let frontFile = null;
     let cameraStream = null;
+    let duplicateQueue = [];
+    let capturedCount = 0;
+    let activeUploads = 0;
 
     // Adjust grids responsiveness dynamically for review layout
     function adjustResponsiveLayout() {
@@ -736,6 +770,20 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         denied.style.display = 'none';
         video.style.display = 'block';
         shutterBtn.style.display = 'flex';
+
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        const statusInd = document.getElementById('bulkStatusIndicator');
+        if (isBulk) {
+            statusInd.style.display = 'block';
+            capturedCount = 0;
+            activeUploads = 0;
+            duplicateQueue = [];
+            document.getElementById('bulkCapturedCount').innerText = '0';
+            document.getElementById('bulkActiveCount').innerText = '0';
+        } else {
+            statusInd.style.display = 'none';
+        }
+
         try {
             cameraStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -751,6 +799,23 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     }
 
     function closeCameraModal() {
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        if (isBulk && activeUploads > 0) {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraStream').srcObject = null;
+            document.getElementById('shutterBtn').style.display = 'none';
+            
+            const statusInd = document.getElementById('bulkStatusIndicator');
+            statusInd.innerText = `Finalizing background processes... ${activeUploads} remaining`;
+            statusInd.style.background = '#eab308';
+            
+            setTimeout(closeCameraModal, 500);
+            return;
+        }
+
         const modal = document.getElementById('cameraModal');
         modal.style.display = 'none';
         if (cameraStream) {
@@ -758,6 +823,24 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             cameraStream = null;
         }
         document.getElementById('cameraStream').srcObject = null;
+
+        const statusInd = document.getElementById('bulkStatusIndicator');
+        statusInd.style.background = '';
+        statusInd.innerHTML = 'Captured: <span id="bulkCapturedCount">0</span> | Active Processes: <span id="bulkActiveCount">0</span>';
+
+        if (isBulk) {
+            processNextDuplicate();
+        }
+    }
+
+    function playShutterFlash() {
+        const video = document.getElementById('cameraStream');
+        video.style.transition = 'none';
+        video.style.opacity = '0.3';
+        setTimeout(() => {
+            video.style.transition = 'opacity 0.25s ease';
+            video.style.opacity = '1';
+        }, 50);
     }
 
     function captureFrame() {
@@ -766,10 +849,102 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        
         canvas.toBlob(blob => {
-            closeCameraModal();
-            handleSelectedFile(blob, 'camera_capture.jpg');
+            if (isBulk) {
+                playShutterFlash();
+                capturedCount++;
+                document.getElementById('bulkCapturedCount').innerText = capturedCount;
+                
+                activeUploads++;
+                document.getElementById('bulkActiveCount').innerText = activeUploads;
+                
+                processBulkFile(blob);
+            } else {
+                closeCameraModal();
+                handleSelectedFile(blob, 'camera_capture.jpg');
+            }
         }, 'image/jpeg', 0.92);
+    }
+
+    async function processBulkFile(blob) {
+        const formData = new FormData();
+        formData.append('front', blob, `bulk_scan_${Date.now()}.jpg`);
+        
+        try {
+            const uploadRes = await fetch('/admin/api/upload-cover', {
+                method: 'POST',
+                body: formData
+            });
+            const uploadData = await uploadRes.json();
+            if (uploadData.status !== 'success') {
+                throw new Error(uploadData.message || "Upload failed");
+            }
+            
+            const coverUrl = uploadData.cover_url;
+            
+            const scanRes = await fetch('/api/scan-vision', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ cover_url: coverUrl })
+            });
+            if (!scanRes.ok) {
+                const errData = await scanRes.json();
+                throw new Error(errData.error || "Failed to scan book with AI");
+            }
+            
+            const scanData = await scanRes.json();
+            const meta = scanData.metadata || {};
+            
+            if (scanData.existing_book) {
+                duplicateQueue.push({
+                    cover_url: coverUrl,
+                    metadata: meta,
+                    existing_book: scanData.existing_book
+                });
+                showToast(`Duplicate: "${scanData.existing_book.title}" queued.`, "info");
+            } else {
+                const savePayload = {
+                    title: meta.title || "Untitled Book",
+                    author: meta.author || "Unknown Author",
+                    isbn: meta.isbn || "",
+                    publisher: meta.publisher || "",
+                    genre: meta.category || "",
+                    class: meta.class || "",
+                    subject: meta.subject || "",
+                    description: meta.description || "",
+                    total_copies: 1,
+                    cover_url: coverUrl,
+                    language: meta.language || "English",
+                    publication_year: meta.publicationYear || "",
+                    tags: meta.tags ? (Array.isArray(meta.tags) ? meta.tags.join(', ') : meta.tags) : ""
+                };
+                
+                const saveRes = await fetch('/admin/api/save-scanned', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(savePayload)
+                });
+                const saveData = await saveRes.json();
+                if (saveData.status === 'success') {
+                    showToast(`Saved: "${savePayload.title}"`, "success");
+                } else {
+                    console.error("Auto-save failed:", saveData.message);
+                    showToast(`Error saving "${savePayload.title}": ${saveData.message}`, "error");
+                }
+            }
+        } catch (err) {
+            console.error("Background scan error:", err);
+            showToast(`Scan failed: ${err.message}`, "error");
+        } finally {
+            activeUploads = Math.max(0, activeUploads - 1);
+            const activeEl = document.getElementById('bulkActiveCount');
+            if (activeEl) {
+                activeEl.innerText = activeUploads;
+            }
+        }
     }
 
     // ── Upload file input ──
@@ -826,35 +1001,13 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 throw new Error("Upload failed: " + data.message);
             }
 
-            // 2. Perform local Tesseract.js OCR
-            document.getElementById('loadingText').innerText = "Starting OCR Engine...";
-            
-            const worker = await Tesseract.createWorker('eng', 1, {
-                logger: m => {
-                    if (m.status === 'recognizing text') {
-                        document.getElementById('loadingText').innerText = `OCR: ${Math.round(m.progress * 100)}% complete...`;
-                    }
-                }
-            });
-            
-            const ocrResult = await worker.recognize(frontFile);
-            const ocrText = ocrResult.data.text;
-            await worker.terminate();
-
-            console.log("Client-side OCR extracted text:", ocrText);
-            
-            if (!ocrText || ocrText.trim().length === 0) {
-                throw new Error("No text could be extracted from the cover. Please take a clearer picture.");
-            }
-
-            // 3. Call backend endpoint to identify book details with GPT-OSS-20B
+            // 2. Call backend endpoint to identify book details with NVIDIA Vision AI
             document.getElementById('loadingText').innerText = "AI is identifying book details...";
             
-            const scanRes = await fetch('/api/scan-ocr-text', {
+            const scanRes = await fetch('/api/scan-vision', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    ocr_text: ocrText,
                     cover_url: data.cover_url
                 })
             });
@@ -866,7 +1019,6 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             
             const scanData = await scanRes.json();
             const meta = scanData.metadata || {};
-            meta.ocrRawText = ocrText;
             
             if (scanData.existing_book) {
                 showExistingBookPopup(scanData.existing_book);
@@ -891,7 +1043,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         adjustResponsiveLayout();
 
         document.getElementById('reviewThumbnail').src = coverUrl;
-        document.getElementById('rawOcr').value = json.ocrRawText || "OCR Data Not Provided";
+        document.getElementById('rawOcr').value = json.description || "NVIDIA Vision AI analyzed";
 
         // Map fields
         const map = {
@@ -980,9 +1132,28 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         document.getElementById('loadingState').style.display = 'none';
     }
 
+    function processNextDuplicate() {
+        if (duplicateQueue.length === 0) {
+            showToast("Bulk scan processing completed!", "success");
+            setTimeout(() => {
+                window.location.href = '/admin?section=books';
+            }, 1500);
+            return;
+        }
+        const nextItem = duplicateQueue.shift();
+        showExistingBookPopup(nextItem.existing_book);
+    }
+
     function handleExistsIssue() {
         if (!currentExistsBook) return;
-        window.location.href = `/admin/issue?book_id=${currentExistsBook.id}`;
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        if (isBulk) {
+            window.open(`/admin/issue?book_id=${currentExistsBook.id}`, '_blank');
+            closeModal('bookExistsModal');
+            processNextDuplicate();
+        } else {
+            window.location.href = `/admin/issue?book_id=${currentExistsBook.id}`;
+        }
     }
 
     async function handleExistsAddCopy() {
@@ -996,7 +1167,12 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             if (data.status === 'success') {
                 showToast(`Added a copy successfully! Stock increased.`, "success");
                 closeModal('bookExistsModal');
-                resetScanMode();
+                const isBulk = document.getElementById('bulkModeToggle').checked;
+                if (isBulk) {
+                    processNextDuplicate();
+                } else {
+                    resetScanMode();
+                }
             } else {
                 showToast("Error adding copy: " + data.message, "error");
             }
@@ -1017,7 +1193,6 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             return;
         }
         
-        // Double confirmed!
         try {
             const res = await fetch(`/admin/api/delete-scanned-book/${currentExistsBook.id}`, {
                 method: 'POST',
@@ -1027,12 +1202,27 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             if (data.status === 'success') {
                 showToast("Book deleted successfully.", "success");
                 closeModal('bookExistsModal');
-                resetScanMode();
+                const isBulk = document.getElementById('bulkModeToggle').checked;
+                if (isBulk) {
+                    processNextDuplicate();
+                } else {
+                    resetScanMode();
+                }
             } else {
                 showToast("Error deleting: " + data.message, "error");
             }
         } catch (e) {
             showToast("Network error.", "error");
+        }
+    }
+
+    function handleExistsSkip() {
+        closeModal('bookExistsModal');
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        if (isBulk) {
+            processNextDuplicate();
+        } else {
+            resetScanMode();
         }
     }
 </script>
