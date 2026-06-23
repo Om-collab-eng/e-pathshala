@@ -535,16 +535,28 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                         <button onclick="closeCameraModal(); document.getElementById('frontInput').click()" style="background:var(--lp); color:white; border:none; border-radius:10px; padding:10px 20px; cursor:pointer; font-weight:700;">📁 Upload Instead</button>
                     </div>
 
-                    <!-- Shutter button -->
-                    <button id="shutterBtn" onclick="captureFrame()" style="
-                        width:70px; height:70px; border-radius:50%;
-                        background:white; border:5px solid rgba(255,255,255,0.3);
-                        cursor:pointer; display:flex; align-items:center; justify-content:center;
-                        transition:transform 0.1s; flex-shrink:0;
-                    " onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                        <div style="width:48px; height:48px; background:var(--lp); border-radius:50%;"></div>
-                    </button>
-                    <p style="color:rgba(255,255,255,0.5); font-size:0.78rem; margin-top:-0.5rem;">Tap the button to capture</p>
+                    <!-- Shutter button & bulk finish controls -->
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem; width:100%;">
+                        <button id="shutterBtn" onclick="captureFrame()" style="
+                            width:70px; height:70px; border-radius:50%;
+                            background:white; border:5px solid rgba(255,255,255,0.3);
+                            cursor:pointer; display:flex; align-items:center; justify-content:center;
+                            transition:transform 0.1s; flex-shrink:0;
+                        " onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                            <div style="width:48px; height:48px; background:var(--lp); border-radius:50%;"></div>
+                        </button>
+                        <p id="shutterHint" style="color:rgba(255,255,255,0.5); font-size:0.78rem; margin-top:-0.2rem; margin-bottom: 0.25rem;">Tap the button to capture</p>
+                        
+                        <button id="bulkFinishBtn" onclick="closeCameraModal(false)" style="
+                            display:none; background:var(--lg); color:white;
+                            border:none; border-radius:12px; padding:12px 28px;
+                            cursor:pointer; font-weight:800; font-family:'Outfit';
+                            font-size:0.9rem; box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+                            transition: all 0.2s;
+                        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            ✓ Done Scanning
+                        </button>
+                    </div>
                 </div>
                 <!-- Hidden canvas for capturing -->
                 <canvas id="captureCanvas" style="display:none;"></canvas>
@@ -816,11 +828,13 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     function startSingleCamera() {
         document.getElementById('bulkModeToggle').checked = false;
         document.getElementById('cameraModalTitle').textContent = '📷 Camera — Single Mode';
+        document.getElementById('bulkFinishBtn').style.display = 'none';
         openCameraModal();
     }
     function startBulkCamera() {
         document.getElementById('bulkModeToggle').checked = true;
         document.getElementById('cameraModalTitle').textContent = '📸 Bulk Scan — Keep scanning!';
+        document.getElementById('bulkFinishBtn').style.display = 'block';
         openCameraModal();
     }
     // ────────────────────────────────────────────────────────────────────────
