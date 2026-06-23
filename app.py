@@ -2741,7 +2741,7 @@ def api_chat():
         finally:
             conn.close()
 
-    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
     if nvidia_key:
         nvidia_key = nvidia_key.strip()
         
@@ -2753,12 +2753,12 @@ def api_chat():
                 "messages": messages,
                 "temperature": 0.6,
                 "top_p": 0.95,
-                "max_tokens": 8192,
+                "max_tokens": 65536,
                 "extra_body": {
                     "chat_template_kwargs": {
                         "enable_thinking": True
                     },
-                    "reasoning_budget": 2048
+                    "reasoning_budget": 16384
                 },
                 "stream": False
             },
@@ -2858,28 +2858,27 @@ def api_scan_ocr_text():
     if not ocr_text:
         return jsonify({"error": "No OCR text provided."}), 400
         
-    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
     if nvidia_key:
         nvidia_key = nvidia_key.strip()
         
     prompt = f"""Extract book details.
-
-Return JSON:
-{{
-  "title": "",
-  "author": "",
-  "publisher": "",
-  "isbn": "",
-  "class": "",
-  "subject": "",
-  "category": "",
-  "description": ""
-}}
-
-OCR Text:
-{ocr_text}
-"""
-    
+ 
+ Return JSON:
+ {{
+   "title": "",
+   "author": "",
+   "publisher": "",
+   "isbn": "",
+   "class": "",
+   "subject": "",
+   "category": "",
+   "description": ""
+ }}
+ 
+ OCR Text:
+ {ocr_text}
+ """
     try:
         response = requests.post(
             "https://integrate.api.nvidia.com/v1/chat/completions",
@@ -2890,12 +2889,12 @@ OCR Text:
                 ],
                 "temperature": 0.6,
                 "top_p": 0.95,
-                "max_tokens": 8192,
+                "max_tokens": 65536,
                 "extra_body": {
                     "chat_template_kwargs": {
                         "enable_thinking": True
                     },
-                    "reasoning_budget": 2048
+                    "reasoning_budget": 16384
                 },
                 "stream": False
             },
@@ -2978,12 +2977,12 @@ JSON Schema:
                         ],
                         "temperature": 0.6,
                         "top_p": 0.95,
-                        "max_tokens": 8192,
+                        "max_tokens": 65536,
                         "extra_body": {
                             "chat_template_kwargs": {
                                 "enable_thinking": True
                             },
-                            "reasoning_budget": 2048
+                            "reasoning_budget": 16384
                         },
                         "stream": False
                     },

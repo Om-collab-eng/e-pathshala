@@ -111,7 +111,7 @@ app.post('/api/scan', upload.single('cover_image'), async (req, res) => {
         }
 
         // Call NVIDIA Integration API to parse metadata from OCR text using nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
-        const nvidiaApiKey = (process.env.NVIDIA_API_KEY || "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").trim();
+        const nvidiaApiKey = (process.env.NVIDIA_API_KEY || "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").trim();
 
         console.log('[AI] Querying NVIDIA Integrate (nvidia/nemotron-3-nano-omni-30b-a3b-reasoning) for metadata extraction...');
 
@@ -157,12 +157,12 @@ ${ocrText}
                 ],
                 temperature: 0.6,
                 top_p: 0.95,
-                max_tokens: 8192,
+                max_tokens: 65536,
                 extra_body: {
                     chat_template_kwargs: {
                         enable_thinking: true
                     },
-                    reasoning_budget: 2048
+                    reasoning_budget: 16384
                 },
                 stream: false
             },
