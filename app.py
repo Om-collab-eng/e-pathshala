@@ -3377,27 +3377,6 @@ def api_update_book(book_id):
     finally:
         conn.close()
 
-
-@app.route('/admin/api/add-copy/<int:book_id>', methods=['POST'])
-def api_add_copy(book_id):
-    if session.get('role') not in ['admin', 'demo_admin', 'librarian']:
-        return jsonify({"status": "error", "message": "Unauthorized"}), 401
-    conn = get_db_connection()
-    try:
-        conn.execute('''
-            UPDATE books SET
-                total_copies     = total_copies + 1,
-                available_copies = available_copies + 1
-            WHERE id = ?
-        ''', (book_id,))
-        conn.commit()
-        book = conn.execute('SELECT total_copies FROM books WHERE id = ?', (book_id,)).fetchone()
-        return jsonify({"status": "success", "total_copies": book['total_copies'] if book else 0})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-    finally:
-        conn.close()
-
 # ─────────────────────────────────────────────────────────────────────────────
 
 @app.route('/digital-library')
@@ -3790,7 +3769,7 @@ def api_save_scanned():
 
 @app.route('/admin/api/add-copy/<int:book_id>', methods=['POST'])
 def api_add_copy(book_id):
-    if session.get('role') not in ['admin', 'demo_admin']: return {"status": "error", "message": "Unauthorized"}
+    if session.get('role') not in ['admin', 'demo_admin', 'librarian']: return {"status": "error", "message": "Unauthorized"}
     s_code = session.get('school_code')
     try:
         conn = get_db_connection()
@@ -3800,8 +3779,11 @@ def api_add_copy(book_id):
             return {"status": "error", "message": "Book not found"}
         conn.execute('UPDATE books SET total_copies = total_copies + 1, available_copies = available_copies + 1 WHERE id = ?', (book_id,))
         conn.commit()
+        # Retrieve the updated total count
+        updated_book = conn.execute('SELECT total_copies FROM books WHERE id = ?', (book_id,)).fetchone()
+        total_copies = updated_book['total_copies'] if updated_book else 0
         conn.close()
-        return {"status": "success"}
+        return {"status": "success", "total_copies": total_copies}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
