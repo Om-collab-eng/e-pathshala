@@ -2897,11 +2897,33 @@ import urllib.parse
 import re
 
 def get_next_book_id(conn):
-    row = conn.execute("SELECT COUNT(*) as count FROM books").fetchone()
-    count = row['count'] if row else 0
-    next_num = count + 1
     year = datetime.now().year
-    return f"VBPG{year}{next_num:04d}"
+    prefix = f"VBPG{year}"
+
+    # Find the highest existing number for this year's prefix
+    row = conn.execute(
+        "SELECT barcode_id FROM books WHERE barcode_id LIKE ? ORDER BY barcode_id DESC LIMIT 1",
+        (prefix + '%',)
+    ).fetchone()
+
+    if row:
+        try:
+            last_num = int(row['barcode_id'][len(prefix):])
+        except (ValueError, IndexError):
+            last_num = 0
+    else:
+        last_num = 0
+
+    # Keep incrementing until we find a free slot (handles gaps from deletions)
+    for attempt in range(1, 10000):
+        candidate = f"{prefix}{last_num + attempt:04d}"
+        existing = conn.execute("SELECT 1 FROM books WHERE barcode_id = ?", (candidate,)).fetchone()
+        if not existing:
+            return candidate
+
+    # Ultimate fallback: timestamp-based unique ID
+    import time
+    return f"{prefix}{int(time.time() * 1000) % 100000:05d}"
 
 def search_web_py(query):
     try:
