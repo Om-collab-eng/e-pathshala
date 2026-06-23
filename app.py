@@ -3089,8 +3089,8 @@ Subject:
 Class/Grade:
 Target Audience:
 Quantity:
-50 words Summary:
-20 words Description:
+Summary:
+Description:
 Tags:
 
 Rules:
@@ -3181,8 +3181,8 @@ Rules:
             "Class/Grade": "class", "class_grade": "class", "class": "class",
             "Target Audience": "targetAudience", "target_audience": "targetAudience", "targetAudience": "targetAudience",
             "Quantity": "quantity", "quantity": "quantity",
-            "50 words Summary": "summary50Words", "summary_50_words": "summary50Words", "summary50Words": "summary50Words",
-            "20 words Description": "description", "detailed_description": "description", "description": "description",
+            "Summary": "summary50Words", "summary": "summary50Words", "summary_50_words": "summary50Words", "50 words Summary": "summary50Words", "summary50Words": "summary50Words",
+            "Description": "description", "description": "description", "detailed_description": "description", "20 words Description": "description",
             "Tags": "tags", "search_tags": "tags", "tags": "tags"
         }
         
@@ -3202,7 +3202,9 @@ Rules:
         for std_key in ["title", "subtitle", "author", "publisher", "publicationYear", "isbn", "language", "category", "subject", "class", "deweyDecimal", "targetAudience", "difficultyLevel", "summary50Words", "description"]:
             book_metadata["confidenceScores"][std_key] = 100
                 
-        # Check if missing crucial data
+        # ── Google Books API enrichment (fast fallback for missing fields) ──────
+        GOOGLE_BOOKS_KEY = os.environ.get('GOOGLE_BOOKS_API_KEY', 'AIzaSyBGDtePaph7tniOpH7RpAb8Mdl2M0hgJVA')
+
         is_missing = (
             not book_metadata.get('title') or
             not book_metadata.get('author') or
@@ -3210,80 +3212,65 @@ Rules:
             not book_metadata.get('publisher') or
             book_metadata.get('publisher', '').lower() in ['unknown', 'n/a', ''] or
             not book_metadata.get('isbn') or
-            not book_metadata.get('class') or
-            not book_metadata.get('subject')
+            not book_metadata.get('description')
         )
-        
-        if is_missing:
-            title_query = book_metadata.get('title') or "unknown book"
-            author_query = book_metadata.get('author') or ""
-            search_query = f"\"{title_query}\" {author_query} book publisher isbn class subject".strip()
-            search_results = search_web_py(search_query)
-            
-            if search_results:
-                validation_prompt = f"""We searched the web for details about the book: "{title_query}".
-Here are some search results:
-{search_results}
 
-We initially extracted these metadata details from the cover image:
-{json.dumps(book_metadata, indent=2)}
+        if is_missing and book_metadata.get('title'):
+            try:
+                import urllib.parse as _uparse
+                title_q = book_metadata.get('title', '')
+                isbn_q  = book_metadata.get('isbn', '')
 
-Use the search results to fill in any missing details (such as author, publisher, subject, class, isbn, or description) and correct any incorrect fields.
+                # Build query: prefer ISBN search when available
+                if isbn_q:
+                    gb_query = f'isbn:{isbn_q}'
+                else:
+                    gb_query = f'intitle:{title_q}'
 
-Return ONLY a valid, minified JSON object matching the JSON schema below. DO NOT wrap it in markdown formatting, no extra text, explanations, or warnings.
-
-JSON Schema:
-{{
-  "title": "Book Title",
-  "author": "Book Author",
-  "publisher": "Book Publisher",
-  "isbn": "10 or 13 digit ISBN number without spaces/hyphens",
-  "class": "Standard/Class name (e.g. VIII, 9, High School, etc.)",
-  "subject": "Subject or academic topic",
-  "category": "Genre or Category (e.g. Fiction, Reference, Science)",
-  "description": "A short description of the book"
-}}
-"""
-                val_response = requests.post(
-                    "https://integrate.api.nvidia.com/v1/chat/completions",
-                    json={
-                        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-                        "messages": [
-                            {"role": "user", "content": validation_prompt}
-                        ],
-                        "temperature": 0.6,
-                        "top_p": 0.95,
-                        "max_tokens": 65536,
-                        "extra_body": {
-                            "chat_template_kwargs": {
-                                "enable_thinking": True
-                            },
-                            "reasoning_budget": 16384
-                        },
-                        "stream": False
-                    },
-                    headers={
-                        "Authorization": f"Bearer {nvidia_key}",
-                        "Content-Type": "application/json"
-                    },
-                    timeout=60
+                gb_url = (
+                    f'https://www.googleapis.com/books/v1/volumes'
+                    f'?q={_uparse.quote(gb_query)}&maxResults=1&key={GOOGLE_BOOKS_KEY}'
                 )
-                if val_response.status_code == 200:
-                    val_data = val_response.json()
-                    val_reply = val_data['choices'][0]['message']['content'].strip()
-                    if "```json" in val_reply:
-                        val_reply = val_reply.split("```json")[1].split("```")[0].strip()
-                    elif "```" in val_reply:
-                        val_reply = val_reply.split("```")[1].split("```")[0].strip()
-                    
-                    try:
-                        val_metadata = json.loads(val_reply)
-                        book_metadata.update(val_metadata)
-                    except Exception:
-                        val_match = re.search(r'\{[\s\S]*?\}', val_reply)
-                        if val_match:
-                            val_metadata = json.loads(val_match.group(0))
-                            book_metadata.update(val_metadata)
+                gb_res  = requests.get(gb_url, timeout=8)
+                gb_data = gb_res.json()
+                items   = gb_data.get('items', [])
+
+                if items:
+                    vi = items[0].get('volumeInfo', {})
+
+                    # Helper: fill only if field is currently blank / unknown
+                    def _fill(field, value):
+                        cur = str(book_metadata.get(field, '')).strip().lower()
+                        if not cur or cur in ('unknown', 'n/a', 'none', ''):
+                            if value:
+                                book_metadata[field] = value
+
+                    _fill('title',           vi.get('title', ''))
+                    _fill('subtitle',        vi.get('subtitle', ''))
+                    _fill('author',          ', '.join(vi.get('authors', [])))
+                    _fill('publisher',       vi.get('publisher', ''))
+                    _fill('publicationYear', str(vi.get('publishedDate', ''))[:4])
+                    _fill('language',        vi.get('language', '').upper())
+                    _fill('description',     vi.get('description', ''))
+                    _fill('category',        ', '.join(vi.get('categories', [])))
+
+                    # ISBN — prefer ISBN-13
+                    if not book_metadata.get('isbn'):
+                        for id_obj in vi.get('industryIdentifiers', []):
+                            if id_obj.get('type') == 'ISBN_13':
+                                _fill('isbn', id_obj.get('identifier', ''))
+                                break
+                        if not book_metadata.get('isbn'):
+                            for id_obj in vi.get('industryIdentifiers', []):
+                                _fill('isbn', id_obj.get('identifier', ''))
+                                break
+
+                    print(f"[Google Books] Enriched metadata for: {vi.get('title')}")
+
+            except Exception as gb_err:
+                print(f"[Google Books] Enrichment failed: {gb_err}")
+        # ────────────────────────────────────────────────────────────────────────
+
                             
         s_code = session.get('school_code')
         existing_data = None
