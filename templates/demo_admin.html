@@ -918,7 +918,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                                     </td>
                                     <td style="text-align:right;">
                                         <div style="display:inline-flex; gap:6px; align-items:center;">
-                                            <button class="ld-btn-alt" style="font-size:0.7rem; padding:6px 12px;" onclick="openViewUserModal({{ u|tojson|safe }})">Info</button>
+                                            <button class="ld-btn-alt" style="font-size:0.7rem; padding:6px 12px;" onclick="openViewUserModal({{ u|tojson|forceescape }})">Info</button>
                                             
                                             <form action="/admin/student/{{ u.id }}/toggle-ban" method="POST" style="margin:0;">
                                                 <button type="submit" class="ld-btn-alt {% if u.is_banned %}ld-btn-success{% else %}ld-btn-danger{% endif %}" style="font-size: 0.7rem; padding: 6px 12px;">

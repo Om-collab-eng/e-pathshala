@@ -1,15 +1,69 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    .nav-pills-container {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    
+    .nav-pill-btn {
+        padding: 8px 16px;
+        border-radius: 99px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .nav-pill-btn.btn-catalog, .nav-pill-btn.btn-dashboard {
+        background: rgba(92, 60, 243, 0.08);
+        color: #5c3cf3;
+        border: 1px solid rgba(92, 60, 243, 0.15);
+    }
+    .nav-pill-btn.btn-catalog:hover, .nav-pill-btn.btn-dashboard:hover {
+        background: rgba(92, 60, 243, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .nav-pill-btn.btn-logout {
+        background: rgba(244, 63, 94, 0.08);
+        color: #f43f5e;
+        border: 1px solid rgba(244, 63, 94, 0.15);
+    }
+    .nav-pill-btn.btn-logout:hover {
+        background: rgba(244, 63, 94, 0.15);
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .nav-pills-container {
+            justify-content: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .nav-pill-btn {
+            flex: 1 1 auto;
+            min-width: 100px;
+        }
+    }
+</style>
+
 <div class="content-container slide-up">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 15px;">
         <h1><span class="icon">📖</span> Book Details</h1>
-        <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-            <div style="display: flex; gap: 10px;">
-                <a href="/student/browse" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">← Back to Catalog</a>
-                <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
-            </div>
-            <a href="/student" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
+        <div class="nav-pills-container">
+            <a href="/student/browse" class="nav-pill-btn btn-catalog">← Back to Catalog</a>
+            <a href="/student" class="nav-pill-btn btn-dashboard">Back to Dashboard</a>
+            <a href="/logout" class="nav-pill-btn btn-logout">Log Out</a>
         </div>
     </div>
 

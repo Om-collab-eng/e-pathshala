@@ -69,6 +69,12 @@
             flex-direction: row;
         }
 
+        @media (max-width: 768px) {
+            .global-nav-container {
+                display: none !important;
+            }
+        }
+
         @media (min-width: 1024px) {
             .global-nav-container {
                 flex-direction: column;
@@ -77,6 +83,129 @@
                 bottom: auto;
                 transform: translateY(-50%);
             }
+        }
+
+        /* AI Chat Widget Responsive positioning and styling */
+        .ai-chat-widget-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .ai-chat-toggle-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #5c3cf3;
+            color: white;
+            border: none;
+            box-shadow: 0 8px 24px rgba(92, 60, 243, 0.35);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .ai-chat-toggle-btn:hover {
+            transform: scale(1.05);
+            background-color: #4b2bd3;
+        }
+
+        .ai-chat-toggle-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @media (max-width: 768px) {
+            .ai-chat-widget-container {
+                bottom: 90px !important;
+            }
+        }
+
+        /* Force Mobile View Simulation Styles */
+        html.force-mobile-view, body.force-mobile-view {
+            background-color: #0f172a !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        body.force-mobile-view .portal-wrapper,
+        body.force-mobile-view .content-container,
+        body.force-mobile-view .login-container {
+            width: 100% !important;
+            max-width: 420px !important;
+            height: 90vh !important;
+            min-height: 700px !important;
+            margin: 0 auto !important;
+            border: 12px solid #334155 !important;
+            border-radius: 40px !important;
+            background-color: var(--bg-main) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        body.force-mobile-view .desktop-sidebar {
+            display: none !important;
+        }
+
+        body.force-mobile-view .portal-main {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            flex-grow: 1 !important;
+            height: 100% !important;
+            overflow-y: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        body.force-mobile-view .bottom-nav {
+            display: flex !important;
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            transform: none !important;
+        }
+
+        body.force-mobile-view .my-pub-header {
+            padding: 1rem !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        body.force-mobile-view .pub-stats-row {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+            padding: 1rem !important;
+        }
+        body.force-mobile-view .pub-list-container {
+            padding: 0 1rem 2rem !important;
+            grid-template-columns: 1fr !important;
+        }
+        body.force-mobile-view .share-cta-banner {
+            margin: 0 1rem 2rem !important;
+            padding: 1rem !important;
         }
     </style>
     {% block head %}{% endblock %}
@@ -311,6 +440,19 @@
             }
         }
 
+        function applyMobileViewStatus() {
+            const isMobileView = localStorage.getItem('forceMobileView') === 'true';
+            if (isMobileView) {
+                document.body.classList.add('force-mobile-view');
+                document.documentElement.classList.add('force-mobile-view');
+            } else {
+                document.body.classList.remove('force-mobile-view');
+                document.documentElement.classList.remove('force-mobile-view');
+            }
+        }
+        window.applyMobileViewStatus = applyMobileViewStatus;
+        applyMobileViewStatus();
+
         // Load saved theme
         let savedTheme = localStorage.getItem('theme') || 'dark';
         if (window.location.pathname.startsWith('/personal')) {
@@ -319,6 +461,7 @@
         html.setAttribute('data-theme', savedTheme);
         
         document.addEventListener('DOMContentLoaded', () => {
+            applyMobileViewStatus();
             updateAllThemeIcons(savedTheme);
             setupDynamicDashboardNav();
             
@@ -419,7 +562,7 @@
     </script>
 
     {% if session.get('user_id') and (session.get('role') == 'super_admin' or (school_perms and school_perms.get('canUseAIChat'))) %}
-    <div id="aiChatWidget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <div id="aiChatWidget" class="ai-chat-widget-container">
         <!-- Chat Window -->
         <div id="aiChatWindow" style="display: none; width: 90vw; max-width: 350px; height: 70vh; max-height: 450px; background: var(--bg-card); border-radius: 12px; box-shadow: var(--shadow-premium); backdrop-filter: var(--glass-blur); flex-direction: column; overflow: hidden; border: 1px solid var(--border-light); margin-bottom: 10px;">
             <div style="background: var(--primary-color); padding: 10px 15px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
@@ -435,8 +578,10 @@
             </div>
         </div>
         <!-- Toggle Button -->
-        <button onclick="toggleAiChat()" style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary-color); color: white; border: none; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; justify-content: center; align-items: center; float: right;">
-            💬
+        <button onclick="toggleAiChat()" class="ai-chat-toggle-btn" aria-label="Toggle AI Chat">
+            <svg viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
         </button>
     </div>
     {% endif %}

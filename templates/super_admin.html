@@ -471,6 +471,16 @@
                         </div>
                         <form id="backupForm" action="/super-admin/force-backup" method="POST" style="display:none;"></form>
                     </div>
+                    {% if session.get('name') == 'OM' %}
+                    <div class="sa-settings-item" style="border-left: 4px solid #3b82f6;" onclick="toggleMobileView()">
+                        <div class="sa-settings-icon" style="color:#3b82f6; background:#eff6ff;">📱</div>
+                        <div class="sa-settings-text">
+                            <div class="sa-settings-title">Toggle Simulated Mobile View</div>
+                            <div class="sa-settings-desc">Force the site to render inside a mobile frame (Widescreen Emulator)</div>
+                        </div>
+                        <div id="mobileViewStatusIndicator" style="font-weight: 800; color: #3b82f6; font-size: 0.8rem; margin-right: 10px;">OFF</div>
+                    </div>
+                    {% endif %}
                     <div class="sa-settings-item" style="border-left: 4px solid #ef4444;" onclick="initiateWipe()">
                         <div class="sa-settings-icon" style="color:#ef4444; background:#fef2f2;">⚠️</div>
                         <div class="sa-settings-text">
@@ -1227,7 +1237,29 @@
         }
     }
 
-    {% if session.get('name') == 'OM' %}
+    function toggleMobileView() {
+        const isMobileView = localStorage.getItem('forceMobileView') === 'true';
+        const newStatus = !isMobileView;
+        localStorage.setItem('forceMobileView', newStatus ? 'true' : 'false');
+        applyMobileViewStatus();
+        updateMobileViewIndicator();
+        showToast(newStatus ? "Mobile View enabled!" : "Mobile View disabled!", "success");
+    }
+
+    function updateMobileViewIndicator() {
+        const isMobileView = localStorage.getItem('forceMobileView') === 'true';
+        const indicator = document.getElementById('mobileViewStatusIndicator');
+        if (indicator) {
+            indicator.innerText = isMobileView ? "ON" : "OFF";
+            indicator.style.color = isMobileView ? "#10b981" : "#3b82f6";
+        }
+    }
+
+    // Call update on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        updateMobileViewIndicator();
+    });
+
     function updateOmTotp() {
         fetch('/super-admin/om-otp')
             .then(r => r.json())

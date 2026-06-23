@@ -317,14 +317,36 @@
         color: var(--sp-purple);
     }
 
-    /* Featured Collection Banner */
+    /* Featured Collection Banner & Carousel */
+    .featured-carousel-wrapper {
+        position: relative;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+    .featured-carousel {
+        display: flex;
+        gap: 15px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        scroll-behavior: smooth;
+    }
+    .featured-carousel::-webkit-scrollbar {
+        display: none;
+    }
+    .featured-carousel .featured-banner {
+        flex: 0 0 100%;
+        scroll-snap-align: start;
+        margin-bottom: 0;
+        box-sizing: border-box;
+    }
     .featured-banner {
         background: linear-gradient(135deg, #f5f3ff 0%, #edd8ff 100%);
         border-radius: 24px;
         padding: 1.5rem;
         position: relative;
         overflow: hidden;
-        margin-bottom: 2rem;
         box-shadow: 0 10px 30px rgba(92, 60, 243, 0.04);
         display: flex;
         justify-content: space-between;
@@ -1045,20 +1067,52 @@
                 </div>
             </div>
 
-            <div class="featured-banner">
-                <div class="featured-info">
-                    <div class="featured-label">Featured Collection</div>
-                    <h4 class="featured-title">Top Reads This Week</h4>
-                    <p class="featured-subtitle">Handpicked popular books and resources just for you!</p>
-                    <a href="/student/browse?genre=Self+Help" class="featured-btn">Explore Now</a>
+            <div class="featured-carousel-wrapper">
+                <div class="featured-carousel">
+                    <!-- Slide 1 -->
+                    <div class="featured-banner">
+                        <div class="featured-info">
+                            <div class="featured-label">Featured Collection</div>
+                            <h4 class="featured-title">Top Reads This Week</h4>
+                            <p class="featured-subtitle">Handpicked popular books and resources just for you!</p>
+                            <a href="/student/browse?genre=Self+Help" class="featured-btn">Explore Now</a>
+                        </div>
+                    </div>
+                    <!-- Slide 2 -->
+                    <div class="featured-banner" style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);">
+                        <div class="featured-info">
+                            <div class="featured-label">Featured Collection</div>
+                            <h4 class="featured-title">Science & Innovation</h4>
+                            <p class="featured-subtitle">Dive into chemistry, physics, and world discoveries!</p>
+                            <a href="/student/browse?genre=Science" class="featured-btn" style="background: #0284c7;">Start Reading</a>
+                        </div>
+                    </div>
+                    <!-- Slide 3 -->
+                    <div class="featured-banner" style="background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%);">
+                        <div class="featured-info">
+                            <div class="featured-label">Featured Collection</div>
+                            <h4 class="featured-title">Coding & Technology</h4>
+                            <p class="featured-subtitle">Learn Python, Web Development, and cutting-edge AI!</p>
+                            <a href="/student/browse?genre=Technology" class="featured-btn" style="background: #059669;">Explore Tech</a>
+                        </div>
+                    </div>
+                    <!-- Slide 4 -->
+                    <div class="featured-banner" style="background: linear-gradient(135deg, #fffbeb 0%, #fde68a 100%);">
+                        <div class="featured-info">
+                            <div class="featured-label">Featured Collection</div>
+                            <h4 class="featured-title">Business & Leadership</h4>
+                            <p class="featured-subtitle">Master finance, entrepreneurship, and team building!</p>
+                            <a href="/student/browse?genre=Business" class="featured-btn" style="background: #d97706;">View Collection</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <div class="carousel-dots">
-                <div class="carousel-dot active"></div>
-                <div class="carousel-dot"></div>
-                <div class="carousel-dot"></div>
-                <div class="carousel-dot"></div>
+                <div class="carousel-dot active" data-index="0"></div>
+                <div class="carousel-dot" data-index="1"></div>
+                <div class="carousel-dot" data-index="2"></div>
+                <div class="carousel-dot" data-index="3"></div>
             </div>
 
             <!-- Trending Now Section -->
@@ -1252,14 +1306,6 @@
     </div>
 </div>
 
-<!-- Floating Action Button for Chat (BASIC & PROFESSIONAL plans only) -->
-{% if school_perms.get('canUseAIChat') %}
-<div class="chat-fab">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-    </svg>
-</div>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -1295,6 +1341,35 @@
             const grad = getPastelGradient(title);
             el.style.background = `linear-gradient(135deg, ${grad[0]} 0%, ${grad[1]} 100%)`;
         });
+
+        // Initialize Carousel Scroll Logic
+        const carousel = document.querySelector('.featured-carousel');
+        const dots = document.querySelectorAll('.carousel-dot');
+        if (carousel && dots.length > 0) {
+            carousel.addEventListener('scroll', () => {
+                const width = carousel.getBoundingClientRect().width || carousel.offsetWidth;
+                if (width > 0) {
+                    const index = Math.round(carousel.scrollLeft / width);
+                    dots.forEach((dot, i) => {
+                        if (i === index) {
+                            dot.classList.add('active');
+                        } else {
+                            dot.classList.remove('active');
+                        }
+                    });
+                }
+            });
+
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    const width = carousel.getBoundingClientRect().width || carousel.offsetWidth;
+                    carousel.scrollTo({
+                        left: index * width,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        }
     });
 
     // Mobile Sidebar Drawer Toggle

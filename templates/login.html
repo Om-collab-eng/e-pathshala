@@ -252,13 +252,19 @@
                 <button type="button" class="btn-alt" id="demoModeBtn" onclick="window.location.href='/demo-mode'" style="width: 100%; border-color: var(--accent-warning); color: var(--accent-warning);">
                     Enter Demo Sandbox
                 </button>
+                
+                <button type="button" class="btn-alt" id="lnkRegisterSchool" onclick="window.location.href='/register?type=school'" style="width: 100%; border-color: var(--accent-primary); color: var(--accent-primary); font-family: inherit;">
+                    First time student? Click here
+                </button>
+                
+                <button type="button" class="btn-alt" id="lnkRegisterPersonal" onclick="window.location.href='/register?type=personal'" style="width: 100%; border-color: var(--accent-primary); color: var(--accent-primary); font-family: inherit; display: none;">
+                    Create a Free Personal Library
+                </button>
             </div>
             
-            <!-- Registration & Helper links -->
-            <div style="text-align: center; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 8px;" id="signUpLinks">
-                <a href="/register?type=school" id="lnkRegisterSchool" style="color: var(--accent-primary); text-decoration: none; font-size: 0.95rem; font-weight: bold;">Link School Student Profile &rarr;</a>
-                <a href="/register?type=personal" id="lnkRegisterPersonal" style="color: var(--accent-primary); text-decoration: none; font-size: 0.95rem; font-weight: bold; display: none;">Create a Free Personal Library &rarr;</a>
-                <a href="/" style="color: var(--text-mid); text-decoration: none; font-size: 0.9rem; margin-top: 8px;">&larr; Return to Home Page</a>
+            <!-- Helper links -->
+            <div style="text-align: center; margin-top: 1.5rem;" id="signUpLinks">
+                <a href="/" style="color: var(--text-mid); text-decoration: none; font-size: 0.9rem;">&larr; Return to Home Page</a>
             </div>
         </form>
         {% endif %}
