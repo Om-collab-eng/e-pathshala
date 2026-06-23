@@ -429,6 +429,13 @@
                         <div class="sa-stat-value">1.2.0</div>
                         <div class="sa-stat-label">System Version</div>
                     </div>
+                    {% if session.get('name') == 'OM' %}
+                    <div class="sa-stat-card" style="border-left: 4px solid #ef4444;">
+                        <div class="sa-stat-icon" style="background: #fef2f2; color: #ef4444;">🔑</div>
+                        <div class="sa-stat-value" id="otpDisplay" style="font-family: monospace; letter-spacing: 2px;">------</div>
+                        <div class="sa-stat-label">Wipe Data OTP (<span id="otpCountdown">00</span>s)</div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -962,6 +969,49 @@
 
 {% block scripts %}
 <script>
+    // ── Wipe Data OTP Updater for OM ─────────────────────────────────────────
+    {% if session.get('name') == 'OM' %}
+    function initOmOtp() {
+        const otpDisp = document.getElementById('otpDisplay');
+        const countDisp = document.getElementById('otpCountdown');
+        if (!otpDisp || !countDisp) return;
+
+        let remainingSecs = 0;
+        let timer = null;
+
+        async function fetchOtp() {
+            try {
+                const res = await fetch('/super-admin/om-otp');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    otpDisp.innerText = data.otp;
+                    remainingSecs = data.remaining;
+                    countDisp.innerText = remainingSecs;
+                    
+                    // Restart local countdown timer
+                    clearInterval(timer);
+                    timer = setInterval(() => {
+                        remainingSecs--;
+                        if (remainingSecs <= 0) {
+                            clearInterval(timer);
+                            fetchOtp();
+                        } else {
+                            countDisp.innerText = remainingSecs;
+                        }
+                    }, 1000);
+                }
+            } catch(e) {
+                console.error("Failed to fetch OTP", e);
+            }
+        }
+
+        // Initial fetch
+        fetchOtp();
+    }
+    document.addEventListener('DOMContentLoaded', initOmOtp);
+    {% endif %}
+    // ─────────────────────────────────────────────────────────────────────────
+
     function toggleSidebarCollapse() {
         const container = document.getElementById('dashboard-container');
         const isCollapsed = container.classList.contains('sidebar-collapsed');
