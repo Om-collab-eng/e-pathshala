@@ -144,6 +144,18 @@ if SUPABASE_URL and SUPABASE_KEY:
     except Exception as files_err:
         print(f"Warning: Could not restore digital content from Supabase Storage: {files_err}")
 
+    # Restoring uploaded covers on startup
+    try:
+        remote_uploads = list_supabase_files("backups/uploads")
+        for filename in remote_uploads:
+            if filename != ".emptyFolderPlaceholder" and filename:
+                remote_path = f"backups/uploads/{filename}"
+                local_path = os.path.join(UPLOADS_DIR, filename)
+                download_from_supabase(remote_path, local_path)
+        print("Restored uploaded covers from Supabase Storage.")
+    except Exception as uploads_err:
+        print(f"Warning: Could not restore uploads from Supabase Storage: {uploads_err}")
+
     # Register lifecycle hook (Runs asynchronously in a background thread to prevent blocking HTTP responses)
     supabase_sync_lock = threading.Lock()
 
@@ -162,7 +174,14 @@ if SUPABASE_URL and SUPABASE_KEY:
                     local_path = os.path.join(root, file)
                     remote_path = f"backups/digital_content/{file}"
                     upload_to_supabase(local_path, remote_path)
-            print("Lifecycle Sync: Synced DB and files to Supabase Storage in the background.")
+            
+            # Sync uploaded cover images
+            for root, _, files in os.walk(UPLOADS_DIR):
+                for file in files:
+                    local_path = os.path.join(root, file)
+                    remote_path = f"backups/uploads/{file}"
+                    upload_to_supabase(local_path, remote_path)
+            print("Lifecycle Sync: Synced DB, digital content, and uploads to Supabase Storage in the background.")
         except Exception as e:
             print(f"Supabase Lifecycle Sync Error: {e}")
         finally:
