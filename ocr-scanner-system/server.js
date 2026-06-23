@@ -49,16 +49,33 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
-// Categories list according to specifications
-const VALID_CATEGORIES = [
-    'Science', 'Mathematics', 'English', 'Hindi', 'Sanskrit',
-    'Social Science', 'Computer Science', 'Fiction', 'Non Fiction',
-    'Biography', 'Reference', 'Exam Preparation', 'Other'
-];
-
 /**
  * 1. Book Scanner & OCR & AI Extraction Endpoint
  */
+// DuckDuckGo search helper
+async function searchWeb(query) {
+    try {
+        console.log(`[Web Search] Querying DuckDuckGo for: "${query}"`);
+        const response = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            timeout: 8000
+        });
+        const html = response.data;
+        const snippets = [];
+        const regex = /<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+        let match;
+        while ((match = regex.exec(html)) !== null && snippets.length < 5) {
+            snippets.push(match[1].replace(/<[^>]*>/g, '').trim());
+        }
+        return snippets.join('\n');
+    } catch (e) {
+        console.error("[Web Search] Search failed:", e.message);
+        return "";
+    }
+}
+
 app.post('/api/scan', upload.single('cover_image'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No image uploaded.' });
@@ -93,54 +110,68 @@ app.post('/api/scan', upload.single('cover_image'), async (req, res) => {
             });
         }
 
-        // Call OpenRouter API to parse metadata from OCR text
-        const openRouterApiKey = process.env.OPENROUTER_API_KEY;
-        if (!openRouterApiKey) {
-            throw new Error('OPENROUTER_API_KEY is not defined in the environment variables.');
-        }
+        // Call NVIDIA Integration API to parse metadata from OCR text using nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+        const nvidiaApiKey = (process.env.NVIDIA_API_KEY || "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").trim();
 
-        console.log('[AI] Querying OpenRouter for metadata extraction...');
+        console.log('[AI] Querying NVIDIA Integrate (nvidia/nemotron-3-nano-omni-30b-a3b-reasoning) for metadata extraction...');
 
-        const aiPrompt = `Analyze the following OCR text extracted from a book cover and extract details like Title, Author, Publisher, ISBN, Subject, and Category.
-Choose the "category" value strictly from this list: ${VALID_CATEGORIES.join(', ')}. If none fit, use "Other".
+        const aiPrompt = `Analyze the following OCR text extracted from a book cover.
+Extract:
+* Book title
+* Author
+* Publisher
+* ISBN
+* Edition
+* Subject
+* Class level
+* Short description
 
-OCR Text:
-"""
-${ocrText}
-"""
-
-Return a valid, minified JSON object with the fields listed below. Return ONLY the JSON object, without any markdown formatting (do not include \`\`\`json or \`\`\`), no extra text, explanations, or warnings.
+Return ONLY a valid, minified JSON object matching the JSON schema below. DO NOT wrap it in markdown formatting (do not include \`\`\`json or \`\`\`), no extra text, explanations, or reasoning. Missing values should be returned as empty strings.
 
 JSON Schema:
 {
-  "title": "Extracted Book Title (Title Case)",
-  "author": "Extracted Book Author(s)",
-  "publisher": "Extracted Publisher Name",
-  "isbn": "10 or 13 digit ISBN number without spaces/hyphens (if found, else empty string)",
-  "category": "One of the listed categories",
-  "subject": "Compelling subject name or academic topic",
-  "confidence": ${Math.round(ocrConfidence)}
-}`;
+  "title": "Book Title",
+  "author": "Book Author",
+  "publisher": "Book Publisher",
+  "isbn": "10 or 13 digit ISBN number without spaces/hyphens",
+  "edition": "Book Edition",
+  "class": "Class level",
+  "subject": "Subject",
+  "description": "Short description of the book"
+}
 
-        const response = await axios.post(
-            'https://openrouter.ai/api/v1/chat/completions',
+OCR Text to analyze:
+"""
+${ocrText}
+"""`;
+
+        let response = await axios.post(
+            'https://integrate.api.nvidia.com/v1/chat/completions',
             {
-                model: 'cohere/north-mini-code:free',
+                model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
                 messages: [
                     {
                         role: 'user',
                         content: aiPrompt
                     }
-                ]
+                ],
+                temperature: 0.6,
+                top_p: 0.95,
+                max_tokens: 8192,
+                extra_body: {
+                    chat_template_kwargs: {
+                        enable_thinking: true
+                    },
+                    reasoning_budget: 2048
+                },
+                stream: false
             },
             {
                 headers: {
-                    'Authorization': `Bearer ${openRouterApiKey}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://librika.in',
-                    'X-Title': 'Library OCR Scanner'
+                    'Authorization': `Bearer ${nvidiaApiKey}`,
+                    'Content-Type': 'application/json'
                 },
-                timeout: 20000 // 20s timeout
+                timeout: 60000 // 60s timeout
             }
         );
 
@@ -155,7 +186,6 @@ JSON Schema:
             bookMetadata = JSON.parse(aiText);
         } catch (parseErr) {
             console.error('[AI] JSON Parse Error. Attempting regex cleanup.', parseErr);
-            // Fallback: extract JSON from string if there is surrounding text
             const jsonRegex = /\{[\s\S]*?\}/;
             const match = aiText.match(jsonRegex);
             if (match) {
@@ -165,9 +195,86 @@ JSON Schema:
             }
         }
 
-        // Validate and ensure category matches the valid options
-        if (!VALID_CATEGORIES.includes(bookMetadata.category)) {
-            bookMetadata.category = 'Other';
+        // Web Search Fallback Check
+        const isMissingData = !bookMetadata.title || 
+                              !bookMetadata.author || bookMetadata.author.toLowerCase().includes('unknown') ||
+                              !bookMetadata.publisher || bookMetadata.publisher.toLowerCase().includes('unknown') ||
+                              !bookMetadata.subject ||
+                              !bookMetadata.isbn;
+
+        if (isMissingData) {
+            console.log("[AI] Missing metadata detected. Running Web Search Fallback...");
+            const searchQuery = `"${bookMetadata.title || ocrText.slice(0, 60).replace(/\n/g, ' ')}" book author publisher isbn class subject`;
+            const searchResults = await searchWeb(searchQuery);
+            if (searchResults) {
+                console.log("[AI] Search results retrieved. Running validation completion with google/gemma-4-31b-it:free...");
+                
+                const validationPrompt = `We searched the web for details about the book: "${bookMetadata.title || ocrText.substring(0, 50)}".
+Here are some search results:
+"""
+${searchResults}
+"""
+
+We initially extracted these metadata details from the cover OCR:
+${JSON.stringify(bookMetadata, null, 2)}
+
+Use the search results to fill in any missing details (such as author, publisher, subject, class, isbn, edition, or description) and correct any incorrect fields.
+
+Return ONLY a valid, minified JSON object matching the JSON schema below. DO NOT wrap it in markdown formatting (do not include \`\`\`json or \`\`\`), no extra text, explanations, or reasoning. Missing values should be returned as empty strings.
+
+JSON Schema:
+{
+  "title": "Book Title",
+  "author": "Book Author",
+  "publisher": "Book Publisher",
+  "isbn": "10 or 13 digit ISBN number without spaces/hyphens",
+  "edition": "Book Edition",
+  "class": "Class level",
+  "subject": "Subject",
+  "description": "Short description of the book"
+}`;
+
+                const validateRes = await axios.post(
+                    'https://integrate.api.nvidia.com/v1/chat/completions',
+                    {
+                        model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: validationPrompt
+                            }
+                        ],
+                        temperature: 0.6,
+                        top_p: 0.95,
+                        max_tokens: 8192,
+                        extra_body: {
+                            chat_template_kwargs: {
+                                enable_thinking: true
+                            },
+                            reasoning_budget: 2048
+                        },
+                        stream: false
+                    },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${nvidiaApiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 60000
+                    }
+                );
+
+                let valText = validateRes.data.choices[0].message.content.trim();
+                valText = valText.replace(/```json\n?|```/g, '').trim();
+                
+                try {
+                    const parsedVal = JSON.parse(valText);
+                    // Merge validated properties
+                    bookMetadata = { ...bookMetadata, ...parsedVal };
+                } catch(e) {
+                    console.error("[AI] Failed to parse validation response, keeping original metadata:", e.message);
+                }
+            }
         }
 
         // Ensure confidence is set
@@ -198,27 +305,29 @@ JSON Schema:
  * 2. Save Final Book Metadata Endpoint
  */
 app.post('/api/books', async (req, res) => {
-    const { title, author, publisher, isbn, category, subject, image } = req.body;
+    const { title, author, publisher, isbn, edition, class: className, subject, description, image } = req.body;
 
     if (!title) {
         return res.status(400).json({ error: 'Title is required to save a book.' });
     }
 
     try {
-        // Auto-generate book ID: LIBdd/mm/yy/count
+        // Auto-generate book ID: VBPG[Year][Sequence]
         const bookId = await getNextBookId();
         const addedDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
         const newBook = {
-            book_id: bookId,
+            bookId,
             title,
-            author,
-            publisher,
-            isbn,
-            category: VALID_CATEGORIES.includes(category) ? category : 'Other',
-            subject,
-            image,
-            added_date: addedDate
+            author: author || '',
+            publisher: publisher || '',
+            isbn: isbn || '',
+            edition: edition || '',
+            class: className || '',
+            subject: subject || '',
+            description: description || '',
+            coverImage: image || '',
+            addedDate
         };
 
         const result = await dbOperations.addBook(newBook);
@@ -238,9 +347,9 @@ app.post('/api/books', async (req, res) => {
  * 3. Search and Retrieve Books Endpoint
  */
 app.get('/api/books', async (req, res) => {
-    const { search, category } = req.query;
+    const { search } = req.query;
     try {
-        const books = await dbOperations.getBooks(search, category);
+        const books = await dbOperations.getBooks(search);
         res.json(books);
     } catch (err) {
         console.error('[Search Error]', err.message);

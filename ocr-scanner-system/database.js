@@ -16,17 +16,22 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
 
 function initializeTables() {
     db.serialize(() => {
-        // Books table
+        // Drop old table to reload new schema
+        db.run(`DROP TABLE IF EXISTS books`);
+
+        // Create books table with camelCase schema
         db.run(`CREATE TABLE IF NOT EXISTS books (
-            book_id TEXT PRIMARY KEY,
+            bookId TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             author TEXT,
             publisher TEXT,
             isbn TEXT,
-            category TEXT,
+            edition TEXT,
+            class TEXT,
             subject TEXT,
-            image TEXT,
-            added_date TEXT NOT NULL
+            description TEXT,
+            coverImage TEXT,
+            addedDate TEXT NOT NULL
         )`);
 
         // Scan history / stats table
@@ -40,7 +45,7 @@ function initializeTables() {
     });
 }
 
-// Generate sequential Library ID: LIBdd/mm/yy/no. of book scanned
+// Generate sequential Library ID: VBPG[Year][Sequence] (e.g. VBPG20260001)
 function getNextBookId() {
     return new Promise((resolve, reject) => {
         db.get(`SELECT COUNT(*) as count FROM books`, [], (err, row) => {
@@ -49,12 +54,10 @@ function getNextBookId() {
             }
             
             const nextNum = (row ? row.count : 0) + 1;
-            const now = new Date();
-            const dd = String(now.getDate()).padStart(2, '0');
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const yy = String(now.getFullYear()).substring(2);
+            const year = new Date().getFullYear();
+            const seqStr = String(nextNum).padStart(4, '0');
             
-            resolve(`LIB${dd}/${mm}/${yy}/${nextNum}`);
+            resolve(`VBPG${year}${seqStr}`);
         });
     });
 }
@@ -64,47 +67,44 @@ const dbOperations = {
     // Add a book
     addBook: (book) => {
         return new Promise((resolve, reject) => {
-            const query = `INSERT INTO books (book_id, title, author, publisher, isbn, category, subject, image, added_date)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            const query = `INSERT INTO books (bookId, title, author, publisher, isbn, edition, class, subject, description, coverImage, addedDate)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
             db.run(
                 query,
                 [
-                    book.book_id,
+                    book.bookId,
                     book.title,
                     book.author || '',
                     book.publisher || '',
                     book.isbn || '',
-                    book.category || 'Other',
+                    book.edition || '',
+                    book.class || '',
                     book.subject || '',
-                    book.image || '',
-                    book.added_date
+                    book.description || '',
+                    book.coverImage || '',
+                    book.addedDate
                 ],
                 function(err) {
                     if (err) reject(err);
-                    else resolve({ success: true, book_id: book.book_id });
+                    else resolve({ success: true, bookId: book.bookId });
                 }
             );
         });
     },
 
     // Get all books with optional search filtering
-    getBooks: (search = '', category = '') => {
+    getBooks: (search = '') => {
         return new Promise((resolve, reject) => {
             let query = `SELECT * FROM books WHERE 1=1`;
             const params = [];
 
             if (search) {
-                query += ` AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?)`;
+                query += ` AND (title LIKE ? OR author LIKE ? OR isbn LIKE ? OR publisher LIKE ? OR subject LIKE ?)`;
                 const term = `%${search}%`;
-                params.push(term, term, term);
+                params.push(term, term, term, term, term);
             }
 
-            if (category) {
-                query += ` AND category = ?`;
-                params.push(category);
-            }
-
-            query += ` ORDER BY added_date DESC`;
+            query += ` ORDER BY addedDate DESC`;
 
             db.all(query, params, (err, rows) => {
                 if (err) reject(err);
@@ -140,7 +140,7 @@ const dbOperations = {
                 if (err) return reject(err);
                 stats.totalBooks = row ? row.count : 0;
 
-                db.all(`SELECT * FROM books ORDER BY added_date DESC LIMIT 5`, [], (err, rows) => {
+                db.all(`SELECT * FROM books ORDER BY addedDate DESC LIMIT 5`, [], (err, rows) => {
                     if (err) return reject(err);
                     stats.recentBooks = rows || [];
 

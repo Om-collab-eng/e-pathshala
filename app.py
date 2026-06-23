@@ -508,7 +508,7 @@ def init_db():
                         ('pending_requests', 'phone'), ('pending_requests', 'password'),
                         ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'),
                         ('schools', 'status'), ('users', 'status'), ('users', 'is_banned'), ('users', 'permissions'),
-                        ('books', 'is_banned')]:
+                        ('books', 'is_banned'), ('books', 'isbn'), ('books', 'publisher'), ('books', 'class'), ('books', 'subject')]:
         try:
             conn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
         except sqlite3.OperationalError:
@@ -613,7 +613,7 @@ def init_db():
     for table, col in [('users', 'session_token'), ('users', 'admission_no'), ('users', 'class'), ('users', 'school_code'),
                        ('books', 'school_code'), ('transactions', 'school_code'),
                        ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'), ('users', 'is_banned'), ('users', 'permissions'),
-                       ('books', 'is_banned')]:
+                       ('books', 'is_banned'), ('books', 'isbn'), ('books', 'publisher'), ('books', 'class'), ('books', 'subject')]:
         try:
             dconn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
         except sqlite3.OperationalError:
@@ -2741,29 +2741,35 @@ def api_chat():
         finally:
             conn.close()
 
-    openrouter_key = os.environ.get('OPENROUTER_API_KEY')
-    if openrouter_key:
-        openrouter_key = openrouter_key.strip()
-    if not openrouter_key:
-        return jsonify({"error": "OpenRouter API Key not configured on server."}), 500
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    if nvidia_key:
+        nvidia_key = nvidia_key.strip()
         
     try:
         response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
+            "https://integrate.api.nvidia.com/v1/chat/completions",
             json={
-                "model": model,
-                "messages": messages
+                "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                "messages": messages,
+                "temperature": 0.6,
+                "top_p": 0.95,
+                "max_tokens": 8192,
+                "extra_body": {
+                    "chat_template_kwargs": {
+                        "enable_thinking": True
+                    },
+                    "reasoning_budget": 2048
+                },
+                "stream": False
             },
             headers={
-                "Authorization": f"Bearer {openrouter_key}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://librika.in",
-                "X-Title": "Librika Chatbot"
+                "Authorization": f"Bearer {nvidia_key}",
+                "Content-Type": "application/json"
             },
-            timeout=25
+            timeout=60
         )
         if response.status_code != 200:
-            return jsonify({"error": f"OpenRouter returned error: {response.text}"}), 500
+            return jsonify({"error": f"NVIDIA API returned error: {response.text}"}), 500
             
         res_data = response.json()
         reply = res_data['choices'][0]['message']['content']
@@ -2806,6 +2812,215 @@ def approve_request(req_id):
 # ---------------------------------------------------------
 # SMART SCANNER MODULE
 # ---------------------------------------------------------
+import urllib.parse
+import re
+
+def get_next_book_id(conn):
+    row = conn.execute("SELECT COUNT(*) as count FROM books").fetchone()
+    count = row['count'] if row else 0
+    next_num = count + 1
+    year = datetime.now().year
+    return f"VBPG{year}{next_num:04d}"
+
+def search_web_py(query):
+    try:
+        print(f"[Web Search] Querying DuckDuckGo for: {query}")
+        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(query)}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        res = requests.get(url, headers=headers, timeout=8)
+        if res.status_code != 200:
+            return ""
+        html = res.text
+        # Extract snippets using regex
+        snippets = []
+        pattern = re.compile(r'<a class="result__snippet"[^>]*>(.*?)</a>', re.DOTALL)
+        matches = pattern.findall(html)
+        for match in matches[:5]:
+            # clean HTML tags
+            clean = re.sub(r'<[^>]*>', '', match).strip()
+            snippets.append(clean)
+        return "\n".join(snippets)
+    except Exception as e:
+        print("[Web Search] Python search failed:", str(e))
+        return ""
+
+@app.route('/api/scan-ocr-text', methods=['POST'])
+def api_scan_ocr_text():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.json or {}
+    ocr_text = data.get('ocr_text', '').strip()
+    cover_url = data.get('cover_url', '')
+    
+    if not ocr_text:
+        return jsonify({"error": "No OCR text provided."}), 400
+        
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    if nvidia_key:
+        nvidia_key = nvidia_key.strip()
+        
+    prompt = f"""Extract book details.
+
+Return JSON:
+{{
+  "title": "",
+  "author": "",
+  "publisher": "",
+  "isbn": "",
+  "class": "",
+  "subject": "",
+  "category": "",
+  "description": ""
+}}
+
+OCR Text:
+{ocr_text}
+"""
+    
+    try:
+        response = requests.post(
+            "https://integrate.api.nvidia.com/v1/chat/completions",
+            json={
+                "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.6,
+                "top_p": 0.95,
+                "max_tokens": 8192,
+                "extra_body": {
+                    "chat_template_kwargs": {
+                        "enable_thinking": True
+                    },
+                    "reasoning_budget": 2048
+                },
+                "stream": False
+            },
+            headers={
+                "Authorization": f"Bearer {nvidia_key}",
+                "Content-Type": "application/json"
+            },
+            timeout=60
+        )
+        if response.status_code != 200:
+            return jsonify({"error": f"NVIDIA API returned error: {response.text}"}), 500
+            
+        res_data = response.json()
+        ai_reply = res_data['choices'][0]['message']['content'].strip()
+        
+        # Parse JSON
+        # cleanup markdown wrapping
+        if "```json" in ai_reply:
+            ai_reply = ai_reply.split("```json")[1].split("```")[0].strip()
+        elif "```" in ai_reply:
+            ai_reply = ai_reply.split("```")[1].split("```")[0].strip()
+            
+        try:
+            book_metadata = json.loads(ai_reply)
+        except Exception:
+            match = re.search(r'\{[\s\S]*?\}', ai_reply)
+            if match:
+                book_metadata = json.loads(match.group(0))
+            else:
+                raise ValueError("Failed to parse AI response as JSON: " + ai_reply)
+                
+        # Check if missing crucial data
+        is_missing = (
+            not book_metadata.get('title') or
+            not book_metadata.get('author') or
+            book_metadata.get('author', '').lower() in ['unknown', 'n/a', ''] or
+            not book_metadata.get('publisher') or
+            book_metadata.get('publisher', '').lower() in ['unknown', 'n/a', ''] or
+            not book_metadata.get('isbn') or
+            not book_metadata.get('class') or
+            not book_metadata.get('subject')
+        )
+        
+        if is_missing:
+            # Fallback to search
+            title_query = book_metadata.get('title') or ocr_text.replace('\n', ' ')[:80]
+            search_query = f"\"{title_query}\" book author publisher isbn class subject"
+            search_results = search_web_py(search_query)
+            
+            if search_results:
+                validation_prompt = f"""We searched the web for details about the book: "{title_query}".
+Here are some search results:
+{search_results}
+
+We initially extracted these metadata details from the cover OCR:
+{json.dumps(book_metadata, indent=2)}
+
+Use the search results to fill in any missing details (such as author, publisher, subject, class, isbn, or description) and correct any incorrect fields.
+
+Return ONLY a valid, minified JSON object matching the JSON schema below. DO NOT wrap it in markdown formatting, no extra text, explanations, or warnings.
+
+JSON Schema:
+{{
+  "title": "Book Title",
+  "author": "Book Author",
+  "publisher": "Book Publisher",
+  "isbn": "10 or 13 digit ISBN number without spaces/hyphens",
+  "class": "Standard/Class name (e.g. VIII, 9, High School, etc.)",
+  "subject": "Subject or academic topic",
+  "category": "One of the listed categories",
+  "description": "A short description of the book"
+}}
+"""
+                val_response = requests.post(
+                    "https://integrate.api.nvidia.com/v1/chat/completions",
+                    json={
+                        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                        "messages": [
+                            {"role": "user", "content": validation_prompt}
+                        ],
+                        "temperature": 0.6,
+                        "top_p": 0.95,
+                        "max_tokens": 8192,
+                        "extra_body": {
+                            "chat_template_kwargs": {
+                                "enable_thinking": True
+                            },
+                            "reasoning_budget": 2048
+                        },
+                        "stream": False
+                    },
+                    headers={
+                        "Authorization": f"Bearer {nvidia_key}",
+                        "Content-Type": "application/json"
+                    },
+                    timeout=60
+                )
+                if val_response.status_code != 200:
+                    return jsonify({"error": f"NVIDIA API returned error: {val_response.text}"}), 500
+                if val_response.status_code == 200:
+                    val_data = val_response.json()
+                    val_reply = val_data['choices'][0]['message']['content'].strip()
+                    if "```json" in val_reply:
+                        val_reply = val_reply.split("```json")[1].split("```")[0].strip()
+                    elif "```" in val_reply:
+                        val_reply = val_reply.split("```")[1].split("```")[0].strip()
+                    
+                    try:
+                        val_metadata = json.loads(val_reply)
+                        book_metadata.update(val_metadata)
+                    except Exception:
+                        val_match = re.search(r'\{[\s\S]*?\}', val_reply)
+                        if val_match:
+                            val_metadata = json.loads(val_match.group(0))
+                            book_metadata.update(val_metadata)
+                            
+        return jsonify({
+            "success": True,
+            "metadata": book_metadata,
+            "cover_url": cover_url
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/admin/scanner')
 @require_permission('canUseAIScanner')
 def smart_scanner():
@@ -3183,23 +3398,39 @@ def api_save_scanned():
     
     try:
         conn = get_db_connection()
+        # Generate the next Book ID format: VBPG20260001
+        book_id = get_next_book_id(conn)
+        
         conn.execute('''
-            INSERT INTO books (title, author, barcode_id, genre, description, total_copies, available_copies, cover_url, school_code)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO books (title, author, barcode_id, isbn, genre, description, total_copies, available_copies, cover_url, school_code, publisher, class, subject)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             data.get('title'),
             data.get('author'),
+            book_id,
             data.get('isbn'),
             data.get('genre'),
             data.get('description'),
             int(data.get('total_copies', 1)),
             int(data.get('total_copies', 1)),
             data.get('cover_url'),
-            s_code
+            s_code,
+            data.get('publisher', ''),
+            data.get('class', ''),
+            data.get('subject', '')
         ))
+        
+        # Generate and save the Code-128 barcode image
+        try:
+            EAN = barcode.get_barcode_class('code128')
+            my_barcode = EAN(book_id, writer=ImageWriter())
+            my_barcode.save(os.path.join(BARCODE_DIR, book_id))
+        except Exception as e:
+            print("Failed to generate barcode image for save-scanned:", str(e))
+            
         conn.commit()
         conn.close()
-        return {"status": "success"}
+        return {"status": "success", "book_id": book_id}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 

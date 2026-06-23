@@ -221,6 +221,7 @@
 </div><!-- end personal-layout -->
 
 {% if lib.plan_name != 'FREE' %}
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 let cameraStream = null;
 
@@ -293,75 +294,46 @@ async function startScan(file) {
             throw new Error("Upload failed: " + uploadData.message);
         }
 
-        statusText.innerText = "Processing image...";
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
-        const base64Image = await fileToBase64(file);
-
-        statusText.innerText = "🧠 AI is extracting book details...";
         const absoluteCoverUrl = window.location.origin + uploadData.cover_url;
 
-        const prompt = `You are a highly advanced Library AI. Look at the provided front cover image of a book.
-Extract all text (OCR) exactly as seen. Then, analyze the text and generate a rich set of metadata.
+        // Perform local Tesseract.js OCR
+        statusText.innerText = "⚡ Extracting text from cover...";
+        const worker = await Tesseract.createWorker('eng', 1, {
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    statusText.innerText = `OCR: ${Math.round(m.progress * 100)}%...`;
+                }
+            }
+        });
+        
+        const ocrResult = await worker.recognize(file);
+        const ocrText = ocrResult.data.text;
+        await worker.terminate();
 
-Return ONLY a strictly valid JSON object matching this schema exactly. DO NOT wrap it in markdown. Do not include any conversational text.
-{
-  "title": "Extracted title",
-  "author": "Extracted author name",
-  "publisher": "Extracted publisher",
-  "isbn": "Extracted or inferred ISBN",
-  "language": "English (or inferred)",
-  "category": "Main Category (e.g., Self Help)",
-  "description": "A detailed 100-200 word description suitable for library catalog"
-}`;
+        console.log("Client-side OCR extracted text:", ocrText);
+        
+        if (!ocrText || ocrText.trim().length === 0) {
+            throw new Error("No text could be extracted from the cover. Please try a clearer picture.");
+        }
 
-        const chatRes = await fetch('/api/chat', {
+        // Call backend API with extracted text
+        statusText.innerText = "🧠 AI is identifying book details...";
+        const chatRes = await fetch('/api/scan-ocr-text', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                model: 'nvidia/nemotron-nano-12b-v2-vl:free',
-                messages: [
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: prompt },
-                            {
-                                type: 'image_url',
-                                image_url: {
-                                    url: base64Image
-                                }
-                            }
-                        ]
-                    }
-                ]
+                ocr_text: ocrText,
+                cover_url: uploadData.cover_url
             })
         });
+        
         if (!chatRes.ok) {
             const errData = await chatRes.json();
             throw new Error(errData.error || "Failed to scan book cover.");
         }
-        const chatData = await chatRes.json();
-        let aiResponse = chatData.reply || '';
-        let metadata = {};
         
-        try {
-            let text = aiResponse.toString();
-            if (text.includes("```json")) {
-                text = text.split("```json")[1].split("```")[0];
-            } else if (text.includes("```")) {
-                text = text.split("```")[1].split("```")[0];
-            }
-            metadata = JSON.parse(text.trim());
-        } catch (parseErr) {
-            console.error("AI JSON Parse Error: ", parseErr, aiResponse);
-            throw new Error("AI extraction response was not in expected JSON format. Proceeding to form manually.");
-        }
+        const chatData = await chatRes.json();
+        const metadata = chatData.metadata || {};
 
         statusText.innerText = "✅ Redirecting to catalog form...";
         

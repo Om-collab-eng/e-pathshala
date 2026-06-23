@@ -571,6 +571,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                                 <input type="text" id="f_category" class="ld-input" required>
                             </div>
                             <div class="ld-form-group">
+                                <label>Class / Grade (e.g. VIII, 9)</label>
+                                <input type="text" id="f_class" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Subject</label>
+                                <input type="text" id="f_subject" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
                                 <label>Dewey Decimal Classification</label>
                                 <input type="text" id="f_dewey" class="ld-input">
                             </div>
@@ -682,6 +690,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
     let frontFile = null;
     let cameraStream = null;
@@ -787,6 +796,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 
         try {
             // 1. Upload Cover to Server
+            document.getElementById('loadingText').innerText = "Uploading cover image...";
             const res = await fetch('/admin/api/upload-cover', {
                 method: 'POST',
                 body: formData
@@ -797,106 +807,53 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 throw new Error("Upload failed: " + data.message);
             }
 
-            // 2. Convert cover to base64 data URI
-            document.getElementById('loadingText').innerText = "Processing image...";
+            // 2. Perform local Tesseract.js OCR
+            document.getElementById('loadingText').innerText = "Starting OCR Engine...";
             
-            function fileToBase64(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                });
+            const worker = await Tesseract.createWorker('eng', 1, {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        document.getElementById('loadingText').innerText = `OCR: ${Math.round(m.progress * 100)}% complete...`;
+                    }
+                }
+            });
+            
+            const ocrResult = await worker.recognize(frontFile);
+            const ocrText = ocrResult.data.text;
+            await worker.terminate();
+
+            console.log("Client-side OCR extracted text:", ocrText);
+            
+            if (!ocrText || ocrText.trim().length === 0) {
+                throw new Error("No text could be extracted from the cover. Please take a clearer picture.");
             }
-            const base64Image = await fileToBase64(frontFile);
 
-            // 3. Call OpenRouter Multimodal Vision AI via secure /api/chat endpoint
-            document.getElementById('loadingText').innerText = "AI is scanning the cover...";
+            // 3. Call backend endpoint to identify book details with GPT-OSS-20B
+            document.getElementById('loadingText').innerText = "AI is identifying book details...";
             
-            const prompt = `You are a highly advanced Library AI. Look at the provided front cover image of a book.
-Extract all text (OCR) exactly as seen. Then, analyze the text and generate a rich set of metadata.
-
-Return ONLY a strictly valid JSON object matching this schema exactly. DO NOT wrap it in markdown block. Do not include any conversational text.
-{
-  "title": "Extracted title",
-  "subtitle": "Extracted subtitle or empty",
-  "author": "Extracted author name",
-  "publisher": "Extracted publisher",
-  "isbn13": "Extracted or inferred ISBN",
-  "edition": "Extracted edition",
-  "language": "English (or inferred)",
-  "publicationYear": "Year",
-  "category": "Main Category (e.g., Self Help)",
-  "subcategory": "Sub category",
-  "genre": "Genre",
-  "subject": "Subject",
-  "readingLevel": "Beginner/Intermediate/Advanced",
-  "deweyDecimal": "Inferred Dewey Decimal number",
-  "keywords": ["list", "of", "search", "keywords"],
-  "tags": ["list", "of", "tags"],
-  "targetAudience": ["list", "of", "audiences"],
-  "difficultyLevel": "Difficulty",
-  "estimatedReadingTime": "E.g., 6 Hours",
-  "summary50Words": "A 50-word summary",
-  "description": "A detailed 150-300 word description suitable for library catalogs",
-  "ocrRawText": "ALL raw text extracted from the cover",
-  "confidenceScores": {
-     "title": 95,
-     "author": 90,
-     "isbn13": 40
-  }
-}`;
-
-            const chatRes = await fetch('/api/chat', {
+            const scanRes = await fetch('/api/scan-ocr-text', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    model: 'nvidia/nemotron-nano-12b-v2-vl:free',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: [
-                                { type: 'text', text: prompt },
-                                {
-                                    type: 'image_url',
-                                    image_url: {
-                                        url: base64Image
-                                    }
-                                }
-                            ]
-                        }
-                    ]
+                    ocr_text: ocrText,
+                    cover_url: data.cover_url
                 })
             });
-            if (!chatRes.ok) {
-                const errData = await chatRes.json();
-                throw new Error(errData.error || "Failed to scan book cover.");
-            }
-            const chatData = await chatRes.json();
-            let rawText = chatData.reply || '';
-
-            // Clean markdown blocks if AI returned them
-            if (rawText.includes("```json")) {
-                rawText = rawText.split("```json")[1].split("```")[0].trim();
-            } else if (rawText.includes("```")) {
-                rawText = rawText.split("```")[1].split("```")[0].trim();
+            
+            if (!scanRes.ok) {
+                const errData = await scanRes.json();
+                throw new Error(errData.error || "Failed to parse book details.");
             }
             
-            // Save globally for debugging if it fails
-            window.lastRawText = rawText;
+            const scanData = await scanRes.json();
+            const meta = scanData.metadata || {};
+            meta.ocrRawText = ocrText;
             
-            const resultJson = JSON.parse(rawText);
-            populateReviewScreen(resultJson, data.cover_url);
+            populateReviewScreen(meta, data.cover_url);
 
         } catch (err) {
             console.error(err);
-            
-            let msg = err.message;
-            if (err.message.includes("JSON")) {
-                msg = "JSON Error. Raw AI Output: " + String(window.lastRawText).substring(0, 50);
-            }
-            
-            showToast("Scan Error: " + msg, "error");
+            showToast("Scan Error: " + err.message, "error");
             document.getElementById('processBtn').style.display = 'inline-block';
             document.getElementById('loadingState').style.display = 'none';
         }
@@ -917,7 +874,8 @@ Return ONLY a strictly valid JSON object matching this schema exactly. DO NOT wr
         const map = {
             'f_title': 'title', 'f_subtitle': 'subtitle', 'f_author': 'author',
             'f_publisher': 'publisher', 'f_year': 'publicationYear',
-            'f_isbn13': 'isbn13', 'f_language': 'language', 'f_category': 'category',
+            'f_isbn13': 'isbn', 'f_language': 'language', 'f_category': 'category',
+            'f_class': 'class', 'f_subject': 'subject',
             'f_dewey': 'deweyDecimal', 'f_difficulty': 'difficultyLevel',
             'f_summary': 'summary50Words', 'f_description': 'description'
         };
@@ -948,7 +906,9 @@ Return ONLY a strictly valid JSON object matching this schema exactly. DO NOT wr
             author: document.getElementById('f_author').value,
             isbn: document.getElementById('f_isbn13').value,
             publisher: document.getElementById('f_publisher').value,
-            genre: document.getElementById('f_category').value, // mapping category to genre
+            genre: document.getElementById('f_category').value,
+            class: document.getElementById('f_class').value,
+            subject: document.getElementById('f_subject').value,
             description: document.getElementById('f_description').value,
             total_copies: document.getElementById('f_quantity').value,
             cover_url: coverImageUrl,
@@ -965,7 +925,7 @@ Return ONLY a strictly valid JSON object matching this schema exactly. DO NOT wr
             });
             const data = await res.json();
             if (data.status === 'success') {
-                showToast("Book successfully saved to catalog!", "success");
+                showToast(`Book successfully saved with ID: ${data.book_id}!`, "success");
                 setTimeout(() => window.location.href = '/admin?section=books', 1500);
             } else {
                 showToast("Error saving: " + data.message, "error");

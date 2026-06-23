@@ -195,27 +195,23 @@
                                     </div>
                                     <div class="form-group-row">
                                         <div class="form-group">
-                                            <label for="form-category">Category <span class="required">*</span></label>
-                                            <select id="form-category" required>
-                                                <option value="Science">Science</option>
-                                                <option value="Mathematics">Mathematics</option>
-                                                <option value="English">English</option>
-                                                <option value="Hindi">Hindi</option>
-                                                <option value="Sanskrit">Sanskrit</option>
-                                                <option value="Social Science">Social Science</option>
-                                                <option value="Computer Science">Computer Science</option>
-                                                <option value="Fiction">Fiction</option>
-                                                <option value="Non Fiction">Non Fiction</option>
-                                                <option value="Biography">Biography</option>
-                                                <option value="Reference">Reference</option>
-                                                <option value="Exam Preparation">Exam Preparation</option>
-                                                <option value="Other">Other</option>
-                                            </select>
+                                            <label for="form-edition">Edition</label>
+                                            <input type="text" id="form-edition" placeholder="E.g. 3rd Edition">
                                         </div>
                                         <div class="form-group">
                                             <label for="form-subject">Subject</label>
                                             <input type="text" id="form-subject">
                                         </div>
+                                    </div>
+                                    <div class="form-group-row">
+                                        <div class="form-group">
+                                            <label for="form-class">Class / Standard</label>
+                                            <input type="text" id="form-class">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="form-description">Short Description</label>
+                                        <textarea id="form-description" style="width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); resize: vertical;"></textarea>
                                     </div>
                                     <div class="form-actions">
                                         <button type="button" class="btn-alt" onclick="resetScanner()">Discard & Retake</button>
@@ -234,27 +230,9 @@
                     <h2>Search Books Database</h2>
                     
                     <div class="search-bar-row">
-                        <div class="search-input-wrapper">
+                        <div class="search-input-wrapper" style="flex: 1;">
                             <span class="search-icon">🔎</span>
-                            <input type="text" id="search-input" placeholder="Search by title, author, or ISBN..." onkeyup="executeSearch()">
-                        </div>
-                        <div class="search-dropdown-wrapper">
-                            <select id="search-category" onchange="executeSearch()">
-                                <option value="">All Categories</option>
-                                <option value="Science">Science</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="English">English</option>
-                                <option value="Hindi">Hindi</option>
-                                <option value="Sanskrit">Sanskrit</option>
-                                <option value="Social Science">Social Science</option>
-                                <option value="Computer Science">Computer Science</option>
-                                <option value="Fiction">Fiction</option>
-                                <option value="Non Fiction">Non Fiction</option>
-                                <option value="Biography">Biography</option>
-                                <option value="Reference">Reference</option>
-                                <option value="Exam Preparation">Exam Preparation</option>
-                                <option value="Other">Other</option>
-                            </select>
+                            <input type="text" id="search-input" placeholder="Search by title, author, isbn, publisher, or subject..." onkeyup="executeSearch()">
                         </div>
                         <button type="button" class="btn-primary" onclick="executeSearch()">Filter</button>
                     </div>
@@ -269,14 +247,16 @@
                                     <th>Author</th>
                                     <th>Publisher</th>
                                     <th>ISBN</th>
-                                    <th>Category</th>
+                                    <th>Edition</th>
+                                    <th>Class</th>
                                     <th>Subject</th>
+                                    <th>Description</th>
                                     <th>Added Date</th>
                                 </tr>
                             </thead>
                             <tbody id="inventory-list">
                                 <tr>
-                                    <td colspan="9" class="table-empty">Loading inventory...</td>
+                                    <td colspan="11" class="table-empty">Loading inventory...</td>
                                 </tr>
                             </tbody>
                         </table>

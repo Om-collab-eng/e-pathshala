@@ -201,8 +201,10 @@ function populateVerificationForm(data) {
     document.getElementById('form-author').value = meta.author || '';
     document.getElementById('form-publisher').value = meta.publisher || '';
     document.getElementById('form-isbn').value = meta.isbn || '';
-    document.getElementById('form-category').value = meta.category || 'Other';
+    document.getElementById('form-edition').value = meta.edition || '';
+    document.getElementById('form-class').value = meta.class || '';
     document.getElementById('form-subject').value = meta.subject || '';
+    document.getElementById('form-description').value = meta.description || '';
     
     // Handle low confidence score (threshold < 70)
     const confidence = meta.confidence || 0;
@@ -234,8 +236,10 @@ async function saveVerifiedBook(event) {
         author: document.getElementById('form-author').value.trim(),
         publisher: document.getElementById('form-publisher').value.trim(),
         isbn: document.getElementById('form-isbn').value.trim(),
-        category: document.getElementById('form-category').value,
+        edition: document.getElementById('form-edition').value.trim(),
+        class: document.getElementById('form-class').value.trim(),
         subject: document.getElementById('form-subject').value.trim(),
+        description: document.getElementById('form-description').value.trim(),
         image: document.getElementById('metadata-image-path').value
     };
 
@@ -254,7 +258,7 @@ async function saveVerifiedBook(event) {
             throw new Error(result.error || 'Failed to save book record.');
         }
 
-        showToast(`Saved Book! Generated ID: ${result.book.book_id}`, 'success');
+        showToast(`Saved Book! Generated ID: ${result.book.bookId}`, 'success');
         resetScanner();
         loadDashboardStats(); // Refresh dashboard counts
         
@@ -295,11 +299,11 @@ async function loadDashboardStats() {
         stats.recentBooks.forEach(book => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><span class="book-row-id">${book.book_id}</span></td>
+                <td><span class="book-row-id">${book.bookId}</span></td>
                 <td style="font-weight: 700;">${book.title}</td>
                 <td>${book.author || 'N/A'}</td>
-                <td>${book.category}</td>
-                <td>${book.added_date.substring(0, 10)}</td>
+                <td>${book.edition || 'N/A'}</td>
+                <td>${book.addedDate.substring(0, 10)}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -312,13 +316,11 @@ async function loadDashboardStats() {
 // Fetch Inventory Lookup List
 async function executeSearch() {
     const searchVal = document.getElementById('search-input').value.trim();
-    const categoryVal = document.getElementById('search-category').value;
     const tbody = document.getElementById('inventory-list');
     
     try {
         const params = new URLSearchParams();
         if (searchVal) params.append('search', searchVal);
-        if (categoryVal) params.append('category', categoryVal);
         
         const response = await fetch(`/api/books?${params.toString()}`);
         const books = await response.json();
@@ -326,29 +328,31 @@ async function executeSearch() {
         tbody.innerHTML = '';
         
         if (books.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" class="table-empty">No matching books found in inventory.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" class="table-empty">No matching books found in inventory.</td></tr>`;
             return;
         }
         
         books.forEach(book => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><span class="book-row-id">${book.book_id}</span></td>
-                <td><img src="${book.image || 'placeholder.png'}" class="book-table-thumb" alt="Cover"></td>
+                <td><span class="book-row-id">${book.bookId}</span></td>
+                <td><img src="${book.coverImage || 'placeholder.png'}" class="book-table-thumb" alt="Cover"></td>
                 <td style="font-weight: 700;">${book.title}</td>
                 <td>${book.author || 'N/A'}</td>
                 <td>${book.publisher || 'N/A'}</td>
                 <td>${book.isbn || 'N/A'}</td>
-                <td>${book.category}</td>
+                <td>${book.edition || 'N/A'}</td>
+                <td>${book.class || 'N/A'}</td>
                 <td>${book.subject || 'N/A'}</td>
-                <td>${book.added_date.substring(0, 10)}</td>
+                <td class="book-row-desc" title="${book.description || ''}">${book.description ? book.description.substring(0, 50) + (book.description.length > 50 ? '...' : '') : 'N/A'}</td>
+                <td>${book.addedDate.substring(0, 10)}</td>
             `;
             tbody.appendChild(tr);
         });
         
     } catch (err) {
         console.error('Error loading inventory list:', err);
-        tbody.innerHTML = `<tr><td colspan="9" class="table-empty" style="color: var(--accent-error);">Failed to load books database.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="table-empty" style="color: var(--accent-error);">Failed to load books database.</td></tr>`;
     }
 }
 

@@ -210,6 +210,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 async function handleAiScan(e) {
     const file = e.target.files[0];
@@ -236,86 +237,53 @@ async function handleAiScan(e) {
         // 2. Display cover URL in form cover field
         document.getElementById('cover_image_url').value = window.location.origin + uploadData.cover_url;
 
-        // 3. Convert cover to base64 data URI
-        statusEl.innerHTML = "⚡ Processing image...";
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
+        // 3. Perform local Tesseract.js OCR
+        statusEl.innerHTML = "⚡ Extracting text from cover...";
+        
+        const worker = await Tesseract.createWorker('eng', 1, {
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    statusEl.innerHTML = `OCR: ${Math.round(m.progress * 100)}%...`;
+                }
+            }
+        });
+        
+        const ocrResult = await worker.recognize(file);
+        const ocrText = ocrResult.data.text;
+        await worker.terminate();
+
+        console.log("Client-side OCR extracted text:", ocrText);
+        
+        if (!ocrText || ocrText.trim().length === 0) {
+            throw new Error("No text could be extracted from the cover. Please try a clearer picture.");
         }
-        const base64Image = await fileToBase64(file);
 
-        // 4. Call OpenRouter AI to scan cover details via backend route
-        statusEl.innerHTML = "🧠 AI is reading cover metadata...";
-        const absoluteCoverUrl = window.location.origin + uploadData.cover_url;
-
-        const prompt = `You are a highly advanced Library AI. Look at the provided front cover image of a book.
-Extract all text (OCR) exactly as seen. Then, analyze the text and generate a rich set of metadata.
-
-Return ONLY a strictly valid JSON object matching this schema exactly. DO NOT wrap it in markdown. Do not include any conversational text.
-{
-  "title": "Extracted title",
-  "author": "Extracted author name",
-  "publisher": "Extracted publisher",
-  "isbn": "Extracted or inferred ISBN",
-  "language": "English (or inferred)",
-  "category": "Main Category (e.g., Self Help)",
-  "description": "A detailed 100-200 word description suitable for catalog"
-}`;
-
-        const chatRes = await fetch('/api/chat', {
+        // 4. Call backend endpoint to identify book details with GPT-OSS-20B
+        statusEl.innerHTML = "🧠 AI is identifying book details...";
+        const chatRes = await fetch('/api/scan-ocr-text', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                model: 'nvidia/nemotron-nano-12b-v2-vl:free',
-                messages: [
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: prompt },
-                            {
-                                type: 'image_url',
-                                image_url: {
-                                    url: base64Image
-                                }
-                            }
-                        ]
-                    }
-                ]
+                ocr_text: ocrText,
+                cover_url: uploadData.cover_url
             })
         });
+        
         if (!chatRes.ok) {
             const errData = await chatRes.json();
-            throw new Error(errData.error || "Failed to scan book cover.");
+            throw new Error(errData.error || "Failed to parse book details.");
         }
-        const chatData = await chatRes.json();
-        let aiResponse = chatData.reply || '';
-        let metadata = {};
         
-        try {
-            let text = aiResponse.toString();
-            // remove markdown wrapping if present
-            if (text.includes("```json")) {
-                text = text.split("```json")[1].split("```")[0];
-            } else if (text.includes("```")) {
-                text = text.split("```")[1].split("```")[0];
-            }
-            metadata = JSON.parse(text.trim());
-        } catch (parseErr) {
-            console.error("AI JSON Parse Error: ", parseErr, aiResponse);
-            throw new Error("AI extraction response was not in expected JSON format. Try manual entry or scanning again.");
-        }
+        const chatData = await chatRes.json();
+        const metadata = chatData.metadata || {};
 
-        // 4. Fill form fields
+        // 5. Fill form fields
         if (metadata.title) document.getElementById('title').value = metadata.title;
         if (metadata.author) document.getElementById('author').value = metadata.author;
         if (metadata.category) document.getElementById('category').value = metadata.category;
         if (metadata.publisher) document.getElementById('publisher').value = metadata.publisher;
         if (metadata.isbn) document.getElementById('isbn').value = metadata.isbn;
-        if (metadata.language) document.getElementById('language').value = metadata.language;
+        if (metadata.language) document.getElementById('language').value = metadata.language || 'English';
         if (metadata.description) document.getElementById('description').value = metadata.description;
 
         statusEl.innerHTML = "<span style='color: var(--accent-success); font-weight: 700;'>✅ AI Auto-Fill Complete!</span>";
