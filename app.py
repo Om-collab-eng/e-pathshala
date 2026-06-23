@@ -1688,19 +1688,123 @@ def admin_panel():
         
     available_books = conn.execute('SELECT SUM(available_copies) FROM books WHERE school_code = ?', (s_code,)).fetchone()[0] or 0
     books = conn.execute('SELECT * FROM books WHERE school_code = ?', (s_code,)).fetchall()
-    
+
+    # ── Pending student book reservations ────────────────────────────────────
+    reservations = conn.execute('''
+        SELECT r.id, r.user_id, r.book_id, r.status, r.created_at,
+               u.name as student_name, u.phone as student_phone,
+               b.title as book_title, b.author as book_author, b.available_copies
+        FROM reservations r
+        JOIN users u ON u.id = r.user_id
+        JOIN books b ON b.id = r.book_id
+        WHERE r.school_code = ? AND r.status = "Pending"
+        ORDER BY r.created_at ASC
+    ''', (s_code,)).fetchall()
+    reservations = [dict(r) for r in reservations]
+
     students = []
     total_students_val = 0
     if 'manage_students' in session.get('permissions', []):
         students = [dict(u) for u in conn.execute('SELECT * FROM users WHERE school_code = ? ORDER BY id DESC', (s_code,)).fetchall()]
         total_students_val = len([u for u in students if u.get('role') == 'student'])
-        
+
     total_issued = conn.execute('SELECT COUNT(*) FROM transactions WHERE school_code = ?', (s_code,)).fetchone()[0] or 0
     total_returned = conn.execute('SELECT COUNT(*) FROM transactions WHERE return_date IS NOT NULL AND school_code = ?', (s_code,)).fetchone()[0] or 0
-        
+
     conn.close()
     template_name = 'demo_admin.html' if session.get('is_demo') else 'admin.html'
-    return render_template(template_name, transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=total_students_val, total_issued=total_issued, total_returned=total_returned)
+    return render_template(template_name, transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=total_students_val, total_issued=total_issued, total_returned=total_returned, reservations=reservations)
+
+@app.route('/admin/student/add', methods=['POST'])
+def admin_add_student():
+    if session.get('role') != 'admin': return redirect('/login')
+    if 'manage_students' not in session.get('permissions', []): return redirect('/admin')
+
+# ── Reservation approve / reject ─────────────────────────────────────────────
+@app.route('/admin/api/reservation/<int:res_id>/approve', methods=['POST'])
+def admin_approve_reservation(res_id):
+    if session.get('role') not in ['admin', 'demo_admin', 'librarian']:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    s_code = session.get('school_code')
+    conn = get_db_connection()
+    try:
+        res = conn.execute(
+            'SELECT * FROM reservations WHERE id = ? AND school_code = ? AND status = "Pending"',
+            (res_id, s_code)
+        ).fetchone()
+        if not res:
+            conn.close()
+            return jsonify({'status': 'error', 'message': 'Reservation not found or already processed'})
+
+        book = conn.execute('SELECT * FROM books WHERE id = ?', (res['book_id'],)).fetchone()
+        if not book:
+            conn.close()
+            return jsonify({'status': 'error', 'message': 'Book not found'})
+        if book['available_copies'] < 1:
+            conn.close()
+            return jsonify({'status': 'error', 'message': 'No copies available to issue'})
+
+        # Issue the book — create a transaction
+        due_date = (datetime.now() + timedelta(days=14)).strftime('%Y-%m-%d')
+        conn.execute(
+            'INSERT INTO transactions (user_id, book_id, issue_date, due_date, school_code) VALUES (?, ?, ?, ?, ?)',
+            (res['user_id'], res['book_id'], datetime.now().strftime('%Y-%m-%d'), due_date, s_code)
+        )
+        conn.execute(
+            'UPDATE books SET available_copies = available_copies - 1 WHERE id = ?',
+            (res['book_id'],)
+        )
+        # Mark reservation approved
+        conn.execute(
+            'UPDATE reservations SET status = "Approved" WHERE id = ?',
+            (res_id,)
+        )
+        # Notify student
+        conn.execute(
+            'INSERT INTO notifications (user_id, message, type, created_at, school_code) VALUES (?, ?, ?, ?, ?)',
+            (res['user_id'],
+             f"Your reservation for '{book['title']}' has been approved and the book is now issued to you (due {due_date}).",
+             'reservation_approved', datetime.now().strftime('%Y-%m-%d %H:%M'), s_code)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'status': 'error', 'message': str(e)})
+
+@app.route('/admin/api/reservation/<int:res_id>/reject', methods=['POST'])
+def admin_reject_reservation(res_id):
+    if session.get('role') not in ['admin', 'demo_admin', 'librarian']:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    s_code = session.get('school_code')
+    conn = get_db_connection()
+    try:
+        res = conn.execute(
+            'SELECT * FROM reservations WHERE id = ? AND school_code = ? AND status = "Pending"',
+            (res_id, s_code)
+        ).fetchone()
+        if not res:
+            conn.close()
+            return jsonify({'status': 'error', 'message': 'Reservation not found or already processed'})
+
+        book = conn.execute('SELECT title FROM books WHERE id = ?', (res['book_id'],)).fetchone()
+        conn.execute('UPDATE reservations SET status = "Rejected" WHERE id = ?', (res_id,))
+        # Notify student
+        if book:
+            conn.execute(
+                'INSERT INTO notifications (user_id, message, type, created_at, school_code) VALUES (?, ?, ?, ?, ?)',
+                (res['user_id'],
+                 f"Your reservation request for '{book['title']}' has been declined by the librarian.",
+                 'reservation_rejected', datetime.now().strftime('%Y-%m-%d %H:%M'), s_code)
+            )
+        conn.commit()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'status': 'error', 'message': str(e)})
+# ─────────────────────────────────────────────────────────────────────────────
 
 @app.route('/admin/student/add', methods=['POST'])
 def admin_add_student():
