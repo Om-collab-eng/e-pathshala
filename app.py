@@ -1515,7 +1515,7 @@ def get_om_totp(offset=0):
 
 @app.route('/super-admin/om-otp', methods=['GET'])
 def get_om_otp():
-    if session.get('role') != 'super_admin' or session.get('name') != 'OM':
+    if session.get('role') != 'super_admin':
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
     import time
     otp = get_om_totp(0)
@@ -3882,6 +3882,52 @@ def api_delete_scanned_book(book_id):
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@app.route('/admin/api/delete-book/<int:book_id>', methods=['POST'])
+def api_admin_delete_book(book_id):
+    """Delete a single book from the library catalog (admin/librarian only)."""
+    if session.get('role') not in ['admin', 'demo_admin', 'librarian']:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+    s_code = session.get('school_code')
+    try:
+        conn = get_db_connection()
+        book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+        if not book:
+            conn.close()
+            return jsonify({"status": "error", "message": "Book not found or access denied"})
+        # Close any open transactions first (mark as returned)
+        conn.execute(
+            "UPDATE transactions SET return_date = datetime('now') WHERE book_id = ? AND return_date IS NULL",
+            (book_id,)
+        )
+        # Delete the book
+        conn.execute('DELETE FROM books WHERE id = ? AND school_code = ?', (book_id, s_code))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+@app.route('/admin/api/delete-all-books', methods=['POST'])
+def api_admin_delete_all_books():
+    """Wipe all books from this library's catalog (admin/librarian only)."""
+    if session.get('role') not in ['admin', 'demo_admin', 'librarian']:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+    s_code = session.get('school_code')
+    try:
+        conn = get_db_connection()
+        count = conn.execute('SELECT COUNT(*) FROM books WHERE school_code = ?', (s_code,)).fetchone()[0]
+        conn.execute("""
+            UPDATE transactions SET return_date = datetime('now')
+            WHERE book_id IN (SELECT id FROM books WHERE school_code = ?)
+              AND return_date IS NULL
+        """, (s_code,))
+        conn.execute('DELETE FROM books WHERE school_code = ?', (s_code,))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success", "deleted": count})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/api/log-error', methods=['POST'])
 def api_log_error():

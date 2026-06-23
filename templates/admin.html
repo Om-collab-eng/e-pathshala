@@ -794,6 +794,9 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                             <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Manage catalog inventory, copies, and download barcodes. Click any row to edit or manage.</p>
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
+                            <button onclick="confirmDeleteAll()" class="ld-btn" style="background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;display:flex;align-items:center;gap:6px;" title="Delete all books in this library">
+                                <span style="font-size:1rem;">🗑️</span> Delete All Books
+                            </button>
                             <a href="/admin/add_book" class="ld-btn">+ Add Book</a>
                         </div>
                     </div>
@@ -820,8 +823,17 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                                 {% for book in books %}
                                 <tr onclick="openBookMenu({{ book.id }}, '{{ book.title|replace("'", "\\'")|e }}', '{{ book.author|replace("'", "\\'")|e }}', '{{ book.cover_url or '' }}', '{{ book.barcode_id }}', {{ book.total_copies }}, {{ book.available_copies }})" style="cursor:pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--lp-light)'" onmouseout="this.style.background=''">
                                     <td>
+                                        {% set isbn = book.isbn or '' %}
                                         {% if book.cover_url %}
-                                            <img src="{{ book.cover_url }}" alt="cover" style="width:40px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" onerror="this.onerror=null; this.outerHTML='<div style=\"width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;\">📖</div>';">
+                                            <img src="{{ book.cover_url }}" alt="cover"
+                                                 data-isbn="{{ isbn }}"
+                                                 style="width:40px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"
+                                                 onerror="bookCoverFallback(this)">
+                                        {% elif isbn %}
+                                            <img src="https://covers.openlibrary.org/b/isbn/{{ isbn }}-S.jpg" alt="cover"
+                                                 data-isbn="{{ isbn }}"
+                                                 style="width:40px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"
+                                                 onerror="this.onerror=null; this.outerHTML='<div style=&quot;width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;&quot;>📖</div>';">
                                         {% else %}
                                             <div style="width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>
                                         {% endif %}
@@ -911,8 +923,19 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                             </div>
                         </button>
                     </div>
+
+                    <!-- Delete danger zone -->
+                    <div style="padding: 0 1.25rem 1.25rem;">
+                        <button onclick="bamDelete()" id="bamDeleteBtn"
+                            style="width:100%;background:#fff0f0;border:2px solid #ef4444;border-radius:14px;padding:0.85rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;color:#ef4444;font-weight:800;font-size:0.88rem;font-family:'Outfit';"
+                            onmouseover="this.style.background='#ef4444';this.style.color='#fff';"
+                            onmouseout="this.style.background='#fff0f0';this.style.color='#ef4444';">
+                            <span style="font-size:1.2rem;">🗑️</span> Delete This Book
+                        </button>
+                    </div>
                 </div>
             </div>
+
 
             <!-- =================== EDIT BOOK MODAL =================== -->
             <div id="editBookModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('editBookModal').style.display='none'">
@@ -967,6 +990,34 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 </div>
             </div>
 
+
+            <!-- =================== DELETE BOOK CONFIRM MODAL =================== -->
+            <div id="deleteBookModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeleteBookModal()">
+                <div class="ld-modal-content" style="max-width:400px;text-align:center;">
+                    <div style="font-size:3rem;margin-bottom:0.5rem;">🗑️</div>
+                    <h3 class="ld-modal-title" style="color:#ef4444;" id="deleteBookModalTitle">Delete Book?</h3>
+                    <p id="deleteBookModalMsg" style="color:var(--muted);font-size:0.88rem;margin:0.5rem 0 1.5rem;">This will permanently remove this book and all its transaction history.</p>
+                    <div style="display:flex;gap:0.75rem;">
+                        <button onclick="closeDeleteBookModal()" class="ld-btn-alt" style="flex:1;">Cancel</button>
+                        <button onclick="confirmDeleteBookNow()" id="deleteBookConfirmBtn" class="ld-btn" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;">Yes, Delete</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================== DELETE ALL BOOKS CONFIRM MODAL =================== -->
+            <div id="deleteAllBooksModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeleteAllModal()">
+                <div class="ld-modal-content" style="max-width:420px;text-align:center;">
+                    <div style="font-size:3rem;margin-bottom:0.5rem;">☢️</div>
+                    <h3 class="ld-modal-title" style="color:#ef4444;">Delete ALL Books?</h3>
+                    <p style="color:var(--muted);font-size:0.88rem;margin:0.5rem 0;">This will permanently wipe <strong>every book</strong> in this library's catalog including all transaction history. This cannot be undone.</p>
+                    <p style="color:#ef4444;font-size:0.8rem;font-weight:700;margin-bottom:1.25rem;">Type <code>DELETE ALL</code> below to confirm:</p>
+                    <input id="deleteAllConfirmInput" class="ld-input" placeholder="DELETE ALL" style="text-align:center;letter-spacing:2px;font-weight:700;margin-bottom:1rem;">
+                    <div style="display:flex;gap:0.75rem;">
+                        <button onclick="closeDeleteAllModal()" class="ld-btn-alt" style="flex:1;">Cancel</button>
+                        <button onclick="confirmDeleteAllNow()" id="deleteAllConfirmBtn" class="ld-btn" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;">Wipe All Books</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- =================== 3. MEMBERS TAB =================== -->
             <div id="tab-members" class="tab-content" style="display: none;">
@@ -1686,6 +1737,91 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         el.textContent = msg;
         document.body.appendChild(el);
         setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 2500);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── Book Cover Fallback (tries Open Library via ISBN, then emoji) ─────────
+    function bookCoverFallback(img) {
+        const isbn = img.dataset.isbn;
+        if (isbn) {
+            img.onerror = function() {
+                this.onerror = null;
+                this.outerHTML = '<div style="width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>';
+            };
+            img.src = 'https://covers.openlibrary.org/b/isbn/' + isbn + '-S.jpg';
+        } else {
+            img.onerror = null;
+            img.outerHTML = '<div style="width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>';
+        }
+    }
+
+    // ── Delete single book ────────────────────────────────────────────────────
+    let _deleteTargetId   = null;
+    let _deleteTargetName = '';
+
+    function bamDelete() {
+        _deleteTargetId   = _bamBookId;
+        _deleteTargetName = document.getElementById('bamTitle').textContent;
+        closeBookMenu();
+        document.getElementById('deleteBookModalTitle').textContent = 'Delete "' + _deleteTargetName + '"?';
+        document.getElementById('deleteBookModalMsg').textContent   = 'This will permanently remove this book and all its copies. Active loans will be logged as returned. This cannot be undone.';
+        document.getElementById('deleteBookModal').style.display    = 'flex';
+    }
+
+    function closeDeleteBookModal() {
+        document.getElementById('deleteBookModal').style.display = 'none';
+    }
+
+    function confirmDeleteBookNow() {
+        const btn = document.getElementById('deleteBookConfirmBtn');
+        btn.textContent = 'Deleting...'; btn.disabled = true;
+        fetch('/admin/api/delete-book/' + _deleteTargetId, { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                btn.textContent = 'Yes, Delete'; btn.disabled = false;
+                if (d.status === 'success') {
+                    closeDeleteBookModal();
+                    showBamAlert('Book deleted successfully!', 'success');
+                    // Remove the row from DOM instantly without reload
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showBamAlert(d.message || 'Delete failed', 'error');
+                }
+            })
+            .catch(() => { btn.textContent = 'Yes, Delete'; btn.disabled = false; showBamAlert('Network error', 'error'); });
+    }
+
+    // ── Delete ALL books ──────────────────────────────────────────────────────
+    function confirmDeleteAll() {
+        document.getElementById('deleteAllConfirmInput').value = '';
+        document.getElementById('deleteAllBooksModal').style.display = 'flex';
+    }
+
+    function closeDeleteAllModal() {
+        document.getElementById('deleteAllBooksModal').style.display = 'none';
+    }
+
+    function confirmDeleteAllNow() {
+        const inputVal = document.getElementById('deleteAllConfirmInput').value.trim();
+        if (inputVal !== 'DELETE ALL') {
+            showBamAlert('Please type DELETE ALL exactly to confirm', 'error');
+            return;
+        }
+        const btn = document.getElementById('deleteAllConfirmBtn');
+        btn.textContent = 'Deleting...'; btn.disabled = true;
+        fetch('/admin/api/delete-all-books', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                btn.textContent = 'Wipe All Books'; btn.disabled = false;
+                if (d.status === 'success') {
+                    closeDeleteAllModal();
+                    showBamAlert('All books deleted — ' + (d.deleted || 0) + ' removed!', 'success');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showBamAlert(d.message || 'Delete failed', 'error');
+                }
+            })
+            .catch(() => { btn.textContent = 'Wipe All Books'; btn.disabled = false; showBamAlert('Network error', 'error'); });
     }
     // ─────────────────────────────────────────────────────────────────────────
 

@@ -114,7 +114,7 @@
                 {% endif %}
             </div>
 
-            {% if session.get('name') == 'OM' %}
+            {% if session.get('role') == 'super_admin' %}
             <div class="sa-section-header" style="margin-top: 1.5rem;">
                 <div class="sa-section-title" style="color: #ef4444;">Master Override Passcode</div>
             </div>
@@ -429,7 +429,7 @@
                         <div class="sa-stat-value">1.2.0</div>
                         <div class="sa-stat-label">System Version</div>
                     </div>
-                    {% if session.get('name') == 'OM' %}
+                    {% if session.get('role') == 'super_admin' %}
                     <div class="sa-stat-card" style="border-left: 4px solid #ef4444;">
                         <div class="sa-stat-icon" style="background: #fef2f2; color: #ef4444;">🔑</div>
                         <div class="sa-stat-value" id="otpDisplay" style="font-family: monospace; letter-spacing: 2px;">------</div>
@@ -478,7 +478,7 @@
                         </div>
                         <form id="backupForm" action="/super-admin/force-backup" method="POST" style="display:none;"></form>
                     </div>
-                    {% if session.get('name') == 'OM' %}
+                    {% if session.get('role') == 'super_admin' %}
                     <div class="sa-settings-item" style="border-left: 4px solid #3b82f6;" onclick="toggleMobileView()">
                         <div class="sa-settings-icon" style="color:#3b82f6; background:#eff6ff;">📱</div>
                         <div class="sa-settings-text">
@@ -492,7 +492,7 @@
                         <div class="sa-settings-icon" style="color:#ef4444; background:#fef2f2;">⚠️</div>
                         <div class="sa-settings-text">
                             <div class="sa-settings-title" style="color:#ef4444;">WIPE ALL SYSTEM DATA</div>
-                            {% if session.get('name') == 'OM' %}
+                            {% if session.get('role') == 'super_admin' %}
                             <div class="sa-settings-desc" style="color: #6b7280; font-size: 0.75rem; margin-top: 4px;">
                                 Authentication passcode: <strong id="settingsWipeCode" style="font-family: monospace; font-size: 0.9rem; color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 2px 6px; border-radius: 4px; letter-spacing: 1px;">------</strong> (expires in <span id="settingsWipeTimer">15</span>s)
                             </div>
@@ -969,46 +969,42 @@
 
 {% block scripts %}
 <script>
-    // ── Wipe Data OTP Updater for OM ─────────────────────────────────────────
+    // ── Wipe Data OTP Updater for OM (single consolidated function) ──────────
     {% if session.get('name') == 'OM' %}
-    function initOmOtp() {
-        const otpDisp = document.getElementById('otpDisplay');
-        const countDisp = document.getElementById('otpCountdown');
-        if (!otpDisp || !countDisp) return;
-
-        let remainingSecs = 0;
-        let timer = null;
-
-        async function fetchOtp() {
-            try {
-                const res = await fetch('/super-admin/om-otp');
-                const data = await res.json();
+    function updateAllOtp() {
+        fetch('/super-admin/om-otp')
+            .then(r => r.json())
+            .then(data => {
                 if (data.status === 'success') {
-                    otpDisp.innerText = data.otp;
-                    remainingSecs = data.remaining;
-                    countDisp.innerText = remainingSecs;
-                    
-                    // Restart local countdown timer
-                    clearInterval(timer);
-                    timer = setInterval(() => {
-                        remainingSecs--;
-                        if (remainingSecs <= 0) {
-                            clearInterval(timer);
-                            fetchOtp();
-                        } else {
-                            countDisp.innerText = remainingSecs;
-                        }
-                    }, 1000);
-                }
-            } catch(e) {
-                console.error("Failed to fetch OTP", e);
-            }
-        }
+                    // Overview sidebar card
+                    const omDisplay = document.getElementById('omTotpDisplay');
+                    if (omDisplay) omDisplay.innerText = data.otp;
+                    const omTimer = document.getElementById('omTotpTimer');
+                    if (omTimer) omTimer.innerText = data.remaining;
 
-        // Initial fetch
-        fetchOtp();
+                    // Settings tab stat card
+                    const otpDisp = document.getElementById('otpDisplay');
+                    if (otpDisp) otpDisp.innerText = data.otp;
+                    const otpCount = document.getElementById('otpCountdown');
+                    if (otpCount) otpCount.innerText = data.remaining;
+
+                    // Settings wipe code
+                    const settingsWipeCode = document.getElementById('settingsWipeCode');
+                    if (settingsWipeCode) settingsWipeCode.innerText = data.otp;
+                    const settingsWipeTimer = document.getElementById('settingsWipeTimer');
+                    if (settingsWipeTimer) settingsWipeTimer.innerText = data.remaining;
+
+                    // Modal wipe code
+                    const modalWipeCode = document.getElementById('modalWipeCode');
+                    if (modalWipeCode) modalWipeCode.innerText = data.otp;
+                    const modalWipeTimer = document.getElementById('modalWipeTimer');
+                    if (modalWipeTimer) modalWipeTimer.innerText = data.remaining;
+                }
+            })
+            .catch(e => console.log('OTP update error:', e));
     }
-    document.addEventListener('DOMContentLoaded', initOmOtp);
+    // Update every second and immediately on load
+    document.addEventListener('DOMContentLoaded', () => { updateAllOtp(); setInterval(updateAllOtp, 1000); });
     {% endif %}
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -1311,34 +1307,7 @@
         updateMobileViewIndicator();
     });
 
-    function updateOmTotp() {
-        fetch('/super-admin/om-otp')
-            .then(r => r.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    const omDisplay = document.getElementById('omTotpDisplay');
-                    if (omDisplay) omDisplay.innerText = data.otp;
-                    
-                    const omTimer = document.getElementById('omTotpTimer');
-                    if (omTimer) omTimer.innerText = data.remaining;
-                    
-                    const settingsWipeCode = document.getElementById('settingsWipeCode');
-                    if (settingsWipeCode) settingsWipeCode.innerText = data.otp;
-                    
-                    const settingsWipeTimer = document.getElementById('settingsWipeTimer');
-                    if (settingsWipeTimer) settingsWipeTimer.innerText = data.remaining;
-
-                    const modalWipeCode = document.getElementById('modalWipeCode');
-                    if (modalWipeCode) modalWipeCode.innerText = data.otp;
-                    
-                    const modalWipeTimer = document.getElementById('modalWipeTimer');
-                    if (modalWipeTimer) modalWipeTimer.innerText = data.remaining;
-                }
-            })
-            .catch(e => console.log("OTP update error:", e));
-    }
-    setInterval(updateOmTotp, 1000);
-    updateOmTotp();
+    // (updateOmTotp removed — merged into updateAllOtp above)
     {% endif %}
 
     // Hub handlers
