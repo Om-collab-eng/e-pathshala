@@ -5,13 +5,13 @@ PLANS = {
         "perms": {
             "canImportCSV": False,
             "canExportCSV": False,
-            "canUseAIScanner": False,
-            "canUseBarcodeScanner": False,
+            "canUseAIScanner": True,
+            "canUseBarcodeScanner": True,
             "canUseAdvancedAnalytics": False,
             "canUsePublishing": False,
             "canUseMultiBranch": False,
             "canUseAPI": False,
-            "canUseAIChat": False
+            "canUseAIChat": True
         }
     },
     "BASIC": {
