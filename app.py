@@ -126,6 +126,22 @@ def list_supabase_files(prefix):
         print(f"Supabase List Exception: {e}")
         return []
 
+def delete_from_supabase(remote_path):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return False
+    base_url = SUPABASE_URL.rstrip('/')
+    url = f"{base_url}/storage/v1/object/{SUPABASE_BUCKET}/{remote_path}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey": SUPABASE_KEY
+    }
+    try:
+        response = requests.delete(url, headers=headers)
+        return response.status_code in [200, 204]
+    except Exception as e:
+        print(f"Supabase Delete Exception for {remote_path}: {e}")
+        return False
+
 if SUPABASE_URL and SUPABASE_KEY:
     print("Supabase configured successfully. Starting download/restore process...")
     # Restoring database on startup
@@ -1515,19 +1531,64 @@ def super_admin_wipe_data():
         if otp != get_om_totp(0) and otp != get_om_totp(-1):
             return "Incorrect or expired OTP. Please contact OM.", 400
 
+    # 1. Wipe both databases
+    for db_path in [DB_FILE, DEMO_DB_FILE]:
+        if not os.path.exists(db_path):
+            continue
+        try:
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+            for row in tables:
+                table = row['name']
+                if table in ['sqlite_sequence', 'system_settings']: continue
+                if table == 'users':
+                    conn.execute('DELETE FROM users WHERE role != "super_admin"')
+                else:
+                    conn.execute(f'DELETE FROM "{table}"')
+            conn.commit()
+            conn.close()
+        except Exception as db_err:
+            print(f"Error wiping database {db_path}: {db_err}")
 
-    # NUCLEAR OPTION - Wipes all non-super-admin data
-    conn = get_db_connection()
-    tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-    for row in tables:
-        table = row['name']
-        if table in ['sqlite_sequence', 'system_settings']: continue
-        if table == 'users':
-            conn.execute('DELETE FROM users WHERE role != "super_admin"')
-        else:
-            conn.execute(f'DELETE FROM {table}')
-    conn.commit()
-    conn.close()
+    # 2. Wipe local cover uploads & digital content files
+    for folder in [UPLOADS_DIR, DIGITAL_CONTENT_DIR]:
+        if os.path.exists(folder):
+            for filename in os.listdir(folder):
+                file_path = os.path.join(folder, filename)
+                if os.path.isfile(file_path) and filename != ".emptyFolderPlaceholder":
+                    try:
+                        os.unlink(file_path)
+                    except Exception as f_err:
+                        print(f"Error deleting file {file_path}: {f_err}")
+
+    # 3. Wipe Supabase remote backups
+    if SUPABASE_URL and SUPABASE_KEY:
+        # Delete backups/library_v3.db
+        delete_from_supabase('backups/library_v3.db')
+        
+        # Delete digital content files in Supabase
+        try:
+            remote_files = list_supabase_files("backups/digital_content")
+            for f in remote_files:
+                if f and f != ".emptyFolderPlaceholder":
+                    delete_from_supabase(f"backups/digital_content/{f}")
+        except Exception as sync_err:
+            print("Failed to delete remote digital content:", sync_err)
+            
+        # Delete uploads files in Supabase
+        try:
+            remote_uploads = list_supabase_files("backups/uploads")
+            for f in remote_uploads:
+                if f and f != ".emptyFolderPlaceholder":
+                    delete_from_supabase(f"backups/uploads/{f}")
+        except Exception as sync_err:
+            print("Failed to delete remote uploads:", sync_err)
+
+        # 4. Upload the newly wiped library_v3.db database immediately
+        if os.path.exists(DB_FILE):
+            upload_to_supabase(DB_FILE, 'backups/library_v3.db')
+
     return redirect('/super-admin')
 
 @app.route('/super-admin/force-backup', methods=['POST'])
