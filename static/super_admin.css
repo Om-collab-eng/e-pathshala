@@ -45,9 +45,7 @@
     font-weight: 800;
     letter-spacing: -0.025em;
     margin: 0;
-    background: linear-gradient(to right, #ffffff, #e0e7ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #ffffff;
 }
 
 .sa-header p {
@@ -714,8 +712,14 @@ details[open] summary {
         gap: 8px !important;
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05) !important;
         z-index: 1000 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
         transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
+
+    .sa-bottom-nav::-webkit-scrollbar { display: none; }
 
     .sa-bottom-nav::before {
         content: "librika.in";
