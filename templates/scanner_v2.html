@@ -980,12 +980,20 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             const meta = scanData.metadata || {};
             
             if (scanData.existing_book) {
-                duplicateQueue.push({
-                    cover_url: coverUrlDb,   // store persistent cover
-                    metadata: meta,
-                    existing_book: scanData.existing_book
-                });
-                showToast(`Duplicate: "${scanData.existing_book.title}" queued.`, "info");
+                try {
+                    const addCopyRes = await fetch(`/admin/api/add-copy/${scanData.existing_book.id}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'}
+                    });
+                    const addCopyData = await addCopyRes.json();
+                    if (addCopyData.status === 'success') {
+                        showToast(`Existing Book: Added copy of "${scanData.existing_book.title}" to stock`, "success");
+                    } else {
+                        showToast(`Error adding copy of "${scanData.existing_book.title}": ${addCopyData.message}`, "error");
+                    }
+                } catch(e) {
+                    showToast(`Failed to add copy of "${scanData.existing_book.title}"`, "error");
+                }
             } else {
                 const savePayload = {
                     title: meta.title || "Untitled Book",
