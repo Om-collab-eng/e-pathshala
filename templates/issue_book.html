@@ -61,9 +61,15 @@
 
 {% block scripts %}
 <script>
-    // Keep focus on barcode input for scanner-ready experience
-    document.addEventListener('click', () => {
-        document.getElementById('barcode_input').focus();
+    // Keep focus on barcode input for scanner-ready experience, but allow interacting with dropdowns/buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('select') || e.target.closest('input') || e.target.closest('button')) {
+            return;
+        }
+        const barcodeInput = document.getElementById('barcode_input');
+        if (barcodeInput) {
+            barcodeInput.focus();
+        }
     });
 </script>
 {% endblock %}

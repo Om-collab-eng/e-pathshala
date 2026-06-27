@@ -1669,7 +1669,8 @@ def admin_panel():
     class_filter = request.args.get('class')
     conn = get_db_connection()
     
-    query = '''SELECT t.*, u.name as user_name, b.title as book_title 
+    query = '''SELECT t.*, u.name as user_name, u.admission_no as user_admission, u.phone as user_phone, 
+                      b.title as book_title, b.barcode_id as book_barcode 
                FROM transactions t 
                JOIN users u ON t.user_id = u.id 
                JOIN books b ON t.book_id = b.id 
@@ -1959,16 +1960,26 @@ def issue_book():
             book = conn.execute('SELECT * FROM books WHERE barcode_id = ? AND available_copies > 0 AND school_code = ?', (barcode_id, s_code)).fetchone()
         elif book_id:
             book = conn.execute('SELECT * FROM books WHERE id = ? AND available_copies > 0 AND school_code = ?', (book_id, s_code)).fetchone()
-        if book:
+            
+        if not book:
+            if barcode_id:
+                flash("Error: Book with the scanned barcode is not available or does not exist.", "error")
+            else:
+                flash("Error: The selected book is not available or does not exist.", "error")
+        else:
             student = conn.execute('SELECT * FROM users WHERE id = ? AND school_code = ?', (student_id, s_code)).fetchone()
-            issue_date = datetime.now().strftime('%Y-%m-%d')
-            due_date = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
-            conn.execute('INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code) VALUES (?,?,?,?,?,?)',
-                         (student_id, book['id'], issue_date, due_date, student['class'], s_code))
-            conn.execute('UPDATE books SET available_copies = available_copies - 1 WHERE id = ?', (book['id'],))
-            conn.commit()
-            conn.close()
-            return redirect('/admin')
+            if not student:
+                flash("Error: Selected student was not found.", "error")
+            else:
+                issue_date = datetime.now().strftime('%Y-%m-%d')
+                due_date = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
+                conn.execute('INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code) VALUES (?,?,?,?,?,?)',
+                             (student_id, book['id'], issue_date, due_date, student['class'], s_code))
+                conn.execute('UPDATE books SET available_copies = available_copies - 1 WHERE id = ?', (book['id'],))
+                conn.commit()
+                conn.close()
+                flash(f"Success: '{book['title']}' successfully issued to {student['name']}.", "success")
+                return redirect('/admin')
     selected_book_id = request.args.get('book_id', type=int)
     students = conn.execute('SELECT * FROM users WHERE role = "student" AND school_code = ?', (s_code,)).fetchall()
     books = conn.execute('SELECT * FROM books WHERE available_copies > 0 AND school_code = ?', (s_code,)).fetchall()
