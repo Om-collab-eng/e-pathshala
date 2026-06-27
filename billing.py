@@ -6,8 +6,13 @@ from permissions import PLANS
 def get_db_connection():
     from flask import session, has_request_context
     db_name = 'demo.db' if (has_request_context() and session.get('is_demo')) else 'library_v3.db'
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(db_name, timeout=10.0)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute('PRAGMA journal_mode=WAL')
+        conn.execute('PRAGMA busy_timeout=10000')
+    except Exception as e:
+        print("PRAGMA setting failed:", e)
     return conn
 
 class DummyGateway:

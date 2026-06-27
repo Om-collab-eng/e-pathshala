@@ -929,48 +929,16 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 capturedCount++;
                 document.getElementById('bulkCapturedCount').innerText = capturedCount;
                 
-                // Add to queue
-                bulkQueue.push(blob);
-                activeUploads = bulkQueue.length;
-                document.getElementById('bulkActiveCount').innerText = activeUploads;
+                activeUploads++;
+                const activeEl = document.getElementById('bulkActiveCount');
+                if (activeEl) activeEl.innerText = activeUploads;
                 
-                triggerQueueProcessor();
+                processBulkFile(blob);
             } else {
                 closeCameraModal();
                 handleSelectedFile(blob, 'camera_capture.jpg');
             }
         }, 'image/jpeg', 0.92);
-    }
-
-    const bulkQueue = [];
-    let isProcessingQueue = false;
-
-    async function triggerQueueProcessor() {
-        if (isProcessingQueue) return;
-        if (bulkQueue.length === 0) {
-            isProcessingQueue = false;
-            return;
-        }
-        
-        isProcessingQueue = true;
-        const nextBlob = bulkQueue.shift();
-        
-        // Update active count (remaining in queue + current processing)
-        activeUploads = bulkQueue.length + 1;
-        const activeEl = document.getElementById('bulkActiveCount');
-        if (activeEl) activeEl.innerText = activeUploads;
-        
-        try {
-            await processBulkFile(nextBlob);
-        } catch (err) {
-            console.error("Queue item failed:", err);
-        } finally {
-            activeUploads = bulkQueue.length;
-            if (activeEl) activeEl.innerText = activeUploads;
-            isProcessingQueue = false;
-            // Process next item with a 600ms delay to prevent network congestion
-            setTimeout(triggerQueueProcessor, 600);
-        }
     }
 
     async function processBulkFile(blob) {
@@ -1051,6 +1019,12 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         } catch (err) {
             console.error("Background scan error:", err);
             showToast(`Scan failed: ${err.message}`, "error");
+        } finally {
+            activeUploads = Math.max(0, activeUploads - 1);
+            const activeEl = document.getElementById('bulkActiveCount');
+            if (activeEl) {
+                activeEl.innerText = activeUploads;
+            }
         }
     }
 
