@@ -530,6 +530,13 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 <span style="margin-left:auto; background:#f97316; color:white; font-size:0.62rem; font-weight:800; padding:2px 7px; border-radius:20px;" id="resBadge">{{ reservations|length }}</span>
                 {% endif %}
             </button>
+            <button class="ld-nav-link tab-btn" onclick="switchTab('reviews', this)">
+                <div class="ld-nav-icon">✍️</div>
+                Reviews
+                {% if pending_reviews %}
+                <span style="margin-left:auto; background:#f97316; color:white; font-size:0.62rem; font-weight:800; padding:2px 7px; border-radius:20px;">{{ pending_reviews|length }}</span>
+                {% endif %}
+            </button>
             {% if school_perms.canUsePublishing %}
             <button class="ld-nav-link tab-btn" onclick="switchTab('moderation', this)">
                 <div class="ld-nav-icon">
@@ -544,6 +551,10 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 </div>
                 Reports & Hub
             </button>
+            <a href="/billing" class="ld-nav-link" style="text-decoration: none;">
+                <div class="ld-nav-icon">💳</div>
+                Billing & Plan
+            </a>
             <a href="/admin/settings" class="ld-nav-link">
                 <div class="ld-nav-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
@@ -885,6 +896,68 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                         <div style="font-size:0.8rem;margin-top:0.5rem;">When students reserve books from the catalog, they'll appear here.</div>
                     </div>
                     {% endif %}
+                </div>
+            </div>
+
+            <!-- =================== REVIEWS TAB =================== -->
+            <div id="tab-reviews" class="tab-content" style="display: none;">
+                <div class="ld-panel">
+                    <div class="ld-panel-header">
+                        <div>
+                            <h3 class="ld-panel-title">✍️ Pending Book Reviews</h3>
+                            <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Review student book summaries and approve points allocation (+20 points).</p>
+                        </div>
+                    </div>
+
+                    <div class="ld-table-responsive">
+                        {% if pending_reviews %}
+                        <table class="ld-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Book/Resource</th>
+                                    <th>Type</th>
+                                    <th>Review Content</th>
+                                    <th style="text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in pending_reviews %}
+                                <tr>
+                                    <td>
+                                        <div style="font-weight:700;">{{ r.student_name }}</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:700;">{{ r.book_title }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="ld-badge" style="background: var(--purple-light); color: var(--purple);">
+                                            {{ r.book_type|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="font-size:0.8rem; line-height:1.4;">
+                                            <strong>What I learned:</strong> {{ r.learned }}<br>
+                                            <strong>Favorite:</strong> {{ r.favorite }}<br>
+                                            <strong>Recommend:</strong> {{ r.recommend }}
+                                        </div>
+                                    </td>
+                                    <td style="text-align:right; white-space:nowrap;">
+                                        <form action="/admin/review/{{ r.id }}/approve" method="POST" style="display:inline;">
+                                            <button type="submit" class="ld-btn" style="font-size:0.75rem; padding:6px 12px; background:#10b981; border:none; color:white;">Approve</button>
+                                        </form>
+                                        <form action="/admin/review/{{ r.id }}/reject" method="POST" style="display:inline; margin-left:4px;">
+                                            <button type="submit" class="ld-btn" style="font-size:0.75rem; padding:6px 12px; background:#ef4444; border:none; color:white;">Reject</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div style="text-align:center; padding:3rem; color:var(--muted);">No pending reviews found.</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -1270,6 +1343,9 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                                     </td>
                                     <td style="text-align:right;">
                                         <a href="/admin/return/{{ tx.id }}" class="ld-btn" style="font-size: 0.72rem; padding: 6px 12px; background: var(--lg);">Process Return</a>
+                                        <form action="/admin/transaction/{{ tx.id }}/lost" method="POST" style="display:inline; margin-left: 4px;" onsubmit="return confirm('Are you sure you want to mark this book as Lost/Damaged? Student will be penalized -50 points.')">
+                                            <button type="submit" class="ld-btn" style="font-size: 0.72rem; padding: 6px 12px; background: var(--lr); border: none; color: white; cursor: pointer;">Mark Lost</button>
+                                        </form>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -1339,6 +1415,9 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                                         </td>
                                         <td style="text-align:right;">
                                             <a href="/admin/return/{{ tx.id }}" class="ld-btn" style="font-size: 0.72rem; padding: 6px 12px; background: var(--lr);">Process Return</a>
+                                            <form action="/admin/transaction/{{ tx.id }}/lost" method="POST" style="display:inline; margin-left: 4px;" onsubmit="return confirm('Are you sure you want to mark this book as Lost/Damaged? Student will be penalized -50 points.')">
+                                                <button type="submit" class="ld-btn" style="font-size: 0.72rem; padding: 6px 12px; background: var(--lr); border: none; color: white; cursor: pointer;">Mark Lost</button>
+                                            </form>
                                         </td>
                                     </tr>
                                     {% endif %}

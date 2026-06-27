@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Write Book Review - librika.in{% endblock %}
+
+{% block head %}
+<style>
+    :root {
+        --sp-purple: #5c3cf3;
+        --sp-purple-light: #f0eeff;
+        --sp-white: #ffffff;
+        --sp-bg-light: #f8fafc;
+        --sp-text-dark: #0f172a;
+        --sp-text-muted: #64748b;
+    }
+
+    body {
+        background-color: var(--sp-bg-light);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .rv-container {
+        max-width: 700px;
+        margin: 4rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .rv-card {
+        background: var(--sp-white);
+        border-radius: 28px;
+        padding: 2.5rem;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.04);
+    }
+
+    .rv-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .rv-badge {
+        background: var(--sp-purple-light);
+        color: var(--sp-purple);
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        display: inline-block;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+    }
+
+    .rv-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin: 0;
+    }
+
+    .rv-meta {
+        font-size: 0.9rem;
+        color: var(--sp-text-muted);
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        box-sizing: border-box;
+        background: var(--sp-bg-light);
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 14px 20px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.95rem;
+        color: var(--sp-text-dark);
+        outline: none;
+        transition: border-color 0.2s;
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-control:focus {
+        border-color: var(--sp-purple);
+    }
+
+    .submit-btn {
+        background: var(--sp-purple);
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 16px;
+        border-radius: 18px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        margin-top: 1.5rem;
+        box-shadow: 0 10px 20px rgba(92, 60, 243, 0.15);
+    }
+
+    .submit-btn:hover {
+        opacity: 0.95;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rv-container">
+    <div class="rv-card">
+        <div class="rv-header">
+            <span class="rv-badge">✍️ Book Review</span>
+            <h1 class="rv-title">{{ book.title }}</h1>
+            <p class="rv-meta">Share your thoughts and learnings. Approved reviews earn +20 points!</p>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label" for="learned">1. What did you learn from this book?</label>
+                <textarea id="learned" name="learned" class="form-control" placeholder="Write a short summary of key concepts, lessons, or takeaways..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="favorite">2. What was your favorite chapter, character, or section and why?</label>
+                <textarea id="favorite" name="favorite" class="form-control" placeholder="Describe the part that resonated most with you..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="recommend">3. Would you recommend this book to other students? Why or why not?</label>
+                <textarea id="recommend" name="recommend" class="form-control" placeholder="Give your recommendations and reasoning..." required></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit Review</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

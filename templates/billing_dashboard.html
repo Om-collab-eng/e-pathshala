@@ -2,141 +2,587 @@
 
 {% block title %}Billing & Subscriptions - librika.in{% endblock %}
 
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bi-purple: #5c3cf3;
+        --bi-purple-light: #f0eeff;
+        --bi-dark: #0f172a;
+        --bi-muted: #64748b;
+        --bi-border: #e2e8f0;
+        --bi-bg: #f8fafc;
+        --bi-card-shadow: 0 15px 35px rgba(0,0,0,0.04);
+        --accent-primary: #5c3cf3;
+        --accent-secondary: #06b6d4;
+    }
+
+    body {
+        background-color: var(--bi-bg);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .bi-header {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 28px;
+        box-shadow: var(--bi-card-shadow);
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        border: 1px solid var(--bi-border);
+    }
+
+    .bi-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 2.2rem;
+        color: var(--bi-dark);
+        margin: 0 0 6px 0;
+    }
+
+    .bi-subtitle {
+        color: var(--bi-muted);
+        font-size: 1.05rem;
+        margin: 0;
+    }
+
+    .bi-btn-alt {
+        background: var(--bi-purple-light);
+        color: var(--bi-purple);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-weight: 800;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .bi-btn-alt:hover {
+        background: var(--bi-purple);
+        color: white;
+    }
+
+    .bi-btn-neon {
+        background: var(--bi-purple);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        box-shadow: 0 8px 16px rgba(92, 60, 243, 0.15);
+    }
+
+    .bi-btn-neon:hover {
+        opacity: 0.95;
+    }
+
+    .bi-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    @media (max-width: 768px) {
+        .bi-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .bi-card {
+        background: white;
+        border-radius: 28px;
+        padding: 2.5rem;
+        box-shadow: var(--bi-card-shadow);
+        border: 1px solid var(--bi-border);
+    }
+
+    .limit-progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #f1f5f9;
+        border-radius: 100px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    /* ── Modal & checkout styles ── */
+    .bi-modal {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 1.5rem;
+    }
+
+    .bi-modal-content {
+        background: white;
+        border-radius: 32px;
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 850px;
+        position: relative;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+        border: 1px solid var(--bi-border);
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 24px; right: 24px;
+        cursor: pointer;
+        font-size: 1.5rem;
+        color: var(--bi-muted);
+        transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+        color: var(--bi-dark);
+    }
+
+    /* Plans selection layout */
+    .plans-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .plan-card {
+        border: 2px solid var(--bi-border);
+        border-radius: 24px;
+        padding: 2rem;
+        text-align: center;
+        transition: border-color 0.2s;
+        cursor: pointer;
+    }
+
+    .plan-card.active, .plan-card:hover {
+        border-color: var(--bi-purple);
+    }
+
+    /* Checkout Layout split */
+    .checkout-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .checkout-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Premium interactive credit card */
+    .card-scene {
+        width: 100%;
+        height: 200px;
+        perspective: 1000px;
+        margin-bottom: 1.5rem;
+    }
+
+    .credit-card {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .credit-card.flipped {
+        transform: rotateY(180deg);
+    }
+
+    .card-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 20px;
+        padding: 24px;
+        box-sizing: border-box;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+
+    .card-front {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%);
+    }
+
+    .card-back {
+        background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+        transform: rotateY(180deg);
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .magnetic-strip {
+        width: 100%;
+        height: 40px;
+        background: #111;
+        margin-top: 25px;
+    }
+
+    .signature-bar {
+        background: #eee;
+        height: 35px;
+        margin: 0 20px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 15px;
+        color: #333;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.95rem;
+        border-radius: 4px;
+    }
+
+    /* Live inputs styling */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--bi-dark);
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        width: 100%;
+        box-sizing: border-box;
+        border: 2px solid var(--bi-border);
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        outline: none;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .form-control:focus {
+        border-color: var(--bi-purple);
+    }
+
+    /* Checkout overlay animation */
+    .payment-loader {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: white;
+        border-radius: 32px;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        text-align: center;
+        padding: 3rem;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid var(--bi-purple-light);
+        border-top: 5px solid var(--bi-purple);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1.5rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-step {
+        font-weight: 700;
+        color: var(--bi-dark);
+        margin-top: 10px;
+        font-size: 1.1rem;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<header class="header">
-    <div>
-        <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Billing & Subscription</h1>
-        <p style="color: var(--text-mid); font-size: 1.1rem;">Manage your SaaS plan and view invoices.</p>
-    </div>
-    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-        <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
-        <a href="/admin" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
-    </div>
-</header>
-
-<div class="grid-2-col" style="margin-bottom: 3rem;">
-    <!-- Current Plan -->
-    <div class="glow-box" style="padding: 2rem; background: var(--bg-card); border-radius: 12px;">
-        <h2 style="margin-bottom: 1rem; color: var(--text-high);">Current Plan: <span style="color: var(--accent-primary);">{{ sub.plan_name }}</span></h2>
-        <p style="color: var(--text-mid); margin-bottom: 0.5rem;"><strong>Status:</strong> <span style="color: #4ade80;">{{ sub.status | upper }}</span></p>
-        <p style="color: var(--text-mid); margin-bottom: 0.5rem;"><strong>Renews:</strong> {{ sub.current_period_end }}</p>
-        {% if sub.plan_id != 'plan_free' %}
-        <form action="/billing/cancel" method="POST" style="margin-top: 1rem;" onsubmit="return confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing cycle.');">
-            <button type="submit" class="btn-alt" style="border-color: #ef4444; color: #ef4444;">Cancel Subscription</button>
-        </form>
-        {% endif %}
-        
-        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Usage Limits</h3>
-            <div style="margin-bottom: 1rem;">
-                <p style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                    <span>Students</span>
-                    <span>{{ students_count }} / {{ sub.max_students }}</span>
-                </p>
-                <div style="width: 100%; height: 6px; background: var(--bg-dark); border-radius: 3px; overflow: hidden;">
-                    <div style="width: {{ (students_count / sub.max_students * 100) | int }}%; height: 100%; background: var(--accent-primary);"></div>
-                </div>
-            </div>
-            <div>
-                <p style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                    <span>Books</span>
-                    <span>{{ books_count }} / {{ sub.max_books }}</span>
-                </p>
-                <div style="width: 100%; height: 6px; background: var(--bg-dark); border-radius: 3px; overflow: hidden;">
-                    <div style="width: {{ (books_count / sub.max_books * 100) | int }}%; height: 100%; background: var(--accent-secondary);"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Upgrade Path -->
-    <div class="glow-box" style="padding: 2rem; background: var(--bg-card); border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+<div style="max-width: 1100px; margin: 3rem auto; padding: 0 1.5rem;">
+    <!-- Header -->
+    <div class="bi-header">
         <div>
-            <h2 style="margin-bottom: 1rem; color: var(--text-high);">Upgrade & Unlock</h2>
-            <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Need more capacity? Upgrade your plan to instantly unlock advanced features, unlimited API access, and higher student limits.</p>
+            <h1 class="bi-title">Subscription & Billing</h1>
+            <p class="bi-subtitle">Manage your institution's subscription plan, invoices, and limits.</p>
         </div>
-        <button class="btn-neon" onclick="document.getElementById('plansModal').style.display='flex';" style="width: 100%; padding: 1rem; font-size: 1.1rem;">View Upgrade Options</button>
+        <div style="display: flex; gap: 10px;">
+            <a href="/admin" class="bi-btn-alt">↩ Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="bi-grid">
+        <!-- Current Subscription Box -->
+        <div class="bi-card">
+            <h3 style="font-family: 'Outfit'; font-size: 1.4rem; font-weight: 800; color: var(--bi-dark); margin: 0 0 15px 0;">Current Active Plan</h3>
+            <div style="background: var(--bi-purple-light); padding: 1.5rem; border-radius: 20px; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; color: var(--bi-purple);">{{ sub.plan_name }} Plan</span>
+                    <span style="font-size: 0.75rem; font-weight: 800; background: #22c55e; color: white; padding: 4px 12px; border-radius: 100px;">{{ sub.status|upper }}</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--bi-purple); font-weight: 700; margin-top: 8px;">
+                    Expires / Renews: {{ sub.current_period_end }}
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: var(--bi-dark);">
+                        <span>Students Enrolled</span>
+                        <span>{{ students_count }} / {{ sub.max_students }}</span>
+                    </div>
+                    <div class="limit-progress-bar">
+                        {% set percent = (students_count / sub.max_students * 100)|int if sub.max_students > 0 else 0 %}
+                        <div style="width: {{ percent if percent <= 100 else 100 }}%; height: 100%; background: var(--accent-primary);"></div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: var(--bi-dark);">
+                        <span>Books Registered</span>
+                        <span>{{ books_count }} / {{ sub.max_books }}</span>
+                    </div>
+                    <div class="limit-progress-bar">
+                        {% set percent = (books_count / sub.max_books * 100)|int if sub.max_books > 0 else 0 %}
+                        <div style="width: {{ percent if percent <= 100 else 100 }}%; height: 100%; background: var(--accent-secondary);"></div>
+                    </div>
+                </div>
+            </div>
+
+            {% if sub.plan_id != 'FREE' %}
+            <form action="/billing/cancel" method="POST" style="margin-top: 2rem;" onsubmit="return confirm('Are you sure you want to cancel your plan? You will revert to the FREE plan limits.');">
+                <button type="submit" class="bi-btn-alt" style="color: #ef4444; background: #fee2e2;">Cancel Plan</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Upgrade / Switch Box -->
+        <div class="bi-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <h3 style="font-family: 'Outfit'; font-size: 1.4rem; font-weight: 800; color: var(--bi-dark); margin: 0 0 10px 0;">Scale Your Institution</h3>
+                <p style="color: var(--bi-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 2rem;">
+                    Unlock additional student registers, larger catalog listings, advanced ISBN AI image scanners, publisher pipelines, and multiple branches sync by changing your plan.
+                </p>
+            </div>
+            <button class="bi-btn-neon" onclick="document.getElementById('plansModal').style.display='flex'">Change Subscription Plan</button>
+        </div>
+    </div>
+
+    <!-- Invoices -->
+    <div class="bi-card">
+        <h3 style="font-family: 'Outfit'; font-size: 1.4rem; font-weight: 800; color: var(--bi-dark); margin: 0 0 15px 0;">Transaction History</h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--bi-border); color: var(--bi-muted); font-weight: 700;">
+                        <th style="padding: 12px 10px;">Date</th>
+                        <th style="padding: 12px 10px;">Invoice ID</th>
+                        <th style="padding: 12px 10px;">Total</th>
+                        <th style="padding: 12px 10px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr style="border-bottom: 1px solid var(--bi-border);">
+                        <td style="padding: 12px 10px; font-weight: 600;">{{ inv.created_at[:10] }}</td>
+                        <td style="padding: 12px 10px; font-family: monospace;">{{ inv.id }}</td>
+                        <td style="padding: 12px 10px; font-weight: 700; color: var(--bi-dark);">Rs. {{ "%.2f"|format(inv.total) }}</td>
+                        <td style="padding: 12px 10px;">
+                            <span style="font-size: 0.72rem; font-weight: 800; background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 12px;">{{ inv.status|upper }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--bi-muted);">No invoices found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- Invoices Table -->
-<h2 style="margin-bottom: 1.5rem;">Billing History</h2>
-<div class="table-container" style="background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
-    <table style="width: 100%; border-collapse: collapse; text-align: left;">
-        <thead>
-            <tr style="background: var(--bg-dark); border-bottom: 1px solid var(--border);">
-                <th style="padding: 1rem;">Date</th>
-                <th style="padding: 1rem;">Invoice ID</th>
-                <th style="padding: 1rem;">Amount</th>
-                <th style="padding: 1rem;">Status</th>
-                <th style="padding: 1rem;">Download</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for inv in invoices %}
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 1rem;">{{ inv.created_at[:10] }}</td>
-                <td style="padding: 1rem; font-family: monospace;">{{ inv.id }}</td>
-                <td style="padding: 1rem;">Rs. {{ "%.2f"|format(inv.total) }}</td>
-                <td style="padding: 1rem;"><span style="color: #4ade80;">{{ inv.status | upper }}</span></td>
-                <td style="padding: 1rem;">
-                    {% if inv.pdf_url %}
-                    <a href="{{ inv.pdf_url }}" download class="btn-alt" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">PDF</a>
-                    {% else %}
-                    N/A
-                    {% endif %}
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-mid);">No invoices found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<!-- Plan Select Modal -->
+<div class="bi-modal" id="plansModal">
+    <div class="bi-modal-content">
+        <span class="close-btn" onclick="document.getElementById('plansModal').style.display='none'">&times;</span>
+        <h2 style="font-family: 'Outfit'; font-size: 1.8rem; font-weight: 800; text-align: center; margin: 0 0 5px 0;">Available Plans</h2>
+        <p style="text-align: center; color: var(--bi-muted); font-size: 0.9rem; margin: 0 0 1.5rem 0;">Choose the capacity that matches your school needs.</p>
 
-<!-- Plans Modal -->
-<div id="plansModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 2000;">
-    <div class="modal-content glow-box" style="max-width: 900px; width: 100%; background: var(--bg-card); padding: 2.5rem; position: relative;">
-        <span onclick="document.getElementById('plansModal').style.display='none'" style="position: absolute; right: 20px; top: 20px; cursor: pointer; font-size: 1.5rem; color: var(--text-mid);">&times;</span>
-        <h2 style="text-align: center; margin-bottom: 0.5rem; font-size: 2.5rem;">Select a Plan</h2>
-        <p style="text-align: center; color: var(--text-mid); margin-bottom: 2.5rem;">Scale your institution securely.</p>
-        
-        <div style="display: flex; justify-content: center; margin-bottom: 2rem;">
-            <div style="background: var(--bg-dark); border-radius: 8px; padding: 0.25rem;">
-                <button class="btn-alt" style="background: var(--accent-primary); border-color: transparent; color: white;" id="toggleMonthly" onclick="setBilling('monthly')">Monthly</button>
-                <button class="btn-alt" style="border-color: transparent;" id="toggleAnnual" onclick="setBilling('annual')">Annually (-20%)</button>
+        <!-- Toggle billing cycle -->
+        <div style="display:flex; justify-content:center; margin-bottom: 20px;">
+            <div style="background: var(--bi-purple-light); padding: 4px; border-radius: 12px; display: flex; gap: 4px;">
+                <button type="button" id="billingMonthly" style="border:none; padding: 6px 16px; border-radius: 10px; font-weight:800; cursor:pointer; background:var(--bi-purple); color:white;" onclick="toggleCycle('monthly')">Monthly</button>
+                <button type="button" id="billingAnnual" style="border:none; padding: 6px 16px; border-radius: 10px; font-weight:800; cursor:pointer; background:transparent; color:var(--bi-purple);" onclick="toggleCycle('annual')">Annually (-20%)</button>
             </div>
         </div>
 
-        <div class="grid-3-col">
-            {% for plan_id, plan in plans.items() %}
-            {% if plan_id != 'FREE' %}
-            <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; transition: border-color 0.3s;" class="plan-card">
-                <h3 style="color: var(--text-high); margin-bottom: 0.5rem; font-size: 1.25rem;">{{ plan_id }} Plan</h3>
-                <div style="font-size: 2rem; font-weight: bold; color: var(--accent-primary); margin-bottom: 1.5rem;">
-                    <span class="price-monthly">Rs. {{ plan.price }}<span style="font-size: 1rem; color: var(--text-mid); font-weight: normal;">/mo</span></span>
-                    <span class="price-annual" style="display: none;">Rs. {{ plan.price * 12 }}<span style="font-size: 1rem; color: var(--text-mid); font-weight: normal;">/yr</span></span>
-                </div>
-                
-                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-mid); font-size: 0.95rem;">
-                    <li style="margin-bottom: 0.5rem;">✅ Up to {{ plan.limits.studentLimit }} Students</li>
-                    <li style="margin-bottom: 0.5rem;">✅ Up to {{ plan.limits.max_books }} Books</li>
-                    {% if plan.perms.canUseAIScanner %}<li style="margin-bottom: 0.5rem;">✅ AI Scanner & ISBN</li>{% endif %}
-                    {% if plan.perms.canUseAdvancedAnalytics %}<li style="margin-bottom: 0.5rem;">✅ Advanced Analytics</li>{% endif %}
-                    {% if plan.perms.canUseAPI %}<li style="margin-bottom: 0.5rem;">✅ API Access</li>{% endif %}
-                    {% if plan.perms.canUseMultiBranch %}<li style="margin-bottom: 0.5rem;">✅ Multi-Branch Sync</li>{% endif %}
+        <div class="plans-grid">
+            <!-- BASIC Card -->
+            <div class="plan-card" onclick="selectPlan('BASIC')">
+                <h3 style="font-family:'Outfit'; font-size:1.3rem; margin: 0 0 10px 0;">BASIC Plan</h3>
+                <div style="font-size: 1.8rem; font-weight: 900; color: var(--bi-purple); margin-bottom: 10px;" id="priceBasic">Rs. 999<span style="font-size:0.9rem; font-weight:normal; color:var(--bi-muted);">/mo</span></div>
+                <ul style="text-align:left; font-size: 0.82rem; color: var(--bi-muted); padding-left: 20px; line-height: 1.5; margin-bottom: 20px;">
+                    <li>Up to 500 Students</li>
+                    <li>Up to 10,000 Books</li>
+                    <li>Import / Export CSV</li>
+                    <li>Standard ISBN lookup</li>
                 </ul>
-                
-                <form action="/billing/checkout" method="POST">
-                    <input type="hidden" name="plan_id" value="{{ plan_id }}">
-                    <input type="hidden" name="billing_cycle" value="monthly" class="billing-cycle-input">
-                    <button type="submit" class="btn-alt" style="width: 100%;">Select {{ plan_id }}</button>
+                <button type="button" class="bi-btn-alt" style="width: 100%; justify-content: center;">Choose Basic</button>
+            </div>
+
+            <!-- PRO Card -->
+            <div class="plan-card" onclick="selectPlan('PROFESSIONAL')">
+                <h3 style="font-family:'Outfit'; font-size:1.3rem; margin: 0 0 10px 0;">PROFESSIONAL</h3>
+                <div style="font-size: 1.8rem; font-weight: 900; color: var(--bi-purple); margin-bottom: 10px;" id="pricePro">Rs. 2,999<span style="font-size:0.9rem; font-weight:normal; color:var(--bi-muted);">/mo</span></div>
+                <ul style="text-align:left; font-size: 0.82rem; color: var(--bi-muted); padding-left: 20px; line-height: 1.5; margin-bottom: 20px;">
+                    <li>Unlimited Students</li>
+                    <li>Unlimited Books</li>
+                    <li>Advanced Analytics Panel</li>
+                    <li>API Integrations</li>
+                    <li>Student Reader Badges</li>
+                </ul>
+                <button type="button" class="bi-btn-neon" style="width: 100%; justify-content: center;">Choose Professional</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Demo Checkout Modal -->
+<div class="bi-modal" id="checkoutModal">
+    <div class="bi-modal-content" style="max-width: 780px;">
+        <span class="close-btn" onclick="document.getElementById('checkoutModal').style.display='none'">&times;</span>
+        <h2 style="font-family: 'Outfit'; font-size: 1.8rem; font-weight: 800; margin: 0 0 5px 0;">Demo Checkout</h2>
+        <p style="color: var(--bi-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Enter mock credentials to execute transaction.</p>
+
+        <!-- Loader overlay inside modal content -->
+        <div class="payment-loader" id="paymentLoader">
+            <div class="spinner"></div>
+            <h3 style="font-family:'Outfit'; font-size: 1.4rem; font-weight: 800; color: var(--bi-dark);" id="loaderStatus">Initializing Transaction...</h3>
+            <p style="color: var(--bi-muted); font-size: 0.9rem; margin-top: 5px;" id="loaderStep">Establishing secure gateway handshake...</p>
+        </div>
+
+        <div class="checkout-layout">
+            <!-- Left Panel: Summary & Card representation -->
+            <div>
+                <!-- Simulated interactive card -->
+                <div class="card-scene">
+                    <div class="credit-card" id="creditCard">
+                        <!-- Front Face -->
+                        <div class="card-face card-front">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size: 0.95rem; font-weight: 800; letter-spacing: 0.05em;">L I B R I K A</span>
+                                <span style="font-weight:900; font-style:italic; font-size: 1.2rem;" id="cardTypeLogo">VISA</span>
+                            </div>
+                            <div style="font-family:'Share Tech Mono', monospace; font-size: 1.25rem; letter-spacing: 2px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);" id="cardPreviewNumber">•••• •••• •••• ••••</div>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                                <div style="min-width:0; padding-right:10px;">
+                                    <div style="font-size: 0.55rem; color: rgba(255,255,255,0.7); text-transform:uppercase;">Cardholder</div>
+                                    <div style="font-size: 0.85rem; font-weight: 700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="cardPreviewName">YOUR NAME</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.55rem; color: rgba(255,255,255,0.7); text-transform:uppercase;">Expires</div>
+                                    <div style="font-size: 0.85rem; font-weight: 700; font-family:'Share Tech Mono';" id="cardPreviewExpiry">MM/YY</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="card-face card-back">
+                            <div class="magnetic-strip"></div>
+                            <div>
+                                <div style="font-size: 0.55rem; color: rgba(255,255,255,0.7); text-transform:uppercase; margin-left: 20px; margin-bottom: 2px;">Security Code</div>
+                                <div class="signature-bar" id="cardPreviewCVV">•••</div>
+                            </div>
+                            <div style="padding: 10px 20px; font-size: 0.55rem; text-align:center; color: rgba(255,255,255,0.4); line-height:1.2;">
+                                Demonstration payment simulator. No real money or credentials required.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order summary -->
+                <div style="background: var(--bi-bg); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--bi-border);">
+                    <h4 style="margin:0 0 10px 0; font-size:0.9rem; font-weight:800;">Order Summary</h4>
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--bi-muted); margin-bottom:6px;">
+                        <span id="summaryPlanLabel">BASIC Plan (Monthly)</span>
+                        <span id="summaryPlanPrice">Rs. 999.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--bi-muted); margin-bottom:6px;">
+                        <span>GST (18%)</span>
+                        <span id="summaryPlanTax">Rs. 179.82</span>
+                    </div>
+                    <hr style="border:none; border-top: 1px dashed var(--bi-border); margin: 8px 0;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.95rem; font-weight:800; color:var(--bi-dark);">
+                        <span>Total Due</span>
+                        <span id="summaryPlanTotal">Rs. 1,178.82</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Fields Form -->
+            <div>
+                <form id="checkoutForm" action="/billing/checkout" method="POST" onsubmit="executeDemoPayment(event)">
+                    <input type="hidden" name="plan_id" id="hiddenPlanId">
+                    <input type="hidden" name="billing_cycle" id="hiddenBillingCycle">
+
+                    <div class="form-group">
+                        <label class="form-label" for="cardholderName">Cardholder Name</label>
+                        <input type="text" id="cardholderName" class="form-control" placeholder="John Doe" required oninput="updateCardName(this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="cardNumber">Card Number</label>
+                        <input type="text" id="cardNumber" class="form-control" placeholder="4111 2222 3333 4444" required maxlength="19" oninput="formatCardNumber(this)" onfocus="flipCard(false)">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="cardExpiry">Expiry Date</label>
+                            <input type="text" id="cardExpiry" class="form-control" placeholder="MM/YY" required maxlength="5" oninput="formatExpiry(this)" onfocus="flipCard(false)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cardCVV">CVV</label>
+                            <input type="password" id="cardCVV" class="form-control" placeholder="***" required maxlength="3" oninput="updateCVV(this.value)" onfocus="flipCard(true)" onblur="flipCard(false)">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="bi-btn-neon" style="width: 100%; padding: 14px; margin-top: 10px;">🚀 Authorize Checkout</button>
                 </form>
             </div>
-            {% endif %}
-            {% endfor %}
         </div>
     </div>
 </div>
@@ -144,26 +590,144 @@
 
 {% block scripts %}
 <script>
-    function setBilling(cycle) {
-        document.querySelectorAll('.billing-cycle-input').forEach(inp => inp.value = cycle);
-        
+    let activeCycle = 'monthly';
+    const planPrices = {
+        'BASIC': { 'monthly': 999, 'annual': 999 * 12 },
+        'PROFESSIONAL': { 'monthly': 2999, 'annual': 2999 * 12 }
+    };
+
+    function toggleCycle(cycle) {
+        activeCycle = cycle;
         if(cycle === 'annual') {
-            document.getElementById('toggleAnnual').style.background = 'var(--accent-primary)';
-            document.getElementById('toggleAnnual').style.color = 'white';
-            document.getElementById('toggleMonthly').style.background = 'transparent';
-            document.getElementById('toggleMonthly').style.color = 'var(--text-mid)';
-            
-            document.querySelectorAll('.price-monthly').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.price-annual').forEach(el => el.style.display = 'block');
+            document.getElementById('billingAnnual').style.background = 'var(--bi-purple)';
+            document.getElementById('billingAnnual').style.color = 'white';
+            document.getElementById('billingMonthly').style.background = 'transparent';
+            document.getElementById('billingMonthly').style.color = 'var(--bi-purple)';
+
+            document.getElementById('priceBasic').innerHTML = 'Rs. 9,590<span style="font-size:0.8rem; font-weight:normal; color:var(--bi-muted);">/yr (-20%)</span>';
+            document.getElementById('pricePro').innerHTML = 'Rs. 28,790<span style="font-size:0.8rem; font-weight:normal; color:var(--bi-muted);">/yr (-20%)</span>';
         } else {
-            document.getElementById('toggleMonthly').style.background = 'var(--accent-primary)';
-            document.getElementById('toggleMonthly').style.color = 'white';
-            document.getElementById('toggleAnnual').style.background = 'transparent';
-            document.getElementById('toggleAnnual').style.color = 'var(--text-mid)';
-            
-            document.querySelectorAll('.price-monthly').forEach(el => el.style.display = 'block');
-            document.querySelectorAll('.price-annual').forEach(el => el.style.display = 'none');
+            document.getElementById('billingMonthly').style.background = 'var(--bi-purple)';
+            document.getElementById('billingMonthly').style.color = 'white';
+            document.getElementById('billingAnnual').style.background = 'transparent';
+            document.getElementById('billingAnnual').style.color = 'var(--bi-purple)';
+
+            document.getElementById('priceBasic').innerHTML = 'Rs. 999<span style="font-size:0.8rem; font-weight:normal; color:var(--bi-muted);">/mo</span>';
+            document.getElementById('pricePro').innerHTML = 'Rs. 2,999<span style="font-size:0.8rem; font-weight:normal; color:var(--bi-muted);">/mo</span>';
         }
+    }
+
+    function selectPlan(planId) {
+        // Hide plans modal
+        document.getElementById('plansModal').style.display = 'none';
+
+        // Set hidden form parameters
+        document.getElementById('hiddenPlanId').value = planId;
+        document.getElementById('hiddenBillingCycle').value = activeCycle;
+
+        // Compute pricing details
+        let price = planPrices[planId][activeCycle];
+        if (activeCycle === 'annual') {
+            // Apply 20% discount
+            price = price * 0.8;
+        }
+
+        const tax = price * 0.18;
+        const total = price + tax;
+
+        // Update Checkout UI
+        document.getElementById('summaryPlanLabel').textContent = `${planId} Plan (${activeCycle.toUpperCase()})`;
+        document.getElementById('summaryPlanPrice').textContent = `Rs. ${price.toFixed(2)}`;
+        document.getElementById('summaryPlanTax').textContent = `Rs. ${tax.toFixed(2)}`;
+        document.getElementById('summaryPlanTotal').textContent = `Rs. ${total.toFixed(2)}`;
+
+        // Clear Form inputs and preview
+        document.getElementById('checkoutForm').reset();
+        document.getElementById('cardPreviewNumber').textContent = '•••• •••• •••• ••••';
+        document.getElementById('cardPreviewName').textContent = 'YOUR NAME';
+        document.getElementById('cardPreviewExpiry').textContent = 'MM/YY';
+        document.getElementById('cardPreviewCVV').textContent = '•••';
+
+        // Show Checkout Modal
+        document.getElementById('checkoutModal').style.display = 'flex';
+    }
+
+    // Live card interactive updates
+    function flipCard(flip) {
+        const card = document.getElementById('creditCard');
+        if (flip) {
+            card.classList.add('flipped');
+        } else {
+            card.classList.remove('flipped');
+        }
+    }
+
+    function updateCardName(name) {
+        document.getElementById('cardPreviewName').textContent = name.toUpperCase() || 'YOUR NAME';
+    }
+
+    function formatCardNumber(input) {
+        let val = input.value.replace(/\D/g, '');
+        // Detect Visa vs Mastercard logo
+        const logoSpan = document.getElementById('cardTypeLogo');
+        if (val.startsWith('4')) {
+            logoSpan.textContent = 'VISA';
+        } else if (val.startsWith('5')) {
+            logoSpan.textContent = 'MASTERCARD';
+        } else {
+            logoSpan.textContent = 'UNION';
+        }
+
+        let formatted = '';
+        for(let i=0; i<val.length; i++) {
+            if (i > 0 && i % 4 === 0) formatted += ' ';
+            formatted += val[i];
+        }
+        input.value = formatted;
+
+        // Update preview
+        document.getElementById('cardPreviewNumber').textContent = formatted || '•••• •••• •••• ••••';
+    }
+
+    function formatExpiry(input) {
+        let val = input.value.replace(/\D/g, '');
+        if (val.length >= 2) {
+            val = val.substring(0, 2) + '/' + val.substring(2, 4);
+        }
+        input.value = val;
+        document.getElementById('cardPreviewExpiry').textContent = val || 'MM/YY';
+    }
+
+    function updateCVV(val) {
+        document.getElementById('cardPreviewCVV').textContent = val || '•••';
+    }
+
+    // Payment loading simulation
+    function executeDemoPayment(event) {
+        event.preventDefault();
+
+        // Show loader overlay
+        document.getElementById('paymentLoader').style.display = 'flex';
+
+        const steps = [
+            { status: "Connecting...", desc: "Initializing handshake with payment server..." },
+            { status: "Authorizing...", desc: "Validating credit card credentials and CVV checks..." },
+            { status: "Simulating Transaction...", desc: "Requesting auth parameters from dummy gateway..." },
+            { status: "Success!", desc: "Plan updated successfully. Redirecting..." }
+        ];
+
+        let curStep = 0;
+        const interval = setInterval(() => {
+            if (curStep < steps.length) {
+                document.getElementById('loaderStatus').textContent = steps[curStep].status;
+                document.getElementById('loaderStep').textContent = steps[curStep].desc;
+                curStep++;
+            } else {
+                clearInterval(interval);
+                // Submit Form
+                document.getElementById('checkoutForm').submit();
+            }
+        }, 800);
     }
 </script>
 {% endblock %}

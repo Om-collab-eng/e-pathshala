@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - librika.in{% endblock %}
+
+{% block head %}
+<style>
+    :root {
+        --sp-purple: #5c3cf3;
+        --sp-purple-light: #f0eeff;
+        --sp-white: #ffffff;
+        --sp-bg-light: #f8fafc;
+        --sp-text-dark: #0f172a;
+        --sp-text-muted: #64748b;
+        --gold: #eab308;
+        --silver: #94a3b8;
+        --bronze: #ca8a04;
+    }
+
+    body {
+        background-color: var(--sp-bg-light);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .ld-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .ld-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .ld-header h1 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .ld-header p {
+        color: var(--sp-text-muted);
+        font-size: 1.1rem;
+    }
+
+    /* Filter Controls */
+    .ld-filters {
+        background: var(--sp-white);
+        border-radius: 20px;
+        padding: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .filter-btn {
+        background: var(--sp-bg-light);
+        border: 1px solid #e2e8f0;
+        color: var(--sp-text-muted);
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+        background: var(--sp-purple);
+        border-color: var(--sp-purple);
+        color: white;
+    }
+
+    .select-filter {
+        background: var(--sp-bg-light);
+        border: 1px solid #e2e8f0;
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        color: var(--sp-text-dark);
+        outline: none;
+        min-width: 120px;
+    }
+
+    /* Toggles for Leaderboard Types */
+    .ld-tabs {
+        display: flex;
+        justify-content: center;
+        background: #f1f5f9;
+        padding: 6px;
+        border-radius: 16px;
+        max-width: 600px;
+        margin: 0 auto 3rem auto;
+    }
+
+    .ld-tab-btn {
+        flex: 1;
+        text-align: center;
+        padding: 12px;
+        border: none;
+        background: none;
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: var(--sp-text-muted);
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.2s;
+    }
+
+    .ld-tab-btn.active {
+        background: var(--sp-white);
+        color: var(--sp-purple);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* Podium Layout */
+    .podium-container {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr 1fr;
+        align-items: end;
+        gap: 20px;
+        max-width: 800px;
+        margin: 0 auto 4rem auto;
+        padding-top: 50px;
+    }
+
+    .podium-card {
+        background: var(--sp-white);
+        border-radius: 24px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        transition: transform 0.2s;
+    }
+
+    .podium-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .podium-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        color: white;
+        font-size: 1.8rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        position: relative;
+        text-transform: uppercase;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+
+    .first-place {
+        grid-column: 2;
+        grid-row: 1;
+        border: 2px solid var(--gold);
+        transform: scale(1.05);
+        z-index: 10;
+    }
+
+    .first-place .podium-avatar {
+        width: 90px;
+        height: 90px;
+        background: linear-gradient(135deg, var(--gold) 0%, #facc15 100%);
+    }
+
+    .second-place {
+        grid-column: 1;
+        grid-row: 1;
+        border: 2px solid var(--silver);
+    }
+
+    .second-place .podium-avatar {
+        background: linear-gradient(135deg, var(--silver) 0%, #cbd5e1 100%);
+    }
+
+    .third-place {
+        grid-column: 3;
+        grid-row: 1;
+        border: 2px solid var(--bronze);
+    }
+
+    .third-place .podium-avatar {
+        background: linear-gradient(135deg, var(--bronze) 0%, #d97706 100%);
+    }
+
+    .podium-medal {
+        position: absolute;
+        top: -15px;
+        font-size: 2rem;
+    }
+
+    .podium-rank {
+        position: absolute;
+        bottom: -15px;
+        background: var(--sp-text-dark);
+        color: white;
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+
+    .podium-name {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: var(--sp-text-dark);
+        margin: 12px 0 4px 0;
+    }
+
+    .podium-class {
+        font-size: 0.8rem;
+        color: var(--sp-text-muted);
+        font-weight: 700;
+    }
+
+    .podium-score {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--sp-purple);
+        margin-top: 12px;
+    }
+
+    /* Leaderboard Table / List */
+    .ld-list {
+        background: var(--sp-white);
+        border-radius: 24px;
+        padding: 1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .ld-row {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        border-radius: 16px;
+        transition: background 0.2s;
+    }
+
+    .ld-row:hover {
+        background: var(--sp-bg-light);
+    }
+
+    .ld-rank {
+        width: 50px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: var(--sp-text-muted);
+    }
+
+    .ld-student {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .ld-student-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--sp-purple-light);
+        color: var(--sp-purple);
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: uppercase;
+        font-size: 1rem;
+    }
+
+    .ld-student-name {
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        font-size: 0.95rem;
+    }
+
+    .ld-student-class {
+        font-size: 0.75rem;
+        color: var(--sp-text-muted);
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
+    .ld-badges {
+        display: flex;
+        gap: 6px;
+        margin-left: 20px;
+    }
+
+    .ld-badge {
+        font-size: 0.65rem;
+        font-weight: 800;
+        background: var(--sp-purple-light);
+        color: var(--sp-purple);
+        padding: 3px 8px;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    .ld-score {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 1.25rem;
+        color: var(--sp-purple);
+        text-align: right;
+        min-width: 80px;
+    }
+
+    /* Current User Sticky Bar */
+    .ld-my-card {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 40px);
+        max-width: 900px;
+        background: var(--sp-text-dark);
+        color: white;
+        border-radius: 20px;
+        padding: 15px 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 100;
+    }
+
+    .ld-my-rank {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #facc15;
+    }
+
+    .ld-my-details {
+        flex-grow: 1;
+        margin-left: 20px;
+    }
+
+    .ld-my-name {
+        font-weight: 800;
+        font-size: 1rem;
+    }
+
+    .ld-my-score {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 1.35rem;
+        color: #facc15;
+    }
+
+    @media (max-width: 768px) {
+        .podium-container {
+            grid-template-columns: 1fr;
+            gap: 30px;
+            padding-top: 10px;
+        }
+        .first-place {
+            grid-column: 1;
+        }
+        .second-place {
+            grid-column: 1;
+        }
+        .third-place {
+            grid-column: 1;
+        }
+        .ld-filters {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .ld-badges {
+            display: none; /* Hide badges on mobile list to save space */
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ld-container">
+    <div class="ld-header">
+        <h1>🏆 Reading Champions</h1>
+        <p>Celebrate our top readers, quiz masters, and review experts!</p>
+    </div>
+
+    <!-- Leaderboard Type Tabs -->
+    <div class="ld-tabs">
+        <button class="ld-tab-btn active" onclick="showLeaderboard('overall')">👑 Overall Champion</button>
+        <button class="ld-tab-btn" onclick="showLeaderboard('physical')">📚 Physical Library</button>
+        <button class="ld-tab-btn" onclick="showLeaderboard('digital')">📱 Digital Library</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="ld-filters">
+        <div class="filter-group">
+            <a href="?timeframe=week" class="filter-btn {% if timeframe == 'week' %}active{% endif %}">This Week</a>
+            <a href="?timeframe=month" class="filter-btn {% if timeframe == 'month' %}active{% endif %}">This Month</a>
+            <a href="?timeframe=year" class="filter-btn {% if timeframe == 'year' %}active{% endif %}">This Year</a>
+            <a href="?timeframe=all" class="filter-btn {% if timeframe == 'all' or not timeframe %}active{% endif %}">All Time</a>
+        </div>
+        
+        <form method="GET" style="display:flex; gap:10px; flex-grow:1; justify-content:flex-end;">
+            <input type="hidden" name="timeframe" value="{{ timeframe }}">
+            
+            <select name="class" class="select-filter" onchange="this.form.submit()">
+                <option value="">All Classes</option>
+                {% for c in classes %}
+                <option value="{{ c }}" {% if active_class == c %}selected{% endif %}>Class {{ c }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="section" class="select-filter" onchange="this.form.submit()">
+                <option value="">All Sections</option>
+                {% for s in sections %}
+                <option value="{{ s }}" {% if active_section == s %}selected{% endif %}>Section {{ s }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Leaderboard Panels -->
+    {% for type in ['overall', 'physical', 'digital'] %}
+    <div id="board-{{ type }}" class="board-panel" style="display: {% if type == 'overall' %}block{% else %}none{% endif %};">
+        
+        {% set rankings = overall_rankings if type == 'overall' else (physical_rankings if type == 'physical' else digital_rankings) %}
+        
+        {% if rankings|length > 0 %}
+            <!-- Podium Top 3 -->
+            <div class="podium-container">
+                <!-- 2nd Place -->
+                {% if rankings|length > 1 %}
+                {% set second = rankings[1] %}
+                <div class="podium-card second-place">
+                    <div class="podium-medal">🥈</div>
+                    <div class="podium-avatar">{{ second.name[0] }}</div>
+                    <div class="podium-name">{{ second.name }}</div>
+                    <div class="podium-class">Class {{ second.class }}</div>
+                    <div class="podium-score">{{ second.score }} pts</div>
+                    <div class="podium-rank">Rank 2</div>
+                </div>
+                {% endif %}
+
+                <!-- 1st Place -->
+                {% if rankings|length > 0 %}
+                {% set first = rankings[0] %}
+                <div class="podium-card first-place">
+                    <div class="podium-medal">👑</div>
+                    <div class="podium-avatar">{{ first.name[0] }}</div>
+                    <div class="podium-name">{{ first.name }}</div>
+                    <div class="podium-class">Class {{ first.class }}</div>
+                    <div class="podium-score">{{ first.score }} pts</div>
+                    <div class="podium-rank">Rank 1</div>
+                </div>
+                {% endif %}
+
+                <!-- 3rd Place -->
+                {% if rankings|length > 2 %}
+                {% set third = rankings[2] %}
+                <div class="podium-card third-place">
+                    <div class="podium-medal">🥉</div>
+                    <div class="podium-avatar">{{ third.name[0] }}</div>
+                    <div class="podium-name">{{ third.name }}</div>
+                    <div class="podium-class">Class {{ third.class }}</div>
+                    <div class="podium-score">{{ third.score }} pts</div>
+                    <div class="podium-rank">Rank 3</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- List of remaining readers (Ranks 4-10) -->
+            <div class="ld-list">
+                {% for r in rankings[3:] %}
+                <div class="ld-row">
+                    <div class="ld-rank">#{{ r.rank }}</div>
+                    <div class="ld-student">
+                        <div class="ld-student-avatar">{{ r.name[0] }}</div>
+                        <div>
+                            <div class="ld-student-name">{{ r.name }}</div>
+                            <div class="ld-student-class">Class {{ r.class }}</div>
+                        </div>
+                    </div>
+                    {% if r.badges %}
+                    <div class="ld-badges">
+                        {% for b in r.badges[:2] %}
+                        <span class="ld-badge">{{ b }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="ld-score">{{ r.score }} pts</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align:center; padding:5rem; color:var(--sp-text-muted); font-size:1.2rem;">No reader scores recorded for this timeframe yet. Be the first!</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <!-- Sticky User Rank Bar -->
+    {% for board_type in ['overall', 'physical', 'digital'] %}
+    <div id="sticky-{{ board_type }}" class="sticky-panel" style="display: {% if board_type == 'overall' %}flex{% else %}none{% endif %};">
+        {% set my_rank_data = my_ranks[board_type] %}
+        {% if my_rank_data %}
+        <div class="ld-my-card">
+            <div class="ld-my-rank">Rank #{{ my_rank_data.rank }}</div>
+            <div class="ld-my-details">
+                <div class="ld-my-name">{{ my_rank_data.name }} (You)</div>
+                <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">Books completed: {{ my_rank_data.books_completed }} | Quiz success: {{ my_rank_data.quiz_success_rate }}%</div>
+            </div>
+            <div class="ld-my-score">{{ my_rank_data.score }} pts</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function showLeaderboard(boardType) {
+        // Toggle active tabs
+        document.querySelectorAll('.ld-tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Toggle active panels
+        document.querySelectorAll('.board-panel').forEach(panel => panel.style.display = 'none');
+        document.getElementById('board-' + boardType).style.display = 'block';
+
+        // Toggle active sticky bars
+        document.querySelectorAll('.sticky-panel').forEach(panel => panel.style.display = 'none');
+        const sticky = document.getElementById('sticky-' + boardType);
+        if (sticky) sticky.style.display = 'flex';
+    }
+</script>
+{% endblock %}

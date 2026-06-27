@@ -822,6 +822,10 @@
                 <span class="link-icon">📊</span>
                 <span>Dashboard</span>
             </a>
+            <a href="/leaderboard" class="sidebar-link">
+                <span class="link-icon">🏆</span>
+                <span>Leaderboard</span>
+            </a>
             <a href="/student/browse" class="sidebar-link">
                 <span class="link-icon">📚</span>
                 <span>Digital Library</span>
@@ -995,6 +999,89 @@
                         {% endif %}
                     </div>
 
+                    <!-- My Reading History & Quizzes Section -->
+                    <div>
+                        <div class="section-header">
+                            <h3 class="section-title">📊 Quizzes & Reviews</h3>
+                        </div>
+                        
+                        <div style="background: var(--sp-white); border-radius: 24px; padding: 1.25rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 15px;">
+                            <!-- Physical Book History -->
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--sp-text-dark); margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">📚 Physical Book Challenges</h4>
+                                {% if returned_transactions %}
+                                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                                        {% for tx in returned_transactions %}
+                                        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--sp-bg-light); padding: 10px 14px; border-radius: 16px;">
+                                            <div style="flex-grow: 1; min-width: 0; padding-right: 10px;">
+                                                <div style="font-weight: 800; font-size: 0.85rem; color: var(--sp-text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ tx.title }}</div>
+                                                <div style="font-size: 0.72rem; color: var(--sp-text-muted); margin-top: 2px;">Returned: {{ tx.return_date }}</div>
+                                            </div>
+                                            <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
+                                                {% if tx.quiz_passed is not none %}
+                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-green); background: var(--sp-green-light); padding: 6px 10px; border-radius: 12px;">Quiz Passed</span>
+                                                {% else %}
+                                                    <a href="/student/quiz/physical/{{ tx.book_id }}" style="font-size: 0.72rem; font-weight: 800; color: white; background: var(--sp-purple); padding: 6px 12px; border-radius: 12px; text-decoration: none;">Take Quiz</a>
+                                                {% endif %}
+                                                
+                                                {% if tx.review_status == 'approved' %}
+                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-orange); background: var(--sp-orange-light); padding: 6px 10px; border-radius: 12px;">Review Approved</span>
+                                                {% elif tx.review_status == 'pending' %}
+                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-text-muted); background: #e2e8f0; padding: 6px 10px; border-radius: 12px;">Review Pending</span>
+                                                {% else %}
+                                                    <a href="/student/review/physical/{{ tx.book_id }}" style="font-size: 0.72rem; font-weight: 800; color: var(--sp-purple); background: var(--sp-purple-light); padding: 6px 12px; border-radius: 12px; text-decoration: none;">Write Review</a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div style="font-size: 0.8rem; color: var(--sp-text-muted); text-align: center; padding: 10px 0;">No returned physical books yet.</div>
+                                {% endif %}
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 5px 0;">
+
+                            <!-- Digital Book History -->
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--sp-text-dark); margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">📱 Digital Book Challenges</h4>
+                                {% if digital_progress %}
+                                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                                        {% for dp in digital_progress %}
+                                        {% set percent = (dp.last_page / dp.total_pages) * 100 if dp.total_pages > 0 else 0 %}
+                                        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--sp-bg-light); padding: 10px 14px; border-radius: 16px;">
+                                            <div style="flex-grow: 1; min-width: 0; padding-right: 10px;">
+                                                <div style="font-weight: 800; font-size: 0.85rem; color: var(--sp-text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ dp.title }}</div>
+                                                <div style="font-size: 0.72rem; color: var(--sp-text-muted); margin-top: 2px;">Progress: {{ percent|round|int }}%</div>
+                                            </div>
+                                            <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
+                                                {% if dp.quiz_passed is not none %}
+                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-green); background: var(--sp-green-light); padding: 6px 10px; border-radius: 12px;">Quiz Passed</span>
+                                                {% elif percent >= 80 %}
+                                                    <a href="/student/quiz/digital/{{ dp.content_id }}" style="font-size: 0.72rem; font-weight: 800; color: white; background: var(--sp-purple); padding: 6px 12px; border-radius: 12px; text-decoration: none;">Take Quiz</a>
+                                                {% else %}
+                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-text-muted); background: #e2e8f0; padding: 6px 12px; border-radius: 12px;" title="Unlock at 80% read">Quiz Locked</span>
+                                                {% endif %}
+                                                
+                                                {% if dp.review_status == 'approved' %}
+                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-orange); background: var(--sp-orange-light); padding: 6px 10px; border-radius: 12px;">Review Approved</span>
+                                                {% elif dp.review_status == 'pending' %}
+                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-text-muted); background: #e2e8f0; padding: 6px 10px; border-radius: 12px;">Review Pending</span>
+                                                {% elif percent >= 100 %}
+                                                    <a href="/student/review/digital/{{ dp.content_id }}" style="font-size: 0.72rem; font-weight: 800; color: var(--sp-purple); background: var(--sp-purple-light); padding: 6px 12px; border-radius: 12px; text-decoration: none;">Write Review</a>
+                                                {% else %}
+                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-text-muted); background: #e2e8f0; padding: 6px 12px; border-radius: 12px;" title="Unlock at 100% read">Review Locked</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div style="font-size: 0.8rem; color: var(--sp-text-muted); text-align: center; padding: 10px 0;">No digital reading activity yet.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
                     <!-- Recommended For You Carousel -->
                     <div>
                         <div class="section-header">
@@ -1142,6 +1229,7 @@
         
         <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Navigation</p>
         <a href="/student" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📊 Dashboard Overview</a>
+        <a href="/leaderboard" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🏆 Leaderboard</a>
         <a href="/student/browse" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📚 Digital Library</a>
         <a href="/digital-library" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🌐 Community Library</a>
         <a href="/student/publish" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">✏️ Publish Content</a>

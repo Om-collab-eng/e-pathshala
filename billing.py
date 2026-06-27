@@ -4,7 +4,9 @@ import sqlite3
 from permissions import PLANS
 
 def get_db_connection():
-    conn = sqlite3.connect('library_v3.db')
+    from flask import session, has_request_context
+    db_name = 'demo.db' if (has_request_context() and session.get('is_demo')) else 'library_v3.db'
+    conn = sqlite3.connect(db_name)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -58,30 +60,26 @@ def process_checkout(school_code, plan_id, billing_cycle):
 
 def get_school_subscription(school_code):
     from flask import session, has_request_context
-    if has_request_context() and session.get('is_demo'):
-        return {
-            "status": "active",
-            "plan_name": "PROFESSIONAL",
-            "plan_id": "PROFESSIONAL",
-            "max_students": PLANS["PROFESSIONAL"]["limits"]["studentLimit"],
-            "max_books": PLANS["PROFESSIONAL"]["limits"]["max_books"],
-            "current_period_end": "Never (Demo Sandbox)"
-        }
-
     conn = get_db_connection()
     school = conn.execute('SELECT activePlan, subscriptionStatus, expiryDate FROM schools WHERE school_code = ?', (school_code,)).fetchone()
     conn.close()
     
+    is_demo = has_request_context() and session.get('is_demo')
+    
     if not school or not school['activePlan']:
-        plan_id = "FREE"
+        plan_id = "PROFESSIONAL" if is_demo else "FREE"
+        status = "active"
+        expiry = "Never (Demo Sandbox)" if is_demo else "Never (Free Tier)"
     else:
         plan_id = school['activePlan']
+        status = school['subscriptionStatus'] or "active"
+        expiry = school['expiryDate'] or "Never"
         
     return {
-        "status": school['subscriptionStatus'] if school else "active",
+        "status": status,
         "plan_name": plan_id,
         "plan_id": plan_id,
         "max_students": PLANS[plan_id]["limits"]["studentLimit"],
         "max_books": PLANS[plan_id]["limits"]["max_books"],
-        "current_period_end": school['expiryDate'] if school and school['expiryDate'] else "Never (Free Tier)"
+        "current_period_end": expiry
     }

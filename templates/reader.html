@@ -222,7 +222,7 @@
                 await fetch('/api/save-progress', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ content_id: contentId, page: page })
+                    body: JSON.stringify({ content_id: contentId, page: page, total_pages: pdfDoc ? pdfDoc.numPages : 1 })
                 });
                 
                 // Show toast

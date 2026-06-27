@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Locked - librika.in{% endblock %}
+
+{% block head %}
+<style>
+    :root {
+        --sp-purple: #5c3cf3;
+        --sp-purple-light: #f0eeff;
+        --sp-white: #ffffff;
+        --sp-bg-light: #f8fafc;
+        --sp-text-dark: #0f172a;
+        --sp-text-muted: #64748b;
+        --error: #ef4444;
+    }
+
+    body {
+        background-color: var(--sp-bg-light);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .lk-container {
+        max-width: 600px;
+        margin: 5rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .lk-card {
+        background: var(--sp-white);
+        border-radius: 28px;
+        padding: 3rem;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.04);
+        text-align: center;
+    }
+
+    .lk-icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        color: var(--sp-purple);
+    }
+
+    .lk-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--sp-text-dark);
+    }
+
+    .lk-message {
+        font-size: 1.1rem;
+        color: var(--sp-text-muted);
+        margin-bottom: 2.5rem;
+        line-height: 1.5;
+    }
+
+    .back-btn {
+        background: var(--sp-purple);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: opacity 0.2s;
+        box-shadow: 0 8px 16px rgba(92, 60, 243, 0.15);
+    }
+
+    .back-btn:hover {
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lk-container">
+    <div class="lk-card">
+        <div class="lk-icon">🔒</div>
+        <h1 class="lk-title">Quiz is Locked</h1>
+        <p class="lk-message">{{ message }}</p>
+        <a href="/student" class="back-btn">Return to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

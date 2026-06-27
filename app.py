@@ -267,6 +267,273 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+def init_leaderboard_tables(conn):
+    # Create new tables
+    conn.execute('''CREATE TABLE IF NOT EXISTS book_quizzes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    book_id INTEGER NOT NULL,
+                    book_type TEXT NOT NULL,
+                    questions TEXT NOT NULL,
+                    created_at TEXT)''')
+
+    conn.execute('''CREATE TABLE IF NOT EXISTS quiz_attempts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    book_id INTEGER NOT NULL,
+                    book_type TEXT NOT NULL,
+                    score REAL NOT NULL,
+                    passed INTEGER DEFAULT 0,
+                    attempted_at TEXT)''')
+
+    conn.execute('''CREATE TABLE IF NOT EXISTS book_reviews (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    book_id INTEGER NOT NULL,
+                    book_type TEXT NOT NULL,
+                    learned TEXT NOT NULL,
+                    favorite TEXT NOT NULL,
+                    recommend TEXT NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    created_at TEXT,
+                    school_code TEXT)''')
+
+    conn.execute('''CREATE TABLE IF NOT EXISTS points_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    points INTEGER NOT NULL,
+                    score_type TEXT NOT NULL,
+                    description TEXT,
+                    created_at TEXT,
+                    school_code TEXT)''')
+                    
+    # Leaderboard Migrations for users table
+    for col, col_type in [
+        ('physical_reader_score', 'INTEGER DEFAULT 0'),
+        ('digital_reader_score', 'INTEGER DEFAULT 0'),
+        ('overall_reader_score', 'INTEGER DEFAULT 0'),
+        ('quizzes_passed', 'INTEGER DEFAULT 0'),
+        ('approved_reviews', 'INTEGER DEFAULT 0'),
+        ('reading_streak', 'INTEGER DEFAULT 0'),
+        ('longest_streak', 'INTEGER DEFAULT 0'),
+        ('last_read_date', 'TEXT'),
+        ('badges', 'TEXT DEFAULT "[]"'),
+        ('section', 'TEXT')
+    ]:
+        try: conn.execute(f'ALTER TABLE users ADD COLUMN {col} {col_type}')
+        except: pass
+
+    # Leaderboard Migrations for reading_progress table
+    for col, col_type in [
+        ('total_pages', 'INTEGER DEFAULT 1'),
+        ('completed_at', 'TEXT'),
+        ('reading_time', 'INTEGER DEFAULT 0'),
+        ('streak_last_increment_date', 'TEXT'),
+        ('started_reading_at', 'TEXT'),
+        ('awarded_50', 'INTEGER DEFAULT 0'),
+        ('awarded_100', 'INTEGER DEFAULT 0')
+    ]:
+        try: conn.execute(f'ALTER TABLE reading_progress ADD COLUMN {col} {col_type}')
+        except: pass
+
+    # Leaderboard Migrations for books table
+    try: conn.execute('ALTER TABLE books ADD COLUMN pages INTEGER DEFAULT 120')
+    except: pass
+
+def check_90_day_cooldown(conn, user_id, book_id, book_type):
+    cooldown_limit = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d %H:%M')
+    
+    # Check passed quizzes
+    past_pass = conn.execute('''
+        SELECT attempted_at FROM quiz_attempts 
+        WHERE user_id = ? AND book_id = ? AND book_type = ? AND passed = 1
+        ORDER BY attempted_at DESC LIMIT 1
+    ''', (user_id, book_id, book_type)).fetchone()
+    
+    if past_pass:
+        if past_pass['attempted_at'] > cooldown_limit:
+            return True
+            
+    # Check physical returns
+    if book_type == 'physical':
+        past_return = conn.execute('''
+            SELECT return_date FROM transactions 
+            WHERE user_id = ? AND book_id = ? AND return_date IS NOT NULL AND return_date != 'LOST'
+            ORDER BY return_date DESC LIMIT 1
+        ''', (user_id, book_id)).fetchone()
+        if past_return:
+            last_return_str = past_return['return_date'] + " 23:59"
+            if last_return_str > cooldown_limit:
+                return True
+    else:
+        past_complete = conn.execute('''
+            SELECT completed_at FROM reading_progress 
+            WHERE student_id = ? AND content_id = ? AND completed_at IS NOT NULL
+            ORDER BY completed_at DESC LIMIT 1
+        ''', (user_id, book_id)).fetchone()
+        if past_complete:
+            if past_complete['completed_at'] > cooldown_limit:
+                return True
+                
+    return False
+
+def check_and_award_badges(conn, user_id):
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not user: return
+    
+    phys_completed = conn.execute('SELECT COUNT(*) FROM transactions WHERE user_id = ? AND return_date IS NOT NULL AND return_date != "LOST"', (user_id,)).fetchone()[0] or 0
+    dig_completed = conn.execute('SELECT COUNT(*) FROM reading_progress WHERE student_id = ? AND last_page >= total_pages AND total_pages > 1', (user_id,)).fetchone()[0] or 0
+    total_completed = phys_completed + dig_completed
+    
+    quizzes_passed = conn.execute('SELECT COUNT(*) FROM quiz_attempts WHERE user_id = ? AND passed = 1', (user_id,)).fetchone()[0] or 0
+    reviews_approved = conn.execute('SELECT COUNT(*) FROM book_reviews WHERE user_id = ? AND status = "approved"', (user_id,)).fetchone()[0] or 0
+    
+    overall_score = user['overall_reader_score'] or 0
+    streak = user['reading_streak'] or 0
+    
+    import json
+    current_badges = []
+    if user['badges']:
+        try:
+            current_badges = json.loads(user['badges'])
+        except:
+            current_badges = []
+            
+    new_badges = list(current_badges)
+    
+    if total_completed >= 1 and 'First Book Completed' not in new_badges:
+        new_badges.append('First Book Completed')
+    if total_completed >= 5 and '5 Books Completed' not in new_badges:
+        new_badges.append('5 Books Completed')
+    if total_completed >= 10 and '10 Books Completed' not in new_badges:
+        new_badges.append('10 Books Completed')
+    if total_completed >= 25 and '25 Books Completed' not in new_badges:
+        new_badges.append('25 Books Completed')
+    if total_completed >= 50 and '50 Books Completed' not in new_badges:
+        new_badges.append('50 Books Completed')
+        
+    if quizzes_passed >= 5 and 'Quiz Master' not in new_badges:
+        new_badges.append('Quiz Master')
+    if reviews_approved >= 5 and 'Review Expert' not in new_badges:
+        new_badges.append('Review Expert')
+    if overall_score >= 500 and 'Reading Champion' not in new_badges:
+        new_badges.append('Reading Champion')
+        
+    conn.execute('''
+        UPDATE users 
+        SET quizzes_passed = ?, approved_reviews = ?, badges = ?
+        WHERE id = ?
+    ''', (quizzes_passed, reviews_approved, json.dumps(new_badges), user_id))
+
+def update_score(conn, user_id, score_type, points, description=""):
+    user = conn.execute('SELECT physical_reader_score, digital_reader_score, overall_reader_score, school_code FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not user: return
+    
+    physical_score = user['physical_reader_score'] or 0
+    digital_score = user['digital_reader_score'] or 0
+    
+    if score_type == 'physical':
+        physical_score = max(0, physical_score + points)
+    elif score_type == 'digital':
+        digital_score = max(0, digital_score + points)
+        
+    overall_score = physical_score + digital_score
+    
+    conn.execute('''
+        UPDATE users 
+        SET physical_reader_score = ?, digital_reader_score = ?, overall_reader_score = ?
+        WHERE id = ?
+    ''', (physical_score, digital_score, overall_score, user_id))
+    
+    now_dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    conn.execute('''
+        INSERT INTO points_log (user_id, points, score_type, description, created_at, school_code)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (user_id, points, score_type, description, now_dt, user['school_code']))
+    
+    check_and_award_badges(conn, user_id)
+
+def ai_generate_quiz(title, author):
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    if nvidia_key:
+        nvidia_key = nvidia_key.strip()
+    
+    prompt = f"""Generate a 5-question multiple-choice quiz about the book "{title}" by "{author}" suitable for school students.
+Each question must be designed to verify that the student actually read and comprehended the book (avoid questions that can be guessed easily).
+Format the output as a valid JSON array of objects. Do NOT include markdown code blocks (like ```json), thinking tags, or other text outside the JSON. Return only the raw JSON array.
+
+Example structure:
+[
+  {{
+    "question": "What is the primary theme of the book?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct_index": 1
+  }}
+]"""
+    
+    try:
+        response = requests.post(
+            "https://integrate.api.nvidia.com/v1/chat/completions",
+            json={
+                "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3,
+                "top_p": 0.95,
+                "max_tokens": 4096,
+                "stream": False
+            },
+            headers={
+                "Authorization": f"Bearer {nvidia_key}",
+                "Content-Type": "application/json"
+            },
+            timeout=30
+        )
+        if response.status_code == 200:
+            res_data = response.json()
+            content = res_data['choices'][0]['message']['content'].strip()
+            if content.startswith("```"):
+                lines = content.splitlines()
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                content = "\n".join(lines).strip()
+            import json
+            parsed = json.loads(content)
+            if isinstance(parsed, list) and len(parsed) > 0:
+                return content
+    except Exception as e:
+        print("AI Quiz generation failed:", e)
+    
+    import json
+    fallback = [
+        {
+            "question": f"Who is the author of '{title}'?",
+            "options": [author, "Unknown", "Another Author", "Editor"],
+            "correct_index": 0
+        },
+        {
+            "question": f"What is the main subject of '{title}'?",
+            "options": ["Fiction", "Non-Fiction / Educational", "Biography", "Poetry"],
+            "correct_index": 1
+        },
+        {
+            "question": f"Which of these best describes the message of '{title}'?",
+            "options": ["Exploring knowledge and learning", "Unrelated topics", "Pure entertainment", "History of publishing"],
+            "correct_index": 0
+        },
+        {
+            "question": f"What can a reader learn from '{title}'?",
+            "options": ["Valuable skills and insights", "How to draw", "Foreign languages", "Nothing specific"],
+            "correct_index": 0
+        },
+        {
+            "question": f"Would you recommend '{title}' to other students?",
+            "options": ["Yes, it is highly educational", "No, it is boring", "Maybe", "It is only for teachers"],
+            "correct_index": 0
+        }
+    ]
+    return json.dumps(fallback)
+
 def init_personal_tables(conn):
     # 1. Add plan_name column to users table if it doesn't exist
     try:
@@ -564,6 +831,7 @@ def init_db():
     conn.execute('UPDATE schools SET status = "active" WHERE status IS NULL')
     conn.execute('UPDATE users SET status = "active" WHERE status IS NULL')
 
+    init_leaderboard_tables(conn)
     conn.commit()
     conn.close()
 
@@ -588,6 +856,18 @@ def init_db():
                  (id INTEGER PRIMARY KEY, name TEXT, school_code TEXT UNIQUE, 
                   librarian_name TEXT, max_books INTEGER, max_students INTEGER, 
                   created_at TEXT)''')
+    try: dconn.execute('ALTER TABLE schools ADD COLUMN activePlan TEXT DEFAULT "FREE"')
+    except: pass
+    try: dconn.execute('ALTER TABLE schools ADD COLUMN subscriptionStatus TEXT DEFAULT "active"')
+    except: pass
+    try: dconn.execute('ALTER TABLE schools ADD COLUMN expiryDate TEXT')
+    except: pass
+    try: dconn.execute('ALTER TABLE schools ADD COLUMN studentLimit INTEGER DEFAULT 50')
+    except: pass
+    try: dconn.execute('ALTER TABLE schools ADD COLUMN librarianLimit INTEGER DEFAULT 1')
+    except: pass
+    try: dconn.execute('ALTER TABLE schools ADD COLUMN adminLimit INTEGER DEFAULT 1')
+    except: pass
                   
     dconn.execute('''CREATE TABLE IF NOT EXISTS books 
                  (id INTEGER PRIMARY KEY, title TEXT, author TEXT, genre TEXT,
@@ -671,6 +951,7 @@ def init_db():
     # Ensure demo admin has all permissions
     dconn.execute('UPDATE users SET permissions = \'["manage_books", "manage_students", "manage_transactions", "approve_content"]\' WHERE role = "admin" AND (permissions IS NULL OR permissions = "[]")')
     
+    init_leaderboard_tables(dconn)
     init_personal_tables(dconn)
     dconn.commit()
     dconn.close()
@@ -1689,6 +1970,8 @@ def admin_panel():
         
     available_books = conn.execute('SELECT SUM(available_copies) FROM books WHERE school_code = ?', (s_code,)).fetchone()[0] or 0
     books = conn.execute('SELECT * FROM books WHERE school_code = ?', (s_code,)).fetchall()
+    total_issued = conn.execute('SELECT COUNT(*) FROM transactions WHERE return_date IS NULL AND school_code = ?', (s_code,)).fetchone()[0] or 0
+    total_returned = conn.execute('SELECT COUNT(*) FROM transactions WHERE return_date IS NOT NULL AND school_code = ?', (s_code,)).fetchone()[0] or 0
 
     # ── Pending student book reservations ────────────────────────────────────
     reservations = conn.execute('''
@@ -1709,12 +1992,27 @@ def admin_panel():
         students = [dict(u) for u in conn.execute('SELECT * FROM users WHERE school_code = ? ORDER BY id DESC', (s_code,)).fetchall()]
         total_students_val = len([u for u in students if u.get('role') == 'student'])
 
-    total_issued = conn.execute('SELECT COUNT(*) FROM transactions WHERE school_code = ?', (s_code,)).fetchone()[0] or 0
-    total_returned = conn.execute('SELECT COUNT(*) FROM transactions WHERE return_date IS NOT NULL AND school_code = ?', (s_code,)).fetchone()[0] or 0
+    # ── Pending book reviews ──────────────────────────────────────────────────
+    pending_reviews = conn.execute('''
+        SELECT r.id, r.user_id, r.book_id, r.book_type, r.learned, r.favorite, r.recommend, r.status, r.created_at,
+               u.name as student_name, b.title as book_title
+        FROM book_reviews r
+        JOIN users u ON r.user_id = u.id
+        JOIN books b ON r.book_id = b.id AND r.book_type = 'physical'
+        WHERE r.status = 'pending' AND r.school_code = ?
+        UNION ALL
+        SELECT r.id, r.user_id, r.book_id, r.book_type, r.learned, r.favorite, r.recommend, r.status, r.created_at,
+               u.name as student_name, d.title as book_title
+        FROM book_reviews r
+        JOIN users u ON r.user_id = u.id
+        JOIN digital_content d ON r.book_id = d.id AND r.book_type = 'digital'
+        WHERE r.status = 'pending' AND r.school_code = ?
+    ''', (s_code, s_code)).fetchall()
+    pending_reviews = [dict(r) for r in pending_reviews]
 
     conn.close()
     template_name = 'demo_admin.html' if session.get('is_demo') else 'admin.html'
-    return render_template(template_name, transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=total_students_val, total_issued=total_issued, total_returned=total_returned, reservations=reservations)
+    return render_template(template_name, transactions=transactions, class_filter=class_filter, available_books=available_books, books=books, overdue_count=len([t for t in transactions if t['is_overdue']]), students=students, total_students=total_students_val, total_issued=total_issued, total_returned=total_returned, reservations=reservations, pending_reviews=pending_reviews)
 
 
 # ── Reservation approve / reject ─────────────────────────────────────────────
@@ -1976,6 +2274,11 @@ def issue_book():
                 conn.execute('INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code) VALUES (?,?,?,?,?,?)',
                              (student_id, book['id'], issue_date, due_date, student['class'], s_code))
                 conn.execute('UPDATE books SET available_copies = available_copies - 1 WHERE id = ?', (book['id'],))
+                
+                # Check cooldown and award 5 points
+                if not check_90_day_cooldown(conn, student_id, book['id'], 'physical'):
+                    update_score(conn, student_id, 'physical', 5, f"Issued book '{book['title']}'")
+                
                 conn.commit()
                 conn.close()
                 flash(f"Success: '{book['title']}' successfully issued to {student['name']}.", "success")
@@ -1993,9 +2296,47 @@ def return_book(tx_id):
     s_code = session.get('school_code')
     conn = get_db_connection()
     tx = conn.execute('SELECT * FROM transactions WHERE id = ? AND school_code = ?', (tx_id, s_code)).fetchone()
-    if tx:
-        conn.execute('UPDATE transactions SET return_date = ? WHERE id = ?', (datetime.now().strftime('%Y-%m-%d'), tx_id))
+    if tx and tx['return_date'] is None:
+        return_date_str = datetime.now().strftime('%Y-%m-%d')
+        conn.execute('UPDATE transactions SET return_date = ? WHERE id = ?', (return_date_str, tx_id))
         conn.execute('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?', (tx['book_id'],))
+        
+        # Calculate score points
+        due_date_str = tx['due_date']
+        due_date = datetime.strptime(due_date_str, '%Y-%m-%d')
+        return_date = datetime.strptime(return_date_str, '%Y-%m-%d')
+        
+        # Check cooldown
+        cooldown_applies = check_90_day_cooldown(conn, tx['user_id'], tx['book_id'], 'physical')
+        
+        # Check minimum reading period eligibility
+        book = conn.execute('SELECT pages, title FROM books WHERE id = ?', (tx['book_id'],)).fetchone()
+        pages = book['pages'] or 120
+        issue_date = datetime.strptime(tx['issue_date'], '%Y-%m-%d')
+        days_kept = (return_date - issue_date).days
+        
+        meets_min_period = True
+        if pages < 100 and days_kept < 2:
+            meets_min_period = False
+        elif pages <= 300 and days_kept < 5:
+            meets_min_period = False
+        elif pages > 300 and days_kept < 7:
+            meets_min_period = False
+            
+        if not cooldown_applies and meets_min_period:
+            if return_date <= due_date:
+                # On-time return!
+                update_score(conn, tx['user_id'], 'physical', 15, f"Returned '{book['title']}' on time")
+                flash("Book returned on time. +15 points awarded to student.", "success")
+            else:
+                # Late return!
+                update_score(conn, tx['user_id'], 'physical', -20, f"Returned '{book['title']}' late")
+                flash("Book returned late. -20 points deducted from student's score.", "warning")
+        elif not meets_min_period:
+            flash(f"Book returned. Minimum reading period was not met ({days_kept} days). Student is not eligible for quiz or points.", "warning")
+        else:
+            flash("Book returned. Cooldown active (90 days), no points updated.", "info")
+            
         conn.commit()
     conn.close()
     return redirect('/admin')
@@ -2060,10 +2401,31 @@ def student_panel():
         'total_read': total_books_read,
         'pending_fines': total_fine
     }
+    returned_txs = conn.execute('''
+        SELECT t.*, b.title, b.author, b.cover_url, b.pages,
+               (SELECT passed FROM quiz_attempts WHERE user_id = t.user_id AND book_id = t.book_id AND book_type = 'physical' LIMIT 1) as quiz_passed,
+               (SELECT status FROM book_reviews WHERE user_id = t.user_id AND book_id = t.book_id AND book_type = 'physical' LIMIT 1) as review_status
+        FROM transactions t 
+        JOIN books b ON b.id = t.book_id 
+        WHERE t.user_id = ? AND t.return_date IS NOT NULL AND t.return_date != 'LOST'
+        ORDER BY t.return_date DESC LIMIT 5
+    ''', (user_id,)).fetchall()
+    returned_transactions = [dict(r) for r in returned_txs]
+
+    digital_progress_raw = conn.execute('''
+        SELECT p.*, d.title, d.category, d.subject, d.cover_url,
+               (SELECT passed FROM quiz_attempts WHERE user_id = p.student_id AND book_id = p.content_id AND book_type = 'digital' LIMIT 1) as quiz_passed,
+               (SELECT status FROM book_reviews WHERE user_id = p.student_id AND book_id = p.content_id AND book_type = 'digital' LIMIT 1) as review_status
+        FROM reading_progress p
+        JOIN digital_content d ON d.id = p.content_id
+        WHERE p.student_id = ?
+        ORDER BY p.updated_at DESC LIMIT 5
+    ''', (user_id,)).fetchall()
+    digital_progress = [dict(dp) for dp in digital_progress_raw]
         
     conn.close()
     template_name = 'demo_student.html' if session.get('is_demo') else 'student.html'
-    return render_template(template_name, transactions=transactions, recommended_books=recommended_books, stats=stats, due_soon=due_soon, overdue_books=overdue_books, school_name=session['school_name'])
+    return render_template(template_name, transactions=transactions, recommended_books=recommended_books, stats=stats, due_soon=due_soon, overdue_books=overdue_books, school_name=session['school_name'], returned_transactions=returned_transactions, digital_progress=digital_progress)
 
 @app.route('/student/profile', methods=['GET', 'POST'])
 def student_profile():
@@ -2073,22 +2435,23 @@ def student_profile():
         name = request.form.get('name', '').strip()
         admission_no = request.form.get('admission_no', '').strip()
         class_name = request.form.get('class', '').strip()
+        section = request.form.get('section', '').strip()
         stream = request.form.get('stream', '').strip()
         dob = request.form.get('dob', '').strip()
         email = request.form.get('email', '').strip()
         new_password = request.form.get('password', '').strip()
 
         # Build update query dynamically
-        fields = 'name = ?, admission_no = ?, class = ?'
-        values = [name, admission_no, class_name]
+        fields = 'name = ?, admission_no = ?, class = ?, section = ?'
+        values = [name, admission_no, class_name, section]
 
         # Update optional fields if columns exist
         try:
             conn.execute(f'UPDATE users SET {fields}, stream = ?, dob = ?, email = ? WHERE id = ?',
                          values + [stream, dob, email, session['user_id']])
         except Exception:
-            conn.execute(f'UPDATE users SET {fields} WHERE id = ?',
-                         values + [session['user_id']])
+            conn.execute(f'UPDATE users SET name = ?, admission_no = ?, class = ? WHERE id = ?',
+                         [name, admission_no, class_name, session['user_id']])
 
         if new_password:
             conn.execute('UPDATE users SET password = ? WHERE id = ?', (new_password, session['user_id']))
@@ -2103,7 +2466,7 @@ def student_profile():
 
     # Books read (returned transactions)
     total_read = conn.execute(
-        'SELECT COUNT(*) FROM transactions WHERE user_id = ? AND return_date IS NOT NULL',
+        'SELECT COUNT(*) FROM transactions WHERE user_id = ? AND return_date IS NOT NULL AND return_date != "LOST"',
         (session['user_id'],)
     ).fetchone()[0]
 
@@ -2136,11 +2499,17 @@ def student_profile():
         'saved_count': saved_count,
         'publications_count': publications_count,
         'favorite_category': fav_category,
-        'days_streak': 7  # placeholder; extend with actual streak logic if needed
+        'days_streak': user['reading_streak'] or 0
     }
 
+    import json
+    try:
+        badges_list = json.loads(user['badges']) if user['badges'] else []
+    except:
+        badges_list = []
+
     conn.close()
-    return render_template('student_profile.html', user=user, stats=stats)
+    return render_template('student_profile.html', user=user, stats=stats, badges=badges_list)
 
 @app.route('/student/book/<int:book_id>')
 def book_details(book_id):
@@ -2218,6 +2587,11 @@ def student_self_issue(book_id):
             conn.execute('INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code) VALUES (?,?,?,?,?,?)',
                          (session['user_id'], book['id'], datetime.now().strftime('%Y-%m-%d'), (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d'), session['class'], book['school_code']))
             conn.execute('UPDATE books SET available_copies = available_copies - 1 WHERE id = ?', (book['id'],))
+            
+            # Check cooldown and award 5 points
+            if not check_90_day_cooldown(conn, session['user_id'], book['id'], 'physical'):
+                update_score(conn, session['user_id'], 'physical', 5, f"Self-issued book '{book['title']}'")
+                
             conn.commit()
     conn.close()
     return redirect('/student')
@@ -3360,6 +3734,12 @@ Rules:
                 return jsonify({"error": "NVIDIA Vision model did not return any content. Response: " + json.dumps(res_data)}), 500
         ai_reply = ai_reply.strip()
         
+        # Remove thought block if present
+        if "<thought>" in ai_reply and "</thought>" in ai_reply:
+            ai_reply = ai_reply.split("</thought>")[1].strip()
+        elif "<thought>" in ai_reply:
+            ai_reply = ai_reply.split("<thought>")[0].strip()
+            
         parsed_data = {}
         # 1. Try to parse as JSON first
         try:
@@ -3481,9 +3861,89 @@ Rules:
 
             except Exception as gb_err:
                 print(f"[Google Books] Enrichment failed: {gb_err}")
+
+        # ── DuckDuckGo Search Fallback for Regional / Local Textbooks ───────────
+        is_missing_still = (
+            not book_metadata.get('title') or
+            not book_metadata.get('author') or
+            book_metadata.get('author', '').lower() in ['unknown', 'n/a', ''] or
+            not book_metadata.get('publisher') or
+            book_metadata.get('publisher', '').lower() in ['unknown', 'n/a', ''] or
+            not book_metadata.get('isbn') or
+            not book_metadata.get('subject')
+        )
+
+        if is_missing_still and book_metadata.get('title'):
+            try:
+                title_query = book_metadata.get('title')
+                search_query = f"\"{title_query}\" book author publisher isbn class subject description"
+                search_results = search_web_py(search_query)
+                if search_results:
+                    refine_prompt = f"""We searched the web for details about the book: "{title_query}".
+Here are the web search results:
+{search_results}
+
+We extracted these metadata details from the cover image:
+{json.dumps(book_metadata, indent=2)}
+
+Use the search results to fill in missing details (author, publisher, subject, class, isbn, or description) and correct wrong fields.
+Return ONLY a valid JSON object matching the schema below. Do not wrap in markdown formatting, no explanations.
+
+JSON Schema:
+{{
+  "title": "Book Title",
+  "author": "Book Author",
+  "publisher": "Book Publisher",
+  "isbn": "10 or 13 digit ISBN without spaces/hyphens",
+  "class": "Standard/Class name",
+  "subject": "Subject/Topic",
+  "category": "General Category",
+  "description": "Short description of the book"
+}}
+"""
+                    response_ref = requests.post(
+                        "https://integrate.api.nvidia.com/v1/chat/completions",
+                        json={
+                            "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                            "messages": [{"role": "user", "content": refine_prompt}],
+                            "temperature": 0.2,
+                            "top_p": 0.95,
+                            "max_tokens": 4096,
+                            "extra_body": {
+                                "chat_template_kwargs": {
+                                    "enable_thinking": False
+                                }
+                            },
+                            "stream": False
+                        },
+                        headers={
+                            "Authorization": f"Bearer {nvidia_key}",
+                            "Content-Type": "application/json"
+                        },
+                        timeout=30
+                    )
+                    if response_ref.status_code == 200:
+                        ref_reply = response_ref.json()['choices'][0]['message']['content'].strip()
+                        if "```json" in ref_reply:
+                            ref_reply = ref_reply.split("```json")[1].split("```")[0].strip()
+                        elif "```" in ref_reply:
+                            ref_reply = ref_reply.split("```")[1].split("```")[0].strip()
+                        
+                        if "<thought>" in ref_reply and "</thought>" in ref_reply:
+                            ref_reply = ref_reply.split("</thought>")[1].strip()
+                        
+                        try:
+                            ref_data = json.loads(ref_reply)
+                            for k in ["title", "author", "publisher", "isbn", "class", "subject", "category", "description"]:
+                                if ref_data.get(k):
+                                    book_metadata[k] = ref_data[k]
+                        except:
+                            pass
+            except Exception as e:
+                print(f"[Web Search Fallback] Refinement failed: {e}")
         # ────────────────────────────────────────────────────────────────────────
 
-                            
+                             
         s_code = session.get('school_code')
         existing_data = None
         if s_code:
@@ -3807,22 +4267,90 @@ def digital_library_reader(content_id):
 def api_save_progress():
     if 'user_id' not in session: return {"status": "error"}
     data = request.json
+    user_id = session['user_id']
+    content_id = data['content_id']
+    page = data['page']
+    total_pages = data.get('total_pages', 1)
     
     conn = get_db_connection()
-    # Check if exists
-    exists = conn.execute('SELECT id FROM reading_progress WHERE student_id = ? AND content_id = ?', 
-                          (session['user_id'], data['content_id'])).fetchone()
-    
-    now = datetime.now().strftime('%Y-%m-%d %H:%M')
-    if exists:
-        conn.execute('UPDATE reading_progress SET last_page = ?, updated_at = ? WHERE id = ?', 
-                     (data['page'], now, exists['id']))
-    else:
-        conn.execute('INSERT INTO reading_progress (student_id, content_id, last_page, updated_at) VALUES (?, ?, ?, ?)',
-                     (session['user_id'], data['content_id'], data['page'], now))
-                     
-    conn.commit()
-    conn.close()
+    try:
+        # Check if exists
+        progress = conn.execute('SELECT * FROM reading_progress WHERE student_id = ? AND content_id = ?', 
+                               (user_id, content_id)).fetchone()
+        
+        now = datetime.now().strftime('%Y-%m-%d %H:%M')
+        today_date = datetime.now().strftime('%Y-%m-%d')
+        yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        
+        if progress:
+            conn.execute('''
+                UPDATE reading_progress 
+                SET last_page = ?, total_pages = ?, updated_at = ? 
+                WHERE id = ?
+            ''', (page, total_pages, now, progress['id']))
+            progress_id = progress['id']
+            awarded_50 = progress['awarded_50']
+            awarded_100 = progress['awarded_100']
+            completed_at = progress['completed_at']
+            started_reading_at = progress['started_reading_at']
+            streak_last_inc = progress['streak_last_increment_date']
+        else:
+            conn.execute('''
+                INSERT INTO reading_progress (student_id, content_id, last_page, total_pages, started_reading_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, content_id, page, total_pages, now, now))
+            progress_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
+            awarded_50 = 0
+            awarded_100 = 0
+            completed_at = None
+            started_reading_at = now
+            streak_last_inc = None
+            
+        # Calculate progress percent
+        percent = (page / total_pages) * 100 if total_pages > 0 else 0
+        cooldown_applies = check_90_day_cooldown(conn, user_id, content_id, 'digital')
+        
+        if percent >= 50 and not awarded_50:
+            if not cooldown_applies:
+                update_score(conn, user_id, 'digital', 10, "Reached 50% digital reading progress")
+            conn.execute('UPDATE reading_progress SET awarded_50 = 1 WHERE id = ?', (progress_id,))
+            
+        if percent >= 100 and not awarded_100:
+            if not cooldown_applies:
+                update_score(conn, user_id, 'digital', 20, "Completed digital reading (100% progress)")
+            conn.execute('UPDATE reading_progress SET awarded_100 = 1, completed_at = ? WHERE id = ?', (now, progress_id))
+            
+        # Daily reading streak logic
+        if streak_last_inc != today_date:
+            user = conn.execute('SELECT last_read_date, reading_streak, longest_streak FROM users WHERE id = ?', (user_id,)).fetchone()
+            if user:
+                last_read = user['last_read_date']
+                curr_streak = user['reading_streak'] or 0
+                long_streak = user['longest_streak'] or 0
+                
+                if last_read == yesterday_date:
+                    curr_streak += 1
+                elif last_read != today_date:
+                    curr_streak = 1
+                    
+                if curr_streak > long_streak:
+                    long_streak = curr_streak
+                    
+                conn.execute('''
+                    UPDATE users 
+                    SET last_read_date = ?, reading_streak = ?, longest_streak = ? 
+                    WHERE id = ?
+                ''', (today_date, curr_streak, long_streak, user_id))
+                
+                if not cooldown_applies:
+                    update_score(conn, user_id, 'digital', 5, f"Daily reading streak day {curr_streak}")
+                    
+                conn.execute('UPDATE reading_progress SET streak_last_increment_date = ? WHERE id = ?', (today_date, progress_id))
+                
+        conn.commit()
+    finally:
+        conn.close()
+        
     return {"status": "success"}
 
 @app.route('/api/live-stats')
@@ -5767,6 +6295,434 @@ def personal_elibrary_delete(content_id):
         return redirect('/personal/elibrary')
     finally:
         conn.close()
+
+@app.route('/leaderboard')
+def leaderboard():
+    if 'user_id' not in session: return redirect('/login')
+    s_code = session.get('school_code')
+    user_id = session.get('user_id')
+    
+    # Filters
+    timeframe = request.args.get('timeframe', 'all') # 'week', 'month', 'year', 'all'
+    class_filter = request.args.get('class', '').strip() or None
+    section_filter = request.args.get('section', '').strip() or None
+    
+    conn = get_db_connection()
+    try:
+        # Timeframe start date calculation
+        date_limit = None
+        if timeframe == 'week':
+            date_limit = (datetime.now() - timedelta(days=datetime.now().weekday())).strftime('%Y-%m-%d 00:00:00')
+        elif timeframe == 'month':
+            date_limit = datetime.now().strftime('%Y-%m-01 00:00:00')
+        elif timeframe == 'year':
+            date_limit = datetime.now().strftime('%Y-01-01 00:00:00')
+            
+        # Overall Leaderboard
+        overall_rankings = get_rankings(conn, s_code, 'overall', timeframe, date_limit, class_filter, section_filter)
+        # Physical Leaderboard
+        physical_rankings = get_rankings(conn, s_code, 'physical', timeframe, date_limit, class_filter, section_filter)
+        # Digital Leaderboard
+        digital_rankings = get_rankings(conn, s_code, 'digital', timeframe, date_limit, class_filter, section_filter)
+        
+        # Get active classes and sections in school for filtering dropdowns
+        classes = [r[0] for r in conn.execute('SELECT DISTINCT class FROM users WHERE school_code = ? AND class IS NOT NULL', (s_code,)).fetchall()]
+        sections = [r[0] for r in conn.execute('SELECT DISTINCT section FROM users WHERE school_code = ? AND section IS NOT NULL', (s_code,)).fetchall()]
+        
+        # Find current user's ranks
+        my_ranks = {
+            'overall': next((u for u in overall_rankings if u['id'] == user_id), None),
+            'physical': next((u for u in physical_rankings if u['id'] == user_id), None),
+            'digital': next((u for u in digital_rankings if u['id'] == user_id), None)
+        }
+        
+    finally:
+        conn.close()
+        
+    return render_template('leaderboard.html',
+                           overall_rankings=overall_rankings[:10], # Top 10
+                           physical_rankings=physical_rankings[:10],
+                           digital_rankings=digital_rankings[:10],
+                           timeframe=timeframe,
+                           active_class=class_filter,
+                           active_section=section_filter,
+                           classes=classes,
+                           sections=sections,
+                           my_ranks=my_ranks)
+
+def get_rankings(conn, school_code, type_filter, timeframe, date_limit, class_filter, section_filter):
+    # Overall/Physical/Digital
+    if timeframe == 'all':
+        if type_filter == 'physical':
+            select_score = "u.physical_reader_score as score"
+        elif type_filter == 'digital':
+            select_score = "u.digital_reader_score as score"
+        else:
+            select_score = "u.overall_reader_score as score"
+            
+        query = f'''
+            SELECT u.id, u.name, u.class, u.section, u.badges, {select_score}
+            FROM users u
+            WHERE u.role = 'student' AND u.school_code = ?
+        '''
+        params = [school_code]
+    else:
+        score_filter = ""
+        if type_filter == 'physical':
+            score_filter = "AND p.score_type = 'physical'"
+        elif type_filter == 'digital':
+            score_filter = "AND p.score_type = 'digital'"
+            
+        query = f'''
+            SELECT u.id, u.name, u.class, u.section, u.badges,
+                   COALESCE(SUM(p.points), 0) as score
+            FROM users u
+            LEFT JOIN points_log p ON u.id = p.user_id AND p.created_at >= ? {score_filter}
+            WHERE u.role = 'student' AND u.school_code = ?
+        '''
+        params = [date_limit, school_code]
+        
+    if class_filter:
+        query += " AND u.class = ?"
+        params.append(class_filter)
+    if section_filter:
+        query += " AND u.section = ?"
+        params.append(section_filter)
+        
+    if timeframe != 'all':
+        query += " GROUP BY u.id"
+        
+    query += " ORDER BY score DESC, u.name ASC"
+    
+    rows = conn.execute(query, params).fetchall()
+    rankings = []
+    
+    import json
+    for idx, row in enumerate(rows):
+        d = dict(row)
+        d['rank'] = idx + 1
+        
+        # Parse badges list
+        try:
+            d['badges'] = json.loads(d['badges']) if d['badges'] else []
+        except:
+            d['badges'] = []
+            
+        # Extra Stats for display
+        phys_c = conn.execute('SELECT COUNT(*) FROM transactions WHERE user_id = ? AND return_date IS NOT NULL AND return_date != "LOST"', (d['id'],)).fetchone()[0] or 0
+        dig_c = conn.execute('SELECT COUNT(*) FROM reading_progress WHERE student_id = ? AND last_page >= total_pages AND total_pages > 1', (d['id'],)).fetchone()[0] or 0
+        d['books_completed'] = phys_c + dig_c
+        
+        total_attempts = conn.execute('SELECT COUNT(*) FROM quiz_attempts WHERE user_id = ?', (d['id'],)).fetchone()[0] or 0
+        passed_attempts = conn.execute('SELECT COUNT(*) FROM quiz_attempts WHERE user_id = ? AND passed = 1', (d['id'],)).fetchone()[0] or 0
+        d['quiz_success_rate'] = round((passed_attempts / total_attempts) * 100) if total_attempts > 0 else 0
+        
+        rankings.append(d)
+        
+    return rankings
+
+@app.route('/student/quiz/<book_type>/<int:book_id>', methods=['GET', 'POST'])
+def take_book_quiz(book_type, book_id):
+    if 'user_id' not in session: return redirect('/login')
+    user_id = session['user_id']
+    s_code = session.get('school_code')
+    
+    conn = get_db_connection()
+    try:
+        # Check if already attempted
+        attempt = conn.execute('''
+            SELECT * FROM quiz_attempts 
+            WHERE user_id = ? AND book_id = ? AND book_type = ?
+        ''', (user_id, book_id, book_type)).fetchone()
+        
+        if attempt:
+            flash("You have already attempted the quiz for this book. Quizzes can only be attempted once.", "error")
+            return redirect('/student')
+            
+        # Get book details
+        book = None
+        if book_type == 'physical':
+            book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+        else:
+            book = conn.execute('SELECT * FROM digital_content WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+            
+        if not book:
+            flash("Book or digital resource not found.", "error")
+            return redirect('/student')
+            
+        # Check eligibility
+        eligible = False
+        message = ""
+        
+        if book_type == 'physical':
+            # Must have a transaction that is returned
+            tx = conn.execute('''
+                SELECT * FROM transactions 
+                WHERE user_id = ? AND book_id = ? AND return_date IS NOT NULL AND return_date != 'LOST'
+                ORDER BY return_date DESC LIMIT 1
+            ''', (user_id, book_id)).fetchone()
+            
+            if not tx:
+                eligible = False
+                message = "The quiz is locked. You must return this book before you can take the quiz."
+            else:
+                eligible, message = is_transaction_eligible_for_quiz(tx, book)
+        else:
+            # Digital book: must have reading progress >= 80%
+            progress = conn.execute('''
+                SELECT * FROM reading_progress 
+                WHERE student_id = ? AND content_id = ?
+            ''', (user_id, book_id)).fetchone()
+            
+            if not progress:
+                eligible = False
+                message = "The quiz is locked. You must start reading this book first."
+            else:
+                total_p = progress['total_pages'] or 1
+                last_p = progress['last_page'] or 1
+                percent = (last_p / total_p) * 100
+                if percent < 80:
+                    eligible = False
+                    message = f"The quiz is locked. You must read at least 80% of this content. Current progress: {round(percent)}%."
+                else:
+                    eligible, message = is_digital_eligible_for_quiz(progress)
+                    
+        if not eligible:
+            return render_template('quiz_locked.html', book=book, book_type=book_type, message=message)
+            
+        # Get or generate quiz
+        quiz = conn.execute('SELECT * FROM book_quizzes WHERE book_id = ? AND book_type = ?', (book_id, book_type)).fetchone()
+        if not quiz:
+            import json
+            questions_json = ai_generate_quiz(book['title'], book['author'] if book_type == 'physical' else session.get('user_name', 'Student'))
+            conn.execute('''
+                INSERT INTO book_quizzes (book_id, book_type, questions, created_at)
+                VALUES (?, ?, ?, ?)
+            ''', (book_id, book_type, questions_json, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            conn.commit()
+            quiz = conn.execute('SELECT * FROM book_quizzes WHERE book_id = ? AND book_type = ?', (book_id, book_type)).fetchone()
+            
+        import json
+        questions = json.loads(quiz['questions'])
+        
+        if request.method == 'POST':
+            correct_count = 0
+            total_questions = len(questions)
+            
+            for idx, q in enumerate(questions):
+                selected = request.form.get(f'q{idx}')
+                if selected is not None and int(selected) == q['correct_index']:
+                    correct_count += 1
+                    
+            score_pct = (correct_count / total_questions) * 100
+            passed = 1 if score_pct >= 70 else 0
+            
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            conn.execute('''
+                INSERT INTO quiz_attempts (user_id, book_id, book_type, score, passed, attempted_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, book_id, book_type, score_pct, passed, now_str))
+            
+            points_awarded = 0
+            cooldown_applies = check_90_day_cooldown(conn, user_id, book_id, book_type)
+            
+            if passed and not cooldown_applies:
+                points_awarded = 50
+                update_score(conn, user_id, book_type, 50, f"Passed quiz for '{book['title']}' ({round(score_pct)}% score)")
+                
+            conn.commit()
+            
+            return render_template('quiz_result.html', 
+                                   book=book, 
+                                   book_type=book_type, 
+                                   score=score_pct, 
+                                   passed=passed, 
+                                   correct=correct_count, 
+                                   total=total_questions, 
+                                   points=points_awarded,
+                                   cooldown=cooldown_applies)
+            
+        return render_template('take_quiz.html', book=book, book_type=book_type, questions=questions)
+        
+    finally:
+        conn.close()
+
+def is_transaction_eligible_for_quiz(tx, book):
+    if not tx['return_date'] or tx['return_date'] == 'LOST':
+        return False, "Book is not returned yet."
+    
+    issue_date = datetime.strptime(tx['issue_date'], '%Y-%m-%d')
+    return_date = datetime.strptime(tx['return_date'], '%Y-%m-%d')
+    days_kept = (return_date - issue_date).days
+    
+    pages = book['pages'] or 120
+    if pages < 100 and days_kept < 2:
+        return False, f"Minimum reading period not met. For a book under 100 pages, you must keep it for at least 2 days (borrowed for {days_kept} days)."
+    elif pages <= 300 and days_kept < 5:
+        return False, f"Minimum reading period not met. For a book between 100-300 pages, you must keep it for at least 5 days (borrowed for {days_kept} days)."
+    elif pages > 300 and days_kept < 7:
+        return False, f"Minimum reading period not met. For a book above 300 pages, you must keep it for at least 7 days (borrowed for {days_kept} days)."
+        
+    return True, ""
+
+def is_digital_eligible_for_quiz(progress):
+    if not progress['started_reading_at']:
+        return False, "Not started reading."
+    
+    start_date = datetime.strptime(progress['started_reading_at'].split()[0], '%Y-%m-%d')
+    now_date = datetime.strptime(datetime.now().strftime('%Y-%m-%d'), '%Y-%m-%d')
+    days_reading = (now_date - start_date).days
+    
+    pages = progress['total_pages'] or 1
+    if pages < 100 and days_reading < 2:
+        return False, f"Minimum reading period not met. For a digital book under 100 pages, you must read it for at least 2 days (read for {days_reading} days)."
+    elif pages <= 300 and days_reading < 5:
+        return False, f"Minimum reading period not met. For a digital book between 100-300 pages, you must read it for at least 5 days (read for {days_reading} days)."
+    elif pages > 300 and days_reading < 7:
+        return False, f"Minimum reading period not met. For a digital book above 300 pages, you must read it for at least 7 days (read for {days_reading} days)."
+        
+    return True, ""
+
+@app.route('/student/review/<book_type>/<int:book_id>', methods=['GET', 'POST'])
+def submit_book_review(book_type, book_id):
+    if 'user_id' not in session: return redirect('/login')
+    user_id = session['user_id']
+    s_code = session.get('school_code')
+    
+    conn = get_db_connection()
+    try:
+        # Check if already reviewed
+        reviewed = conn.execute('''
+            SELECT * FROM book_reviews 
+            WHERE user_id = ? AND book_id = ? AND book_type = ?
+        ''', (user_id, book_id, book_type)).fetchone()
+        
+        if reviewed:
+            flash("You have already submitted a review for this book.", "error")
+            return redirect('/student')
+            
+        # Get book details
+        book = None
+        if book_type == 'physical':
+            book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+        else:
+            book = conn.execute('SELECT * FROM digital_content WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+            
+        if not book:
+            flash("Book or digital resource not found.", "error")
+            return redirect('/student')
+            
+        # Must be eligible
+        eligible = False
+        if book_type == 'physical':
+            tx = conn.execute('''
+                SELECT * FROM transactions 
+                WHERE user_id = ? AND book_id = ? AND return_date IS NOT NULL AND return_date != 'LOST'
+                ORDER BY return_date DESC LIMIT 1
+            ''', (user_id, book_id)).fetchone()
+            if tx:
+                eligible = True
+        else:
+            progress = conn.execute('''
+                SELECT * FROM reading_progress 
+                WHERE student_id = ? AND content_id = ? AND last_page >= total_pages AND total_pages > 1
+            ''', (user_id, book_id)).fetchone()
+            if progress:
+                eligible = True
+                
+        if not eligible:
+            flash("You must complete or return this book before submitting a review.", "error")
+            return redirect('/student')
+            
+        if request.method == 'POST':
+            learned = request.form.get('learned', '').strip()
+            favorite = request.form.get('favorite', '').strip()
+            recommend = request.form.get('recommend', '').strip()
+            
+            if not learned or not favorite or not recommend:
+                flash("All review fields are required.", "error")
+                return render_template('submit_review.html', book=book, book_type=book_type)
+                
+            conn.execute('''
+                INSERT INTO book_reviews (user_id, book_id, book_type, learned, favorite, recommend, status, created_at, school_code)
+                VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+            ''', (user_id, book_id, book_type, learned, favorite, recommend, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), s_code))
+            conn.commit()
+            
+            flash("Your review has been submitted for librarian approval! Points will be awarded upon approval.", "success")
+            return redirect('/student')
+            
+        return render_template('submit_review.html', book=book, book_type=book_type)
+        
+    finally:
+        conn.close()
+
+@app.route('/admin/review/<int:review_id>/approve', methods=['POST'])
+def admin_approve_review(review_id):
+    if session.get('role') != 'admin': return redirect('/login')
+    if 'approve_content' not in session.get('permissions', []): return redirect('/admin')
+    s_code = session.get('school_code')
+    
+    conn = get_db_connection()
+    try:
+        review = conn.execute('SELECT * FROM book_reviews WHERE id = ? AND school_code = ? AND status = "pending"', (review_id, s_code)).fetchone()
+        if review:
+            conn.execute('UPDATE book_reviews SET status = "approved" WHERE id = ?', (review_id,))
+            
+            # Check cooldown
+            cooldown_applies = check_90_day_cooldown(conn, review['user_id'], review['book_id'], review['book_type'])
+            if not cooldown_applies:
+                update_score(conn, review['user_id'], review['book_type'], 20, f"Review approved for {review['book_type']} book ID {review['book_id']}")
+                
+            conn.commit()
+            flash("Review approved and +20 points awarded to the student.", "success")
+        else:
+            flash("Review not found or already processed.", "error")
+    finally:
+        conn.close()
+        
+    return redirect('/admin')
+
+@app.route('/admin/review/<int:review_id>/reject', methods=['POST'])
+def admin_reject_review(review_id):
+    if session.get('role') != 'admin': return redirect('/login')
+    if 'approve_content' not in session.get('permissions', []): return redirect('/admin')
+    s_code = session.get('school_code')
+    
+    conn = get_db_connection()
+    try:
+        review = conn.execute('SELECT * FROM book_reviews WHERE id = ? AND school_code = ? AND status = "pending"', (review_id, s_code)).fetchone()
+        if review:
+            conn.execute('UPDATE book_reviews SET status = "rejected" WHERE id = ?', (review_id,))
+            conn.commit()
+            flash("Review rejected successfully.", "success")
+        else:
+            flash("Review not found or already processed.", "error")
+    finally:
+        conn.close()
+        
+    return redirect('/admin')
+
+@app.route('/admin/transaction/<int:tx_id>/lost', methods=['POST'])
+def mark_transaction_lost(tx_id):
+    if session.get('role') != 'admin': return redirect('/login')
+    if 'manage_transactions' not in session.get('permissions', []): return redirect('/admin')
+    s_code = session.get('school_code')
+    conn = get_db_connection()
+    tx = conn.execute('SELECT * FROM transactions WHERE id = ? AND school_code = ?', (tx_id, s_code)).fetchone()
+    if tx and tx['return_date'] is None:
+        # Mark as LOST
+        conn.execute('UPDATE transactions SET return_date = "LOST" WHERE id = ?', (tx_id,))
+        # Deduct a copy from total copies (since it is lost)
+        conn.execute('UPDATE books SET total_copies = MAX(0, total_copies - 1) WHERE id = ?', (tx['book_id'],))
+        # Deduct 50 points
+        update_score(conn, tx['user_id'], 'physical', -50, f"Book marked as lost/damaged: ID {tx['book_id']}")
+        conn.commit()
+        flash("Book has been marked as Lost/Damaged. -50 points deducted from student's reader score.", "success")
+    else:
+        flash("Transaction not found or already returned.", "error")
+    conn.close()
+    return redirect('/admin')
 
 # Ensure database is initialized even when run via Gunicorn
 init_db()

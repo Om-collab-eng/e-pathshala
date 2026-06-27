@@ -62,8 +62,13 @@ def checkout():
 def cancel():
     school_code = session.get('school_code')
     conn = get_db_connection()
-    conn.execute('UPDATE schools SET subscriptionStatus = "canceled" WHERE school_code = ?', (school_code,))
+    conn.execute('''
+        UPDATE schools 
+        SET activePlan = "FREE", subscriptionStatus = "active", expiryDate = NULL,
+            studentLimit = 50, adminLimit = 1, librarianLimit = 1
+        WHERE school_code = ?
+    ''', (school_code,))
     conn.commit()
     conn.close()
-    flash('Your subscription has been canceled.', 'success')
+    flash('Your plan has been cancelled and downgraded to FREE.', 'success')
     return redirect(url_for('billing.dashboard'))

@@ -449,6 +449,9 @@
             <a href="/student" class="sidebar-link">
                 <span class="link-icon">📊</span><span>Dashboard</span>
             </a>
+            <a href="/leaderboard" class="sidebar-link">
+                <span class="link-icon">🏆</span><span>Leaderboard</span>
+            </a>
             <a href="/student/browse" class="sidebar-link">
                 <span class="link-icon">📚</span><span>Digital Library</span>
             </a>
@@ -578,6 +581,68 @@
                 </div>
             </div>
 
+            <!-- ── Reading Achievements Card ── -->
+            <div class="pp-card" style="grid-column: 1 / -1; background: var(--pp-white);">
+                <div class="pp-card-header">
+                    <div class="pp-card-title-wrap">
+                        <div class="pp-card-icon" style="background:var(--pp-purple-light); color:var(--pp-purple);">🏆</div>
+                        <div>
+                            <h3 class="pp-card-title">Reading Achievements</h3>
+                            <p class="pp-card-subtitle">Your score, streaks, and badges earned</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 20px;">
+                    <!-- Scores Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                        <div style="background: var(--pp-bg); padding: 15px; border-radius: 16px;">
+                            <div style="font-family:'Outfit'; font-size: 1.6rem; font-weight: 800; color: var(--pp-purple);">{{ user.overall_reader_score or 0 }}</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--pp-text-muted); text-transform: uppercase; margin-top: 4px;">Overall Score</div>
+                        </div>
+                        <div style="background: var(--pp-bg); padding: 15px; border-radius: 16px;">
+                            <div style="font-family:'Outfit'; font-size: 1.6rem; font-weight: 800; color: var(--pp-purple);">{{ user.physical_reader_score or 0 }}</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--pp-text-muted); text-transform: uppercase; margin-top: 4px;">Physical Score</div>
+                        </div>
+                        <div style="background: var(--pp-bg); padding: 15px; border-radius: 16px;">
+                            <div style="font-family:'Outfit'; font-size: 1.6rem; font-weight: 800; color: var(--pp-purple);">{{ user.digital_reader_score or 0 }}</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--pp-text-muted); text-transform: uppercase; margin-top: 4px;">Digital Score</div>
+                        </div>
+                    </div>
+
+                    <!-- Streaks & Stats -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                        <div style="background: var(--pp-bg); padding: 12px; border-radius: 16px;">
+                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--pp-text-dark);">{{ user.longest_streak or 0 }} days</div>
+                            <div style="font-size: 0.65rem; font-weight: 600; color: var(--pp-text-muted); margin-top: 2px;">Longest Streak</div>
+                        </div>
+                        <div style="background: var(--pp-bg); padding: 12px; border-radius: 16px;">
+                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--pp-text-dark);">{{ user.quizzes_passed or 0 }}</div>
+                            <div style="font-size: 0.65rem; font-weight: 600; color: var(--pp-text-muted); margin-top: 2px;">Quizzes Passed</div>
+                        </div>
+                        <div style="background: var(--pp-bg); padding: 12px; border-radius: 16px;">
+                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--pp-text-dark);">{{ user.approved_reviews or 0 }}</div>
+                            <div style="font-size: 0.65rem; font-weight: 600; color: var(--pp-text-muted); margin-top: 2px;">Reviews Approved</div>
+                        </div>
+                    </div>
+
+                    <!-- Badges -->
+                    <div>
+                        <h4 style="font-size: 0.82rem; font-weight: 800; color: var(--pp-text-dark); margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.05em;">🏅 Earned Badges</h4>
+                        {% if badges %}
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                {% for b in badges %}
+                                <span style="font-size: 0.72rem; font-weight: 800; background: var(--pp-purple-light); color: var(--pp-purple); padding: 6px 14px; border-radius: 100px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(92,60,243,0.15);">
+                                    🌟 {{ b }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div style="font-size: 0.78rem; color: var(--pp-text-muted); font-style: italic;">No badges earned yet. Complete books and pass quizzes to unlock!</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
             <!-- ── Account Overview Card ── -->
             <div class="pp-card pp-account-card">
                 <div class="pp-card-header">
@@ -669,6 +734,13 @@
                             <option value="{{ c }}" {% if user.class and user.class|string == c|string %}selected{% endif %}>Class {{ c }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                    <!-- Section -->
+                    <div class="pp-field-row">
+                        <div class="pp-field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                        <span class="pp-field-label">Academic Section</span>
+                        <span class="pp-field-value view-state">{{ 'Section ' + user.section if user.section else '—' }}</span>
+                        <input type="text" name="section" class="pp-field-input edit-state" value="{{ user.section or '' }}" placeholder="e.g. A, B, C">
                     </div>
                     <!-- Stream -->
                     <div class="pp-field-row">
