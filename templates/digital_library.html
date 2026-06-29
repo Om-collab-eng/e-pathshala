@@ -209,6 +209,41 @@
         font-weight: 500;
     }
 
+    /* Toggle Switch styling */
+    .sa-toggle-switch input:checked + .sa-toggle-slider {
+        background-color: var(--sp-purple);
+    }
+    .sa-toggle-switch .sa-toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+    .sa-toggle-switch input:checked + .sa-toggle-slider:before {
+        transform: translateX(18px);
+    }
+    .ai-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: linear-gradient(135deg, #5c3cf3, #ff4d6d);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        z-index: 10;
+        box-shadow: 0 4px 12px rgba(92, 60, 243, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
     .filter-btn {
         background: #ffffff;
         border: 1.5px solid #e2e8f0;
@@ -1028,15 +1063,29 @@
         </header>
 
         <!-- Search & Filter Bar -->
-        <div class="search-filter-row">
-            <div class="search-input-wrapper">
-                <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <form method="GET" action="/digital-library" class="search-filter-row" style="width: 100%; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0; box-sizing: border-box;">
+            <div class="search-input-wrapper" style="flex: 1; min-width: 220px; display: flex; align-items: center; position: relative;">
+                <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 14px;">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" id="searchInput" class="search-control" placeholder="Search by title, subject, author, tags..." oninput="applyFilters()">
+                <input type="text" name="q" id="searchInput" class="search-control" style="width: 100%; padding-left: 38px;" placeholder="Search by title, subject, author, tags..." value="{{ search_query or '' }}" oninput="if(!document.getElementById('aiToggle').checked) applyFilters()">
             </div>
-            <button type="button" class="filter-btn" id="filterOptionsBtn" onclick="toggleSubjectsFilter()">
+            
+            <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; border: 1.5px solid #e2e8f0; padding: 10px 14px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: var(--sp-text-dark); height: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box;">
+                <label class="sa-toggle-switch" style="position: relative; display: inline-block; width: 40px; height: 22px; margin: 0; cursor: pointer;">
+                    <input type="checkbox" name="ai" id="aiToggle" value="true" {% if ai_search %}checked{% endif %} style="opacity: 0; width: 0; height: 0;" onchange="if(this.checked) { this.form.submit() } else { window.location.href='/digital-library' }">
+                    <span class="sa-toggle-slider" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                </label>
+                <span>🤖 AI Search</span>
+            </div>
+            
+            {% if ai_search %}
+            <button type="submit" class="filter-btn" style="height: 40px; background: var(--sp-purple); color: white; display: inline-flex; align-items: center; gap: 6px; border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(92,60,243,0.15); padding: 0 20px;">
+                Search
+            </button>
+            {% else %}
+            <button type="button" class="filter-btn" id="filterOptionsBtn" onclick="toggleSubjectsFilter()" style="height: 40px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="4" y1="21" x2="4" y2="14"></line>
                     <line x1="4" y1="10" x2="4" y2="3"></line>
@@ -1048,9 +1097,10 @@
                     <line x1="9" y1="8" x2="15" y2="8"></line>
                     <line x1="17" y1="16" x2="23" y2="16"></line>
                 </svg>
-                Filter
+                <span>Filters</span>
             </button>
-        </div>
+            {% endif %}
+        </form>
 
         <!-- Subjects select filter dropdown drawer -->
         <div class="subjects-select-wrapper" id="subjectsSelectWrapper">
@@ -1223,7 +1273,10 @@
                     <div class="upload-item-card">
                         <!-- Left Cover -->
                         <a href="/digital-library/read/{{ item.id }}" class="upload-card-link">
-                            <div class="card-cover-wrapper">
+                            <div class="card-cover-wrapper" style="position: relative;">
+                                {% if item.ai_score %}
+                                <div class="ai-badge" style="left: 5px; top: 5px; font-size: 0.65rem; padding: 2px 6px; white-space: nowrap;">🤖 {{ item.ai_score }}%</div>
+                                {% endif %}
                                 {% if item.cover_url %}
                                 <img src="{{ item.cover_url }}" class="card-cover-img" alt="Cover">
                                 {% else %}

@@ -2562,24 +2562,38 @@ def student_browse():
     s_code = session.get('school_code')
     genre_filter = request.args.get('genre')
     search_query = request.args.get('q', '').strip()
+    ai_search = request.args.get('ai') == 'true'
     
     conn = get_db_connection()
     
-    query = "SELECT * FROM books WHERE (is_banned IS NULL OR is_banned != 1 AND is_banned != '1')"
-    params = []
+    query = "SELECT * FROM books WHERE (is_banned IS NULL OR is_banned != 1 AND is_banned != '1') AND school_code = ?"
+    params = [s_code]
     
     if genre_filter:
         query += ' AND genre = ?'
         params.append(genre_filter)
         
-    if search_query:
-        query += ' AND (title LIKE ? OR author LIKE ?)'
-        params.extend([f'%{search_query}%', f'%{search_query}%'])
+    if search_query and not ai_search:
+        query += ' AND (title LIKE ? OR author LIKE ? OR subject LIKE ? OR genre LIKE ?)'
+        params.extend([f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
         
-    books = conn.execute(query, params).fetchall()
-    genres = [row[0] for row in conn.execute("SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND (is_banned IS NULL OR is_banned != 1 AND is_banned != '1')").fetchall()]
+    books_rows = conn.execute(query, params).fetchall()
+    books = [dict(r) for r in books_rows]
+    
+    ai_scores = {}
+    if search_query and ai_search and books:
+        ai_scores = perform_ai_semantic_search(search_query, books)
+        scored_books = []
+        for b in books:
+            score = ai_scores.get(b["id"], 0)
+            if score > 0:
+                b["ai_score"] = score
+                scored_books.append(b)
+        books = sorted(scored_books, key=lambda x: x["ai_score"], reverse=True)
+        
+    genres = [row[0] for row in conn.execute("SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND school_code = ? AND (is_banned IS NULL OR is_banned != 1 AND is_banned != '1')", (s_code,)).fetchall()]
     conn.close()
-    return render_template('student_browse.html', books=books, genres=genres, active_genre=genre_filter, search_query=search_query)
+    return render_template('student_browse.html', books=books, genres=genres, active_genre=genre_filter, search_query=search_query, ai_search=ai_search)
 
 @app.route('/student/issue/<int:book_id>')
 def student_self_issue(book_id):
@@ -3439,6 +3453,88 @@ def search_web_py(query):
         print("[Web Search] Python search failed:", str(e))
         return ""
 
+def perform_ai_semantic_search(search_query, books_list):
+    """
+    Ranks books based on semantic matching using NVIDIA Nemotron API.
+    books_list should be a list of dicts with: id, title, author, description, subject, genre.
+    Returns: a dict of {book_id: relevance_score_out_of_100}
+    """
+    if not search_query or not books_list:
+        return {}
+        
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    if nvidia_key:
+        nvidia_key = nvidia_key.strip()
+        
+    books_summary = []
+    for b in books_list:
+        books_summary.append({
+            "id": b["id"],
+            "title": b.get("title", ""),
+            "author": b.get("author", ""),
+            "genre": b.get("genre", ""),
+            "subject": b.get("subject", ""),
+            "description": b.get("description", "")[:120] if b.get("description") else ""
+        })
+        
+    prompt = f"""Search Query: "{search_query}"
+
+Analyze the books listed below. Match and rank them by their semantic relevance to the search query.
+Think semantically (e.g. if query is 'space voyage', match sci-fi, astronomy, or travel-to-moon plots).
+
+For each book, determine a relevance match percentage (0 to 100).
+- If relevance is 0, exclude it or score it 0.
+- Return ONLY a valid JSON list of objects matching this schema:
+[
+  {{"id": 1, "score": 95}},
+  {{"id": 2, "score": 40}}
+]
+Do not wrap in markdown tags, no notes, no markdown json wrapper.
+
+Books List:
+{json.dumps(books_summary, indent=2)}
+"""
+
+    try:
+        response = requests.post(
+            "https://integrate.api.nvidia.com/v1/chat/completions",
+            json={
+                "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.1,
+                "max_tokens": 2048,
+                "extra_body": {
+                    "chat_template_kwargs": {"enable_thinking": False}
+                },
+                "stream": False
+            },
+            headers={
+                "Authorization": f"Bearer {nvidia_key}",
+                "Content-Type": "application/json"
+            },
+            timeout=15
+        )
+        if response.status_code == 200:
+            res_json = response.json()
+            content = res_json['choices'][0]['message']['content'].strip()
+            
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
+            if "<thought>" in content and "</thought>" in content:
+                content = content.split("</thought>")[1].strip()
+                
+            ranks = json.loads(content)
+            scores = {}
+            for item in ranks:
+                if isinstance(item, dict) and "id" in item and "score" in item:
+                    scores[int(item["id"])] = int(item["score"])
+            return scores
+    except Exception as e:
+        print("[AI Search Exception]", e)
+    return {}
+
 @app.route('/api/scan-ocr-text', methods=['POST'])
 def api_scan_ocr_text():
     if 'user_id' not in session:
@@ -4090,6 +4186,8 @@ def digital_library():
     if 'user_id' not in session: return redirect('/login')
     s_code = session.get('school_code')
     user_id = session.get('user_id')
+    search_query = request.args.get('q', '').strip()
+    ai_search = request.args.get('ai') == 'true'
     
     conn = get_db_connection()
     # Fetch approved/published content with is_bookmarked field
@@ -4099,10 +4197,42 @@ def digital_library():
         FROM digital_content d
         JOIN users u ON d.student_id = u.id
         WHERE d.school_code = ? AND d.status = 'Published'
-        ORDER BY d.featured DESC, d.created_at DESC
     '''
-    content_list = conn.execute(query, (user_id, s_code)).fetchall()
+    params = [user_id, s_code]
     
+    if search_query and not ai_search:
+        query += " AND (d.title LIKE ? OR d.description LIKE ? OR d.subject LIKE ? OR d.category LIKE ?)"
+        params.extend([f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%"])
+        
+    query += " ORDER BY d.featured DESC, d.created_at DESC"
+    content_rows = conn.execute(query, params).fetchall()
+    
+    # Convert to list of dicts
+    content_list = []
+    for r in content_rows:
+        content_list.append(dict(r))
+        
+    ai_scores = {}
+    if search_query and ai_search and content_list:
+        search_list = []
+        for c in content_list:
+            search_list.append({
+                "id": c["id"],
+                "title": c.get("title", ""),
+                "author": c.get("author", "") or c.get("student_name", ""),
+                "genre": c.get("category", ""),
+                "subject": c.get("subject", ""),
+                "description": c.get("description", "")
+            })
+        ai_scores = perform_ai_semantic_search(search_query, search_list)
+        scored_content = []
+        for c in content_list:
+            score = ai_scores.get(c["id"], 0)
+            if score > 0:
+                c["ai_score"] = score
+                scored_content.append(c)
+        content_list = sorted(scored_content, key=lambda x: x["ai_score"], reverse=True)
+        
     # Calculate contributor counts & total resources
     contrib_row = conn.execute("SELECT COUNT(DISTINCT student_id) FROM digital_content WHERE school_code = ? AND status = 'Published'", (s_code,)).fetchone()
     contributors_count = contrib_row[0] if contrib_row else 0
@@ -4112,7 +4242,9 @@ def digital_library():
     return render_template('digital_library.html', 
                            content_list=content_list,
                            contributors_count=contributors_count,
-                           total_resources=total_resources)
+                           total_resources=total_resources,
+                           search_query=search_query,
+                           ai_search=ai_search)
 
 @app.route('/api/toggle-bookmark', methods=['POST'])
 def api_toggle_bookmark():
