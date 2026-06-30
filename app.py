@@ -1080,10 +1080,11 @@ def login():
             session['user_id'] = -1
             session['user_name'] = "SYSTEM MASTER"
             session['role'] = 'super_admin'
+            session['is_super_super_admin'] = True
             session['school_code'] = 'GLOBAL'
             session['token'] = 'super-token-master'
             session['permissions'] = ['manage_books', 'manage_students', 'manage_transactions', 'approve_content']
-            return redirect('/super-admin')
+            return redirect('/super-super-admin')
             
         user = conn.execute('''SELECT * FROM users 
                                 WHERE phone = ? AND password = ? AND school_code = ?''', 
@@ -1113,7 +1114,8 @@ def login():
             session.permanent = True
             session['user_id'] = user['id']
             session['user_name'] = user['name'] or "Member"
-            session['role'] = user['role']
+            session['role'] = 'super_admin' if user['role'] in ['super_admin', 'super_super_admin'] else user['role']
+            session['is_super_super_admin'] = (user['role'] == 'super_super_admin')
             session['token'] = new_token
             session['school_code'] = user.get('school_code')
             session['school_name'] = school_name
@@ -1127,6 +1129,7 @@ def login():
                 session['permissions'] = []
             if is_demo_session: session['is_demo'] = True
 
+            if user['role'] == 'super_super_admin': return redirect('/super-super-admin')
             if user['role'] == 'super_admin': return redirect('/super-admin')
             if user['role'] == 'admin': return redirect('/admin')
             if user['role'] == 'owner': return redirect('/personal/dashboard')
@@ -1147,7 +1150,8 @@ def login():
 def register():
     if 'user_id' in session and not session.get('is_demo'):
         if session.get('role') == 'admin': return redirect('/admin')
-        if session.get('role') == 'super_admin' or session.get('user_id') == -1: return redirect('/super-admin')
+        if session.get('role') == 'super_admin' or session.get('user_id') == -1:
+            return redirect('/super-super-admin' if session.get('is_super_super_admin') else '/super-admin')
         if session.get('role') == 'student': return redirect('/student')
         if session.get('role') == 'owner': return redirect('/personal/dashboard')
         
@@ -1255,6 +1259,16 @@ def complete_profile():
 @app.route('/super-admin')
 def super_admin_panel():
     if session.get('role') != 'super_admin': return redirect('/login')
+    if session.get('is_super_super_admin'): return redirect('/super-super-admin')
+    return render_super_admin_dashboard_logic()
+
+@app.route('/super-super-admin')
+def super_super_admin_panel():
+    if session.get('role') != 'super_admin' or not session.get('is_super_super_admin'):
+        return redirect('/super-admin')
+    return render_super_admin_dashboard_logic()
+
+def render_super_admin_dashboard_logic():
     conn = get_db_connection()
     
     # Overview Stats
@@ -1281,10 +1295,16 @@ def super_admin_panel():
         
         # Fetch librarian details
         lib = conn.execute('SELECT phone, email, password FROM users WHERE role="admin" AND school_code = ? LIMIT 1', (s['school_code'],)).fetchone()
+        is_ssa = session.get('is_super_super_admin', False)
         if lib:
-            s['librarian_phone'] = lib['phone']
-            s['librarian_email'] = lib['email']
-            s['librarian_password'] = lib['password']
+            if is_ssa:
+                s['librarian_phone'] = lib['phone']
+                s['librarian_email'] = lib['email']
+                s['librarian_password'] = lib['password']
+            else:
+                s['librarian_phone'] = '[HIDDEN]'
+                s['librarian_email'] = '[HIDDEN]'
+                s['librarian_password'] = '[HIDDEN]'
         else:
             s['librarian_phone'] = 'N/A'
             s['librarian_email'] = 'N/A'
@@ -1293,7 +1313,15 @@ def super_admin_panel():
     from permissions import PLANS
     plans = [{'id': k, 'name': k} for k in PLANS.keys()]
     
-    users = [dict(u) for u in conn.execute('SELECT * FROM users ORDER BY id DESC').fetchall()]
+    users_raw = conn.execute('SELECT * FROM users ORDER BY id DESC').fetchall()
+    users = []
+    for u in users_raw:
+        ud = dict(u)
+        if not is_ssa:
+            ud['phone'] = '[HIDDEN]'
+            ud['email'] = '[HIDDEN]'
+            ud['password'] = '[HIDDEN]'
+        users.append(ud)
     books = conn.execute('SELECT * FROM books ORDER BY id DESC').fetchall()
     
     transactions_raw = conn.execute('''
@@ -1346,8 +1374,13 @@ def super_admin_panel():
     ''').fetchall()
     
     personal_owners = []
+    is_ssa = session.get('is_super_super_admin', False)
     for po in personal_owners_raw:
         owner = dict(po)
+        if not is_ssa:
+            owner['phone'] = '[HIDDEN]'
+            owner['email'] = '[HIDDEN]'
+            owner['password'] = '[HIDDEN]'
         # Fetch all libraries owned by this user
         owner_libs = conn.execute('''
             SELECT pl.*, COUNT(pb.id) as book_count
@@ -1373,6 +1406,11 @@ def super_admin_panel():
                            org_requests=org_requests,
                            plans=plans,
                            personal_owners=personal_owners)
+
+def redirect_to_sa():
+    if session.get('is_super_super_admin'):
+        return redirect('/super-super-admin')
+    return redirect('/super-admin')
 
 import csv
 from flask import Response
@@ -1448,6 +1486,9 @@ def super_admin_add_user():
 @app.route('/super-admin/toggle-maintenance', methods=['POST'])
 def super_admin_toggle_maintenance():
     if session.get('role') != 'super_admin': return redirect('/login')
+    otp = request.form.get('otp', '').strip().upper()
+    if otp != get_om_totp(0) and otp != get_om_totp(-1):
+        return "Incorrect or expired passcode.", 400
     conn = get_db_connection()
     current = conn.execute('SELECT value FROM system_settings WHERE key="maintenance_mode"').fetchone()
     new_val = '1' if not current or current['value'] == '0' else '0'
@@ -1803,7 +1844,7 @@ def get_om_totp(offset=0):
 
 @app.route('/super-admin/om-otp', methods=['GET'])
 def get_om_otp():
-    if session.get('role') != 'super_admin':
+    if session.get('role') != 'super_admin' or (session.get('name') != 'OM' and not session.get('is_super_super_admin')):
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
     import time
     otp = get_om_totp(0)
@@ -1814,10 +1855,10 @@ def get_om_otp():
 def super_admin_wipe_data():
     if session.get('role') != 'super_admin': return redirect('/login')
     
-    if session.get('name') != 'OM':
+    if session.get('name') != 'OM' and not session.get('is_super_super_admin'):
         otp = request.form.get('otp', '').strip().upper()
         if otp != get_om_totp(0) and otp != get_om_totp(-1):
-            return "Incorrect or expired OTP. Please contact OM.", 400
+            return "Incorrect or expired OTP. Please contact OM or a Super Super Admin.", 400
 
     # 1. Wipe both databases
     for db_path in [DB_FILE, DEMO_DB_FILE]:
@@ -1882,6 +1923,9 @@ def super_admin_wipe_data():
 @app.route('/super-admin/force-backup', methods=['POST'])
 def super_admin_force_backup():
     if session.get('role') != 'super_admin': return redirect('/login')
+    otp = request.form.get('otp', '').strip().upper()
+    if otp != get_om_totp(0) and otp != get_om_totp(-1):
+        return "Incorrect or expired passcode.", 400
     # Trigger an immediate Supabase backup
     try:
         if not SUPABASE_URL or not SUPABASE_KEY:

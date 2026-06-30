@@ -14,6 +14,7 @@
 
 {% block content %}
 <div class="super-admin-body" id="dashboard-container">
+    <button id="exitMobileViewBtn" onclick="toggleMobileView()" style="position: fixed; top: 15px; right: 15px; z-index: 100000; background: #ef4444; color: white; border: none; padding: 10px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); display: none;">Exit Mobile View</button>
     <script>
         (function() {
             const savedState = localStorage.getItem('sidebarCollapsed');
@@ -109,7 +110,7 @@
                 {% endif %}
             </div>
 
-            {% if session.get('role') == 'super_admin' %}
+            {% if session.get('is_super_super_admin') or session.get('name') == 'OM' %}
             <div class="sa-section-header" style="margin-top: 1.5rem;">
                 <div class="sa-section-title" style="color: #ef4444;">Master Override Passcode</div>
             </div>
@@ -216,7 +217,13 @@
                     <div class="sa-item-icon" style="border-radius: 50%;">{{ (u.name or 'U')[0]|upper }}</div>
                     <div class="sa-item-content">
                         <div class="sa-item-title">{{ u.name or 'Pending Profile' }}</div>
-                        <div class="sa-item-subtitle">📞 {{ u.phone or u.admission_no }}</div>
+                        <div class="sa-item-subtitle">
+                            {% if session.get('is_super_super_admin') %}
+                            📞 {{ u.phone or u.admission_no }}
+                            {% else %}
+                            🔑 Code: {{ u.school_code or u.admission_no or 'N/A' }}
+                            {% endif %}
+                        </div>
                         <div class="sa-item-meta">
                             <span>🌐 {{ u.school_code }}</span>
                         </div>
@@ -459,19 +466,17 @@
             <div class="sa-settings-group">
                 <div class="sa-settings-group-title">Admin Tools (Danger Zone)</div>
                 <div class="sa-settings-card">
-                    <div class="sa-settings-item" style="border-left: 4px solid #f59e0b;" onclick="document.getElementById('maintForm').submit()">
+                    <div class="sa-settings-item" style="border-left: 4px solid #f59e0b;" onclick="initiateAuthCodeAction('/super-admin/toggle-maintenance', 'Toggle Maintenance Mode', '#f59e0b', 'Toggle Mode')">
                         <div class="sa-settings-icon" style="color:#f59e0b; background:#fef3c7;">🚧</div>
                         <div class="sa-settings-text">
                             <div class="sa-settings-title">Toggle Maintenance Mode</div>
                         </div>
-                        <form id="maintForm" action="/super-admin/toggle-maintenance" method="POST" style="display:none;"></form>
                     </div>
-                    <div class="sa-settings-item" style="border-left: 4px solid #10b981;" onclick="document.getElementById('backupForm').submit()">
+                    <div class="sa-settings-item" style="border-left: 4px solid #10b981;" onclick="initiateAuthCodeAction('/super-admin/force-backup', 'Force Firebase Backup Sync', '#10b981', 'Force Sync')">
                         <div class="sa-settings-icon" style="color:#10b981; background:#d1fae5;">💾</div>
                         <div class="sa-settings-text">
                             <div class="sa-settings-title">Force Firebase Backup Sync</div>
                         </div>
-                        <form id="backupForm" action="/super-admin/force-backup" method="POST" style="display:none;"></form>
                     </div>
                     {% if session.get('role') == 'super_admin' %}
                     <div class="sa-settings-item" style="border-left: 4px solid #3b82f6;" onclick="toggleMobileView()">
@@ -487,7 +492,7 @@
                         <div class="sa-settings-icon" style="color:#ef4444; background:#fef2f2;">⚠️</div>
                         <div class="sa-settings-text">
                             <div class="sa-settings-title" style="color:#ef4444;">WIPE ALL SYSTEM DATA</div>
-                            {% if session.get('role') == 'super_admin' %}
+                            {% if session.get('is_super_super_admin') or session.get('name') == 'OM' %}
                             <div class="sa-settings-desc" style="color: #6b7280; font-size: 0.75rem; margin-top: 4px;">
                                 Authentication passcode: <strong id="settingsWipeCode" style="font-family: monospace; font-size: 0.9rem; color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 2px 6px; border-radius: 4px; letter-spacing: 1px;">------</strong> (expires in <span id="settingsWipeTimer">15</span>s)
                             </div>
@@ -526,7 +531,7 @@
             <span>Go Home</span>
         </button>
         <!-- Desktop Theme Toggle -->
-        <button class="sa-nav-item sa-desktop-only-nav-item" id="superAdminThemeToggle" title="Switch Appearance">
+        <button class="sa-nav-item sa-desktop-only-nav-item" id="superAdminThemeToggle" onclick="toggleTheme()" title="Switch Appearance">
             <span class="sa-nav-icon" id="superAdminThemeIcon">🌙</span>
             <span>Appearance</span>
         </button>
@@ -642,6 +647,9 @@
                     <option value="student">Student</option>
                     <option value="admin">Admin / Librarian</option>
                     <option value="super_admin">Super Admin</option>
+                    {% if session.get('is_super_super_admin') %}
+                    <option value="super_super_admin">Super Super Admin</option>
+                    {% endif %}
                 </select>
             </div>
             <div class="input-group">
@@ -740,12 +748,12 @@
             <h2 style="margin: 0; color: #ef4444;">⚠️ Authentication Required</h2>
             <button type="button" onclick="closeModal('wipeOtpModal')" style="background: none; border: none; color: #6b7280; font-size: 1.8rem; cursor: pointer; line-height: 1; padding: 0;">&times;</button>
         </div>
-        {% if session.get('name') == 'OM' %}
+        {% if session.get('is_super_super_admin') or session.get('name') == 'OM' %}
         <p style="color: #6b7280; margin-bottom: 1.5rem;">
             Current passcode: <strong id="modalWipeCode" style="font-family: monospace; font-size: 1.2rem; color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 2px 8px; border-radius: 4px; letter-spacing: 1px;">------</strong> (expires in <span id="modalWipeTimer">15</span>s)
         </p>
         {% else %}
-        <p style="color: #6b7280; margin-bottom: 1.5rem;">Please contact OM for the 6-digit passcode.</p>
+        <p style="color: #6b7280; margin-bottom: 1.5rem;">Please contact OM or a Super Super Admin for the 6-digit passcode.</p>
         {% endif %}
         <div id="wipeOtpInputArea">
             <form action="/super-admin/wipe-data" method="POST">
@@ -804,6 +812,9 @@
                     <option value="student">Student</option>
                     <option value="admin">Admin / Librarian</option>
                     <option value="super_admin">Super Admin</option>
+                    {% if session.get('is_super_super_admin') %}
+                    <option value="super_super_admin">Super Super Admin</option>
+                    {% endif %}
                 </select>
             </div>
             <div class="input-group">
@@ -965,7 +976,7 @@
 {% block scripts %}
 <script>
     // ── Wipe Data OTP Updater for OM (single consolidated function) ──────────
-    {% if session.get('name') == 'OM' %}
+    {% if session.get('name') == 'OM' or session.get('is_super_super_admin') %}
     function updateAllOtp() {
         fetch('/super-admin/om-otp')
             .then(r => r.json())
@@ -1055,30 +1066,12 @@
         initSidebarCollapse();
         updateSaToggleText();
         
-        // Super Admin Sidebar Theme Toggle
-        const saThemeToggle = document.getElementById('superAdminThemeToggle');
+        // Super Admin Sidebar Theme Toggle (Initial Sync only)
         const saThemeIcon = document.getElementById('superAdminThemeIcon');
         const htmlElement = document.documentElement;
-        
-        if (saThemeToggle && saThemeIcon) {
-            // Initial sync
+        if (saThemeIcon) {
             const currentTheme = htmlElement.getAttribute('data-theme') || 'dark';
             saThemeIcon.innerText = currentTheme === 'dark' ? '🌙' : '☀️';
-            
-            saThemeToggle.addEventListener('click', () => {
-                const theme = htmlElement.getAttribute('data-theme');
-                const nextTheme = theme === 'dark' ? 'light' : 'dark';
-                
-                htmlElement.setAttribute('data-theme', nextTheme);
-                localStorage.setItem('theme', nextTheme);
-                saThemeIcon.innerText = nextTheme === 'dark' ? '🌙' : '☀️';
-                
-                // Also sync global nav icon in base.html if exists
-                const baseThemeIcon = document.getElementById('themeIcon');
-                if (baseThemeIcon) {
-                    baseThemeIcon.innerText = nextTheme === 'dark' ? '🌙' : '☀️';
-                }
-            });
         }
     });
 
@@ -1262,23 +1255,31 @@
         });
     }
 
-    function initiateWipe() {
-        if ("{{ session.get('name') }}" === "OM") {
-            if (confirm("OM WARNING: You are about to permanently wipe all data. Proceed?")) {
-                let form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/super-admin/wipe-data';
-                document.body.appendChild(form);
-                form.submit();
+    function initiateAuthCodeAction(actionUrl, actionName, btnColor, btnText) {
+        const form = document.querySelector('#wipeOtpModal form');
+        if (form) {
+            form.action = actionUrl;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerText = btnText;
+                submitBtn.style.background = btnColor;
             }
-        } else {
-            document.getElementById('wipeOtpInputArea').style.display = 'block';
-            document.getElementById('wipeOtpErrorArea').style.display = 'none';
-            openModal('wipeOtpModal');
         }
+        const modalTitle = document.querySelector('#wipeOtpModal h2');
+        if (modalTitle) {
+            modalTitle.innerText = `⚠️ Confirm ${actionName}`;
+            modalTitle.style.color = btnColor;
+        }
+        document.getElementById('wipeOtpInputArea').style.display = 'block';
+        document.getElementById('wipeOtpErrorArea').style.display = 'none';
+        openModal('wipeOtpModal');
     }
 
-    {% if session.get('name') == 'OM' %}
+    function initiateWipe() {
+        initiateAuthCodeAction('/super-admin/wipe-data', 'System Wipe', '#ef4444', 'Confirm Wipe');
+    }
+
+    {% if session.get('name') == 'OM' or session.get('is_super_super_admin') %}
     function toggleMobileView() {
         const isMobileView = localStorage.getItem('forceMobileView') === 'true';
         const newStatus = !isMobileView;
@@ -1294,6 +1295,10 @@
         if (indicator) {
             indicator.innerText = isMobileView ? "ON" : "OFF";
             indicator.style.color = isMobileView ? "#10b981" : "#3b82f6";
+        }
+        const exitBtn = document.getElementById('exitMobileViewBtn');
+        if (exitBtn) {
+            exitBtn.style.display = isMobileView ? 'block' : 'none';
         }
     }
 
