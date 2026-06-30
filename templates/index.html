@@ -5,7 +5,6 @@
 {% block head %}
 <link rel="stylesheet" href="/static/landing.css">
 <style>
-    /* Force Light Theme */
     :root {
         --bg-main: #ffffff;
         --bg-card: #f8fafc;
@@ -16,9 +15,18 @@
         --text-low: #64748b;
         --accent-primary: #4f46e5;
     }
+    [data-theme="dark"] {
+        --bg-main: #0b0f19;
+        --bg-card: #111827;
+        --bg-input: #1f2937;
+        --border: #374151;
+        --text-high: #f9fafb;
+        --text-mid: #d1d5db;
+        --text-low: #9ca3af;
+    }
     body {
-        background-color: var(--bg-main) !important;
-        color: var(--text-high) !important;
+        background-color: var(--bg-main);
+        color: var(--text-high);
     }
     
     /* Desktop Nav Links */

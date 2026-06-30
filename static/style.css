@@ -38,6 +38,32 @@
     --shadow-premium: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+[data-theme="dark"] {
+    --bg-main: #0b0f19;
+    --bg-surface: #111827;
+    --bg-card: #1f2937;
+    --border-color: #374151;
+    
+    --text-high: #f9fafb;
+    --text-mid: #d1d5db;
+    --text-low: #9ca3af;
+    
+    --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] {
+    /* Student portal variables overrides */
+    --sp-bg-light: #0b0f19;
+    --sp-white: #111827;
+    --sp-text-dark: #f9fafb;
+    --sp-text-muted: #9ca3af;
+    --sp-purple-light: rgba(92, 60, 243, 0.15);
+    --sp-pink-light: rgba(255, 77, 109, 0.15);
+    --sp-orange-light: rgba(255, 136, 0, 0.15);
+    --sp-green-light: rgba(0, 176, 80, 0.15);
+    --sp-blue-light: rgba(2, 132, 199, 0.15);
+}
+
 * {
     margin: 0;
     padding: 0;

@@ -555,3 +555,65 @@
     border-color: var(--glass-border) !important;
     box-shadow: 0 4px 6px rgba(15, 23, 42, 0.02) !important;
 }
+
+/* Dark Theme Overrides for Personal Library Dashboard */
+[data-theme="dark"] .personal-layout {
+    background: radial-gradient(circle at top right, rgba(124, 58, 237, 0.12), transparent 45%),
+                radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 45%),
+                #0b0f19 !important;
+    color: #f9fafb !important;
+}
+
+[data-theme="dark"] .personal-layout h1 {
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+[data-theme="dark"] .personal-layout h2,
+[data-theme="dark"] .personal-layout h3,
+[data-theme="dark"] .personal-layout h4,
+[data-theme="dark"] .personal-layout strong {
+    color: #f9fafb !important;
+}
+
+[data-theme="dark"] .personal-layout p,
+[data-theme="dark"] .personal-layout span:not(.link-icon):not(.badge) {
+    color: #d1d5db !important;
+}
+
+[data-theme="dark"] .personal-sidebar {
+    background: rgba(17, 24, 39, 0.95) !important;
+    border-right-color: #374151 !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .personal-sidebar .sidebar-link {
+    color: #d1d5db !important;
+}
+
+[data-theme="dark"] .personal-sidebar .sidebar-link:hover,
+[data-theme="dark"] .personal-sidebar .sidebar-link.active {
+    background: #1f2937 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .personal-card {
+    background: #111827 !important;
+    border-color: #374151 !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .personal-card h3,
+[data-theme="dark"] .personal-card p,
+[data-theme="dark"] .personal-card span {
+    color: #f9fafb !important;
+}
+
+[data-theme="dark"] .personal-main {
+    background-color: #0b0f19 !important;
+}
+
+[data-theme="dark"] .personal-header {
+    border-bottom-color: #374151 !important;
+}

@@ -315,11 +315,7 @@
             const nav = document.querySelector('.global-nav-container');
             if (nav) {
                 const themeToggle = document.getElementById('themeToggle');
-                if (window.location.pathname.startsWith('/personal')) {
-                    if (themeToggle) themeToggle.style.setProperty('display', 'none', 'important');
-                } else {
-                    if (themeToggle) themeToggle.style.removeProperty('display');
-                }
+                if (themeToggle) themeToggle.style.removeProperty('display');
                 
                 const hasSidebar = !!(document.querySelector('.desktop-sidebar') || document.querySelector('.sa-bottom-nav') || document.getElementById('portalSidebar'));
                 if (hasSidebar) {
@@ -455,9 +451,6 @@
 
         // Load saved theme
         let savedTheme = localStorage.getItem('theme') || 'dark';
-        if (window.location.pathname.startsWith('/personal')) {
-            savedTheme = 'light';
-        }
         html.setAttribute('data-theme', savedTheme);
         
         document.addEventListener('DOMContentLoaded', () => {
