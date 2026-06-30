@@ -59,14 +59,13 @@
         box-sizing: border-box;
     }
 
-    /* Header component (White background as per mockup) */
     .comm-header {
-        background: #ffffff;
+        background: var(--sp-white);
         padding: 1.5rem 1.25rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--border-color);
     }
 
     .comm-header-left {
@@ -186,8 +185,8 @@
 
     .search-control {
         width: 100%;
-        background: #ffffff;
-        border: 1.5px solid #e2e8f0;
+        background: var(--sp-white);
+        border: 1.5px solid var(--border-color);
         border-radius: 12px;
         padding: 10px 14px 10px 38px;
         font-size: 0.8rem;
@@ -199,7 +198,7 @@
 
     .search-control:focus {
         border-color: var(--sp-purple);
-        background: #ffffff;
+        background: var(--sp-white);
         outline: none;
         box-shadow: 0 0 0 3px rgba(92, 60, 243, 0.08);
     }
@@ -245,8 +244,8 @@
     }
 
     .filter-btn {
-        background: #ffffff;
-        border: 1.5px solid #e2e8f0;
+        background: var(--sp-white);
+        border: 1.5px solid var(--border-color);
         border-radius: 12px;
         padding: 0 14px;
         font-size: 0.8rem;
@@ -280,8 +279,8 @@
     }
 
     .pill-item {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+        background: var(--sp-white);
+        border: 1px solid var(--border-color);
         border-radius: 10px;
         padding: 7px 14px;
         font-size: 0.72rem;
@@ -321,8 +320,8 @@
 
     .subject-select-menu {
         width: 100%;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
+        background: var(--sp-white);
+        border: 1px solid var(--border-color);
         border-radius: 10px;
         padding: 8px 12px;
         font-size: 0.78rem;
@@ -470,9 +469,9 @@
     }
 
     .upload-item-card {
-        background: #ffffff;
+        background: var(--sp-white);
         border-radius: 16px;
-        border: 1px solid #f1f5f9;
+        border: 1px solid var(--border-color);
         box-shadow: 0 2px 8px rgba(0,0,0,0.01);
         padding: 12px 14px;
         display: flex;
@@ -695,9 +694,9 @@
 
     /* Be a Contributor Box component */
     .contribute-box-card {
-        background: #ffffff;
+        background: var(--sp-white);
         border-radius: 16px;
-        border: 1px solid #f1f5f9;
+        border: 1px solid var(--border-color);
         padding: 12px 14px;
         margin: 1.5rem 1.25rem 1rem 1.25rem;
         display: flex;
@@ -986,10 +985,20 @@
             <span class="brand-icon">🌐</span>
             <div class="brand-info">
                 <h4>{{ session.get('school_name', 'Digital Library') }}</h4>
-                <p>Student Portal</p>
+                <p>{% if session.get('role') == 'admin' %}Librarian Panel{% else %}Student Portal{% endif %}</p>
             </div>
         </div>
         <nav class="sidebar-menu">
+            {% if session.get('role') == 'admin' %}
+            <a href="/admin" class="sidebar-link">
+                <span class="link-icon">⬅️</span>
+                <span>Librarian Panel</span>
+            </a>
+            <a href="/digital-library" class="sidebar-link active">
+                <span class="link-icon">🌐</span>
+                <span>Community Library</span>
+            </a>
+            {% else %}
             <a href="/student" class="sidebar-link">
                 <span class="link-icon">📊</span>
                 <span>Dashboard</span>
@@ -1018,6 +1027,7 @@
                 <span class="link-icon">👤</span>
                 <span>My Profile</span>
             </a>
+            {% endif %}
             <hr class="sidebar-divider">
             <a href="/logout" class="sidebar-link logout-link">
                 <span class="link-icon">🚪</span>
@@ -1031,7 +1041,7 @@
             </div>
             <div class="profile-card-info">
                 <h5>{{ session['user_name'] }}</h5>
-                <p>Class: {{ session['class'] }}</p>
+                <p>{% if session.get('role') == 'admin' %}Role: Librarian{% else %}Class: {{ session['class'] }}{% endif %}</p>
             </div>
         </div>
     </aside>
@@ -1072,7 +1082,7 @@
                 <input type="text" name="q" id="searchInput" class="search-control" style="width: 100%; padding-left: 38px;" placeholder="Search by title, subject, author, tags..." value="{{ search_query or '' }}" oninput="if(!document.getElementById('aiToggle').checked) applyFilters()">
             </div>
             
-            <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; border: 1.5px solid #e2e8f0; padding: 10px 14px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: var(--sp-text-dark); height: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box;">
+            <div style="display: flex; align-items: center; gap: 8px; background: var(--sp-white); border: 1.5px solid var(--border-color); padding: 10px 14px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: var(--sp-text-dark); height: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box;">
                 <label class="sa-toggle-switch" style="position: relative; display: inline-block; width: 40px; height: 22px; margin: 0; cursor: pointer;">
                     <input type="checkbox" name="ai" id="aiToggle" value="true" {% if ai_search %}checked{% endif %} style="opacity: 0; width: 0; height: 0;" onchange="if(this.checked) { this.form.submit() } else { window.location.href='/digital-library' }">
                     <span class="sa-toggle-slider" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
@@ -1255,7 +1265,7 @@
         <!-- Uploads List -->
         <div class="uploads-list-container" id="uploadsContainer">
             {% if not content_list %}
-            <div style="text-align: center; padding: 3rem 1rem; background: white; border-radius: 16px; border: 1px solid #f1f5f9;">
+            <div style="text-align: center; padding: 3rem 1rem; background: var(--sp-white); border-radius: 16px; border: 1px solid var(--border-color);">
                 <h4 style="margin: 0; color: var(--sp-text-dark);">Community Library is Empty</h4>
                 <p style="margin: 5px 0 0 0; font-size: 0.75rem; color: var(--sp-text-muted);">Be the first to share notes and help your peers!</p>
             </div>
@@ -1353,6 +1363,7 @@
             {% endif %}
         </div>
 
+        {% if session.get('role') != 'admin' %}
         <!-- Be a Contributor CTA Card -->
         <div class="contribute-box-card">
             <div class="contribute-box-left">
@@ -1375,9 +1386,20 @@
                 Publish Yours
             </a>
         </div>
+        {% endif %}
 
         <!-- Fixed Bottom Nav (Consistent with standard student dashboard menu) -->
         <nav class="bottom-nav">
+            {% if session.get('role') == 'admin' %}
+            <a href="/admin" class="bottom-nav-item">
+                <span class="bottom-nav-icon">⬅️</span>
+                <span>Librarian</span>
+            </a>
+            <a href="/digital-library" class="bottom-nav-item active">
+                <span class="bottom-nav-icon">🌐</span>
+                <span>Community</span>
+            </a>
+            {% else %}
             <a href="/student" class="bottom-nav-item">
                 <span class="bottom-nav-icon">🏠</span>
                 <span>Home</span>
@@ -1398,6 +1420,7 @@
                 <span class="bottom-nav-icon">👤</span>
                 <span>Profile</span>
             </a>
+            {% endif %}
         </nav>
 
     </div>

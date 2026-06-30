@@ -374,6 +374,11 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     </div>
 
                     <div class="ld-form-group">
+                        <label for="due_days">Custom Due Days (Allocation Duration)</label>
+                        <input type="number" id="due_days" name="due_days" value="{{ school.due_days or 3 }}" class="ld-input" required min="1" max="365" placeholder="e.g. 3">
+                    </div>
+
+                    <div class="ld-form-group">
                         <label for="new_code">Dynamic Library Code</label>
                         <input type="text" id="new_code" name="new_code" value="{{ school.school_code }}" class="ld-input" required pattern="[A-Z0-9\-]+" placeholder="e.g. GREENWOOD-101">
                         

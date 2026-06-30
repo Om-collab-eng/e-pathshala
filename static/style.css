@@ -1059,4 +1059,68 @@ tr:hover td {
     }
 }
 
+/* Dynamic Scrollable Bottom Navigation Bar on Mobile devices (All Roles) */
+@media (max-width: 1024px) {
+    nav.bottom-nav, 
+    nav.sa-bottom-nav, 
+    nav.ld-bottom-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        gap: 1.5rem !important;
+        padding: 0 1.5rem !important;
+        align-items: center !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        height: 75px !important;
+        background: var(--bg-surface, #ffffff) !important;
+        border-top: 1px solid var(--border-color, #e2e8f0) !important;
+    }
+    
+    nav.bottom-nav::-webkit-scrollbar, 
+    nav.sa-bottom-nav::-webkit-scrollbar, 
+    nav.ld-bottom-nav::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    nav.bottom-nav a, 
+    nav.sa-bottom-nav a, 
+    nav.ld-bottom-nav a,
+    nav.sa-bottom-nav button,
+    nav.bottom-nav button,
+    nav.ld-bottom-nav button,
+    .bottom-nav-item,
+    .sa-nav-item,
+    .sa-bnav-item,
+    .ld-bnav-item {
+        flex-shrink: 0 !important;
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+        min-width: 70px !important;
+        color: var(--text-mid, #64748b) !important;
+        text-decoration: none !important;
+    }
+
+    nav.bottom-nav a.active,
+    nav.sa-bottom-nav a.active,
+    nav.ld-bottom-nav a.active,
+    nav.sa-bottom-nav button.active,
+    nav.bottom-nav button.active,
+    nav.ld-bottom-nav button.active,
+    .bottom-nav-item.active,
+    .sa-nav-item.active,
+    .sa-bnav-item.active,
+    .ld-bnav-item.active {
+        color: var(--accent-primary, #5c3cf3) !important;
+        font-weight: 700 !important;
+    }
+}
+
 

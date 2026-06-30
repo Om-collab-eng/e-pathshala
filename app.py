@@ -725,6 +725,8 @@ def init_db():
     except: pass
     try: conn.execute('ALTER TABLE schools ADD COLUMN adminLimit INTEGER DEFAULT 1')
     except: pass
+    try: conn.execute('ALTER TABLE schools ADD COLUMN due_days INTEGER DEFAULT 3')
+    except: pass
                   
     conn.execute('''CREATE TABLE IF NOT EXISTS users 
                  (id INTEGER PRIMARY KEY, name TEXT, admission_no TEXT, class TEXT, 
@@ -2189,10 +2191,11 @@ def admin_settings():
     if request.method == 'POST':
         new_code = request.form.get('new_code', '').strip().upper()
         new_name = request.form.get('new_name', '').strip()
+        due_days = request.form.get('due_days', '3').strip()
         
         if new_code and new_code != old_code:
             # 1. Update Schools table
-            conn.execute('UPDATE schools SET school_code = ?, name = ? WHERE school_code = ?', (new_code, new_name, old_code))
+            conn.execute('UPDATE schools SET school_code = ?, name = ?, due_days = ? WHERE school_code = ?', (new_code, new_name, int(due_days), old_code))
             # 2. Cascade to Users
             conn.execute('UPDATE users SET school_code = ? WHERE school_code = ?', (new_code, old_code))
             # 3. Cascade to Books
@@ -2204,7 +2207,7 @@ def admin_settings():
             session.clear()
             return redirect('/login')
             
-        conn.execute('UPDATE schools SET name = ? WHERE school_code = ?', (new_name, old_code))
+        conn.execute('UPDATE schools SET name = ?, due_days = ? WHERE school_code = ?', (new_name, int(due_days), old_code))
         conn.commit()
         
     school = conn.execute('SELECT * FROM schools WHERE school_code = ?', (old_code,)).fetchone()
@@ -2247,6 +2250,93 @@ def add_book():
         conn.close()
         return redirect('/admin')
     return render_template('add_book.html')
+
+@app.route('/api/check-book-availability', methods=['POST'])
+def check_book_availability():
+    if session.get('role') != 'admin': return jsonify({"error": "Unauthorized"}), 401
+    s_code = session.get('school_code')
+    data = request.json or {}
+    title = data.get('title', '').strip()
+    author = data.get('author', '').strip()
+    isbn = data.get('isbn', '').strip()
+    
+    conn = get_db_connection()
+    book = None
+    if isbn:
+        book = conn.execute('SELECT * FROM books WHERE isbn = ? AND school_code = ?', (isbn, s_code)).fetchone()
+    if not book and title:
+        book = conn.execute('SELECT * FROM books WHERE title LIKE ? AND school_code = ?', (f"%{title}%", s_code)).fetchone()
+        
+    if book:
+        book_dict = dict(book)
+        conn.close()
+        return jsonify({"found": True, "book": book_dict})
+    else:
+        conn.close()
+        return jsonify({"found": False})
+
+@app.route('/api/issue-scanned-book', methods=['POST'])
+def issue_scanned_book():
+    if session.get('role') != 'admin': return jsonify({"error": "Unauthorized"}), 401
+    s_code = session.get('school_code')
+    data = request.json or {}
+    student_id = data.get('student_id')
+    book_id = data.get('book_id')
+    
+    conn = get_db_connection()
+    book = conn.execute('SELECT * FROM books WHERE id = ? AND available_copies > 0 AND school_code = ?', (book_id, s_code)).fetchone()
+    if not book:
+        conn.close()
+        return jsonify({"success": False, "error": "Book is not available or does not exist."})
+        
+    student = conn.execute('SELECT * FROM users WHERE id = ? AND school_code = ?', (student_id, s_code)).fetchone()
+    if not student:
+        conn.close()
+        return jsonify({"success": False, "error": "Student not found."})
+        
+    issue_date = datetime.now().strftime('%Y-%m-%d')
+    due_date = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
+    conn.execute('INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code) VALUES (?,?,?,?,?,?)',
+                 (student_id, book['id'], issue_date, due_date, student['class'], s_code))
+    conn.execute('UPDATE books SET available_copies = available_copies - 1 WHERE id = ?', (book['id'],))
+    
+    # Check cooldown and award 5 points
+    if not check_90_day_cooldown(conn, student_id, book['id'], 'physical'):
+        update_score(conn, student_id, 'physical', 5, f"Issued book '{book['title']}'")
+        
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": f"'{book['title']}' successfully issued to {student['name']}."})
+
+@app.route('/api/add-scanned-book', methods=['POST'])
+def add_scanned_book():
+    if session.get('role') != 'admin': return jsonify({"error": "Unauthorized"}), 401
+    s_code = session.get('school_code')
+    data = request.json or {}
+    title = data.get('title', '').strip()
+    author = data.get('author', '').strip()
+    publisher = data.get('publisher', '').strip()
+    isbn = data.get('isbn', '').strip()
+    description = data.get('description', '').strip()
+    
+    if not title or not author:
+        return jsonify({"success": False, "error": "Title and Author are required."})
+        
+    conn = get_db_connection()
+    import random
+    barcode_id = f"BC{random.randint(100000, 999999)}"
+    
+    conn.execute('''
+        INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, publisher)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (title, author, 'General', barcode_id, 5, 5, s_code, description, isbn, publisher))
+    
+    new_book = conn.execute('SELECT * FROM books WHERE barcode_id = ? AND school_code = ?', (barcode_id, s_code)).fetchone()
+    new_book_dict = dict(new_book) if new_book else None
+    
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": f"Book '{title}' added successfully.", "book": new_book_dict})
 
 @app.route('/admin/issue', methods=['GET', 'POST'])
 def issue_book():

@@ -4,72 +4,442 @@
 
 {% block content %}
 <style>
-    /* Fix for dropdown options appearing white-on-white */
+    /* Premium layout rules */
     select option {
-        background-color: var(--bg-surface, #1e1e2d);
-        color: var(--text-light, #ffffff);
+        background-color: var(--bg-surface, #111827);
+        color: var(--text-high, #ffffff);
+    }
+    
+    .scanner-feed-container {
+        position: relative;
+        width: 100%;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 2px dashed var(--border-color, #374151);
+        background: #000000;
+        margin-top: 1.25rem;
+        aspect-ratio: 4 / 3;
+    }
+
+    #cameraStream {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .scanner-scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(to right, transparent, var(--accent-primary, #5c3cf3), transparent);
+        animation: scanAnim 2.5s linear infinite;
+        pointer-events: none;
+        display: none;
+    }
+
+    @keyframes scanAnim {
+        0% { top: 0%; }
+        50% { top: 100%; }
+        100% { top: 0%; }
+    }
+
+    /* Modal Styling */
+    .scanner-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 1.5rem;
+    }
+
+    .scanner-modal-card {
+        background: var(--bg-surface, #1f2937);
+        border: 1px solid var(--border-color, #374151);
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        color: var(--text-high, #f9fafb);
+        text-align: center;
+        animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalScaleIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .scanner-modal-btn-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 1.5rem;
+        justify-content: center;
+    }
+
+    .scanner-modal-btn {
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 0.95rem;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .scanner-modal-btn.btn-yes {
+        background: var(--accent-primary, #5c3cf3);
+        color: white;
+    }
+
+    .scanner-modal-btn.btn-yes:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(92, 60, 243, 0.4);
+    }
+
+    .scanner-modal-btn.btn-no {
+        background: rgba(255,255,255,0.1);
+        color: var(--text-high, #f9fafb);
+        border: 1px solid var(--border-color, #374151);
+    }
+
+    .scanner-modal-btn.btn-no:hover {
+        background: rgba(255,255,255,0.15);
+    }
+
+    .scan-status-overlay {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(15, 23, 42, 0.85);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.1);
+        pointer-events: none;
+        z-index: 50;
     }
 </style>
+
 <div class="login-container">
     <div class="auth-card" style="max-width: 500px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h1 style="text-align: left; margin: 0;">Issue Terminal</h1>
+            <h1 style="text-align: left; margin: 0; font-size: 1.8rem; font-weight: 800;">Issue Terminal</h1>
             <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-                <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem;">Log Out</a>
-                <a href="/admin" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem;">Back to Dashboard</a>
+                <a href="/logout" class="btn-alt" style="border-color: rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); padding: 4px 12px; font-size: 0.8rem; border-radius: 8px;">Log Out</a>
+                <a href="/admin" class="btn-alt" style="padding: 4px 12px; font-size: 0.8rem; border-radius: 8px;">Back to Dashboard</a>
             </div>
         </div>
         
-        <p style="margin-bottom: 2rem; color: var(--text-mid); font-size: 0.85rem;">Identify student and register asset allocation.</p>
+        <p style="margin-bottom: 1.5rem; color: var(--text-mid); font-size: 0.85rem;">Select student, then scan the book cover to issue or add.</p>
 
-        <form method="POST">
+        <!-- Dropdowns for manual issue fallback -->
+        <form id="issueForm" onsubmit="event.preventDefault();">
             <div class="input-group">
-                <label>Target Student Entity</label>
-                <select name="student_id" required>
+                <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-high);">Target Student Entity</label>
+                <select id="studentSelect" name="student_id" required style="width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-high);">
                     {% for student in students %}
-                    <option value="{{ student.id }}">{{ student.name }} (ID: {{ student.admission_no }} - Cls {{ student.class }})</option>
+                    <option value="{{ student.id }}">{{ student.name }} (Admission No: {{ student.admission_no }})</option>
                     {% endfor %}
                 </select>
             </div>
             
-            <div class="input-group">
-                <label>Manual Asset Selection</label>
-                <select name="book_id">
+            <div class="input-group" style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-high);">Manual Asset Selector (Fallback)</label>
+                <select id="bookSelect" name="book_id" style="width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-high);">
                     <option value="">-- No selection --</option>
                     {% for book in books %}
-                    <option value="{{ book.id }}" {% if selected_book_id == book.id %}selected{% endif %}>{{ book.title }} ({{ book.barcode_id }})</option>
+                    <option value="{{ book.id }}">{{ book.title }} by {{ book.author }}</option>
                     {% endfor %}
                 </select>
             </div>
-            
-            <div style="display: flex; align-items: center; gap: 10px; margin: 1.5rem 0;">
-                <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
-                <span style="font-size: 0.7rem; color: var(--text-low); font-weight: 700;">OR SCAN BARCODE</span>
-                <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+
+            <!-- Scanner Camera Box -->
+            <div class="scanner-feed-container">
+                <video id="cameraStream" autoplay playsinline></video>
+                <div id="scanline" class="scanner-scanline"></div>
+                <div id="scannerStatus" class="scan-status-overlay">Camera ready</div>
             </div>
 
-            <div class="input-group">
-                <label>Live Scanner Input</label>
-                <input type="text" id="barcode_input" name="barcode_id" placeholder="Waiting for scanner pulse..." autofocus>
+            <canvas id="snapshotCanvas" style="display: none;"></canvas>
+
+            <!-- Controller Actions -->
+            <div style="display: flex; gap: 12px; margin-top: 1.5rem;">
+                <button type="button" id="startStopBtn" class="btn-alt" style="flex: 1; border-radius: 12px; padding: 12px;">Stop Camera</button>
+                <button type="button" id="scanBtn" class="btn-neon" style="flex: 2; border-radius: 12px; padding: 12px; font-weight: 800;">📷 Capture & Scan Book</button>
             </div>
 
-            <button type="submit" class="btn-neon">Commit Transaction</button>
+            <button type="button" id="manualCommitBtn" class="btn-neon" style="width: 100%; margin-top: 1rem; border-radius: 12px; padding: 12px; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);">Commit Manual Transaction</button>
         </form>
     </div>
 </div>
+
+<!-- Modal dialog overlay -->
+<div id="confirmModal" class="scanner-modal">
+    <div class="scanner-modal-card">
+        <h3 id="modalTitle" style="font-size: 1.3rem; font-weight: 800; margin-bottom: 0.75rem;">Confirm Transaction</h3>
+        <p id="modalMessage" style="font-size: 0.9rem; color: var(--text-mid); line-height: 1.5;"></p>
+        <div class="scanner-modal-btn-row">
+            <button id="modalBtnNo" class="scanner-modal-btn btn-no">Cancel</button>
+            <button id="modalBtnYes" class="scanner-modal-btn btn-yes">Confirm</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Keep focus on barcode input for scanner-ready experience, but allow interacting with dropdowns/buttons
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('select') || e.target.closest('input') || e.target.closest('button')) {
-            return;
+    let streamInstance = null;
+    const video = document.getElementById('cameraStream');
+    const scanline = document.getElementById('scanline');
+    const statusText = document.getElementById('scannerStatus');
+    const startStopBtn = document.getElementById('startStopBtn');
+    const scanBtn = document.getElementById('scanBtn');
+    const canvas = document.getElementById('snapshotCanvas');
+    const studentSelect = document.getElementById('studentSelect');
+    const bookSelect = document.getElementById('bookSelect');
+    
+    // Modal controls
+    const modal = document.getElementById('confirmModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const btnYes = document.getElementById('modalBtnYes');
+    const btnNo = document.getElementById('modalBtnNo');
+
+    async function initCamera() {
+        try {
+            statusText.innerText = "Starting camera...";
+            streamInstance = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            video.srcObject = streamInstance;
+            statusText.innerText = "Camera Active - Center Book Cover";
+            scanline.style.display = 'block';
+            startStopBtn.innerText = "Stop Camera";
+            scanBtn.disabled = false;
+        } catch (err) {
+            console.error("Camera access failed:", err);
+            statusText.innerText = "Failed to start camera";
+            scanline.style.display = 'none';
+            scanBtn.disabled = true;
         }
-        const barcodeInput = document.getElementById('barcode_input');
-        if (barcodeInput) {
-            barcodeInput.focus();
+    }
+
+    function stopCamera() {
+        if (streamInstance) {
+            streamInstance.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+            streamInstance = null;
+        }
+        statusText.innerText = "Camera Stopped";
+        scanline.style.display = 'none';
+        startStopBtn.innerText = "Start Camera";
+        scanBtn.disabled = true;
+    }
+
+    startStopBtn.addEventListener('click', () => {
+        if (streamInstance) {
+            stopCamera();
+        } else {
+            initCamera();
         }
     });
+
+    // Capture image & query VLM API
+    scanBtn.addEventListener('click', async () => {
+        if (!streamInstance) return;
+        
+        statusText.innerText = "Capturing cover frame...";
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        scanBtn.disabled = true;
+        
+        canvas.toBlob(async (blob) => {
+            try {
+                const formData = new FormData();
+                formData.append('front', blob, 'screenshot.jpg');
+                
+                statusText.innerText = "Uploading frame...";
+                const uploadRes = await fetch('/admin/api/upload-cover', {
+                    method: 'POST',
+                    body: formData
+                });
+                const uploadData = await uploadRes.json();
+                if (uploadData.status !== 'success') {
+                    statusText.innerText = "Upload failed: " + uploadData.message;
+                    scanBtn.disabled = false;
+                    return;
+                }
+                
+                const coverUrl = uploadData.cover_url;
+                statusText.innerText = "Analyzing book cover (AI Model)...";
+                
+                const scanRes = await fetch('/api/scan-vision', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cover_url: coverUrl })
+                });
+                const scanData = await scanRes.json();
+                if (scanData.error) {
+                    statusText.innerText = "AI scan failed: " + scanData.error;
+                    scanBtn.disabled = false;
+                    return;
+                }
+                
+                const title = scanData.title || "";
+                const author = scanData.author || "";
+                const isbn = scanData.isbn || "";
+                const publisher = scanData.publisher || "";
+                const description = scanData.description || "";
+                
+                if (!title || !author) {
+                    statusText.innerText = "AI could not identify Title/Author. Please try again.";
+                    scanBtn.disabled = false;
+                    return;
+                }
+                
+                statusText.innerText = "Checking catalog availability...";
+                const checkRes = await fetch('/api/check-book-availability', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, author, isbn })
+                });
+                const checkData = await checkRes.json();
+                
+                scanBtn.disabled = false;
+                
+                const studentId = studentSelect.value;
+                const studentName = studentSelect.options[studentSelect.selectedIndex].text.split('(')[0].trim();
+                
+                if (checkData.found) {
+                    statusText.innerText = "Book found in library!";
+                    const book = checkData.book;
+                    showModal(
+                        "Book Found",
+                        `Book "${book.title}" by ${book.author} is available. Do you want to issue it to ${studentName}?`,
+                        async () => {
+                            statusText.innerText = "Issuing book...";
+                            const issueRes = await fetch('/api/issue-scanned-book', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ student_id: studentId, book_id: book.id })
+                            });
+                            const issueData = await issueRes.json();
+                            if (issueData.success) {
+                                alert(issueData.message);
+                                window.location.reload();
+                            } else {
+                                alert(issueData.error);
+                            }
+                        }
+                    );
+                } else {
+                    statusText.innerText = "Book not found in library.";
+                    showModal(
+                        "Book Not Available",
+                        `"${title}" by ${author} is not in the library. Do you want to add this book and auto-issue it to ${studentName}?`,
+                        async () => {
+                            statusText.innerText = "Adding book to catalog...";
+                            const addRes = await fetch('/api/add-scanned-book', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ title, author, publisher, isbn, description })
+                            });
+                            const addData = await addRes.json();
+                            if (!addData.success) {
+                                alert(addData.error);
+                                return;
+                            }
+                            
+                            statusText.innerText = "Auto-issuing book to student...";
+                            const issueRes = await fetch('/api/issue-scanned-book', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ student_id: studentId, book_id: addData.book.id })
+                            });
+                            const issueData = await issueRes.json();
+                            if (issueData.success) {
+                                alert(`Success: Book added and auto-issued to ${studentName}.`);
+                                window.location.reload();
+                            } else {
+                                alert(`Book added, but auto-issue failed: ${issueData.error}`);
+                            }
+                        }
+                    );
+                }
+            } catch (err) {
+                console.error("Scanning failed:", err);
+                statusText.innerText = "System error occurred during scan";
+                scanBtn.disabled = false;
+            }
+        }, 'image/jpeg', 0.85);
+    });
+
+    // Manual issue fallback
+    document.getElementById('manualCommitBtn').addEventListener('click', async () => {
+        const studentId = studentSelect.value;
+        const bookId = bookSelect.value;
+        if (!bookId) {
+            alert("Please select a book for manual issuance.");
+            return;
+        }
+        
+        const studentName = studentSelect.options[studentSelect.selectedIndex].text.split('(')[0].trim();
+        const bookTitle = bookSelect.options[bookSelect.selectedIndex].text;
+        
+        showModal(
+            "Confirm Manual Issue",
+            `Do you want to issue "${bookTitle}" to ${studentName}?`,
+            async () => {
+                const res = await fetch('/api/issue-scanned-book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id: studentId, book_id: bookId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.error || "Failed to issue book.");
+                }
+            }
+        );
+    });
+
+    function showModal(title, msg, onConfirm) {
+        modalTitle.innerText = title;
+        modalMessage.innerText = msg;
+        modal.style.display = 'flex';
+        
+        btnYes.onclick = () => {
+            modal.style.display = 'none';
+            if (onConfirm) onConfirm();
+        };
+        
+        btnNo.onclick = () => {
+            modal.style.display = 'none';
+        };
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', initCamera);
 </script>
 {% endblock %}

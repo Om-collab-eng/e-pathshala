@@ -426,6 +426,92 @@
                 }
             }
             
+            // 2.5 Librarian / Admin Sidebar injection
+            const librarianSidebar = document.querySelector('.ld-sidebar');
+            if (librarianSidebar) {
+                const nav = librarianSidebar.querySelector('.ld-nav');
+                if (nav && !nav.querySelector('.embedded-nav-controls')) {
+                    const container = document.createElement('div');
+                    container.className = 'embedded-nav-controls';
+                    container.style.display = 'flex';
+                    container.style.flexDirection = 'column';
+                    container.style.gap = '6px';
+                    container.style.marginTop = '1.5rem';
+                    container.style.paddingTop = '1.5rem';
+                    container.style.borderTop = '1px solid var(--border, #e2e8f0)';
+                    
+                    const backBtn = document.createElement('button');
+                    backBtn.className = 'ld-nav-link';
+                    backBtn.type = 'button';
+                    backBtn.style.width = '100%';
+                    backBtn.innerHTML = '<div class="ld-nav-icon">⬅️</div>Go Back';
+                    backBtn.onclick = () => window.history.back();
+                    
+                    const homeBtn = document.createElement('button');
+                    homeBtn.className = 'ld-nav-link';
+                    homeBtn.type = 'button';
+                    homeBtn.style.width = '100%';
+                    homeBtn.innerHTML = '<div class="ld-nav-icon">🏠</div>Go Home';
+                    homeBtn.onclick = () => window.location.href = '/';
+                    
+                    const themeBtn = document.createElement('button');
+                    themeBtn.className = 'ld-nav-link';
+                    themeBtn.id = 'embeddedThemeToggle';
+                    themeBtn.type = 'button';
+                    themeBtn.style.width = '100%';
+                    const currentTheme = html.getAttribute('data-theme') || 'dark';
+                    const themeIconSymbol = currentTheme === 'dark' ? '🌙' : '☀️';
+                    themeBtn.innerHTML = `<div class="ld-nav-icon" id="embeddedThemeIcon">${themeIconSymbol}</div>Appearance`;
+                    themeBtn.onclick = toggleTheme;
+                    
+                    container.appendChild(backBtn);
+                    container.appendChild(homeBtn);
+                    container.appendChild(themeBtn);
+                    nav.appendChild(container);
+                }
+            }
+
+            // 2.6 Personal Library Sidebar injection
+            const personalSidebar = document.querySelector('.personal-sidebar');
+            if (personalSidebar) {
+                const nav = personalSidebar.querySelector('.personal-nav');
+                if (nav && !nav.querySelector('.embedded-nav-controls')) {
+                    const container = document.createElement('div');
+                    container.className = 'embedded-nav-controls';
+                    container.style.display = 'flex';
+                    container.style.flexDirection = 'column';
+                    container.style.gap = '6px';
+                    container.style.marginTop = '1.5rem';
+                    container.style.paddingTop = '1.5rem';
+                    container.style.borderTop = '1px solid var(--glass-border, rgba(148, 163, 184, 0.15))';
+                    
+                    const backBtn = document.createElement('a');
+                    backBtn.className = 'personal-nav-link';
+                    backBtn.href = '#';
+                    backBtn.innerHTML = '<span>⬅️</span> Go Back';
+                    backBtn.onclick = (e) => { e.preventDefault(); window.history.back(); };
+                    
+                    const homeBtn = document.createElement('a');
+                    homeBtn.className = 'personal-nav-link';
+                    homeBtn.href = '/';
+                    homeBtn.innerHTML = '<span>🏠</span> Go Home';
+                    
+                    const themeBtn = document.createElement('a');
+                    themeBtn.className = 'personal-nav-link';
+                    themeBtn.href = '#';
+                    themeBtn.id = 'embeddedThemeToggle';
+                    const currentTheme = html.getAttribute('data-theme') || 'dark';
+                    const themeIconSymbol = currentTheme === 'dark' ? '🌙' : '☀️';
+                    themeBtn.innerHTML = `<span id="embeddedThemeIcon">${themeIconSymbol}</span> Appearance`;
+                    themeBtn.onclick = (e) => { e.preventDefault(); toggleTheme(); };
+                    
+                    container.appendChild(backBtn);
+                    container.appendChild(homeBtn);
+                    container.appendChild(themeBtn);
+                    nav.appendChild(container);
+                }
+            }
+            
             // 3. Super Admin theme toggle sync
             const saThemeToggle = document.getElementById('superAdminThemeToggle');
             if (saThemeToggle) {

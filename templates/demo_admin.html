@@ -522,14 +522,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 <span style="margin-left:auto; background:#f97316; color:white; font-size:0.62rem; font-weight:800; padding:2px 7px; border-radius:20px;">{{ pending_reviews|length }}</span>
                 {% endif %}
             </button>
-            {% if school_perms.canUsePublishing %}
             <button class="ld-nav-link tab-btn" onclick="switchTab('moderation', this)">
-                <div class="ld-nav-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                </div>
-                Moderation
+                <div class="ld-nav-icon">🔍</div>
+                Content Review
             </button>
-            {% endif %}
+            <a href="/digital-library" class="ld-nav-link" style="text-decoration: none;">
+                <div class="ld-nav-icon">🌐</div>
+                Digital Library
+            </a>
             <button class="ld-nav-link tab-btn" onclick="switchTab('reports', this)">
                 <div class="ld-nav-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -1281,7 +1281,6 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             </div>
 
             <!-- =================== 6. MODERATION TAB =================== -->
-            {% if school_perms.canUsePublishing %}
             <div id="tab-moderation" class="tab-content" style="display: none;">
                 <div class="ld-panel" style="text-align: center; padding: 3.5rem 2rem;">
                     <div style="font-size: 3rem; margin-bottom: 1rem;">⚖️</div>
@@ -1295,7 +1294,6 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                     </div>
                 </div>
             </div>
-            {% endif %}
 
             <!-- =================== 7. REPORTS & HUB TAB =================== -->
             <div id="tab-reports" class="tab-content" style="display: none;">
