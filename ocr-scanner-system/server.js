@@ -111,7 +111,7 @@ app.post('/api/scan', upload.single('cover_image'), async (req, res) => {
         }
 
         // Call NVIDIA Integration API to parse metadata from OCR text using nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
-        const nvidiaApiKey = (process.env.NVIDIA_API_KEY || "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").trim();
+        const nvidiaApiKey = (process.env.NVIDIA_API_KEY || "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").trim();
 
         console.log('[AI] Querying NVIDIA Integrate (nvidia/nemotron-3-nano-omni-30b-a3b-reasoning) for metadata extraction...');
 
@@ -148,22 +148,20 @@ ${ocrText}
         let response = await axios.post(
             'https://integrate.api.nvidia.com/v1/chat/completions',
             {
-                model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
+                model: 'nvidia/nemotron-nano-12b-v2-vl',
                 messages: [
+                    {
+                        role: 'system',
+                        content: '/think'
+                    },
                     {
                         role: 'user',
                         content: aiPrompt
                     }
                 ],
-                temperature: 0.6,
-                top_p: 0.95,
-                max_tokens: 65536,
-                extra_body: {
-                    chat_template_kwargs: {
-                        enable_thinking: true
-                    },
-                    reasoning_budget: 16384
-                },
+                temperature: 1.0,
+                top_p: 1.0,
+                max_tokens: 4096,
                 stream: false
             },
             {
@@ -237,22 +235,20 @@ JSON Schema:
                 const validateRes = await axios.post(
                     'https://integrate.api.nvidia.com/v1/chat/completions',
                     {
-                        model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
+                        model: 'nvidia/nemotron-nano-12b-v2-vl',
                         messages: [
+                            {
+                                role: 'system',
+                                content: '/think'
+                            },
                             {
                                 role: 'user',
                                 content: validationPrompt
                             }
                         ],
-                        temperature: 0.6,
-                        top_p: 0.95,
-                        max_tokens: 8192,
-                        extra_body: {
-                            chat_template_kwargs: {
-                                enable_thinking: true
-                            },
-                            reasoning_budget: 2048
-                        },
+                        temperature: 1.0,
+                        top_p: 1.0,
+                        max_tokens: 4096,
                         stream: false
                     },
                     {

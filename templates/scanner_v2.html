@@ -507,6 +507,8 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 </div>
             </div>
 
+            </script>
+
             <!-- =================== CAMERA MODAL =================== -->
             <div id="cameraModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:99999; flex-direction:column; align-items:center; justify-content:center;">
                 <div style="width:100%; max-width:500px; padding:1.5rem; display:flex; flex-direction:column; align-items:center; gap:1rem;">
@@ -599,6 +601,15 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                         </div>
 
                         <div class="ld-grid-fields">
+                            <div class="ld-form-group" style="grid-column: span 2;">
+                                <label style="color: var(--lp); font-weight: 800;">Link to Purchase Acquisition (Optional)</label>
+                                <select id="f_acquisition" class="ld-input" style="border-color: var(--lp-mid);">
+                                    <option value="">-- Direct Cataloging (Non-Acquisition Book) --</option>
+                                    {% for a in acquisitions %}
+                                    <option value="{{ a.id }}">{{ a.bill_number }} ({{ a.bill_date }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                             <div class="ld-form-group" style="grid-column: span 2;">
                                 <label>Book Title</label>
                                 <input type="text" id="f_title" class="ld-input" required>
@@ -743,7 +754,21 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         <button class="ld-modal-close" onclick="closeModal('bookExistsModal')">✕</button>
         <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
         <h3 id="existsBookTitle" class="ld-modal-title" style="margin-bottom: 0.5rem; font-family: 'Outfit'; font-weight: 800; color: var(--text);">Book Already Exists</h3>
-        <p id="existsBookMeta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1.8rem; line-height: 1.5;">This book is already cataloged in your library database.</p>
+        <p id="existsBookMeta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.5;">This book is already cataloged in your library database.</p>
+        
+        <!-- Dynamic Acquisition Status Alert / Link Picker -->
+        <div id="existsAcqAlert" style="margin-bottom: 1.8rem; padding: 12px; border-radius: 12px; font-size: 0.8rem; text-align: left; line-height: 1.4;">
+        </div>
+        
+        <!-- Safe JSON payload container for active acquisitions -->
+        <script type="application/json" id="acqsData">
+            [
+                {% for a in acquisitions %}
+                {"id": {{ a.id }}, "bill_number": {{ a.bill_number|tojson }}, "bill_date": {{ a.bill_date|tojson }}}
+                {% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        </script>
         
         <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
             <button onclick="handleExistsIssue()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--lb); color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">📖 Issue Book</button>
@@ -981,9 +1006,11 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             
             if (scanData.existing_book) {
                 try {
+                    const acqId = scanData.acquisition ? scanData.acquisition.acq_id : null;
                     const addCopyRes = await fetch(`/admin/api/add-copy/${scanData.existing_book.id}`, {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'}
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ acquisition_id: acqId })
                     });
                     const addCopyData = await addCopyRes.json();
                     if (addCopyData.status === 'success') {
@@ -1118,7 +1145,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             const persistentCoverUrl = data.cover_url_db || data.cover_url;
             
             if (scanData.existing_book) {
-                showExistingBookPopup(scanData.existing_book);
+                showExistingBookPopup(scanData.existing_book, scanData.acquisition);
             } else {
                 populateReviewScreen(meta, persistentCoverUrl);
             }
@@ -1186,7 +1213,8 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             cover_url: coverImageUrl,
             language: document.getElementById('f_language').value,
             publication_year: document.getElementById('f_year').value,
-            tags: document.getElementById('f_tags').value
+            tags: document.getElementById('f_tags').value,
+            acquisition_id: document.getElementById('f_acquisition').value || null
         };
 
         try {
@@ -1210,13 +1238,49 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     let currentExistsBook = null;
     let deleteConfirmCount = 0;
 
-    function showExistingBookPopup(book) {
+    function showExistingBookPopup(book, acquisition = null) {
         currentExistsBook = book;
         deleteConfirmCount = 0;
         
         document.getElementById('existsBookTitle').innerText = book.title;
         document.getElementById('existsBookMeta').innerHTML = `Author: <strong>${book.author}</strong><br>In Stock: <strong>${book.total_copies}</strong> (Available: ${book.available_copies})`;
         
+        // Populate Acquisition Status
+        const acqAlert = document.getElementById('existsAcqAlert');
+        if (acquisition) {
+            acqAlert.style.background = 'var(--lg-light, rgba(34, 197, 94, 0.12))';
+            acqAlert.style.border = '1px solid rgba(34, 197, 94, 0.25)';
+            acqAlert.style.color = 'var(--lg, #22c55e)';
+            acqAlert.innerHTML = `
+                🟢 <strong>Acquisition Found:</strong><br>
+                This book belongs to acquisition invoice <strong>Bill #${acquisition.bill_number}</strong> (${acquisition.bill_date}) from <strong>${acquisition.vendor_name || 'Vendor'}</strong>.
+                <input type="hidden" id="existsAcqSelect" value="${acquisition.acq_id}">
+            `;
+        } else {
+            acqAlert.style.background = 'var(--lam-light, rgba(245, 158, 11, 0.12))';
+            acqAlert.style.border = '1px solid rgba(245, 158, 11, 0.25)';
+            acqAlert.style.color = 'var(--lam, #f59e0b)';
+            
+            // Build the selector options using the acquisitions list
+            let optionsHtml = '<option value="">-- Direct Cataloging (Non-Acquisition Copy) --</option>';
+            const acqsEl = document.getElementById('acqsData');
+            const acqs = JSON.parse(acqsEl ? acqsEl.textContent.trim() : '[]');
+            acqs.forEach(a => {
+                optionsHtml += `<option value="${a.id}">${a.bill_number} (${a.bill_date})</option>`;
+            });
+            
+            acqAlert.innerHTML = `
+                ⚠️ <strong>Book is not in any Acquisition:</strong><br>
+                This book was not found in any active purchase acquisitions.<br>
+                <div style="margin-top: 8px;">
+                    <label style="font-weight: bold; font-size: 0.72rem; display: block; margin-bottom: 4px; color: var(--text);">Choose Acquisition to link:</label>
+                    <select id="existsAcqSelect" style="width: 100%; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border); font-family: inherit; font-size: 0.8rem; background: var(--white); color: var(--text);">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            `;
+        }
+
         // Reset delete button state
         const delBtn = document.getElementById('existsDeleteBtn');
         delBtn.innerText = "🗑️ Delete Book";
@@ -1255,10 +1319,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 
     async function handleExistsAddCopy() {
         if (!currentExistsBook) return;
+        const acqSelect = document.getElementById('existsAcqSelect');
+        const acqId = acqSelect ? acqSelect.value : '';
+        
         try {
             const res = await fetch(`/admin/api/add-copy/${currentExistsBook.id}`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'}
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ acquisition_id: acqId || null })
             });
             const data = await res.json();
             if (data.status === 'success') {

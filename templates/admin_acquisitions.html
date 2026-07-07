@@ -1,0 +1,1003 @@
+{% extends "base.html" %}
+
+{% block title %}Book Acquisition — librika.in{% endblock %}
+
+{% block content %}
+<style>
+    /* Styling variables and themes are inherited from base.html (style.css) */
+    /* Adaptive styling utilizing Librika variables */
+    .acq-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+        color: var(--text-high, #1a1a1a);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .acq-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .acq-header h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 0;
+        background: linear-gradient(135deg, #a78bfa, #6366f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .acq-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .acq-stat-card {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: var(--text-high, #1a1a1a);
+        transition: transform 0.2s ease;
+    }
+
+    .acq-stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .acq-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .acq-stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+    }
+
+    .acq-stat-label {
+        font-size: 0.78rem;
+        color: var(--text-low, #718096);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .acq-panel {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: var(--text-high, #1a1a1a);
+    }
+
+    .acq-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color, #e2e8f0);
+        padding-bottom: 1rem;
+    }
+
+    .acq-panel-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+
+    /* Modal / Form elements */
+    .acq-btn {
+        background: var(--accent-primary, #5c3cf3);
+        color: white !important;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .acq-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .acq-btn-alt {
+        background: transparent;
+        color: var(--text-high, #1a1a1a);
+        border: 1px solid var(--border-color, #e2e8f0);
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .acq-btn-alt:hover {
+        background: rgba(0,0,0,0.03);
+    }
+
+    html[data-theme="dark"] .acq-btn-alt:hover {
+        background: rgba(255,255,255,0.05);
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--text-mid, #4a4a4a) !important;
+    }
+
+    .form-input, .form-select {
+        width: 100%;
+        background: var(--bg-main, #f0f2f5);
+        border: 1px solid var(--border-color, #e2e8f0);
+        color: var(--text-high, #1a1a1a);
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9rem;
+    }
+
+    html[data-theme="dark"] .form-input,
+    html[data-theme="dark"] .form-select {
+        background: var(--bg-main, #0b0f19);
+        border-color: var(--border-color, #374151);
+        color: var(--text-high, #f9fafb);
+    }
+
+    .form-input:focus, .form-select:focus {
+        border-color: var(--accent-primary, #5c3cf3);
+        outline: none;
+    }
+
+    /* Table styling */
+    .acq-table-container {
+        overflow-x: auto;
+        margin-top: 1rem;
+    }
+
+    .acq-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.88rem;
+    }
+
+    .acq-table th {
+        background: var(--bg-main, #f0f2f5);
+        padding: 12px;
+        color: var(--text-mid, #4a4a4a);
+        font-weight: 700;
+        border-bottom: 2px solid var(--border-color, #e2e8f0);
+    }
+
+    html[data-theme="dark"] .acq-table th {
+        background: var(--bg-main, #0b0f19);
+        color: var(--text-mid, #d1d5db);
+        border-bottom: 2px solid var(--border-color, #374151);
+    }
+
+    .acq-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color, #e2e8f0);
+    }
+
+    html[data-theme="dark"] .acq-table td {
+        border-bottom: 1px solid var(--border-color, #374151);
+    }
+
+    .acq-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .acq-badge-completed { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .acq-badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+    /* Custom Spreadsheet Grid Editor */
+    .editor-grid {
+        width: 100%;
+        overflow-x: auto;
+        background: var(--bg-main, #f0f2f5);
+        border-radius: 12px;
+        border: 1px solid var(--border-color, #e2e8f0);
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    html[data-theme="dark"] .editor-grid {
+        background: var(--bg-main, #0b0f19);
+        border-color: var(--border-color, #374151);
+    }
+
+    .grid-row {
+        display: grid;
+        grid-template-columns: 140px 180px 140px 80px 90px 100px 100px 120px 80px;
+        gap: 8px;
+        margin-bottom: 8px;
+        align-items: center;
+    }
+
+    .grid-header {
+        font-weight: bold;
+        color: var(--text-mid, #4a4a4a);
+        border-bottom: 1px solid var(--border-color, #e2e8f0);
+        padding-bottom: 6px;
+        margin-bottom: 12px;
+    }
+
+    html[data-theme="dark"] .grid-header {
+        color: var(--text-mid, #d1d5db);
+        border-bottom: 1px solid var(--border-color, #374151);
+    }
+
+    .grid-cell input {
+        width: 100%;
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        color: var(--text-high, #1a1a1a);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+    }
+
+    html[data-theme="dark"] .grid-cell input {
+        background: var(--bg-surface, #111827);
+        border-color: var(--border-color, #374151);
+        color: var(--text-high, #f9fafb);
+    }
+
+    /* Accession / Barcode print layout */
+    .barcode-sheet {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .spine-label {
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 4px;
+        text-align: center;
+        font-family: monospace;
+        font-size: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    @media print {
+        @page {
+            margin: 10mm;
+            size: portrait;
+        }
+        /* Hide all page layouts, menus, buttons and headers */
+        body, html {
+            background: white !important;
+            color: black !important;
+        }
+        .sidebar, .navbar, .acq-container, .modal-backdrop, #modalActions, 
+        #successSegment > span, #successSegment > strong, #successSegment > p, #successSegment > button {
+            display: none !important;
+        }
+        #newAcquisitionModal {
+            position: absolute !important;
+            inset: 0 !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            z-index: auto !important;
+        }
+        #newAcquisitionModal > div {
+            background: transparent !important;
+            border: none !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+        }
+        #newAcquisitionModal > div > *:not(#successSegment) {
+            display: none !important;
+        }
+        #successSegment {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important;
+        }
+        #successSegment > *:not(#accessionTagsContainer) {
+            display: none !important;
+        }
+        #accessionTagsContainer {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 15px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+        .spine-label {
+            border: 1.5px solid #000 !important;
+            padding: 15px 10px !important;
+            background: white !important;
+            color: black !important;
+            border-radius: 6px !important;
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+            text-align: center !important;
+            font-family: monospace !important;
+            font-size: 0.85rem !important;
+            min-height: 90px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
+    }
+</style>
+
+<div class="acq-container">
+    <!-- Header -->
+    <div class="acq-header">
+        <div>
+            <h1>Book Acquisition</h1>
+            <p style="color: var(--text-muted, #9ca3af); font-size: 0.88rem; margin-top: 4px;">Invoices, Vendor management, and cataloging workflows.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="acq-btn-alt" onclick="openNonAcqBooksModal()">📚 Non-Acquisition Books</button>
+            <button class="acq-btn-alt" onclick="openModal('addVendorModal')">👤 Add Vendor</button>
+            <button class="acq-btn" onclick="openNewAcquisitionModal()">⚡ New Acquisition</button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="acq-stats">
+        <div class="acq-stat-card">
+            <div class="acq-stat-icon">📁</div>
+            <div>
+                <div class="acq-stat-value">{{ stats.total_acquisitions }}</div>
+                <div class="acq-stat-label">Invoices</div>
+            </div>
+        </div>
+        <div class="acq-stat-card">
+            <div class="acq-stat-icon">📚</div>
+            <div>
+                <div class="acq-stat-value">{{ stats.total_books }}</div>
+                <div class="acq-stat-label">Titles Cataloged</div>
+            </div>
+        </div>
+        <div class="acq-stat-card">
+            <div class="acq-stat-icon">📖</div>
+            <div>
+                <div class="acq-stat-value">{{ stats.total_copies }}</div>
+                <div class="acq-stat-label">Copies Added</div>
+            </div>
+        </div>
+        <div class="acq-stat-card">
+            <div class="acq-stat-icon">₹</div>
+            <div>
+                <div class="acq-stat-value">₹{{ "%.2f"|format(stats.total_value) }}</div>
+                <div class="acq-stat-label">Total Spend</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main List Panel -->
+    <div class="acq-panel">
+        <div class="acq-panel-header">
+            <span class="acq-panel-title">Acquisition Invoice History</span>
+        </div>
+
+        <div class="acq-table-container">
+            {% if acquisitions %}
+            <table class="acq-table">
+                <thead>
+                    <tr>
+                        <th>Bill No.</th>
+                        <th>Bill Date</th>
+                        <th>Vendor</th>
+                        <th>Total Titles</th>
+                        <th>Total Copies</th>
+                        <th>Total Amount</th>
+                        <th>Processed By</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in acquisitions %}
+                     <tr id="acq-row-{{ a.id }}">
+                         <td>
+                             {% if a.invoice_image %}
+                             <a href="{{ a.invoice_image }}" target="_blank" title="View Invoice File" style="color: var(--accent-primary, #5c3cf3); text-decoration: underline; font-weight: 700;">{{ a.bill_number }} 📄</a>
+                             {% else %}
+                             <strong>{{ a.bill_number }}</strong>
+                             {% endif %}
+                         </td>
+                         <td>{{ a.bill_date }}</td>
+                         <td>{{ a.vendor_name }}</td>
+                         <td>{{ a.total_books }}</td>
+                         <td>{{ a.total_copies }}</td>
+                         <td>₹{{ "%.2f"|format(a.total_amount) }}</td>
+                         <td>{{ a.user_name or 'System' }}</td>
+                         <td><span class="acq-badge acq-badge-completed">{{ a.status }}</span></td>
+                         <td>
+                             <button onclick="openEditAcquisition({{ a.id }})" style="background: none; border: none; color: var(--accent-primary, #5c3cf3); cursor: pointer; font-size: 0.8rem; font-weight: 700; margin-right: 8px;">✏️ Edit</button>
+                             {% if 'manage_students' in session.get('permissions', []) %}
+                             <button onclick="deleteAcquisition({{ a.id }})" style="background: none; border: none; color: #f87171; cursor: pointer; font-size: 0.8rem; font-weight: 700;">🗑️ Delete</button>
+                             {% endif %}
+                         </td>
+                     </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted, #9ca3af);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                <h3>No acquisitions logged yet</h3>
+                <p style="font-size: 0.8rem; margin-top: 4px;">Click "New Acquisition" to add books to your library catalog.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ================= NEW ACQUISITION MODAL ================= -->
+<div id="newAcquisitionModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; justify-content: center; align-items: center; padding: 2rem; overflow-y: auto;">
+    <div style="background: var(--bg-surface, #1f2937); border: 1px solid var(--border-color, #374151); border-radius: 20px; max-width: 1000px; width: 100%; padding: 2rem; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #374151); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.35rem; font-weight: 800;">Create Book Acquisition</h2>
+            <button onclick="closeModal('newAcquisitionModal')" style="background: none; border: none; color: var(--text-high, #1a1a1a); font-size: 1.2rem; cursor: pointer;">✕</button>
+        </div>
+
+        <input type="hidden" id="editAcquisitionId" value="">
+        <input type="hidden" id="uploadedInvoiceUrl" value="">
+
+        <!-- 1. Invoice upload / metadata form -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;" id="acqFormSection">
+            <div class="form-group">
+                <label class="form-label">Bill / Invoice Number</label>
+                <input type="text" class="form-input" id="billNo" placeholder="e.g. BILL-99201">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Bill Date</label>
+                <input type="date" class="form-input" id="billDate">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Vendor</label>
+                <select class="form-select" id="vendorSelect">
+                    <option value="">-- Select Vendor --</option>
+                    {% for v in vendors %}
+                    <option value="{{ v.id }}">{{ v.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Total Amount (₹)</label>
+                <input type="number" class="form-input" id="billAmount" placeholder="0.00">
+            </div>
+        </div>
+
+        <div style="border: 2px dashed var(--border-color, #e2e8f0); padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1.5rem 0; transition: all 0.2s ease;" 
+             id="ocrUploadContainer"
+             ondragover="handleDragOver(event)"
+             ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event)">
+            <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📄</span>
+            <span style="font-weight: bold; font-size: 0.9rem;">Scan/Upload Invoice Bill</span>
+            <p style="font-size: 0.78rem; color: var(--text-muted, #9ca3af); margin-top: 4px; margin-bottom: 12px;">Supports invoice image or PDF bill format</p>
+            <input type="file" id="invoiceFile" accept="image/*,application/pdf" style="display: none;" onchange="handleInvoiceScan()">
+            <button class="acq-btn-alt" onclick="document.getElementById('invoiceFile').click()">Choose File &amp; Scan with AI ✨</button>
+            <div id="ocrLoading" style="display: none; margin-top: 1rem; color: var(--accent-primary, #5c3cf3); font-weight: bold; font-size: 0.8rem;">
+                <span class="ld-spinner" style="display: inline-block; vertical-align: middle; margin-right: 8px; width: 18px; height: 18px;"></span>
+                AI is parsing invoice bill parameters...
+            </div>
+        </div>
+
+        <!-- Invoice file attachment preview -->
+        <div id="uploadedInvoicePreview" style="display: none; margin: 1rem 0; align-items: center; justify-content: center; gap: 12px; padding: 1rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; background: var(--bg-main, #f0f2f5);">
+            <span style="font-size: 1.5rem;">📄</span>
+            <div style="text-align: left; flex-grow: 1;">
+                <span style="font-weight: bold; font-size: 0.85rem; display: block; color: var(--text-high, #1a1a1a);">Invoice File Attached</span>
+                <a id="invoicePreviewLink" href="" target="_blank" style="color: var(--accent-primary, #5c3cf3); font-weight: bold; text-decoration: underline; font-size: 0.8rem;">View Original Invoice</a>
+            </div>
+            <button type="button" class="acq-btn-alt" onclick="clearInvoiceImage()" style="padding: 6px 12px; font-size: 0.75rem; border-color: var(--accent-error, #f43f5e); color: var(--accent-error, #f43f5e); background: transparent;">Remove File</button>
+        </div>
+
+        <!-- 2. Interactive grid spreadsheet list -->
+        <h3 style="font-size: 1rem; font-weight: bold; margin-top: 1.5rem;">Review &amp; Edit Catalog Items</h3>
+        <p style="font-size: 0.75rem; color: var(--text-muted, #9ca3af); margin-bottom: 10px;">Review details extracted. Click "+ Add Line" to add custom rows manually.</p>
+
+        <div class="editor-grid">
+            <div class="grid-row grid-header">
+                <div>ISBN</div>
+                <div>Book Title</div>
+                <div>Author</div>
+                <div>Qty</div>
+                <div>Price (₹)</div>
+                <div>Shelf</div>
+                <div>Rack</div>
+                <div>Category / Subject</div>
+                <div>Actions</div>
+            </div>
+            <div id="gridBody">
+                <!-- Rows will be injected here -->
+            </div>
+        </div>
+
+        <div style="margin-top: 1rem; display: flex; gap: 10px;">
+            <button class="acq-btn-alt" onclick="addGridRow()">➕ Add Line</button>
+        </div>
+
+        <!-- Print Barcodes segment (displays after success) -->
+        <div id="successSegment" style="display: none; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 1.25rem; border-radius: 12px; margin-top: 1.5rem;">
+            <span style="font-size: 1.2rem; margin-right: 6px;">🎉</span>
+            <strong style="color: #34d399;">Acquisition Saved Successfully!</strong>
+            <p style="font-size: 0.8rem; color: var(--text-muted, #9ca3af); margin-top: 4px; margin-bottom: 12px;">Generated physical accession spine tags for this purchase:</p>
+            <div class="barcode-sheet" id="accessionTagsContainer">
+                <!-- Spine labels show up here -->
+            </div>
+            <button class="acq-btn" style="margin-top: 1rem;" onclick="window.print()">🖨️ Print Labels</button>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color, #374151); padding-top: 1rem; margin-top: 2rem;" id="modalActions">
+            <button class="acq-btn-alt" onclick="closeModal('newAcquisitionModal')">Cancel</button>
+            <button class="acq-btn" onclick="saveAcquisition()">Save &amp; Catalog Complete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= ADD VENDOR MODAL ================= -->
+<div id="addVendorModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 10000; justify-content: center; align-items: center; padding: 2rem;">
+    <div style="background: var(--bg-surface, #1f2937); border: 1px solid var(--border-color, #374151); border-radius: 20px; max-width: 480px; width: 100%; padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #374151); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.2rem; font-weight: 800;">Register New Vendor</h2>
+            <button onclick="closeModal('addVendorModal')" style="background: none; border: none; color: var(--text-high, #1a1a1a); font-size: 1.2rem; cursor: pointer;">✕</button>
+        </div>
+
+        <form action="/admin/vendors/create" method="POST">
+            <div class="form-group">
+                <label class="form-label">Vendor Name *</label>
+                <input type="text" class="form-input" name="name" required placeholder="e.g. Pearson India">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-input" name="email" placeholder="vendor@example.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="text" class="form-input" name="phone" placeholder="999-888-777">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Physical Address</label>
+                <input type="text" class="form-input" name="address" placeholder="Delhi, India">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color, #374151); padding-top: 1rem; margin-top: 1.5rem;">
+                <button type="button" class="acq-btn-alt" onclick="closeModal('addVendorModal')">Cancel</button>
+                <button type="submit" class="acq-btn">Create Vendor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= NON-ACQUISITION BOOKS MODAL ================= -->
+<div id="nonAcqBooksModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 10000; justify-content: center; align-items: center; padding: 2rem;">
+    <div style="background: var(--bg-surface, #1f2937); border: 1px solid var(--border-color, #374151); border-radius: 20px; max-width: 900px; width: 100%; padding: 2rem; max-height: 85vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #374151); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">📚 Non-Acquisition Books <span style="font-size: 0.75rem; background: var(--lp-light, rgba(92,60,243,0.1)); color: var(--accent-primary, #5c3cf3); padding: 4px 8px; border-radius: 6px; font-weight: 600;" id="nonAcqCount">0</span></h2>
+            <button onclick="closeModal('nonAcqBooksModal')" style="background: none; border: none; color: var(--text-high, #1a1a1a); font-size: 1.2rem; cursor: pointer;">✕</button>
+        </div>
+        
+        <p style="font-size: 0.8rem; color: var(--text-muted, #9ca3af); margin-bottom: 1rem;">These are cataloged books added directly via general/manual scanning without purchase invoices or purchase orders.</p>
+
+        <div style="overflow-x: auto; border: 1px solid var(--border-color, #374151); border-radius: 12px; max-height: 50vh;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.82rem;">
+                <thead style="background: var(--bg-main, #f0f2f5); border-bottom: 1px solid var(--border-color, #374151); position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                        <th style="padding: 12px; font-weight: bold;">Book ID</th>
+                        <th style="padding: 12px; font-weight: bold;">Title</th>
+                        <th style="padding: 12px; font-weight: bold;">Author</th>
+                        <th style="padding: 12px; font-weight: bold;">ISBN</th>
+                        <th style="padding: 12px; font-weight: bold;">Publisher</th>
+                        <th style="padding: 12px; font-weight: bold; text-align: center;">Copies</th>
+                    </tr>
+                </thead>
+                <tbody id="nonAcqTableBody">
+                    <tr>
+                        <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted, #9ca3af);">Loading books...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem; border-top: 1px solid var(--border-color, #374151); padding-top: 1rem;">
+            <button class="acq-btn" onclick="closeModal('nonAcqBooksModal')">Done</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(id) {
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    async function openNonAcqBooksModal() {
+        openModal('nonAcqBooksModal');
+        const body = document.getElementById('nonAcqTableBody');
+        body.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted, #9ca3af);"><span class="ld-spinner" style="display:inline-block; width:20px; height:20px; vertical-align:middle; margin-right:8px;"></span> Loading non-acquisition books...</td></tr>';
+        
+        try {
+            const r = await fetch('/admin/api/non-acquisition-books');
+            const res = await r.json();
+            if (res.status === 'success') {
+                document.getElementById('nonAcqCount').innerText = res.books.length;
+                if (res.books.length === 0) {
+                    body.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted, #9ca3af);">🎉 All cataloged books belong to purchase acquisitions!</td></tr>';
+                } else {
+                    body.innerHTML = '';
+                    res.books.forEach(b => {
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = '1px solid var(--border-color, #374151)';
+                        tr.innerHTML = `
+                            <td style="padding: 12px; font-weight: bold; color: var(--accent-primary, #5c3cf3);">${b.barcode_id}</td>
+                            <td style="padding: 12px; font-weight: bold;">${b.title}</td>
+                            <td style="padding: 12px;">${b.author}</td>
+                            <td style="padding: 12px; color: var(--text-muted, #9ca3af);">${b.isbn || 'None'}</td>
+                            <td style="padding: 12px;">${b.publisher || 'None'}</td>
+                            <td style="padding: 12px; text-align: center; font-weight: bold;">${b.total_copies}</td>
+                        `;
+                        body.appendChild(tr);
+                    });
+                }
+            } else {
+                body.innerHTML = `<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #f87171;">Failed to load: ${res.message || 'Unknown error'}</td></tr>`;
+            }
+        } catch(e) {
+            body.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #f87171;">Error fetching non-acquisition books.</td></tr>';
+        }
+    }
+
+    function closeModal(id) {
+        if (id === 'newAcquisitionModal') {
+            const successVisible = document.getElementById('successSegment').style.display === 'block';
+            if (successVisible) {
+                window.location.reload();
+                return;
+            }
+            document.getElementById('newAcquisitionModal').style.display = 'none';
+            document.getElementById('gridBody').innerHTML = '';
+            document.getElementById('successSegment').style.display = 'none';
+            document.getElementById('modalActions').style.display = 'flex';
+            document.getElementById('billNo').value = '';
+            document.getElementById('billDate').value = '';
+            document.getElementById('vendorSelect').value = '';
+            document.getElementById('billAmount').value = '';
+            document.getElementById('editAcquisitionId').value = '';
+            document.getElementById('uploadedInvoiceUrl').value = '';
+            document.getElementById('uploadedInvoicePreview').style.display = 'none';
+        } else {
+            document.getElementById(id).style.display = 'none';
+        }
+    }
+
+    function openNewAcquisitionModal() {
+        document.getElementById('editAcquisitionId').value = '';
+        document.getElementById('uploadedInvoiceUrl').value = '';
+        document.getElementById('uploadedInvoicePreview').style.display = 'none';
+        document.getElementById('newAcquisitionModal').querySelector('h2').innerText = 'Create Book Acquisition';
+        
+        document.getElementById('billNo').value = '';
+        document.getElementById('billDate').value = '';
+        document.getElementById('vendorSelect').value = '';
+        document.getElementById('billAmount').value = '';
+        document.getElementById('gridBody').innerHTML = '';
+        
+        document.getElementById('successSegment').style.display = 'none';
+        document.getElementById('modalActions').style.display = 'flex';
+        
+        addGridRow();
+        openModal('newAcquisitionModal');
+    }
+
+    async function openEditAcquisition(acqId) {
+        try {
+            const r = await fetch(`/admin/acquisitions/get/${acqId}`);
+            const res = await r.json();
+            if (res.status === 'success' && res.acquisition) {
+                const acq = res.acquisition;
+                
+                document.getElementById('editAcquisitionId').value = acqId;
+                document.getElementById('newAcquisitionModal').querySelector('h2').innerText = 'Edit Book Acquisition';
+                
+                document.getElementById('billNo').value = acq.bill_number || '';
+                document.getElementById('billDate').value = acq.bill_date || '';
+                document.getElementById('vendorSelect').value = acq.vendor_id || '';
+                document.getElementById('billAmount').value = acq.total_amount || '0.00';
+                
+                if (acq.invoice_image) {
+                    document.getElementById('uploadedInvoiceUrl').value = acq.invoice_image;
+                    document.getElementById('invoicePreviewLink').href = acq.invoice_image;
+                    document.getElementById('uploadedInvoicePreview').style.display = 'flex';
+                } else {
+                    document.getElementById('uploadedInvoiceUrl').value = '';
+                    document.getElementById('uploadedInvoicePreview').style.display = 'none';
+                }
+                
+                document.getElementById('gridBody').innerHTML = '';
+                if (res.items && res.items.length) {
+                    res.items.forEach(item => {
+                        addGridRow(item);
+                    });
+                } else {
+                    addGridRow();
+                }
+                
+                document.getElementById('successSegment').style.display = 'none';
+                document.getElementById('modalActions').style.display = 'flex';
+                
+                openModal('newAcquisitionModal');
+            } else {
+                alert("Failed to load acquisition: " + (res.message || 'Unknown error'));
+            }
+        } catch(e) {
+            alert("Error loading acquisition details.");
+        }
+    }
+
+    function clearInvoiceImage() {
+        document.getElementById('uploadedInvoiceUrl').value = '';
+        document.getElementById('uploadedInvoicePreview').style.display = 'none';
+        document.getElementById('invoiceFile').value = '';
+    }
+
+    function addGridRow(data = {}) {
+        const body = document.getElementById('gridBody');
+        const rowId = 'row-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+        
+        const row = document.createElement('div');
+        row.className = 'grid-row';
+        row.id = rowId;
+        row.innerHTML = `
+            <div class="grid-cell"><input type="text" class="row-isbn" value="${data.isbn || ''}" placeholder="ISBN" onchange="lookupIsbn('${rowId}')"></div>
+            <div class="grid-cell"><input type="text" class="row-title" value="${data.title || ''}" placeholder="Title" required></div>
+            <div class="grid-cell"><input type="text" class="row-author" value="${data.author || ''}" placeholder="Author"></div>
+            <div class="grid-cell"><input type="number" class="row-qty" value="${data.quantity || 1}" min="1"></div>
+            <div class="grid-cell"><input type="number" class="row-price" value="${data.unit_price || 0.0}" step="0.01"></div>
+            <div class="grid-cell"><input type="text" class="row-shelf" value="${data.shelf || 'A1'}" placeholder="Shelf"></div>
+            <div class="grid-cell"><input type="text" class="row-rack" value="${data.rack || 'R1'}" placeholder="Rack"></div>
+            <div class="grid-cell"><input type="text" class="row-category" value="${data.category || 'General'}" placeholder="Category"></div>
+            <div class="grid-cell"><button onclick="document.getElementById('${rowId}').remove()" style="background:none; border:none; color:#f87171; cursor:pointer; font-weight:bold;">✕</button></div>
+        `;
+        body.appendChild(row);
+    }
+
+    async function lookupIsbn(rowId) {
+        const row = document.getElementById(rowId);
+        const isbn = row.querySelector('.row-isbn').value.trim();
+        if (!isbn) return;
+        
+        try {
+            const r = await fetch(`/admin/acquisitions/isbn-lookup?isbn=${isbn}`);
+            const res = await r.json();
+            if (res.success) {
+                row.querySelector('.row-title').value = res.title || '';
+                row.querySelector('.row-author').value = res.author || '';
+                row.querySelector('.row-category').value = res.category || '';
+            }
+        } catch(e) {
+            console.error("ISBN lookup failed:", e);
+        }
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        const container = document.getElementById('ocrUploadContainer');
+        container.style.borderColor = 'var(--accent-primary, #5c3cf3)';
+        container.style.backgroundColor = 'rgba(92, 60, 243, 0.05)';
+    }
+
+    function handleDragLeave(e) {
+        e.preventDefault();
+        const container = document.getElementById('ocrUploadContainer');
+        container.style.borderColor = 'var(--border-color, #e2e8f0)';
+        container.style.backgroundColor = 'transparent';
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        const container = document.getElementById('ocrUploadContainer');
+        container.style.borderColor = 'var(--border-color, #e2e8f0)';
+        container.style.backgroundColor = 'transparent';
+        
+        if (e.dataTransfer.files && e.dataTransfer.files.length) {
+            handleInvoiceScan(e.dataTransfer.files[0]);
+        }
+    }
+
+    // Clipboard Paste Listener
+    document.addEventListener('paste', handlePasteEvent);
+
+    function handlePasteEvent(e) {
+        const modal = document.getElementById('newAcquisitionModal');
+        if (modal && modal.style.display !== 'none') {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') === 0 || items[i].type === 'application/pdf') {
+                    const file = items[i].getAsFile();
+                    if (file) {
+                        handleInvoiceScan(file);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    async function handleInvoiceScan(droppedFile = null) {
+        const fileInput = document.getElementById('invoiceFile');
+        const file = droppedFile || (fileInput.files.length ? fileInput.files[0] : null);
+        if (!file) return;
+        
+        const loader = document.getElementById('ocrLoading');
+        loader.style.display = 'block';
+        
+        const fd = new FormData();
+        fd.append('bill_file', file);
+        
+        try {
+            const r = await fetch('/admin/acquisitions/ocr', {
+                method: 'POST',
+                body: fd
+            });
+            const res = await r.json();
+            if (res.status === 'success' && res.data) {
+                document.getElementById('billNo').value = res.data.bill_number || '';
+                document.getElementById('billDate').value = res.data.bill_date || '';
+                document.getElementById('billAmount').value = res.data.total_amount || '';
+                
+                document.getElementById('gridBody').innerHTML = '';
+                if (res.data.items && res.data.items.length) {
+                    res.data.items.forEach(item => {
+                        addGridRow(item);
+                    });
+                }
+            } else {
+                alert("AI Scan failed: " + (res.message || 'Unknown error'));
+            }
+        } catch(e) {
+            alert("Error running AI OCR scan.");
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    async function saveAcquisition() {
+        const billNo = document.getElementById('billNo').value.trim();
+        const billDate = document.getElementById('billDate').value;
+        const vendorId = document.getElementById('vendorSelect').value;
+        const billAmount = document.getElementById('billAmount').value;
+        
+        if (!billNo || !billDate) {
+            alert("Please fill in the Bill Number and Bill Date.");
+            return;
+        }
+        
+        const rows = document.querySelectorAll('#gridBody .grid-row');
+        const items = [];
+        rows.forEach(row => {
+            items.push({
+                isbn: row.querySelector('.row-isbn').value.trim(),
+                title: row.querySelector('.row-title').value.trim(),
+                author: row.querySelector('.row-author').value.trim(),
+                quantity: parseInt(row.querySelector('.row-qty').value || 1),
+                unit_price: parseFloat(row.querySelector('.row-price').value || 0.0),
+                shelf: row.querySelector('.row-shelf').value.trim(),
+                rack: row.querySelector('.row-rack').value.trim(),
+                category: row.querySelector('.row-category').value.trim()
+            });
+        });
+        
+        if (!items.length) {
+            alert("Please add at least one item to catalog.");
+            return;
+        }
+        
+        const acquisitionId = document.getElementById('editAcquisitionId').value;
+        const invoiceImage = document.getElementById('uploadedInvoiceUrl').value;
+
+        const data = {
+            acquisition_id: acquisitionId || null,
+            invoice_image: invoiceImage || '',
+            bill_number: billNo,
+            bill_date: billDate,
+            vendor_id: vendorId,
+            total_amount: billAmount,
+            items: items
+        };
+        
+        try {
+            const r = await fetch('/admin/acquisitions/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const res = await r.json();
+            if (res.status === 'success') {
+                document.getElementById('successSegment').style.display = 'block';
+                document.getElementById('modalActions').style.display = 'none';
+                
+                const tagsBox = document.getElementById('accessionTagsContainer');
+                tagsBox.innerHTML = '';
+                if (res.accessions && res.accessions.length) {
+                    res.accessions.forEach(t => {
+                        const label = document.createElement('div');
+                        label.className = 'spine-label';
+                        label.innerHTML = `
+                            <strong>${t.accession}</strong><br>
+                            ${t.title.substring(0, 18)}...<br>
+                            Loc: ${t.shelf}/${t.rack}
+                        `;
+                        tagsBox.appendChild(label);
+                    });
+                }
+            } else {
+                alert("Save failed: " + (res.message || 'Unknown error'));
+            }
+        } catch(e) {
+            alert("Network error saving acquisition.");
+        }
+    }
+
+    async function deleteAcquisition(acqId) {
+        if (!confirm("Are you sure you want to delete this acquisition? This will remove all generated copies from your database and adjust book counts.")) return;
+        
+        try {
+            const r = await fetch(`/admin/acquisitions/delete/${acqId}`, { method: 'POST' });
+            const res = await r.json();
+            if (res.status === 'success') {
+                document.getElementById('acq-row-' + acqId).remove();
+                alert(res.message);
+            } else {
+                alert("Delete failed: " + res.message);
+            }
+        } catch(e) {
+            alert("Error sending request to delete acquisition.");
+        }
+    }
+</script>
+{% endblock %}

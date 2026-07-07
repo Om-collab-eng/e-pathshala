@@ -504,6 +504,129 @@
 
         </div>
 
+        <!-- ================= ACQUISITIONS TAB ================= -->
+        <div id="tab-acquisitions" class="tab-content" style="display: none;">
+            <div class="sa-stats-row">
+                <div class="sa-stat-card">
+                    <div class="sa-stat-icon" style="background: #e0f2fe; color: #0284c7;">📦</div>
+                    <div class="sa-stat-value">{{ stats.total_acquisitions }}</div>
+                    <div class="sa-stat-label">Total Acquisitions</div>
+                </div>
+                <div class="sa-stat-card">
+                    <div class="sa-stat-icon" style="background: #dcfce7; color: #16a34a;">📚</div>
+                    <div class="sa-stat-value">{{ stats.total_acquisition_copies }}</div>
+                    <div class="sa-stat-label">Total Copies Added</div>
+                </div>
+                <div class="sa-stat-card">
+                    <div class="sa-stat-icon" style="background: #fef3c7; color: #d97706;">₹</div>
+                    <div class="sa-stat-value">₹{{ "%.2f"|format(stats.total_acquisition_value) }}</div>
+                    <div class="sa-stat-label">Total Spent</div>
+                </div>
+            </div>
+
+            <!-- Global Vendor Directory & Merging -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                <div class="sa-panel" style="background: white; padding: 1.5rem; border-radius: 16px; border: 1px solid #e2e8f0; color: #1e293b;">
+                    <div style="font-weight: 800; font-size: 1rem; margin-bottom: 10px;">Global Vendor Directory</div>
+                    <div style="max-height: 250px; overflow-y: auto; font-size: 0.85rem;">
+                        <table style="width:100%; text-align:left; border-collapse:collapse;">
+                            <thead>
+                                <tr style="border-bottom:1px solid #cbd5e1;">
+                                    <th style="padding:6px 0;">Name</th>
+                                    <th style="padding:6px 0;">School</th>
+                                    <th style="padding:6px 0;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in vendors_sa %}
+                                <tr style="border-bottom:1px solid #f1f5f9;">
+                                    <td style="padding:6px 0;"><strong>{{ v.name }}</strong></td>
+                                    <td style="padding:6px 0;">{{ v.school_code }}</td>
+                                    <td style="padding:6px 0;">{{ v.status }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="sa-panel" style="background: white; padding: 1.5rem; border-radius: 16px; border: 1px solid #e2e8f0; color: #1e293b;">
+                    <div style="font-weight: 800; font-size: 1rem; margin-bottom: 10px;">Merge Duplicate Vendors</div>
+                    <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 12px;">Consolidate duplicate vendors across schools. Transfers all transactions to target vendor.</p>
+                    <form action="/super-admin/vendors/merge" method="POST">
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:4px;">Source Vendor (will be deleted)</label>
+                            <select name="source_vendor_id" style="width:100%; padding:6px; border-radius:6px; border:1px solid #cbd5e1;" required>
+                                {% for v in vendors_sa %}
+                                <option value="{{ v.id }}">{{ v.name }} ({{ v.school_code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:4px;">Target Vendor (will keep)</label>
+                            <select name="target_vendor_id" style="width:100%; padding:6px; border-radius:6px; border:1px solid #cbd5e1;" required>
+                                {% for v in vendors_sa %}
+                                <option value="{{ v.id }}">{{ v.name }} ({{ v.school_code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-sa-primary" style="width:100%; padding:8px; border-radius:8px; border:none; cursor:pointer;">Merge Vendors</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Master Data Configurations -->
+            <div class="sa-section-header" style="margin-top: 1.5rem;">
+                <div class="sa-section-title">Master Data Classifications</div>
+            </div>
+            <div class="sa-list-item" style="background:white; border-color:#e2e8f0; display:block; color:#1e293b;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+                    <div>
+                        <label style="font-weight:bold; font-size:0.8rem;">Categories</label>
+                        <textarea style="width:100%; height:80px; font-size:0.8rem; margin-top:4px; padding:6px; border-radius:6px; border:1px solid #cbd5e1;" readonly>Fiction, Non-Fiction, Reference, Textbook, Biography, Science, History</textarea>
+                    </div>
+                    <div>
+                        <label style="font-weight:bold; font-size:0.8rem;">Languages</label>
+                        <textarea style="width:100%; height:80px; font-size:0.8rem; margin-top:4px; padding:6px; border-radius:6px; border:1px solid #cbd5e1;" readonly>English, Hindi, Sanskrit, French, German, Spanish</textarea>
+                    </div>
+                    <div>
+                        <label style="font-weight:bold; font-size:0.8rem;">DDC Edition Settings</label>
+                        <textarea style="width:100%; height:80px; font-size:0.8rem; margin-top:4px; padding:6px; border-radius:6px; border:1px solid #cbd5e1;" readonly>Edition: DDC 23
+Default Prefix: ACC
+Format: ACC-[SCHOOL_CODE]-[SERIAL]</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- School Monitoring List -->
+            <div class="sa-section-header" style="margin-top: 1.5rem;">
+                <div class="sa-section-title">Cross-School Acquisitions</div>
+            </div>
+            <div class="sa-list">
+                {% if acquisitions_sa %}
+                    {% for a in acquisitions_sa %}
+                    <div class="sa-list-item" style="background: white; border-color: #e2e8f0; color: #1e293b;">
+                        <div class="sa-item-icon" style="background: #e0f2fe; color: #0284c7;">📦</div>
+                        <div class="sa-item-content">
+                            <div class="sa-item-title">Bill: <strong>{{ a.bill_number }}</strong> ({{ a.school_name }})</div>
+                            <div class="sa-item-subtitle">Vendor: {{ a.vendor_name }} | Date: {{ a.bill_date }}</div>
+                            <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">
+                                Total Cost: <strong>₹{{ "%.2f"|format(a.total_amount) }}</strong> | Titles: {{ a.total_books }} | Copies: {{ a.total_copies }}
+                            </div>
+                        </div>
+                        <div class="sa-item-actions">
+                            <form action="/super-admin/acquisitions/delete/{{ a.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this acquisition globally?');">
+                                <button type="submit" class="sa-badge sa-badge-inactive" style="border:none; cursor:pointer; background:#fee2e2; color:#b91c1c;">Delete Override</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="font-size: 0.85rem; color: #6b7280;">No acquisitions recorded across schools.</p>
+                {% endif %}
+            </div>
+        </div>
+
     </div>
 
     <!-- Bottom Navigation (Transforms to Vertical Sidebar on Desktop) -->
@@ -558,6 +681,10 @@
         <button class="sa-nav-item" onclick="switchTab('personal', 'Personal Libraries', 'Manage personal user collections and subscriptions', this)">
             <span class="sa-nav-icon">👤</span>
             <span>Personal Library</span>
+        </button>
+        <button class="sa-nav-item" onclick="switchTab('acquisitions', 'Acquisition Control', 'Cross-school book acquisition dashboard', this)">
+            <span class="sa-nav-icon">📦</span>
+            <span>Acquisitions</span>
         </button>
         <button class="sa-nav-item" onclick="switchTab('settings', 'System Settings', 'Configure and manage your global system', this)">
             <span class="sa-nav-icon">⚙️</span>

@@ -233,17 +233,17 @@
             <!-- School Library Code (Hidden for personal portal) -->
             <div class="input-group" id="schoolCodeGroup">
                 <label for="school_code">Library Code</label>
-                <input type="text" id="school_code" name="school_code" placeholder="Library Code (e.g. DEMO)" required>
+                <input type="text" id="school_code" name="school_code" placeholder="Library Code (e.g. DEMO)" autocomplete="organization" required>
             </div>
 
             <div class="input-group">
                 <label for="username" id="lblUsername">Phone Number</label>
-                <input type="text" id="username" name="username" placeholder="Phone No." required>
+                <input type="text" id="username" name="username" placeholder="Phone No." autocomplete="username" required>
             </div>
 
             <div class="input-group">
                 <label for="password">Security Password</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required>
+                <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
             </div>
 
             <button type="submit" class="btn-neon" id="loginBtn">Authenticate & Enter</button>
