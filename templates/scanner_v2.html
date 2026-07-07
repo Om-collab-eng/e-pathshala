@@ -484,12 +484,22 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 
                 </div>
 
-                <!-- Hidden file input for upload mode -->
+                <!-- Hidden file inputs for upload mode -->
                 <input type="file" id="frontInput" accept="image/*" style="display:none;">
+                <input type="file" id="backInput" accept="image/*" style="display:none;">
 
-                <!-- Preview after image is selected -->
-                <div id="previewArea" style="display:none; max-width:420px; margin:0 auto; text-align:center;">
-                    <img id="frontPreview" style="width:100%; max-height:280px; object-fit:contain; border-radius:12px; border:1px solid var(--border);">
+                <!-- Preview after images are selected -->
+                <div id="previewArea" style="display:none; max-width:600px; margin:0 auto; text-align:center;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:1rem;">
+                        <div>
+                            <div style="font-weight:700; font-size:0.85rem; margin-bottom:6px; color:var(--text); font-family:'Outfit';">Front Cover</div>
+                            <img id="frontPreview" style="width:100%; max-height:250px; object-fit:contain; border-radius:12px; border:1px solid var(--border);">
+                        </div>
+                        <div>
+                            <div style="font-weight:700; font-size:0.85rem; margin-bottom:6px; color:var(--text); font-family:'Outfit';">Back Cover</div>
+                            <img id="backPreview" style="width:100%; max-height:250px; object-fit:contain; border-radius:12px; border:1px solid var(--border);">
+                        </div>
+                    </div>
                     <div style="margin-top:0.5rem; font-size:0.8rem; color:var(--muted);">
                         <button onclick="resetScanMode()" style="background:none;border:none;color:var(--lp);cursor:pointer;font-weight:700;font-size:0.82rem;">← Rescan</button>
                     </div>
@@ -798,6 +808,8 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 {% block scripts %}
 <script>
     let frontFile = null;
+    let backFile = null;
+    let cameraScanStep = 'front';
     let cameraStream = null;
     let duplicateQueue = [];
     let capturedCount = 0;
@@ -856,7 +868,8 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     // ── Camera mode helpers ──────────────────────────────────────────────────
     function startSingleCamera() {
         document.getElementById('bulkModeToggle').checked = false;
-        document.getElementById('cameraModalTitle').textContent = '📷 Camera — Single Mode';
+        cameraScanStep = 'front';
+        document.getElementById('cameraModalTitle').textContent = '📷 Camera — Scan Front Cover';
         document.getElementById('bulkFinishBtn').style.display = 'none';
         openCameraModal();
     }
@@ -960,8 +973,36 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 
                 processBulkFile(blob);
             } else {
-                closeCameraModal();
-                handleSelectedFile(blob, 'camera_capture.jpg');
+                playShutterFlash();
+                if (cameraScanStep === 'front') {
+                    // Handle front capture
+                    const file = new File([blob], 'front_capture.jpg', { type: 'image/jpeg' });
+                    frontFile = file;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('frontPreview').src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Transition to back scan
+                    cameraScanStep = 'back';
+                    document.getElementById('cameraModalTitle').textContent = '📷 Camera — Scan Back Cover';
+                    showToast("Front Cover Captured! Now scan the Back Cover.", "info");
+                } else {
+                    // Handle back capture
+                    const file = new File([blob], 'back_capture.jpg', { type: 'image/jpeg' });
+                    backFile = file;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('backPreview').src = e.target.result;
+                        document.getElementById('previewArea').style.display = 'block';
+                        document.getElementById('processBtn').disabled = false;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    closeCameraModal();
+                    showToast("Back Cover Captured!", "success");
+                }
             }
         }, 'image/jpeg', 0.92);
     }
@@ -1068,6 +1109,10 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         if (e.target.files.length) handleSelectedFile(e.target.files[0]);
     });
 
+    document.getElementById('backInput').addEventListener('change', (e) => {
+        if (e.target.files.length) handleSelectedBackFile(e.target.files[0]);
+    });
+
     function handleSelectedFile(fileOrBlob, name) {
         const file = fileOrBlob instanceof File ? fileOrBlob : new File([fileOrBlob], name || 'capture.jpg', { type: 'image/jpeg' });
         if (!file.type.startsWith('image/')) {
@@ -1079,22 +1124,47 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         reader.onload = (e) => {
             document.getElementById('frontPreview').src = e.target.result;
             document.getElementById('previewArea').style.display = 'block';
-            document.getElementById('processBtn').disabled = false;
+            
+            // Auto trigger back cover selection
+            showToast("Front Cover selected! Now upload the Back Cover.", "info");
+            setTimeout(() => {
+                document.getElementById('backInput').click();
+            }, 800);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function handleSelectedBackFile(file) {
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file.', 'error');
+            return;
+        }
+        backFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('backPreview').src = e.target.result;
+            document.getElementById('previewArea').style.display = 'block';
+            if (frontFile && backFile) {
+                document.getElementById('processBtn').disabled = false;
+            }
         };
         reader.readAsDataURL(file);
     }
 
     function resetScanMode() {
         frontFile = null;
+        backFile = null;
         document.getElementById('frontPreview').src = '';
+        document.getElementById('backPreview').src = '';
         document.getElementById('previewArea').style.display = 'none';
         document.getElementById('processBtn').disabled = true;
         document.getElementById('frontInput').value = '';
+        document.getElementById('backInput').value = '';
     }
 
     document.getElementById('processBtn').addEventListener('click', async () => {
-        if (!frontFile) {
-            showToast("Front Cover is required!", "error");
+        if (!frontFile || !backFile) {
+            showToast("Both Front and Back Covers are required!", "error");
             return;
         }
 
@@ -1103,10 +1173,11 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 
         const formData = new FormData();
         formData.append('front', frontFile);
+        formData.append('back', backFile);
 
         try {
-            // 1. Upload Cover to Server
-            document.getElementById('loadingText').innerText = "Uploading cover image...";
+            // 1. Upload Covers to Server
+            document.getElementById('loadingText').innerText = "Uploading cover images...";
             const res = await fetch('/admin/api/upload-cover', {
                 method: 'POST',
                 body: formData
@@ -1129,7 +1200,8 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    cover_url: data.cover_url  // disk path for AI to read
+                    cover_url: data.cover_url, // Front disk path
+                    back_url: data.back_url   // Back disk path
                 })
             });
             

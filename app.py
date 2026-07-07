@@ -4632,13 +4632,17 @@ def api_scan_vision():
         
     data = request.json or {}
     cover_url = data.get('cover_url', '')
+    back_url = data.get('back_url', '')
     
     if not cover_url:
         return jsonify({"error": "No cover image URL provided."}), 400
         
     import base64
     base64_image = ""
+    base64_back = ""
+    
     try:
+        # Front cover
         parsed_url = urllib.parse.urlparse(cover_url)
         path_on_disk = parsed_url.path.lstrip('/')
         if os.path.exists(path_on_disk):
@@ -4646,6 +4650,14 @@ def api_scan_vision():
                 base64_image = base64.b64encode(image_file.read()).decode('utf-8')
         else:
             return jsonify({"error": f"Cover image file not found on server: {path_on_disk}"}), 404
+            
+        # Back cover
+        if back_url:
+            parsed_back = urllib.parse.urlparse(back_url)
+            path_back = parsed_back.path.lstrip('/')
+            if os.path.exists(path_back):
+                with open(path_back, "rb") as back_file:
+                    base64_back = base64.b64encode(back_file.read()).decode('utf-8')
     except Exception as e:
         return jsonify({"error": f"Failed to read/encode cover image: {str(e)}"}), 500
 
@@ -4653,7 +4665,7 @@ def api_scan_vision():
     if nvidia_key:
         nvidia_key = nvidia_key.strip()
         
-    prompt = """Analyze this book cover image and extract the following information.
+    prompt = """Analyze these book cover images (front cover and optionally back cover) and extract the following information.
 
 Book Title:
 Subtitle:
@@ -4676,6 +4688,23 @@ Rules:
 - Do not explain anything.
 - Return only the fields above.
 """
+    user_content = [
+        {"type": "text", "text": prompt},
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{base64_image}"
+            }
+        }
+    ]
+    if base64_back:
+        user_content.append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{base64_back}"
+            }
+        })
+        
     messages = [
         {
             "role": "system",
@@ -4683,15 +4712,7 @@ Rules:
         },
         {
             "role": "user",
-            "content": [
-                {"type": "text", "text": prompt},
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{base64_image}"
-                    }
-                }
-            ]
+            "content": user_content
         }
     ]
     
@@ -4927,6 +4948,7 @@ JSON Schema:
                              
         s_code = session.get('school_code')
         existing_data = None
+        acquisition_data = None
         if s_code:
             conn = get_db_connection()
             isbn = book_metadata.get('isbn')
@@ -4947,13 +4969,42 @@ JSON Schema:
                     'total_copies': existing_book['total_copies'],
                     'available_copies': existing_book['available_copies']
                 }
+                # Find if this book is associated with any acquisition via acquisition_items
+                acq_item = conn.execute('''
+                    SELECT a.id as acq_id, a.bill_number, a.bill_date, v.name as vendor_name 
+                    FROM acquisition_items ai
+                    JOIN acquisitions a ON ai.acquisition_id = a.id
+                    JOIN vendors v ON a.vendor_id = v.id
+                    WHERE ai.book_id = ?
+                    LIMIT 1
+                ''', (existing_book['id'],)).fetchone()
+                
+                # If not found in acquisition_items, check in book_copies
+                if not acq_item:
+                    acq_item = conn.execute('''
+                        SELECT a.id as acq_id, a.bill_number, a.bill_date, v.name as vendor_name
+                        FROM book_copies bc
+                        JOIN acquisitions a ON bc.acquisition_id = a.id
+                        JOIN vendors v ON a.vendor_id = v.id
+                        WHERE bc.book_id = ? AND bc.acquisition_id IS NOT NULL
+                        LIMIT 1
+                    ''', (existing_book['id'],)).fetchone()
+                    
+                if acq_item:
+                    acquisition_data = {
+                        'acq_id': acq_item['acq_id'],
+                        'bill_number': acq_item['bill_number'],
+                        'bill_date': acq_item['bill_date'],
+                        'vendor_name': acq_item['vendor_name']
+                    }
             conn.close()
 
         return jsonify({
             "success": True,
             "metadata": book_metadata,
             "cover_url": cover_url,
-            "existing_book": existing_data
+            "existing_book": existing_data,
+            "acquisition": acquisition_data
         })
         
     except Exception as e:
@@ -4971,47 +5022,55 @@ def api_upload_cover():
     if session.get('role') not in ['admin', 'demo_admin']: return {"status": "error", "message": "Unauthorized"}
 
     front_img_file = request.files.get('front')
+    back_img_file = request.files.get('back')
+    
     if not front_img_file:
         return {"status": "error", "message": "Front cover is required"}
+    if not back_img_file:
+        return {"status": "error", "message": "Back cover is required"}
 
     import base64, io
     from PIL import Image as PILImage
 
-    # ── Read & resize the image (keep it small for DB storage) ───────────────
+    def process_image(img_file):
+        try:
+            raw_bytes = img_file.read()
+            pil_img   = PILImage.open(io.BytesIO(raw_bytes)).convert('RGB')
+            max_side = 600
+            w, h = pil_img.size
+            if max(w, h) > max_side:
+                scale = max_side / max(w, h)
+                pil_img = pil_img.resize((int(w * scale), int(h * scale)), PILImage.LANCZOS)
+            buf = io.BytesIO()
+            pil_img.save(buf, format='JPEG', quality=82)
+            jpeg_bytes = buf.getvalue()
+            
+            filename  = f"scan_{uuid.uuid4().hex[:8]}.jpg"
+            cover_dir = os.path.join(BASE_DIR, 'static', 'uploads')
+            os.makedirs(cover_dir, exist_ok=True)
+            cover_path = os.path.join(cover_dir, filename)
+            with open(cover_path, 'wb') as f:
+                f.write(jpeg_bytes)
+            disk_url = f"/static/uploads/{filename}"
+            b64 = base64.b64encode(jpeg_bytes).decode('utf-8')
+            data_url = f"data:image/jpeg;base64,{b64}"
+            return disk_url, data_url
+        except Exception as e:
+            raise Exception(f"Image processing failed: {str(e)}")
+
     try:
-        raw_bytes = front_img_file.read()
-        pil_img   = PILImage.open(io.BytesIO(raw_bytes)).convert('RGB')
-
-        # Resize: cap longest side at 600px to keep base64 manageable
-        max_side = 600
-        w, h = pil_img.size
-        if max(w, h) > max_side:
-            scale = max_side / max(w, h)
-            pil_img = pil_img.resize((int(w * scale), int(h * scale)), PILImage.LANCZOS)
-
-        # Encode to JPEG bytes
-        buf = io.BytesIO()
-        pil_img.save(buf, format='JPEG', quality=82)
-        jpeg_bytes = buf.getvalue()
+        front_disk, front_db = process_image(front_img_file)
+        back_disk, back_db = process_image(back_img_file)
     except Exception as e:
-        return {"status": "error", "message": f"Image processing failed: {str(e)}"}
+        return {"status": "error", "message": str(e)}
 
-    # ── Also save to disk so scan-vision can read it by path ─────────────────
-    filename  = f"scan_{uuid.uuid4().hex[:8]}.jpg"
-    cover_dir = os.path.join(BASE_DIR, 'static', 'uploads')
-    os.makedirs(cover_dir, exist_ok=True)
-    cover_path = os.path.join(cover_dir, filename)
-    with open(cover_path, 'wb') as f:
-        f.write(jpeg_bytes)
-    disk_url = f"/static/uploads/{filename}"
-
-    # ── Build a persistent base64 data: URL for DB storage ──────────────────
-    b64 = base64.b64encode(jpeg_bytes).decode('utf-8')
-    data_url = f"data:image/jpeg;base64,{b64}"
-
-    # Return disk_url so scan-vision (which reads file from disk) still works,
-    # and data_url as cover_url_db which is what gets stored in the DB.
-    return {"status": "success", "cover_url": disk_url, "cover_url_db": data_url}
+    return {
+        "status": "success", 
+        "cover_url": front_disk, 
+        "cover_url_db": front_db,
+        "back_url": back_disk,
+        "back_url_db": back_db
+    }
 
 # ── Book Action API endpoints ─────────────────────────────────────────────────
 
