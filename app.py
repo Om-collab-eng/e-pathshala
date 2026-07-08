@@ -1066,6 +1066,14 @@ def init_db():
     dconn.commit()
     dconn.close()
 
+    # Initialize billing tables (plans, subscriptions, invoices, payments, coupons, addons)
+    try:
+        from migrate_billing import init_billing_tables
+        init_billing_tables('library_v3.db')
+        init_billing_tables('demo.db')
+    except Exception as e:
+        print("Error initializing billing tables:", e)
+
 # Single Session Enforcement Middleware
 @app.before_request
 def check_session():
