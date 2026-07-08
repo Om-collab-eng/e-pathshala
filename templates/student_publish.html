@@ -801,11 +801,11 @@
                     </div>
                     <div class="card-header-info">
                         <h3 class="card-header-title">Upload Document<span class="req">*</span></h3>
-                        <p class="card-header-subtitle">Upload your PDF, DOCX or PPT file</p>
+                        <p class="card-header-subtitle">Upload your PDF, DOCX, PPT or ZIP file</p>
                     </div>
                 </div>
 
-                <input type="file" id="docFileInput" name="document" accept=".pdf,.doc,.docx,.ppt,.pptx" style="display: none;" onchange="handleDocSelection()" {% if not draft %}required{% endif %}>
+                <input type="file" id="docFileInput" name="document" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" style="display: none;" onchange="handleDocSelection()" {% if not draft %}required{% endif %}>
 
                 <!-- Normal upload box -->
                 <div class="upload-box" id="docUploadBox" onclick="document.getElementById('docFileInput').click()" {% if draft and draft.file_url %}style="display: none;"{% endif %}>
@@ -817,7 +817,7 @@
                         </svg>
                     </div>
                     <div class="upload-box-title">Tap to upload file</div>
-                    <div class="upload-box-subtitle">PDF, DOCX, PPTX • Max size: 25MB</div>
+                    <div class="upload-box-subtitle">PDF, DOCX, PPTX, ZIP • Max size: 25MB</div>
                 </div>
 
                 <!-- Selected state -->
