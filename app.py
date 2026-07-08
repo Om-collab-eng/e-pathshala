@@ -926,6 +926,27 @@ def init_db():
 
     # Sync Demo DB schema
     dconn = sqlite3.connect(DEMO_DB_FILE)
+    
+    # Create global library sections table in Demo DB
+    dconn.execute('''
+    CREATE TABLE IF NOT EXISTS global_sections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        created_at TEXT
+    )''')
+    
+    # Auto-seed default global sections in Demo DB
+    try:
+        count = dconn.execute('SELECT COUNT(*) FROM global_sections').fetchone()[0]
+        if count == 0:
+            default_secs = ["Self Help", "Science", "Technology", "Business", "Story", "Reference", "Novel"]
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+            for name in default_secs:
+                dconn.execute('INSERT OR IGNORE INTO global_sections (name, created_at) VALUES (?, ?)', (name, now_str))
+            dconn.commit()
+    except Exception as e:
+        print("Error seeding global sections in demo DB:", e)
+
     # Ensure users table exists in Demo DB first
     dconn.execute('''CREATE TABLE IF NOT EXISTS users 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
