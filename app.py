@@ -1455,6 +1455,24 @@ def render_super_admin_dashboard_logic():
         owner['libraries'] = [dict(lib) for lib in owner_libs]
         personal_owners.append(owner)
         
+    # Fetch global acquisitions and vendors for super admin acquisitions dashboard tab
+    acquisitions_sa_raw = conn.execute('''
+        SELECT a.*, v.name as vendor_name, s.name as school_name
+        FROM acquisitions a
+        LEFT JOIN vendors v ON a.vendor_id = v.id
+        LEFT JOIN schools s ON a.school_code = s.school_code
+        ORDER BY a.created_date DESC, a.id DESC
+    ''').fetchall()
+    acquisitions_sa = [dict(acq) for acq in acquisitions_sa_raw]
+
+    vendors_sa_raw = conn.execute('SELECT * FROM vendors ORDER BY name ASC').fetchall()
+    vendors_sa = [dict(vendor) for vendor in vendors_sa_raw]
+
+    # Acquisitions Stats
+    stats['total_acquisitions'] = conn.execute('SELECT COUNT(*) FROM acquisitions').fetchone()[0] or 0
+    stats['total_acquisition_copies'] = conn.execute('SELECT SUM(total_copies) FROM acquisitions').fetchone()[0] or 0
+    stats['total_acquisition_value'] = conn.execute('SELECT SUM(total_amount) FROM acquisitions').fetchone()[0] or 0
+
     conn.close()
     return render_template('super_admin.html', 
                            stats=stats, 
@@ -1467,7 +1485,9 @@ def render_super_admin_dashboard_logic():
                            recent_payments=recent_payments,
                            org_requests=org_requests,
                            plans=plans,
-                           personal_owners=personal_owners)
+                           personal_owners=personal_owners,
+                           vendors_sa=vendors_sa,
+                           acquisitions_sa=acquisitions_sa)
 
 def redirect_to_sa():
     if session.get('is_super_super_admin'):
