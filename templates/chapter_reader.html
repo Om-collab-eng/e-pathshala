@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Reading: {{ chapter.title }} - librika.in{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --reader-bg: #0f172a;
+        --reader-panel-bg: #1e293b;
+        --reader-text: #f8fafc;
+        --reader-border: rgba(255, 255, 255, 0.1);
+        --font-scale: 1.0;
+    }
+    
+    .light-theme {
+        --reader-bg: #f8fafc;
+        --reader-panel-bg: #ffffff;
+        --reader-text: #0f172a;
+        --reader-border: rgba(0, 0, 0, 0.1);
+    }
+
+    .reader-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        max-width: 1400px;
+        margin: 20px auto;
+        padding: 0 20px;
+        height: calc(100vh - 120px);
+    }
+
+    @media (max-width: 992px) {
+        .reader-container {
+            grid-template-columns: 1fr;
+            height: auto;
+        }
+    }
+
+    .reading-pane {
+        background: var(--reader-panel-bg);
+        border: 1px solid var(--reader-border);
+        border-radius: 12px;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        height: 100%;
+        color: var(--reader-text);
+    }
+
+    .reading-content {
+        font-size: calc(1.1rem * var(--font-scale));
+        line-height: 1.8;
+        flex: 1;
+        margin-bottom: 30px;
+        white-space: pre-wrap;
+    }
+
+    .study-pane {
+        background: var(--reader-panel-bg);
+        border: 1px solid var(--reader-border);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        color: var(--reader-text);
+        overflow: hidden;
+    }
+
+    .tabs-header {
+        display: flex;
+        background: rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid var(--reader-border);
+    }
+
+    .tab-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 12px 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: #94a3b8;
+        transition: 0.2s;
+        border-bottom: 2px solid transparent;
+        text-align: center;
+    }
+
+    .tab-btn.active {
+        color: var(--accent-primary, #8b5cf6);
+        border-bottom-color: var(--accent-primary, #8b5cf6);
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .tab-content {
+        padding: 20px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--reader-border);
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .control-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--reader-border);
+        color: var(--reader-text);
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+    
+    .light-theme .control-btn {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .control-btn:hover {
+        background: rgba(139, 92, 246, 0.2);
+    }
+
+    .qna-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--reader-border);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 12px;
+    }
+
+    .vocab-word {
+        font-weight: bold;
+        color: var(--accent-primary, #8b5cf6);
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+    }
+
+    .vocab-meaning {
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+    
+    .light-theme .vocab-meaning {
+        color: #475569;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        height: 8px;
+        margin-top: 15px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        background: linear-gradient(90deg, #8b5cf6, #ec4899);
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+</style>
+
+<div class="dashboard" style="background: var(--reader-bg); min-height: 100vh;">
+    <header class="header" style="border-bottom: 1px solid var(--reader-border);">
+        <div>
+            <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-primary, #8b5cf6); font-weight: bold;">{{ book.title }}</span>
+            <h1 style="margin: 0; color: var(--reader-text); font-size: 1.6rem;">Chapter {{ chapter.chapter_num }}: {{ chapter.title }}</h1>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="/digital-library/content/{{ book.id }}" class="btn-alt" style="padding: 6px 14px; text-decoration: none; font-size: 0.9rem;">Exit Reader</a>
+        </div>
+    </header>
+
+    <div class="reader-container">
+        <!-- Reading Pane -->
+        <div class="reading-pane" id="readingPane">
+            <div class="toolbar">
+                <div class="controls">
+                    <button class="control-btn" onclick="adjustFont(-0.1)">A-</button>
+                    <button class="control-btn" onclick="adjustFont(0.1)">A+</button>
+                    <button class="control-btn" id="themeToggler" onclick="toggleTheme()">☀️ Light Mode</button>
+                </div>
+                <div style="font-size: 0.85rem; color: #94a3b8;">
+                    Scroll down to track reading progress
+                </div>
+            </div>
+
+            <div class="reading-content" id="textContent">
+                {{ chapter.content }}
+            </div>
+
+            <div style="border-top: 1px solid var(--reader-border); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <span style="font-size: 0.85rem; color: #94a3b8;">Reading Progress: <span id="progressText">{{ chapter.current_progress|int }}%</span></span>
+                    <div class="progress-bar-container" style="width: 200px;">
+                        <div class="progress-bar-fill" id="progressBar" style="width: {{ chapter.current_progress }}%;"></div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    {% if prev_ch %}
+                    <a href="/digital-library/chapter/{{ prev_ch.id }}" class="btn-alt" style="text-decoration: none; padding: 8px 16px; font-size: 0.85rem;">◀ Prev Chapter</a>
+                    {% endif %}
+
+                    {% if next_ch %}
+                    <a href="/digital-library/chapter/{{ next_ch.id }}" class="btn-alt" style="text-decoration: none; padding: 8px 16px; font-size: 0.85rem;">Next Chapter ▶</a>
+                    {% endif %}
+                    
+                    <button class="btn-neon" id="quizBtn" onclick="goToQuiz()" style="padding: 8px 20px; font-size: 0.85rem; {% if chapter.finished != 1 and chapter.current_progress < 80 %}opacity: 0.6; cursor: not-allowed;{% endif %}">
+                        ✍ Take Chapter Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Study Pane -->
+        <div class="study-pane">
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchTab(event, 'tab-summary')">Summary</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-notes')">Notes</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-vocab')">Vocabulary</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-qna')">Q&A</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Summary Tab -->
+                <div class="tab-pane active" id="tab-summary">
+                    <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--accent-primary, #8b5cf6);">AI-Generated Summary</h3>
+                    <p style="line-height: 1.6; font-size: 0.95rem; color: var(--reader-text);">{{ chapter.summary }}</p>
+                </div>
+
+                <!-- Notes Tab -->
+                <div class="tab-pane" id="tab-notes">
+                    <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--accent-primary, #8b5cf6);">Key Study Notes</h3>
+                    <ul style="padding-left: 20px; line-height: 1.7; font-size: 0.95rem;">
+                        {% for note in chapter.notes %}
+                        <li style="margin-bottom: 10px;">{{ note }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Vocab Tab -->
+                <div class="tab-pane" id="tab-vocab">
+                    <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--accent-primary, #8b5cf6); margin-bottom: 15px;">Difficult Vocabulary</h3>
+                    {% for item in chapter.vocabulary %}
+                    <div style="margin-bottom: 15px; border-bottom: 1px solid var(--reader-border); padding-bottom: 10px;">
+                        <div class="vocab-word">{{ item.word }}</div>
+                        <div class="vocab-meaning">{{ item.meaning }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Q&A Tab -->
+                <div class="tab-pane" id="tab-qna">
+                    <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--accent-primary, #8b5cf6); margin-bottom: 15px;">Comprehension Q&As</h3>
+                    {% for item in chapter.qna %}
+                    <div class="qna-item">
+                        <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; color: var(--accent-primary, #8b5cf6);">Q: {{ item.question }}</div>
+                        <div style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;" class="vocab-meaning">A: {{ item.answer }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let fontScale = 1.0;
+    const chapterId = {{ chapter.id }};
+    let currentProgress = {{ chapter.current_progress }};
+    let finished = {{ chapter.finished }};
+    
+    // Setup Theme Toggler
+    function toggleTheme() {
+        const dashboard = document.querySelector('.dashboard');
+        const toggler = document.getElementById('themeToggler');
+        if (dashboard.classList.contains('light-theme')) {
+            dashboard.classList.remove('light-theme');
+            toggler.innerText = '☀️ Light Mode';
+            localStorage.setItem('reader-theme', 'dark');
+        } else {
+            dashboard.classList.add('light-theme');
+            toggler.innerText = '🌙 Dark Mode';
+            localStorage.setItem('reader-theme', 'light');
+        }
+    }
+    
+    // Apply saved theme on load
+    if (localStorage.getItem('reader-theme') === 'light') {
+        toggleTheme();
+    }
+
+    // Adjust text font size scaling
+    function adjustFont(val) {
+        fontScale = Math.max(0.7, Math.min(2.0, fontScale + val));
+        document.documentElement.style.setProperty('--font-scale', fontScale);
+    }
+
+    // Switch study guide tabs
+    function switchTab(e, tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+        
+        e.currentTarget.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // Scrolling-based progress tracking
+    const readingPane = document.getElementById('readingPane');
+    readingPane.addEventListener('scroll', () => {
+        const scrollTop = readingPane.scrollTop;
+        const scrollHeight = readingPane.scrollHeight - readingPane.clientHeight;
+        if (scrollHeight > 0) {
+            const pct = Math.min(100, Math.round((scrollTop / scrollHeight) * 100));
+            if (pct > currentProgress) {
+                currentProgress = pct;
+                
+                // Update Badge / UI
+                document.getElementById('progressText').innerText = currentProgress + '%';
+                document.getElementById('progressBar').style.width = currentProgress + '%';
+                
+                if (currentProgress >= 80) {
+                    finished = 1;
+                    document.getElementById('quizBtn').style.opacity = '1';
+                    document.getElementById('quizBtn').style.cursor = 'pointer';
+                }
+                
+                saveProgress(currentProgress, finished);
+            }
+        }
+    });
+
+    // Save progress to database
+    let saveTimeout = null;
+    function saveProgress(prog, fin) {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(async () => {
+            try {
+                await fetch('/api/chapter/save-progress', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        chapter_id: chapterId,
+                        progress: prog,
+                        finished: fin
+                    })
+                });
+            } catch (e) {
+                console.error("Failed to save chapter progress", e);
+            }
+        }, 1000);
+    }
+
+    function goToQuiz() {
+        if (currentProgress < 80 && finished === 0) {
+            alert('Please read at least 80% of this chapter first to unlock the quiz!');
+            return;
+        }
+        window.location.href = `/digital-library/chapter/${chapterId}/quiz`;
+    }
+</script>
+{% endblock %}

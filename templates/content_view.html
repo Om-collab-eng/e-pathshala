@@ -75,12 +75,68 @@
                 </div>
                 {% endif %}
 
+                {% if chapters %}
+                <div style="margin-top: 2rem;">
+                    <h3 style="color: var(--text-light); font-size: 1.2rem; margin-bottom: 15px; text-align: left; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">📖 Book Chapters & Study Material</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                        {% for ch in chapters %}
+                        <div class="glow-box" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 0; background: rgba(255,255,255,0.01); border: 1px solid var(--border-color); border-radius: 10px; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h4 style="margin: 0; color: var(--text-light); font-size: 1rem;">Chapter {{ ch.chapter_num }}: {{ ch.title }}</h4>
+                                <div style="display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap;">
+                                    <!-- Progress Badge -->
+                                    {% if ch.finished == 1 %}
+                                    <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: bold;">✓ Completed</span>
+                                    {% elif ch.progress > 0 %}
+                                    <span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: bold;">⏱ {{ ch.progress|round|int }}% Progress</span>
+                                    {% else %}
+                                    <span style="background: rgba(156, 163, 175, 0.1); color: #9ca3af; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem;">Not Started</span>
+                                    {% endif %}
+                                    
+                                    <!-- Quiz Status -->
+                                    {% if ch.quiz_score is not none %}
+                                        {% if ch.quiz_passed == 1 %}
+                                        <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: bold;">★ Quiz Passed ({{ ch.quiz_score|round|int }}%)</span>
+                                        {% else %}
+                                        <span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: bold;">⚠ Quiz Failed ({{ ch.quiz_score|round|int }}%)</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px;">
+                                <a href="/digital-library/chapter/{{ ch.id }}" class="btn-alt" style="padding: 6px 14px; font-size: 0.8rem; border-color: var(--accent-primary); color: var(--text-light); background: rgba(139, 92, 246, 0.1); font-weight: bold; text-decoration: none;">
+                                    Read & Study
+                                </a>
+                                
+                                {% if ch.finished == 1 or ch.progress >= 80 %}
+                                    {% if ch.quiz_score is none %}
+                                    <a href="/digital-library/chapter/{{ ch.id }}/quiz" class="btn-neon" style="padding: 6px 14px; font-size: 0.8rem; font-weight: bold; text-decoration: none;">
+                                        Take Quiz
+                                    </a>
+                                    {% else %}
+                                    <a href="/digital-library/chapter/{{ ch.id }}/quiz" class="btn-alt" style="padding: 6px 14px; font-size: 0.8rem; text-decoration: none;">
+                                        View Quiz Results
+                                    </a>
+                                    {% endif %}
+                                {% else %}
+                                    <button disabled title="Complete reading this chapter to unlock the quiz" style="padding: 6px 14px; font-size: 0.8rem; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; cursor: not-allowed;">
+                                        Quiz Locked 🔒
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
                 <div style="text-align: center; margin-top: 2rem;">
                     <button onclick="window.location.href='/digital-library/read/{{ content.id }}'" class="btn-neon" style="font-size: 1.1rem; padding: 1rem 3rem;">
                         📖 Read Document
                     </button>
                     <p style="margin-top: 10px; font-size: 0.75rem; color: var(--text-low);">Secure native E-Reader</p>
                 </div>
+                {% endif %}
             </div>
             
             <!-- Reviews Section -->

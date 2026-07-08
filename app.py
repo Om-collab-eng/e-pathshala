@@ -534,6 +534,264 @@ Example structure:
     ]
     return json.dumps(fallback)
 
+def get_chapter_num(name):
+    import re
+    # Match patterns like: Chapter 1, Ch 1, Chapter-1, Unit 1, Lesson 1
+    match = re.search(r'(?:chapter|ch|unit|lesson)[^0-9]*([0-9]+)', name, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    
+    # Fallback: if no keyword, just find any digit sequence in the filename/path
+    match_fallback = re.search(r'([0-9]+)', name)
+    if match_fallback:
+        return int(match_fallback.group(1))
+    
+    return None
+
+def clean_chapter_name(filename):
+    import os, re
+    basename = os.path.basename(filename)
+    name_without_ext = os.path.splitext(basename)[0]
+    cleaned = name_without_ext.replace('-', ' ').replace('_', ' ')
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return cleaned.title()
+
+def ai_grade_short_answer(question, suggested_answer, student_answer):
+    import os
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    if nvidia_key:
+        nvidia_key = nvidia_key.strip()
+    
+    prompt = f"""You are a school teacher grading a short answer question.
+Question: "{question}"
+Expected Correct Answer: "{suggested_answer}"
+Student's Answer: "{student_answer}"
+
+Grade the student's answer as either "correct" (if it captures the key concept/meaning, even with spelling or minor phrasing differences) or "incorrect".
+Return ONLY the word "correct" or "incorrect". Do not include any other text or reasoning.
+"""
+    try:
+        from openai import OpenAI
+        client = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=nvidia_key
+        )
+        completion = client.chat.completions.create(
+            model="mistralai/mistral-nemotron",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=10,
+            stream=False
+        )
+        grade = completion.choices[0].message.content.strip().lower()
+        if 'correct' in grade and 'incorrect' not in grade:
+            return 'correct'
+    except Exception as e:
+        print("AI grading failed:", e)
+    return 'incorrect'
+
+def ai_process_chapter(chapter_title, chapter_text):
+    import os, json
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+    if nvidia_key:
+        nvidia_key = nvidia_key.strip()
+        
+    prompt = f"""You are an expert educator. Analyze the following chapter text of "{chapter_title}" and generate study materials.
+Return ONLY a valid JSON object. Do NOT include markdown code blocks (like ```json), thinking tags, or other text outside the JSON. Return only the raw JSON.
+
+JSON Structure:
+{{
+  "summary": "A detailed summary of the chapter.",
+  "notes": [
+    "Key point 1 from the chapter.",
+    "Key point 2 from the chapter."
+  ],
+  "vocabulary": [
+    {{"word": "word1", "meaning": "meaning of word1"}},
+    {{"word": "word2", "meaning": "meaning of word2"}}
+  ],
+  "qna": [
+    {{"question": "What is the main topic?", "answer": "Detailed answer."}},
+    {{"question": "How did X happen?", "answer": "Detailed answer."}}
+  ],
+  "quiz": [
+    {{
+      "type": "mcq",
+      "question": "A multiple choice question verifying comprehension.",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct_index": 1
+    }},
+    {{
+      "type": "tf",
+      "question": "A True/False question verifying comprehension.",
+      "options": ["True", "False"],
+      "correct_index": 0
+    }},
+    {{
+      "type": "fib",
+      "question": "A fill in the blanks question: 'The main character's name is ______.' Use underscore for blank.",
+      "correct_answer": "Answer"
+    }},
+    {{
+      "type": "sa",
+      "question": "A short answer question requiring a sentence or two to answer.",
+      "suggested_answer": "Suggested answer for student reference."
+    }}
+  ]
+}}
+
+Generate at least:
+- 1 summary
+- 3 key notes
+- 3 vocabulary words with meanings
+- 3 Q&As
+- A quiz containing: 2 MCQs, 2 True/False, 2 Fill in the Blanks, and 1 Short Answer Question.
+
+Here is the chapter text:
+{chapter_text[:12000]}
+"""
+
+    try:
+        from openai import OpenAI
+        client = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=nvidia_key
+        )
+        completion = client.chat.completions.create(
+            model="mistralai/mistral-nemotron",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.4,
+            top_p=0.7,
+            max_tokens=4096,
+            stream=False
+        )
+        content = completion.choices[0].message.content.strip()
+        if content.startswith("```"):
+            lines = content.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines[-1].startswith("```"):
+                lines = lines[:-1]
+            content = "\n".join(lines).strip()
+            
+        parsed = json.loads(content)
+        return parsed
+    except Exception as e:
+        print("AI Chapter processing failed:", e)
+        # Fallback dictionary
+        fallback = {
+            "summary": f"This is a fallback summary for {chapter_title}.",
+            "notes": [
+                f"Fallback note 1 for {chapter_title}.",
+                f"Fallback note 2 for {chapter_title}.",
+                f"Fallback note 3 for {chapter_title}."
+            ],
+            "vocabulary": [
+                {"word": "example", "meaning": "a representative form or pattern"},
+                {"word": "fallback", "meaning": "something to return to in case of failure"},
+                {"word": "chapter", "meaning": "a division of a written work"}
+            ],
+            "qna": [
+                {"question": f"What is the focus of {chapter_title}?", "answer": "The text focuses on this chapter's subject matter."},
+                {"question": "How can we study this chapter?", "answer": "By reading the text and attempting the quiz."}
+            ],
+            "quiz": [
+                {
+                    "type": "mcq",
+                    "question": f"Which chapter is this quiz for?",
+                    "options": [chapter_title, "Other Chapter", "None", "All"],
+                    "correct_index": 0
+                },
+                {
+                    "type": "tf",
+                    "question": f"This quiz is for {chapter_title}.",
+                    "options": ["True", "False"],
+                    "correct_index": 0
+                },
+                {
+                    "type": "fib",
+                    "question": f"The title of this chapter is ______.",
+                    "correct_answer": chapter_title
+                },
+                {
+                    "type": "sa",
+                    "question": f"Summarize {chapter_title} in one sentence.",
+                    "suggested_answer": "This is a brief summary of the chapter content."
+                }
+            ]
+        }
+        return fallback
+
+def process_zip_chapters(doc_path, book_id):
+    import zipfile, json, os, re
+    try:
+        with zipfile.ZipFile(doc_path, 'r') as zip_ref:
+            chapters = []
+            for info in zip_ref.infolist():
+                name = info.filename
+                # ignore hidden files, OS metadata
+                if '__MACOSX' in name or '.DS_Store' in name or info.is_dir() or name.startswith('.'):
+                    continue
+                
+                # Determine chapter number from the filename or its path
+                chapter_num = get_chapter_num(name)
+                if chapter_num is None:
+                    continue
+                
+                try:
+                    with zip_ref.open(info) as f:
+                        content_bytes = f.read()
+                        try:
+                            content_text = content_bytes.decode('utf-8')
+                        except UnicodeDecodeError:
+                            content_text = content_bytes.decode('latin-1')
+                except Exception as e:
+                    print(f"Error reading file {name} in zip: {e}")
+                    continue
+                
+                title = clean_chapter_name(name)
+                chapters.append({
+                    "chapter_num": chapter_num,
+                    "title": title,
+                    "content": content_text
+                })
+            
+            if not chapters:
+                print("No chapters found in ZIP file.")
+                return
+                
+            # Sort chapters by chapter_num (natural numeric sorting!)
+            chapters.sort(key=lambda x: x['chapter_num'])
+            
+            # Now process each chapter using AI
+            conn = get_db_connection()
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+            
+            # Clean existing chapters for this book if any
+            conn.execute('DELETE FROM digital_chapters WHERE book_id = ?', (book_id,))
+            
+            for ch in chapters:
+                cleaned_text = ch['content'].strip()
+                # Run AI analysis
+                ai_data = ai_process_chapter(ch['title'], cleaned_text)
+                
+                summary = ai_data.get('summary', '')
+                notes_json = json.dumps(ai_data.get('notes', []))
+                vocab_json = json.dumps(ai_data.get('vocabulary', []))
+                qna_json = json.dumps(ai_data.get('qna', []))
+                quiz_json = json.dumps(ai_data.get('quiz', []))
+                
+                conn.execute('''
+                    INSERT INTO digital_chapters (book_id, chapter_num, title, content, summary, notes, vocabulary, qna, quiz, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (book_id, ch['chapter_num'], ch['title'], cleaned_text, summary, notes_json, vocab_json, qna_json, quiz_json, now_str))
+            
+            conn.commit()
+            conn.close()
+            print(f"Successfully processed {len(chapters)} chapters for book ID {book_id}")
+    except Exception as e:
+        print("Error processing ZIP chapters:", e)
+
 def init_personal_tables(conn):
     # 1. Add plan_name column to users table if it doesn't exist
     try:
@@ -892,6 +1150,36 @@ def init_db():
                  (id INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, content_id INTEGER NOT NULL, 
                   last_page INTEGER DEFAULT 1, updated_at TEXT)''')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_progress_student ON reading_progress(student_id)')
+
+    conn.execute('''CREATE TABLE IF NOT EXISTS digital_chapters (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    book_id INTEGER NOT NULL,
+                    chapter_num INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT,
+                    summary TEXT,
+                    notes TEXT,
+                    vocabulary TEXT,
+                    qna TEXT,
+                    quiz TEXT,
+                    created_at TEXT)''')
+                    
+    conn.execute('''CREATE TABLE IF NOT EXISTS chapter_quiz_attempts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    chapter_id INTEGER NOT NULL,
+                    score REAL NOT NULL,
+                    passed INTEGER DEFAULT 0,
+                    attempted_at TEXT)''')
+                    
+    conn.execute('''CREATE TABLE IF NOT EXISTS chapter_reading_progress (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    chapter_id INTEGER NOT NULL,
+                    progress REAL NOT NULL DEFAULT 0.0,
+                    finished INTEGER DEFAULT 0,
+                    last_read TEXT,
+                    UNIQUE(user_id, chapter_id))''')
     
     # Automated Migrations for Main DB
     for table, col in [('users', 'session_token'), ('users', 'admission_no'), ('books', 'genre'), 
@@ -1033,6 +1321,36 @@ def init_db():
                  (id INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, content_id INTEGER NOT NULL, 
                   last_page INTEGER DEFAULT 1, updated_at TEXT)''')
     dconn.execute('CREATE INDEX IF NOT EXISTS idx_progress_student ON reading_progress(student_id)')
+
+    dconn.execute('''CREATE TABLE IF NOT EXISTS digital_chapters (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    book_id INTEGER NOT NULL,
+                    chapter_num INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT,
+                    summary TEXT,
+                    notes TEXT,
+                    vocabulary TEXT,
+                    qna TEXT,
+                    quiz TEXT,
+                    created_at TEXT)''')
+                    
+    dconn.execute('''CREATE TABLE IF NOT EXISTS chapter_quiz_attempts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    chapter_id INTEGER NOT NULL,
+                    score REAL NOT NULL,
+                    passed INTEGER DEFAULT 0,
+                    attempted_at TEXT)''')
+                    
+    dconn.execute('''CREATE TABLE IF NOT EXISTS chapter_reading_progress (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    chapter_id INTEGER NOT NULL,
+                    progress REAL NOT NULL DEFAULT 0.0,
+                    finished INTEGER DEFAULT 0,
+                    last_read TEXT,
+                    UNIQUE(user_id, chapter_id))''')
     
     # Run migrations on Demo DB
     for table, col in [('users', 'session_token'), ('users', 'admission_no'), ('users', 'class'), ('users', 'school_code'),
@@ -1701,13 +2019,19 @@ def global_library_add_digital_book():
                     print("Error extracting PDF cover page:", e)
             
         conn = get_db_connection()
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
             INSERT INTO digital_content (title, category, description, subject, class, tags, 
                                          cover_url, file_url, student_id, school_code, status, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'GLOBAL', 'Published', ?)
         ''', (title, category, description, subject, class_name, tags, cover_url, file_url, user_id, datetime.now().strftime('%Y-%m-%d %H:%M')))
         conn.commit()
+        book_id = cursor.lastrowid
         conn.close()
+        
+        # If ZIP, automatically extract and process chapters
+        if doc_file and doc_file.filename and doc_filename.lower().endswith('.zip'):
+            process_zip_chapters(doc_path, book_id)
         
         flash(f"Digital book '{title}' published to Global E-Library successfully.", "success")
     except Exception as e:
@@ -3842,7 +4166,7 @@ def student_self_issue(book_id):
 @app.route('/student/publish', methods=['GET', 'POST'])
 @require_permission('canUsePublishing')
 def student_publish():
-    if 'user_id' not in session or session.get('role') != 'student':
+    if 'user_id' not in session or session.get('role') not in ['student', 'teacher', 'admin', 'super_admin']:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({"status": "error", "message": "Session expired. Please log in again."}), 401
         return redirect('/login')
@@ -3864,6 +4188,7 @@ def student_publish():
         
         cover_url = ""
         file_url = ""
+        doc_filename = ""
         
         import time
         from werkzeug.utils import secure_filename
@@ -3919,14 +4244,19 @@ def student_publish():
             id_to_return = draft_id
         else:
             # Creating new draft publication
+            status = 'Published' if session.get('role') in ['admin', 'teacher', 'super_admin'] else 'Draft'
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO digital_content (title, category, description, subject, class, tags, 
                                              cover_url, file_url, student_id, school_code, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Draft', ?)
-            ''', (title, category, description, subject, class_name, tags, cover_url, file_url, user_id, s_code, datetime.now().strftime('%Y-%m-%d %H:%M')))
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (title, category, description, subject, class_name, tags, cover_url, file_url, user_id, s_code, status, datetime.now().strftime('%Y-%m-%d %H:%M')))
             conn.commit()
             id_to_return = cursor.lastrowid
+            
+        # Process ZIP file if uploaded
+        if doc_file and doc_file.filename and doc_filename.lower().endswith('.zip'):
+            process_zip_chapters(doc_path, id_to_return)
             
         conn.close()
         
@@ -5548,6 +5878,38 @@ def view_digital_content(content_id):
         ORDER BY r.created_at DESC
     ''', (content_id,)).fetchall()
     
+    # Fetch chapters
+    chapters = conn.execute('''
+        SELECT * FROM digital_chapters 
+        WHERE book_id = ? 
+        ORDER BY chapter_num ASC
+    ''', (content_id,)).fetchall()
+    
+    chapters_list = []
+    user_id = session.get('user_id')
+    for ch in chapters:
+        ch_dict = dict(ch)
+        # Fetch user progress for this chapter
+        progress = conn.execute('''
+            SELECT progress, finished FROM chapter_reading_progress 
+            WHERE user_id = ? AND chapter_id = ?
+        ''', (user_id, ch['id'])).fetchone()
+        
+        ch_dict['progress'] = progress['progress'] if progress else 0.0
+        ch_dict['finished'] = progress['finished'] if progress else 0
+        
+        # Fetch quiz attempt for this chapter
+        attempt = conn.execute('''
+            SELECT score, passed FROM chapter_quiz_attempts 
+            WHERE user_id = ? AND chapter_id = ?
+            ORDER BY attempted_at DESC LIMIT 1
+        ''', (user_id, ch['id'])).fetchone()
+        
+        ch_dict['quiz_score'] = attempt['score'] if attempt else None
+        ch_dict['quiz_passed'] = attempt['passed'] if attempt else None
+        
+        chapters_list.append(ch_dict)
+        
     conn.close()
     
     if not content:
@@ -5559,7 +5921,7 @@ def view_digital_content(content_id):
         content['student_class'] = 'System'
         content['school_name'] = 'Global Library Network'
         
-    return render_template('content_view.html', content=content, reviews=reviews)
+    return render_template('content_view.html', content=content, reviews=reviews, chapters=chapters_list)
 
 @app.route('/author/<int:author_id>')
 def view_author_profile(author_id):
@@ -5743,6 +6105,216 @@ def api_save_progress():
         conn.close()
         
     return {"status": "success"}
+
+@app.route('/digital-library/chapter/<int:chapter_id>')
+def view_chapter(chapter_id):
+    if 'user_id' not in session: return redirect('/login')
+    
+    conn = get_db_connection()
+    chapter = conn.execute('SELECT * FROM digital_chapters WHERE id = ?', (chapter_id,)).fetchone()
+    if not chapter:
+        conn.close()
+        return "Chapter not found", 404
+        
+    book = conn.execute('SELECT * FROM digital_content WHERE id = ?', (chapter['book_id'],)).fetchone()
+    
+    # Get last progress
+    progress = conn.execute('SELECT * FROM chapter_reading_progress WHERE user_id = ? AND chapter_id = ?', 
+                            (session['user_id'], chapter_id)).fetchone()
+    
+    # Get total chapters of this book to show navigation (prev/next chapter)
+    prev_ch = conn.execute('SELECT id, title FROM digital_chapters WHERE book_id = ? AND chapter_num < ? ORDER BY chapter_num DESC LIMIT 1', 
+                           (chapter['book_id'], chapter['chapter_num'])).fetchone()
+    next_ch = conn.execute('SELECT id, title FROM digital_chapters WHERE book_id = ? AND chapter_num > ? ORDER BY chapter_num ASC LIMIT 1', 
+                           (chapter['book_id'], chapter['chapter_num'])).fetchone()
+                           
+    conn.close()
+    
+    import json
+    ch_dict = dict(chapter)
+    
+    # Load and clean JSON fields safely
+    def safe_load_json(val):
+        if not val:
+            return []
+        try:
+            return json.loads(val)
+        except Exception:
+            return []
+            
+    ch_dict['notes'] = safe_load_json(ch_dict.get('notes'))
+    ch_dict['vocabulary'] = safe_load_json(ch_dict.get('vocabulary'))
+    ch_dict['qna'] = safe_load_json(ch_dict.get('qna'))
+    
+    # Save initial progress if not exists
+    if not progress:
+        conn = get_db_connection()
+        conn.execute('INSERT OR IGNORE INTO chapter_reading_progress (user_id, chapter_id, progress, finished, last_read) VALUES (?, ?, ?, ?, ?)',
+                     (session['user_id'], chapter_id, 10.0, 0, datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        conn.close()
+        ch_dict['current_progress'] = 10.0
+        ch_dict['finished'] = 0
+    else:
+        ch_dict['current_progress'] = progress['progress']
+        ch_dict['finished'] = progress['finished']
+        
+    return render_template('chapter_reader.html', chapter=ch_dict, book=book, prev_ch=prev_ch, next_ch=next_ch)
+
+@app.route('/api/chapter/save-progress', methods=['POST'])
+def save_chapter_progress():
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+        
+    data = request.json or {}
+    chapter_id = data.get('chapter_id')
+    progress = float(data.get('progress', 0.0))
+    finished = int(data.get('finished', 0))
+    user_id = session.get('user_id')
+    
+    if not chapter_id:
+        return jsonify({"status": "error", "message": "Missing chapter_id"}), 400
+        
+    conn = get_db_connection()
+    now = datetime.now().strftime('%Y-%m-%d %H:%M')
+    try:
+        # Check if progress exists
+        existing = conn.execute('SELECT id, finished FROM chapter_reading_progress WHERE user_id = ? AND chapter_id = ?', (user_id, chapter_id)).fetchone()
+        if existing:
+            # Only update finished if it is not already 1
+            new_finished = max(existing['finished'], finished)
+            conn.execute('''
+                UPDATE chapter_reading_progress 
+                SET progress = ?, finished = ?, last_read = ?
+                WHERE id = ?
+            ''', (progress, new_finished, now, existing['id']))
+        else:
+            conn.execute('''
+                INSERT INTO chapter_reading_progress (user_id, chapter_id, progress, finished, last_read)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (user_id, chapter_id, progress, finished, now))
+        conn.commit()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/digital-library/chapter/<int:chapter_id>/quiz', methods=['GET', 'POST'])
+def take_chapter_quiz(chapter_id):
+    if 'user_id' not in session: return redirect('/login')
+    user_id = session['user_id']
+    
+    conn = get_db_connection()
+    try:
+        # Check if already attempted
+        attempt = conn.execute('''
+            SELECT * FROM chapter_quiz_attempts 
+            WHERE user_id = ? AND chapter_id = ?
+        ''', (user_id, chapter_id)).fetchone()
+        
+        chapter = conn.execute('SELECT * FROM digital_chapters WHERE id = ?', (chapter_id,)).fetchone()
+        if not chapter:
+            flash("Chapter not found.", "error")
+            return redirect('/digital-library')
+            
+        book = conn.execute('SELECT * FROM digital_content WHERE id = ?', (chapter['book_id'],)).fetchone()
+        
+        import json
+        questions = json.loads(chapter['quiz'])
+        
+        if attempt:
+            # Already taken, render results immediately
+            passed = attempt['passed']
+            score = attempt['score']
+            return render_template('chapter_quiz_result.html', 
+                                   chapter=chapter, 
+                                   book=book, 
+                                   score=score, 
+                                   passed=passed,
+                                   already_taken=True)
+            
+        # Check eligibility (progress >= 80 or finished = 1)
+        progress = conn.execute('SELECT * FROM chapter_reading_progress WHERE user_id = ? AND chapter_id = ?', 
+                                (user_id, chapter_id)).fetchone()
+        if not progress or (progress['progress'] < 80.0 and progress['finished'] != 1):
+            flash("You must finish reading the chapter before taking the quiz.", "error")
+            return redirect(f'/digital-library/chapter/{chapter_id}')
+            
+        if request.method == 'POST':
+            correct_count = 0
+            total_questions = 0
+            
+            graded_questions = []
+            
+            for idx, q in enumerate(questions):
+                q_type = q.get('type')
+                q_dict = dict(q)
+                
+                if q_type in ['mcq', 'tf']:
+                    selected = request.form.get(f'q_{idx}')
+                    is_correct = False
+                    if selected is not None and int(selected) == q.get('correct_index'):
+                        correct_count += 1
+                        is_correct = True
+                    q_dict['user_answer'] = q['options'][int(selected)] if selected is not None else "None"
+                    q_dict['correct_answer'] = q['options'][q['correct_index']]
+                    q_dict['is_correct'] = is_correct
+                    total_questions += 1
+                elif q_type == 'fib':
+                    user_ans = request.form.get(f'q_{idx}', '').strip()
+                    correct_ans = q.get('correct_answer', '').strip()
+                    is_correct = (user_ans.lower() == correct_ans.lower())
+                    if is_correct:
+                        correct_count += 1
+                    q_dict['user_answer'] = user_ans
+                    q_dict['correct_answer'] = correct_ans
+                    q_dict['is_correct'] = is_correct
+                    total_questions += 1
+                elif q_type == 'sa':
+                    user_ans = request.form.get(f'q_{idx}', '').strip()
+                    suggested = q.get('suggested_answer', '').strip()
+                    
+                    # Grade with AI
+                    grade = ai_grade_short_answer(q.get('question'), suggested, user_ans)
+                    is_correct = (grade == 'correct')
+                    if is_correct:
+                        correct_count += 1
+                    q_dict['user_answer'] = user_ans
+                    q_dict['correct_answer'] = suggested
+                    q_dict['is_correct'] = is_correct
+                    q_dict['ai_graded'] = True
+                    total_questions += 1
+                
+                graded_questions.append(q_dict)
+                    
+            score_pct = (correct_count / total_questions) * 100 if total_questions > 0 else 0.0
+            passed = 1 if score_pct >= 70.0 else 0
+            
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            conn.execute('''
+                INSERT INTO chapter_quiz_attempts (user_id, chapter_id, score, passed, attempted_at)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (user_id, chapter_id, score_pct, passed, now_str))
+            
+            if passed:
+                update_score(conn, user_id, 'chapter_quiz', 20, f"Passed quiz for chapter '{chapter['title']}' ({round(score_pct)}% score)")
+                
+            conn.commit()
+            
+            return render_template('chapter_quiz_result.html', 
+                                   chapter=chapter, 
+                                   book=book, 
+                                   score=score_pct, 
+                                   passed=passed,
+                                   correct=correct_count,
+                                   total=total_questions,
+                                   questions=graded_questions,
+                                   already_taken=False)
+                                   
+        return render_template('chapter_quiz.html', chapter=chapter, book=book, questions=questions)
+    finally:
+        conn.close()
 
 @app.route('/api/live-stats')
 def api_live_stats():
