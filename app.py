@@ -3776,7 +3776,33 @@ def student_browse():
         
     books_rows = conn.execute(query, params).fetchall()
     books = [dict(r) for r in books_rows]
+    for b in books:
+        b['book_type'] = 'physical'
+        
+    # Fetch global digital books to display in the main catalog
+    digital_query = '''
+        SELECT id, title, 'Manager' as author, category as genre, cover_url, 'GLOBAL' as school_code, 'digital' as book_type 
+        FROM digital_content 
+        WHERE school_code = "GLOBAL" AND status = "Published"
+    '''
+    digital_params = []
     
+    if genre_filter:
+        digital_query += ' AND category = ?'
+        digital_params.append(genre_filter)
+        
+    if search_query and not ai_search:
+        digital_query += ' AND (title LIKE ? OR description LIKE ? OR subject LIKE ? OR category LIKE ?)'
+        digital_params.extend([f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
+        
+    digital_rows = conn.execute(digital_query, digital_params).fetchall()
+    for r in digital_rows:
+        books.append(dict(r))
+        
+    # Sort books alphabetically by title if not AI searching
+    if not (search_query and ai_search):
+        books.sort(key=lambda x: x.get('title', '').lower())
+        
     ai_scores = {}
     if search_query and ai_search and books:
         ai_scores = perform_ai_semantic_search(search_query, books)

@@ -1162,19 +1162,24 @@
                 </div>
                 <div class="book-scroller">
                     {% for book in books[:5] %}
-                    <a href="/student/book/{{ book.id }}" class="book-card">
-                        <div class="book-cover-placeholder" data-title="{{ book.title }}">
-                            <span class="cover-tag">{{ book.genre or 'Trending' }}</span>
-                            <h4 class="cover-title">{{ book.title }}</h4>
+                    {% set card_url = "/digital-library/content/" ~ book.id if book.book_type == 'digital' else "/student/book/" ~ book.id %}
+                    <a href="{{ card_url }}" class="book-card">
+                        <div class="book-cover-placeholder" data-title="{{ book.title }}" style="position: relative;">
+                            {% if book.cover_url %}
+                            <img src="{{ book.cover_url }}" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;">
+                            {% endif %}
+                            <span class="cover-tag" style="z-index: 2;">{{ book.genre or 'Trending' }}</span>
+                            <h4 class="cover-title" style="z-index: 2; margin-top: auto;">{{ book.title }}</h4>
                         </div>
                         <div class="book-details">
                             <h4 class="book-title">{{ book.title }}</h4>
-                            <p class="book-author">{{ book.author }}</p>
+                            <p class="book-author">{{ book.author }} {% if book.book_type == 'digital' %}📖{% endif %}</p>
                             <div class="book-meta">
                                 <div class="book-rating">
                                     <span>⭐</span>
                                     <span>{{ "%.1f"|format(4.5 + (book.id % 5) / 10) }}</span>
                                 </div>
+                                {% if book.book_type != 'digital' %}
                                 <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('{{ book.id }}');">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="1"></circle>
@@ -1182,6 +1187,7 @@
                                         <circle cx="12" cy="19" r="1"></circle>
                                     </svg>
                                 </button>
+                                {% endif %}
                             </div>
                         </div>
                     </a>
@@ -1199,19 +1205,24 @@
                 </div>
                 <div class="book-scroller">
                     {% for book in books[5:10] %}
-                    <a href="/student/book/{{ book.id }}" class="book-card">
-                        <div class="book-cover-placeholder" data-title="{{ book.title }}">
-                            <span class="cover-tag">NEW</span>
-                            <h4 class="cover-title">{{ book.title }}</h4>
+                    {% set card_url = "/digital-library/content/" ~ book.id if book.book_type == 'digital' else "/student/book/" ~ book.id %}
+                    <a href="{{ card_url }}" class="book-card">
+                        <div class="book-cover-placeholder" data-title="{{ book.title }}" style="position: relative;">
+                            {% if book.cover_url %}
+                            <img src="{{ book.cover_url }}" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;">
+                            {% endif %}
+                            <span class="cover-tag" style="z-index: 2;">NEW</span>
+                            <h4 class="cover-title" style="z-index: 2; margin-top: auto;">{{ book.title }}</h4>
                         </div>
                         <div class="book-details">
                             <h4 class="book-title">{{ book.title }}</h4>
-                            <p class="book-author">{{ book.author }}</p>
+                            <p class="book-author">{{ book.author }} {% if book.book_type == 'digital' %}📖{% endif %}</p>
                             <div class="book-meta">
                                 <div class="book-rating">
                                     <span>⭐</span>
                                     <span>{{ "%.1f"|format(4.4 + (book.id % 6) / 10) }}</span>
                                 </div>
+                                {% if book.book_type != 'digital' %}
                                 <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('{{ book.id }}');">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="1"></circle>
@@ -1219,6 +1230,7 @@
                                         <circle cx="12" cy="19" r="1"></circle>
                                     </svg>
                                 </button>
+                                {% endif %}
                             </div>
                         </div>
                     </a>
@@ -1240,22 +1252,27 @@
                 </div>
                 <div class="books-grid">
                     {% for book in books %}
-                    <a href="/student/book/{{ book.id }}" class="book-card" style="width: auto;">
+                    {% set card_url = "/digital-library/content/" ~ book.id if book.book_type == 'digital' else "/student/book/" ~ book.id %}
+                    <a href="{{ card_url }}" class="book-card" style="width: auto;">
                         <div class="book-cover-placeholder" data-title="{{ book.title }}" style="position: relative;">
-                            {% if book.ai_score %}
-                            <div class="ai-badge">🤖 {{ book.ai_score }}% Match</div>
+                            {% if book.cover_url %}
+                            <img src="{{ book.cover_url }}" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;">
                             {% endif %}
-                            <span class="cover-tag">{{ book.genre or 'General' }}</span>
-                            <h4 class="cover-title">{{ book.title }}</h4>
+                            {% if book.ai_score %}
+                            <div class="ai-badge" style="z-index: 2;">🤖 {{ book.ai_score }}% Match</div>
+                            {% endif %}
+                            <span class="cover-tag" style="z-index: 2;">{{ book.genre or 'General' }}</span>
+                            <h4 class="cover-title" style="z-index: 2; margin-top: auto;">{{ book.title }}</h4>
                         </div>
                         <div class="book-details">
                             <h4 class="book-title">{{ book.title }}</h4>
-                            <p class="book-author">{{ book.author }}</p>
+                            <p class="book-author">{{ book.author }} {% if book.book_type == 'digital' %}📖{% endif %}</p>
                             <div class="book-meta">
                                 <div class="book-rating">
                                     <span>⭐</span>
                                     <span>{{ "%.1f"|format(4.3 + (book.id % 7) / 10) }}</span>
                                 </div>
+                                {% if book.book_type != 'digital' %}
                                 <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('{{ book.id }}');">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="1"></circle>
@@ -1263,6 +1280,7 @@
                                         <circle cx="12" cy="19" r="1"></circle>
                                     </svg>
                                 </button>
+                                {% endif %}
                             </div>
                         </div>
                     </a>
