@@ -704,6 +704,26 @@ def init_db():
     conn = get_db_connection()
     init_personal_tables(conn)
     
+    # Create global library sections table
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS global_sections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        created_at TEXT
+    )''')
+    
+    # Auto-seed default global sections
+    try:
+        count = conn.execute('SELECT COUNT(*) FROM global_sections').fetchone()[0]
+        if count == 0:
+            default_secs = ["Self Help", "Science", "Technology", "Business", "Story", "Reference", "Novel"]
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+            for name in default_secs:
+                conn.execute('INSERT OR IGNORE INTO global_sections (name, created_at) VALUES (?, ?)', (name, now_str))
+            conn.commit()
+    except Exception as e:
+        print("Error seeding global sections:", e)
+
     # ═══════════════════════════════════════════════════════════════
     #  Book Acquisition Table Creation (Main DB)
     # ═══════════════════════════════════════════════════════════════
@@ -1473,6 +1493,10 @@ def render_super_admin_dashboard_logic():
     stats['total_acquisition_copies'] = conn.execute('SELECT SUM(total_copies) FROM acquisitions').fetchone()[0] or 0
     stats['total_acquisition_value'] = conn.execute('SELECT SUM(total_amount) FROM acquisitions').fetchone()[0] or 0
 
+    # Fetch global library sections and books
+    global_sections = [dict(r) for r in conn.execute('SELECT * FROM global_sections ORDER BY name ASC').fetchall()]
+    global_books = [dict(r) for r in conn.execute('SELECT * FROM books WHERE school_code = "GLOBAL" ORDER BY id DESC').fetchall()]
+
     conn.close()
     return render_template('super_admin.html', 
                            stats=stats, 
@@ -1487,7 +1511,107 @@ def render_super_admin_dashboard_logic():
                            plans=plans,
                            personal_owners=personal_owners,
                            vendors_sa=vendors_sa,
-                           acquisitions_sa=acquisitions_sa)
+                           acquisitions_sa=acquisitions_sa,
+                           global_sections=global_sections,
+                           global_books=global_books)
+
+@app.route('/super-admin/global-sections/add', methods=['POST'])
+def global_sections_add():
+    if session.get('role') != 'super_admin' or not session.get('is_super_super_admin'):
+        return redirect('/login')
+    name = request.form.get('name', '').strip()
+    if name:
+        conn = get_db_connection()
+        try:
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+            conn.execute('INSERT INTO global_sections (name, created_at) VALUES (?, ?)', (name, now_str))
+            conn.commit()
+            flash(f"Global Section '{name}' added successfully.", "success")
+        except sqlite3.IntegrityError:
+            flash(f"Global Section '{name}' already exists.", "error")
+        finally:
+            conn.close()
+    else:
+        flash("Section name cannot be empty.", "error")
+    return redirect_to_sa()
+
+@app.route('/super-admin/global-sections/delete/<int:sec_id>', methods=['POST'])
+def global_sections_delete(sec_id):
+    if session.get('role') != 'super_admin' or not session.get('is_super_super_admin'):
+        return redirect('/login')
+    conn = get_db_connection()
+    try:
+        sec = conn.execute('SELECT name FROM global_sections WHERE id = ?', (sec_id,)).fetchone()
+        if sec:
+            sec_name = sec['name']
+            conn.execute('UPDATE books SET genre = "General" WHERE school_code = "GLOBAL" AND genre = ?', (sec_name,))
+            conn.execute('DELETE FROM global_sections WHERE id = ?', (sec_id,))
+            conn.commit()
+            flash(f"Global Section '{sec_name}' deleted successfully.", "success")
+        else:
+            flash("Global Section not found.", "error")
+    except Exception as e:
+        flash(f"Error: {str(e)}", "error")
+    finally:
+        conn.close()
+    return redirect_to_sa()
+
+@app.route('/super-admin/global-library/add-book', methods=['POST'])
+def global_library_add_book():
+    if session.get('role') != 'super_admin' or not session.get('is_super_super_admin'):
+        return redirect('/login')
+    title = request.form.get('title', '').strip()
+    author = request.form.get('author', '').strip()
+    genre = request.form.get('genre', '').strip()
+    barcode_id = request.form.get('barcode_id', '').strip()
+    
+    if not title or not author:
+        flash("Title and Author are required.", "error")
+        return redirect_to_sa()
+        
+    if not barcode_id:
+        import random
+        barcode_id = f"GLOB{random.randint(100000, 999999)}"
+        
+    conn = get_db_connection()
+    try:
+        existing = conn.execute('SELECT 1 FROM books WHERE barcode_id = ?', (barcode_id,)).fetchone()
+        if existing:
+            import random
+            barcode_id = f"GLOB{random.randint(100000, 999999)}"
+            
+        conn.execute('''
+            INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code)
+            VALUES (?, ?, ?, ?, ?, ?, 'GLOBAL')
+        ''', (title, author, genre, barcode_id, 99999, 99999))
+        conn.commit()
+        flash(f"Book '{title}' added to the Global Library successfully.", "success")
+    except Exception as e:
+        flash(f"Error adding book: {str(e)}", "error")
+    finally:
+        conn.close()
+    return redirect_to_sa()
+
+@app.route('/super-admin/global-library/delete-book/<int:book_id>', methods=['POST'])
+def global_library_delete_book(book_id):
+    if session.get('role') != 'super_admin' or not session.get('is_super_super_admin'):
+        return redirect('/login')
+    conn = get_db_connection()
+    try:
+        book = conn.execute('SELECT title FROM books WHERE id = ? AND school_code = "GLOBAL"', (book_id,)).fetchone()
+        if book:
+            conn.execute('DELETE FROM books WHERE id = ?', (book_id,))
+            conn.execute('DELETE FROM reservations WHERE book_id = ?', (book_id,))
+            conn.execute('DELETE FROM transactions WHERE book_id = ?', (book_id,))
+            conn.commit()
+            flash(f"Book '{book['title']}' deleted from Global Library.", "success")
+        else:
+            flash("Global book not found.", "error")
+    except Exception as e:
+        flash(f"Error: {str(e)}", "error")
+    finally:
+        conn.close()
+    return redirect_to_sa()
 
 def redirect_to_sa():
     if session.get('is_super_super_admin'):
@@ -3323,7 +3447,7 @@ def student_panel():
     txs = conn.execute('SELECT t.*, b.title, b.author, b.cover_url FROM transactions t JOIN books b ON b.id = t.book_id WHERE t.user_id = ? AND t.return_date IS NULL', (user_id,)).fetchall()
     
     # Fetch Recommended Books (Random 4 available books in the school)
-    recommended_books = conn.execute('SELECT * FROM books WHERE school_code = ? AND available_copies > 0 AND (is_banned IS NULL OR is_banned != 1 AND is_banned != \'1\') ORDER BY RANDOM() LIMIT 4', (s_code,)).fetchall()
+    recommended_books = conn.execute('SELECT * FROM books WHERE (school_code = ? OR school_code = "GLOBAL") AND available_copies > 0 AND (is_banned IS NULL OR is_banned != 1 AND is_banned != \'1\') ORDER BY RANDOM() LIMIT 4', (s_code,)).fetchall()
     
     # Stats Calculation
     total_issued = conn.execute('SELECT COUNT(*) FROM transactions WHERE user_id = ?', (user_id,)).fetchone()[0]
@@ -3477,7 +3601,7 @@ def book_details(book_id):
     if 'user_id' not in session: return redirect('/login')
     s_code = session.get('school_code')
     conn = get_db_connection()
-    book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+    book = conn.execute('SELECT * FROM books WHERE id = ? AND (school_code = ? OR school_code = "GLOBAL")', (book_id, s_code)).fetchone()
     
     if not book:
         conn.close()
@@ -3496,7 +3620,7 @@ def reserve_book(book_id):
     user_id = session.get('user_id')
     
     conn = get_db_connection()
-    book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+    book = conn.execute('SELECT * FROM books WHERE id = ? AND (school_code = ? OR school_code = "GLOBAL")', (book_id, s_code)).fetchone()
     if book:
         # Prevent duplicate pending reservations
         existing = conn.execute('SELECT * FROM reservations WHERE user_id = ? AND book_id = ? AND status = "Pending"', (user_id, book_id)).fetchone()
@@ -3522,7 +3646,7 @@ def student_browse():
     
     conn = get_db_connection()
     
-    query = "SELECT * FROM books WHERE (is_banned IS NULL OR is_banned != 1 AND is_banned != '1') AND school_code = ?"
+    query = "SELECT * FROM books WHERE (is_banned IS NULL OR is_banned != 1 AND is_banned != '1') AND (school_code = ? OR school_code = 'GLOBAL')"
     params = [s_code]
     
     if genre_filter:
@@ -3547,9 +3671,10 @@ def student_browse():
                 scored_books.append(b)
         books = sorted(scored_books, key=lambda x: x["ai_score"], reverse=True)
         
-    genres = [row[0] for row in conn.execute("SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND school_code = ? AND (is_banned IS NULL OR is_banned != 1 AND is_banned != '1')", (s_code,)).fetchall()]
+    genres = [row[0] for row in conn.execute("SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND (school_code = ? OR school_code = 'GLOBAL') AND (is_banned IS NULL OR is_banned != 1 AND is_banned != '1')", (s_code,)).fetchall()]
+    global_sections = [dict(r) for r in conn.execute('SELECT * FROM global_sections ORDER BY name ASC').fetchall()]
     conn.close()
-    return render_template('student_browse.html', books=books, genres=genres, active_genre=genre_filter, search_query=search_query, ai_search=ai_search)
+    return render_template('student_browse.html', books=books, genres=genres, active_genre=genre_filter, search_query=search_query, ai_search=ai_search, global_sections=global_sections)
 
 @app.route('/student/issue/<int:book_id>')
 def student_self_issue(book_id):

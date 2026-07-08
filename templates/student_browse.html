@@ -1087,26 +1087,22 @@
                         <div class="category-icon-wrapper">📱</div>
                         <span class="category-text">All</span>
                     </a>
-                    <a href="/student/browse?genre=Self+Help" class="category-card {% if active_genre == 'Self Help' %}active{% endif %}">
-                        <div class="category-icon-wrapper">🌿</div>
-                        <span class="category-text">Self Help</span>
+                    {% for sec in global_sections %}
+                    <a href="/student/browse?genre={{ sec.name }}" class="category-card {% if active_genre == sec.name %}active{% endif %}">
+                        <div class="category-icon-wrapper">
+                            {% if sec.name == 'Self Help' %}🌿
+                            {% elif sec.name == 'Science' %}🧪
+                            {% elif sec.name == 'Technology' %}💻
+                            {% elif sec.name == 'Business' %}💼
+                            {% elif sec.name == 'Story' %}📖
+                            {% elif sec.name == 'Reference' %}📚
+                            {% elif sec.name == 'Novel' %}📕
+                            {% else %}📚
+                            {% endif %}
+                        </div>
+                        <span class="category-text">{{ sec.name }}</span>
                     </a>
-                    <a href="/student/browse?genre=Science" class="category-card {% if active_genre == 'Science' %}active{% endif %}">
-                        <div class="category-icon-wrapper">🧪</div>
-                        <span class="category-text">Science</span>
-                    </a>
-                    <a href="/student/browse?genre=Technology" class="category-card {% if active_genre == 'Technology' %}active{% endif %}">
-                        <div class="category-icon-wrapper">💻</div>
-                        <span class="category-text">Technology</span>
-                    </a>
-                    <a href="/student/browse?genre=Business" class="category-card {% if active_genre == 'Business' %}active{% endif %}">
-                        <div class="category-icon-wrapper">💼</div>
-                        <span class="category-text">Business</span>
-                    </a>
-                    <a href="/student/browse?genre=Story" class="category-card {% if active_genre == 'Story' %}active{% endif %}">
-                        <div class="category-icon-wrapper">📖</div>
-                        <span class="category-text">Story</span>
-                    </a>
+                    {% endfor %}
                 </div>
             </div>
 

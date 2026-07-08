@@ -5,6 +5,6 @@ if __name__ == '__main__':
     # Initialize the database
     init_db()
     
-    print("Starting School Library System on http://0.0.0.0:5000")
+    print("Starting School Library System on http://0.0.0.0:5001")
     # Serve the app using Waitress
-    serve(app, host='0.0.0.0', port=5000)
+    serve(app, host='0.0.0.0', port=5001)
