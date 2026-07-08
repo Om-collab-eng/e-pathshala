@@ -7919,6 +7919,12 @@ def debug_db_status():
         tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
         res = f"Tables: {tables}\n\n"
         
+        import subprocess
+        try:
+            res += "Git Commit:\n" + subprocess.check_output(["git", "log", "-1"]).decode() + "\n"
+        except Exception as e:
+            res += f"Git Error: {str(e)}\n"
+        
         # Query global_sections
         try:
             secs = [dict(r) for r in conn.execute("SELECT * FROM global_sections").fetchall()]
