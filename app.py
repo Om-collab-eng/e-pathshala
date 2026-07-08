@@ -1525,6 +1525,7 @@ def render_super_admin_dashboard_logic():
     # Fetch global library sections and books
     global_sections = [dict(r) for r in conn.execute('SELECT * FROM global_sections ORDER BY name ASC').fetchall()]
     global_books = [dict(r) for r in conn.execute('SELECT * FROM books WHERE school_code = "GLOBAL" ORDER BY id DESC').fetchall()]
+    global_digital_books = [dict(r) for r in conn.execute('SELECT * FROM digital_content WHERE school_code = "GLOBAL" ORDER BY id DESC').fetchall()]
 
     conn.close()
     return render_template('super_admin.html', 
@@ -1542,7 +1543,8 @@ def render_super_admin_dashboard_logic():
                            vendors_sa=vendors_sa,
                            acquisitions_sa=acquisitions_sa,
                            global_sections=global_sections,
-                           global_books=global_books)
+                           global_books=global_books,
+                           global_digital_books=global_digital_books)
 
 @app.route('/super-admin/global-sections/add', methods=['POST'])
 def global_sections_add():
@@ -1638,6 +1640,75 @@ def global_library_delete_book(book_id):
             flash("Global book not found.", "error")
     except Exception as e:
         flash(f"Error: {str(e)}", "error")
+    finally:
+        conn.close()
+@app.route('/super-admin/global-library/add-digital-book', methods=['POST'])
+def global_library_add_digital_book():
+    if session.get('role') != 'super_admin' or not session.get('is_super_super_admin'):
+        return redirect('/login')
+        
+    title = request.form.get('title', '').strip()
+    category = request.form.get('category', '').strip()
+    description = request.form.get('description', '').strip()
+    subject = request.form.get('subject', '').strip()
+    class_name = request.form.get('class', '').strip()
+    tags = request.form.get('tags', '').strip()
+    
+    cover_file = request.files.get('cover')
+    doc_file = request.files.get('document')
+    
+    if not title or not category or not doc_file or not doc_file.filename:
+        flash("Title, Category, and Document file are required.", "error")
+        return redirect_to_sa()
+        
+    cover_url = ""
+    file_url = ""
+    
+    import time
+    from werkzeug.utils import secure_filename
+    
+    user_id = -1  # System Master / Manager
+    
+    try:
+        if cover_file and cover_file.filename:
+            cover_filename = f"c_global_{int(time.time())}_{secure_filename(cover_file.filename)}"
+            cover_path = os.path.join(app.config['UPLOAD_FOLDER'] if 'UPLOAD_FOLDER' in app.config else os.path.join(BASE_DIR, 'static', 'uploads'), cover_filename)
+            os.makedirs(os.path.dirname(cover_path), exist_ok=True)
+            cover_file.save(cover_path)
+            cover_url = f"/static/uploads/{cover_filename}"
+            
+        if doc_file and doc_file.filename:
+            doc_filename = f"d_global_{int(time.time())}_{secure_filename(doc_file.filename)}"
+            doc_path = os.path.join(DIGITAL_CONTENT_DIR, doc_filename)
+            doc_file.save(doc_path)
+            file_url = f"/static/digital_content/{doc_filename}"
+            
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO digital_content (title, category, description, subject, class, tags, 
+                                         cover_url, file_url, student_id, school_code, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'GLOBAL', 'Published', ?)
+        ''', (title, category, description, subject, class_name, tags, cover_url, file_url, user_id, datetime.now().strftime('%Y-%m-%d %H:%M')))
+        conn.commit()
+        conn.close()
+        
+        flash(f"Digital book '{title}' published to Global E-Library successfully.", "success")
+    except Exception as e:
+        flash(f"Error publishing digital book: {str(e)}", "error")
+        
+    return redirect_to_sa()
+
+@app.route('/super-admin/global-library/delete-digital-book/<int:content_id>', methods=['POST'])
+def global_library_delete_digital_book(content_id):
+    if session.get('role') != 'super_admin' or not session.get('is_super_super_admin'):
+        return redirect('/login')
+    conn = get_db_connection()
+    try:
+        conn.execute('DELETE FROM digital_content WHERE id = ? AND school_code = "GLOBAL"', (content_id,))
+        conn.commit()
+        flash("Global digital resource deleted successfully.", "success")
+    except Exception as e:
+        flash(f"Error deleting digital resource: {str(e)}", "error")
     finally:
         conn.close()
     return redirect_to_sa()
@@ -5308,8 +5379,8 @@ def digital_library():
         SELECT d.*, u.name as student_name, u.class as student_class,
                (SELECT 1 FROM reading_progress rp WHERE rp.student_id = ? AND rp.content_id = d.id) as is_bookmarked
         FROM digital_content d
-        JOIN users u ON d.student_id = u.id
-        WHERE d.school_code = ? AND d.status = 'Published'
+        LEFT JOIN users u ON d.student_id = u.id
+        WHERE (d.school_code = ? OR d.school_code = 'GLOBAL') AND d.status = 'Published'
     '''
     params = [user_id, s_code]
     
@@ -5323,7 +5394,11 @@ def digital_library():
     # Convert to list of dicts
     content_list = []
     for r in content_rows:
-        content_list.append(dict(r))
+        item = dict(r)
+        if item.get('school_code') == 'GLOBAL' or item.get('student_id') == -1:
+            item['student_name'] = 'Manager'
+            item['student_class'] = 'System'
+        content_list.append(item)
         
     ai_scores = {}
     if search_query and ai_search and content_list:
@@ -5400,8 +5475,8 @@ def view_digital_content(content_id):
     content = conn.execute('''
         SELECT d.*, u.name as student_name, u.class as student_class, s.name as school_name
         FROM digital_content d
-        JOIN users u ON d.student_id = u.id
-        JOIN schools s ON d.school_code = s.school_code
+        LEFT JOIN users u ON d.student_id = u.id
+        LEFT JOIN schools s ON d.school_code = s.school_code
         WHERE d.id = ?
     ''', (content_id,)).fetchone()
     
@@ -5417,6 +5492,12 @@ def view_digital_content(content_id):
     
     if not content:
         return "Content not found or hidden", 404
+        
+    content = dict(content)
+    if content.get('school_code') == 'GLOBAL' or content.get('student_id') == -1:
+        content['student_name'] = 'Manager'
+        content['student_class'] = 'System'
+        content['school_name'] = 'Global Library Network'
         
     return render_template('content_view.html', content=content, reviews=reviews)
 

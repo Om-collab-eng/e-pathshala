@@ -126,9 +126,9 @@
                     </div>
                     <h3 style="margin: 0 0 5px 0; color: var(--text-light);">{{ content.student_name }}</h3>
                     <p style="margin: 0; font-size: 0.8rem; color: var(--text-mid);">Class {{ content.student_class }}</p>
-                    <p style="margin: 5px 0 0 0; font-size: 0.75rem; color: var(--text-low);">{{ content.school_name }}</p>
-                    
+                    {% if content.student_id != -1 %}
                     <a href="/author/{{ content.student_id }}" class="btn-alt" style="display: block; margin-top: 15px; padding: 8px;">View Full Profile</a>
+                    {% endif %}
                 </div>
             </div>
 
