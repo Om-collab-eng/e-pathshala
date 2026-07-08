@@ -1683,6 +1683,23 @@ def global_library_add_digital_book():
             doc_file.save(doc_path)
             file_url = f"/static/digital_content/{doc_filename}"
             
+            # Extract page 1 of PDF as cover page if no cover was uploaded
+            if not cover_url and doc_filename.lower().endswith('.pdf'):
+                try:
+                    import fitz
+                    cover_filename = f"c_global_{int(time.time())}_pdfcover.jpg"
+                    cover_path = os.path.join(app.config['UPLOAD_FOLDER'] if 'UPLOAD_FOLDER' in app.config else os.path.join(BASE_DIR, 'static', 'uploads'), cover_filename)
+                    os.makedirs(os.path.dirname(cover_path), exist_ok=True)
+                    doc = fitz.open(doc_path)
+                    if doc.page_count > 0:
+                        page = doc.load_page(0)
+                        pix = page.get_pixmap(dpi=150)
+                        pix.save(cover_path)
+                        cover_url = f"/static/uploads/{cover_filename}"
+                    doc.close()
+                except Exception as e:
+                    print("Error extracting PDF cover page:", e)
+            
         conn = get_db_connection()
         conn.execute('''
             INSERT INTO digital_content (title, category, description, subject, class, tags, 
@@ -3837,6 +3854,23 @@ def student_publish():
             doc_path = os.path.join(DIGITAL_CONTENT_DIR, doc_filename)
             doc_file.save(doc_path)
             file_url = f"/static/digital_content/{doc_filename}"
+            
+            # Extract page 1 of PDF as cover page if no cover was uploaded
+            if not cover_url and doc_filename.lower().endswith('.pdf'):
+                try:
+                    import fitz
+                    cover_filename = f"c_{user_id}_{int(time.time())}_pdfcover.jpg"
+                    cover_path = os.path.join(app.config['UPLOAD_FOLDER'] if 'UPLOAD_FOLDER' in app.config else os.path.join(BASE_DIR, 'static', 'uploads'), cover_filename)
+                    os.makedirs(os.path.dirname(cover_path), exist_ok=True)
+                    doc = fitz.open(doc_path)
+                    if doc.page_count > 0:
+                        page = doc.load_page(0)
+                        pix = page.get_pixmap(dpi=150)
+                        pix.save(cover_path)
+                        cover_url = f"/static/uploads/{cover_filename}"
+                    doc.close()
+                except Exception as e:
+                    print("Error extracting PDF cover page:", e)
             
         conn = get_db_connection()
         
