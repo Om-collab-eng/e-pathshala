@@ -7910,39 +7910,6 @@ def mark_transaction_lost(tx_id):
     conn.close()
     return redirect('/admin')
 
-@app.route('/debug-db-status')
-def debug_db_status():
-    import traceback
-    conn = get_db_connection()
-    try:
-        # Query tables
-        tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
-        res = f"Tables: {tables}\n\n"
-        
-        import subprocess
-        try:
-            res += "Git Commit:\n" + subprocess.check_output(["git", "log", "-1"]).decode() + "\n"
-        except Exception as e:
-            res += f"Git Error: {str(e)}\n"
-        
-        # Query global_sections
-        try:
-            secs = [dict(r) for r in conn.execute("SELECT * FROM global_sections").fetchall()]
-            res += f"global_sections content: {secs}\n\n"
-        except Exception as e:
-            res += f"global_sections Error: {str(e)}\nTraceback:\n{traceback.format_exc()}\n\n"
-            
-        # Query books
-        try:
-            books_count = conn.execute("SELECT COUNT(*) FROM books").fetchone()[0]
-            res += f"Books count: {books_count}\n"
-        except Exception as e:
-            res += f"Books Error: {str(e)}\n"
-            
-        return Response(res, mimetype='text/plain')
-    finally:
-        conn.close()
-
 # Ensure database is initialized even when run via Gunicorn
 init_db()
 
