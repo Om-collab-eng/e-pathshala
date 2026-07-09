@@ -143,10 +143,11 @@ def list_supabase_files(prefix):
         return []
     try:
         folder = f"librika/{prefix}"
+        res_type = "raw" if "digital_content" in prefix else "image"
         result = cloudinary.api.resources(
             type="upload",
             prefix=folder,
-            resource_type="auto",
+            resource_type=res_type,
             max_results=500
         )
         filenames = []
