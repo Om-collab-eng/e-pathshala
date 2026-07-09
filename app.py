@@ -1197,6 +1197,26 @@ def init_db():
     conn.execute('CREATE INDEX IF NOT EXISTS idx_users_school_code ON users(school_code)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_users_token ON users(session_token)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone)')
+    
+    # Critical performance indexes for foreign keys & frequently joined columns
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_transactions_book ON transactions(book_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_transactions_school ON transactions(school_code)')
+    
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_books_school ON books(school_code)')
+    
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_reservations_user ON reservations(user_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_reservations_book ON reservations(book_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_reservations_school ON reservations(school_code)')
+    
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_digital_content_school ON digital_content(school_code)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_digital_content_student ON digital_content(student_id)')
+    
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_logs_school ON logs(school_code)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_invoices_school ON invoices(school_code)')
+    
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_book_copies_book ON book_copies(book_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_book_copies_acq ON book_copies(acquisition_id)')
             
     # Default School for existing data
     conn.execute('INSERT OR IGNORE INTO schools (name, school_code, librarian_name, created_at) VALUES (?,?,?,?)',
@@ -1853,7 +1873,7 @@ def render_super_admin_dashboard_logic():
     
     # Fetch all personal owners (users with role = 'owner')
     personal_owners_raw = conn.execute('''
-        SELECT u.*, pl.plan_name as active_plan, pl.library_name as default_lib_name
+        SELECT u.*, MAX(pl.plan_name) as active_plan, MAX(pl.library_name) as default_lib_name
         FROM users u
         LEFT JOIN personal_libraries pl ON u.id = pl.owner_id
         WHERE u.role = 'owner'
