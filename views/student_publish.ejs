@@ -1,0 +1,1474 @@
+<%- layout("base") %>
+<% contentFor("title") %>Publish Content - librika.in<%%>
+<% contentFor("content") %>
+<!-- Load custom Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+    /* Styling System overrides */
+    body {
+        background: #f8fafc;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #1e293b;
+    }
+    
+    .publish-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 5rem 1rem;
+    }
+
+    /* Stepper UI */
+    .stepper-wrapper {
+        margin-bottom: 2.5rem;
+        position: relative;
+    }
+
+    .step-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 70px;
+        cursor: pointer;
+        position: relative;
+        z-index: 5;
+        transition: all 0.3s ease;
+    }
+    
+    .step-node.disabled {
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .step-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .step-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #94a3b8;
+        transition: color 0.3s ease;
+    }
+
+    .step-node.active .step-circle {
+        background: #5c3cf3;
+        border-color: #5c3cf3;
+        color: #ffffff;
+        box-shadow: 0 0 0 5px rgba(92, 60, 243, 0.15);
+    }
+
+    .step-node.active .step-label {
+        color: #5c3cf3;
+    }
+
+    .step-node.completed .step-circle {
+        background: #10b981;
+        border-color: #10b981;
+        color: #ffffff;
+    }
+
+    .step-node.completed .step-label {
+        color: #10b981;
+    }
+
+    /* Card styling */
+    .wizard-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 20px rgba(92, 60, 243, 0.02);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card-header-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: #f0eeff;
+        color: #5c3cf3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card-icon-box svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .card-header-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-header-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .card-header-subtitle {
+        font-size: 0.72rem;
+        color: #64748b;
+        margin: 2px 0 0 0;
+        font-weight: 500;
+    }
+
+    /* Input elements */
+    .form-group {
+        margin-bottom: 1.25rem;
+        position: relative;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .form-label span.req {
+        color: #ef4444;
+        margin-left: 2px;
+    }
+
+    .form-control {
+        width: 100%;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-size: 0.85rem;
+        font-family: inherit;
+        background: #ffffff;
+        color: #1e293b;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #5c3cf3;
+        box-shadow: 0 0 0 4px rgba(92, 60, 243, 0.12);
+        outline: none;
+    }
+
+    .form-control::placeholder {
+        color: #94a3b8;
+    }
+
+    /* Custom Dropdown Select */
+    .form-control-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' class='feather feather-chevron-down' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        background-size: 16px;
+        padding-right: 40px !important;
+        cursor: pointer;
+    }
+
+    .form-help {
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .char-limit {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        float: right;
+        margin-top: 4px;
+        font-weight: 600;
+    }
+
+    .helper-row {
+        overflow: hidden;
+    }
+
+    /* Custom Dropzone / Upload box */
+    .upload-box {
+        border: 2px dashed #b7a6fc;
+        border-radius: 16px;
+        padding: 2.2rem 1.5rem;
+        text-align: center;
+        background: #faf8ff;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .upload-box:hover, .upload-box.dragover {
+        border-color: #5c3cf3;
+        background: #f3eeff;
+    }
+
+    .upload-box-icon {
+        margin-bottom: 12px;
+        color: #5c3cf3;
+        display: flex;
+        justify-content: center;
+    }
+
+    .upload-box-icon svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .upload-box-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #5c3cf3;
+        margin-bottom: 6px;
+    }
+
+    .upload-box-subtitle {
+        font-size: 0.7rem;
+        color: #64748b;
+        line-height: 1.4;
+    }
+
+    /* Selected state preview row */
+    .selected-file-preview {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        text-align: left;
+        transition: all 0.2s ease;
+    }
+
+    .selected-file-icon {
+        color: #5c3cf3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .selected-file-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .selected-file-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .selected-file-name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1e293b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .selected-file-size {
+        font-size: 0.68rem;
+        color: #64748b;
+        margin-top: 2px;
+        font-weight: 500;
+    }
+
+    .remove-file-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        font-size: 0.72rem;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+
+    .remove-file-btn:hover {
+        background: #fef2f2;
+    }
+
+    /* Thumbnail for cover image */
+    .cover-thumbnail-box {
+        position: relative;
+        width: 100%;
+        max-width: 160px;
+        height: 100px;
+        margin: 0 auto 12px auto;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1.5px solid #e2e8f0;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .cover-thumbnail-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Buttons layout in Step 1 */
+    .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 2rem;
+    }
+
+    .btn-save-draft {
+        flex: 4;
+        background: #ffffff;
+        color: #5c3cf3;
+        border: 1.5px solid #5c3cf3;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-save-draft:hover {
+        background: #f5f3ff;
+        border-color: #4b2bd3;
+        color: #4b2bd3;
+    }
+
+    .btn-next-step {
+        flex: 6;
+        background: #5c3cf3;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-next-step:hover {
+        background: #4b2bd3;
+        transform: translateY(-1px);
+    }
+
+    .btn-next-step:active {
+        transform: scale(0.98);
+    }
+
+    /* Outline details button */
+    .btn-outline-details {
+        flex: 1;
+        background: #ffffff;
+        color: #475569;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-details:hover {
+        border-color: #94a3b8;
+        background: #f8fafc;
+    }
+
+    /* Step Views */
+    .step-view {
+        display: none;
+    }
+
+    .step-view.active {
+        display: block;
+        animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Upload spinner */
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .upload-progress-card {
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 8px;
+        background: #f1f5f9;
+        border-radius: 99px;
+        overflow: hidden;
+        margin: 2rem 0 1rem;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #5c3cf3 0%, #8b5cf6 100%);
+        border-radius: 99px;
+        transition: width 0.1s ease;
+    }
+
+    /* Modal dialog */
+    .modal-dialog-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .modal-dialog-content {
+        background: white;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 440px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        text-align: left;
+        position: relative;
+    }
+
+    /* Success Checkmark Circle */
+    .success-card {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .success-checkmark-circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #dcfce7;
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.320, 1.275);
+    }
+
+    @keyframes scaleIn {
+        from { transform: scale(0); }
+        to { transform: scale(1); }
+    }
+
+    /* High-fidelity Ebook card preview styling */
+    .ebook-mockup {
+        width: 84px;
+        height: 120px;
+        border-radius: 8px;
+        position: relative;
+        box-shadow: -4px 6px 14px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+        background: linear-gradient(135deg, #6366f1 0%, #5c3cf3 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px;
+        color: white;
+        box-sizing: border-box;
+        flex-shrink: 0;
+        border-left: 2px solid rgba(255,255,255,0.35);
+    }
+
+    .ebook-mockup-cat {
+        font-size: 0.52rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        background: rgba(255,255,255,0.22);
+        padding: 2px 5px;
+        border-radius: 4px;
+        align-self: flex-start;
+        letter-spacing: 0.5px;
+    }
+
+    .ebook-mockup-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 800;
+        line-height: 1.25;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        margin-bottom: auto;
+        margin-top: 8px;
+        text-align: left;
+    }
+
+    .ebook-mockup-author {
+        font-size: 0.48rem;
+        font-weight: 600;
+        opacity: 0.85;
+        text-align: left;
+    }
+
+    .back-btn {
+        width: 42px;
+        height: 42px;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #5c3cf3;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .back-btn:hover {
+        border-color: #5c3cf3;
+        background: #fbfbfe;
+        transform: translateY(-1px);
+    }
+
+    .guidelines-btn {
+        background: #ffffff;
+        color: #5c3cf3;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+    }
+
+    .guidelines-btn:hover {
+        border-color: #5c3cf3;
+        background: #f5f3ff;
+    }
+</style>
+
+<div class="publish-container">
+    <!-- Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <a href="/student" class="back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </a>
+        <div style="text-align: center; flex-grow: 1; margin: 0 1rem;">
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 900; color: #1e293b; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">Publish Content 📝</h1>
+            <p style="color: #64748b; font-size: 0.78rem; margin: 3px 0 0 0; font-weight: 600;">Share your knowledge with the community</p>
+        </div>
+        <button type="button" class="guidelines-btn" onclick="showGuidelinesModal()">
+            Guidelines 
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Stepper Tracker -->
+    <div class="stepper-wrapper">
+        <div style="position: absolute; top: 18px; left: 10%; right: 10%; height: 2px; background: #e2e8f0; z-index: 1;" id="stepperLineProgress"></div>
+        <div style="display: flex; justify-content: space-between; position: relative; z-index: 2;">
+            <div class="step-node active" id="stepNode-1" onclick="goToStep(1)">
+                <div class="step-circle">1</div>
+                <div class="step-label">Details</div>
+            </div>
+            <div class="step-node disabled" id="stepNode-2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Upload</div>
+            </div>
+            <div class="step-node disabled" id="stepNode-3" onclick="goToStep(3)">
+                <div class="step-circle">3</div>
+                <div class="step-label">Preview</div>
+            </div>
+            <div class="step-node disabled" id="stepNode-4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Publish</div>
+            </div>
+        </div>
+    </div>
+
+    <form id="publishForm" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="draft_id" id="draftIdField" value="<%= draft ? draft.id : '' %>">
+        
+        <!-- ================= STEP 1: DETAILS ================= -->
+        <div class="step-view active" id="stepView-1">
+            <!-- Basic Information Card -->
+            <div class="wizard-card">
+                <div class="card-header-row">
+                    <div class="card-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-header-info">
+                        <h3 class="card-header-title">Basic Information</h3>
+                        <p class="card-header-subtitle">Provide essential details about your content</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="titleInput">Title<span class="req">*</span></label>
+                    <input type="text" id="titleInput" name="title" class="form-control" placeholder="Enter a descriptive title..." required maxlength="100" oninput="updateCharCount('titleInput', 'titleCount', 100)" value="<%= draft ? draft.title : '' %>">
+                    <div class="helper-row">
+                        <span class="char-limit" id="titleCount">0/100</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="subjectCategorySelect">Subject / Category<span class="req">*</span></label>
+                    <select id="subjectCategorySelect" class="form-control form-control-select" required>
+                        <option value="" disabled <% if (!draft) { %>selected<% } %>>Select a subject or category</option>
+                        <% var combined_draft = draft ? draft.subject + '|' + draft.category : ''; %>
+                        <option value="Physics|Notes" <% if (combined_draft === 'Physics|Notes') { %>selected<% } %>>Physics Notes</option>
+                        <option value="Chemistry|Notes" <% if (combined_draft === 'Chemistry|Notes') { %>selected<% } %>>Chemistry Notes</option>
+                        <option value="Mathematics|Notes" <% if (combined_draft === 'Mathematics|Notes') { %>selected<% } %>>Mathematics Notes</option>
+                        <option value="Biology|Notes" <% if (combined_draft === 'Biology|Notes') { %>selected<% } %>>Biology Notes</option>
+                        <option value="Computer Science|Notes" <% if (combined_draft === 'Computer Science|Notes') { %>selected<% } %>>Computer Science Notes</option>
+                        <option value="English|Study Material" <% if (combined_draft === 'English|Study Material') { %>selected<% } %>>Literature & Language</option>
+                        <option value="History|Study Material" <% if (combined_draft === 'History|Study Material') { %>selected<% } %>>History & Social Studies</option>
+                        <option value="General|Book Summary" <% if (combined_draft === 'General|Book Summary') { %>selected<% } %>>Book Summary</option>
+                        <option value="General|Research Work" <% if (combined_draft === 'General|Research Work') { %>selected<% } %>>Research Project</option>
+                        <option value="General|Presentation" <% if (combined_draft === 'General|Presentation') { %>selected<% } %>>Presentation</option>
+                        <option value="Other|Other" <% if (combined_draft === 'Other|Other') { %>selected<% } %>>Other Submissions</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="classSelect">Class / Grade (Optional)</label>
+                    <select id="classSelect" name="class" class="form-control form-control-select">
+                        <option value="" <% if (!draft || !draft.class) { %>selected<% } %>>e.g. Class 11, Grade 10</option>
+                        <option value="Class 12" <% if (draft && draft.class === 'Class 12') { %>selected<% } %>>Class 12 / Grade 12</option>
+                        <option value="Class 11" <% if (draft && draft.class === 'Class 11') { %>selected<% } %>>Class 11 / Grade 11</option>
+                        <option value="Class 10" <% if (draft && draft.class === 'Class 10') { %>selected<% } %>>Class 10 / Grade 10</option>
+                        <option value="Class 9" <% if (draft && draft.class === 'Class 9') { %>selected<% } %>>Class 9 / Grade 9</option>
+                        <option value="Grade 8 & Below" <% if (draft && draft.class === 'Grade 8 & Below') { %>selected<% } %>>Grade 8 & Below</option>
+                        <option value="Higher Education" <% if (draft && draft.class === 'Higher Education') { %>selected<% } %>>Higher Education</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="tagsInput">Tags (Optional)</label>
+                    <input type="text" id="tagsInput" name="tags" class="form-control" placeholder="Add tags separated by commas" maxlength="50" oninput="updateCharCount('tagsInput', 'tagsCount', 50)" value="<%= draft ? draft.tags : '' %>">
+                    <div class="helper-row">
+                        <span class="form-help" style="float: left;">Example: physics, optics, formulas, class11</span>
+                        <span class="char-limit" id="tagsCount">0/50</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label class="form-label" for="descTextarea">Description<span class="req">*</span></label>
+                    <textarea id="descTextarea" name="description" class="form-control" rows="4" placeholder="Briefly describe what your content is about. What will others learn from it?" required maxlength="500" oninput="updateCharCount('descTextarea', 'descCount', 500)" style="resize: vertical; min-height: 80px;"><%= draft ? draft.description : '' %></textarea>
+                    <div class="helper-row">
+                        <span class="char-limit" id="descCount">0/500</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cover Image Card -->
+            <div class="wizard-card">
+                <div class="card-header-row">
+                    <div class="card-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-header-info">
+                        <h3 class="card-header-title">Cover Image (Optional)</h3>
+                        <p class="card-header-subtitle">Add a cover image to make your content stand out (If left empty, Page 1 of your PDF document will automatically be used as the cover)</p>
+                    </div>
+                </div>
+
+                <input type="file" id="coverFileInput" name="cover" accept="image/*" style="display: none;" onchange="handleCoverSelection()">
+                
+                <!-- Normal upload box -->
+                <div class="upload-box" id="coverUploadBox" onclick="document.getElementById('coverFileInput').click()" <% if (draft && draft.cover_url) { %>style="display: none;"<% } %>>
+                    <div class="upload-box-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </div>
+                    <div class="upload-box-title">Tap to upload cover image</div>
+                    <div class="upload-box-subtitle">Recommended ratio: 16:9 or 3:2<br>Max size: 2MB • JPG, PNG</div>
+                </div>
+
+                <!-- Preview Thumbnail / Selected state -->
+                <div class="cover-thumbnail-box" id="coverThumbContainer" <% if (draft && draft.cover_url) { %>style="display: block;"<% } %>>
+                    <img class="cover-thumbnail-img" id="coverThumbImg" src="<%= (draft && draft.cover_url) ? draft.cover_url : '' %>" alt="Cover thumbnail">
+                </div>
+                <div class="selected-file-preview" id="coverSelectedPreview" <% if (draft && draft.cover_url) { %>style="display: flex;"<% } else { %>style="display: none;"<% } %>>
+                    <div class="selected-file-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </div>
+                    <div class="selected-file-info">
+                        <div class="selected-file-name" id="coverSelectedName"><%= draft ? 'Previous Cover Image' : 'image.png' %></div>
+                        <div class="selected-file-size" id="coverSelectedSize">Original</div>
+                    </div>
+                    <button type="button" class="remove-file-btn" onclick="clearCoverSelection(event)">Remove</button>
+                </div>
+            </div>
+
+            <!-- Upload Document Card -->
+            <div class="wizard-card">
+                <div class="card-header-row">
+                    <div class="card-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-header-info">
+                        <h3 class="card-header-title">Upload Document<span class="req">*</span></h3>
+                        <p class="card-header-subtitle">Upload your PDF, DOCX, PPT or ZIP file</p>
+                    </div>
+                </div>
+
+                <input type="file" id="docFileInput" name="document" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" style="display: none;" onchange="handleDocSelection()" <% if (!draft) { %>required<% } %>>
+
+                <!-- Normal upload box -->
+                <div class="upload-box" id="docUploadBox" onclick="document.getElementById('docFileInput').click()" <% if (draft && draft.file_url) { %>style="display: none;"<% } %>>
+                    <div class="upload-box-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.5-2-2.4-3.5-4.4-3.5h-1.2C15.6 4.8 12.8 3 9.5 3 5.4 3 2 6.4 2 10.5c0 .5.1 1 .2 1.5-.7 1.2-1 2.5-.7 3.9.5 2 2.4 3.5 4.4 3.5h11.3c2 0 3.8-1.5 4-3.9z"></path>
+                            <polyline points="16 16 12 12 8 16"></polyline>
+                            <line x1="12" y1="12" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <div class="upload-box-title">Tap to upload file</div>
+                    <div class="upload-box-subtitle">PDF, DOCX, PPTX, ZIP • Max size: 25MB</div>
+                </div>
+
+                <!-- Selected state -->
+                <div class="selected-file-preview" id="docSelectedPreview" <% if (draft && draft.file_url) { %>style="display: flex;"<% } else { %>style="display: none;"<% } %>>
+                    <div class="selected-file-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                    <div class="selected-file-info">
+                        <div class="selected-file-name" id="docSelectedName"><%= draft ? 'Original Document Preserved' : 'physics_notes.pdf' %></div>
+                        <div class="selected-file-size" id="docSelectedSize">Original</div>
+                    </div>
+                    <button type="button" class="remove-file-btn" onclick="clearDocSelection(event)">Remove</button>
+                </div>
+            </div>
+
+            <!-- Action buttons aligned side-by-side -->
+            <div class="button-group">
+                <button type="button" class="btn-save-draft" onclick="saveAsDraftDirectly()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Save Draft
+                </button>
+                <button type="button" class="btn-next-step" onclick="startUploadPhase()">
+                    Next: Upload
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= STEP 2: UPLOAD (PROGRESS) ================= -->
+        <div class="step-view" id="stepView-2">
+            <div class="wizard-card upload-progress-card">
+                <!-- Animated Purple Spinner -->
+                <div style="display: flex; justify-content: center; margin-bottom: 24px;">
+                    <svg class="animate-spin" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#5c3cf3" stroke-width="3" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10" stroke-opacity="0.15" stroke="currentColor"></circle>
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"></path>
+                    </svg>
+                </div>
+                
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 0 0 0.5rem;" id="uploadStatusTitle">Uploading Document</h2>
+                <p style="color: #64748b; font-size: 0.8rem; margin: 0;" id="uploadStatusSubtitle">We are securely uploading your files to the Digital Library.</p>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="uploadProgressBarFill"></div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-top: 10px;">
+                    <span id="uploadProgressBytes">0 MB of 0 MB</span>
+                    <span id="uploadProgressPercent" style="color: #5c3cf3;">0%</span>
+                </div>
+
+                <div class="button-group" style="margin-top: 3rem; justify-content: center;" id="uploadErrorActionRow">
+                    <button type="button" class="btn-outline-details" onclick="cancelUploadXhr()" style="max-width: 200px;">Cancel Upload</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= STEP 3: PREVIEW ================= -->
+        <div class="step-view" id="stepView-3">
+            <div class="wizard-card">
+                <div class="card-header-row">
+                    <div class="card-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-header-info">
+                        <h3 class="card-header-title">Document Preview</h3>
+                        <p class="card-header-subtitle">Verify the details before publishing to the library</p>
+                    </div>
+                </div>
+
+                <!-- Live Card Mockup (Premium Layout) -->
+                <div style="background: #ffffff; border-radius: 16px; padding: 1.25rem; display: flex; gap: 18px; margin-bottom: 1.5rem; border: 1.5px solid #e2e8f0; align-items: flex-start; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                    
+                    <!-- Cover image or fallback 3D mockup card -->
+                    <div id="previewCoverWrapper" style="flex-shrink:0;">
+                        <!-- JS renders cover preview or ebook-mockup template here -->
+                    </div>
+
+                    <div style="flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; justify-content: center; height: 120px;">
+                        <span id="previewCategoryBadge" style="font-size: 0.62rem; background: #f0eeff; color: #5c3cf3; padding: 4px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start;">Notes</span>
+                        <h4 id="previewTitle" style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 800; color: #1e293b; margin: 8px 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Physics Notes</h4>
+                        <p id="previewClassSubject" style="margin: 0; font-size: 0.72rem; color: #64748b; font-weight: 600;">Physics &bull; Class 11</p>
+                        
+                        <div style="margin-top: auto; font-size: 0.68rem; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 4px;" id="previewFileMetaRow">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">file_name.pdf (1.2 MB)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description Preview Block -->
+                <div style="text-align: left; margin-bottom: 1.5rem;">
+                    <label class="form-label" style="font-size: 0.75rem; color: #64748b;">Description</label>
+                    <p id="previewDescription" style="font-size: 0.8rem; color: #475569; line-height: 1.5; margin: 4px 0 0 0; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #f1f5f9; min-height: 60px; white-space: pre-line;">
+                        No description provided.
+                    </p>
+                </div>
+
+                <!-- Tags Preview Block -->
+                <div style="text-align: left; margin-bottom: 0.5rem;" id="previewTagsWrapper">
+                    <label class="form-label" style="font-size: 0.75rem; color: #64748b;">Tags</label>
+                    <div id="previewTagsContainer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;">
+                        <!-- JS generated tags -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="button-group">
+                <button type="button" class="btn-outline-details" onclick="goToStep(1)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Edit Details
+                </button>
+                <button type="button" class="btn-next-step" onclick="finalizeAndPublish()">
+                    Publish Now ✨
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= STEP 4: SUCCESS ================= -->
+        <div class="step-view" id="stepView-4">
+            <div class="wizard-card success-card">
+                <!-- Checkmark SVG inside animated circle -->
+                <div style="display: flex; justify-content: center; margin-bottom: 24px;">
+                    <div class="success-checkmark-circle">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                </div>
+
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.45rem; font-weight: 900; color: #1e293b; margin: 0 0 8px 0;">Published Successfully! 🎉</h2>
+                <p style="color: #64748b; font-size: 0.85rem; max-width: 400px; margin: 0 auto 2.5rem; line-height: 1.6;">
+                    Your document has been submitted successfully. It will be live on the Digital Library once approved by your Librarian!
+                </p>
+                
+                <div class="button-group" style="flex-direction: column; gap: 10px; max-width: 280px; margin: 0 auto;">
+                    <a href="/student/my-publications" class="btn-next-step" style="width: 100%; box-sizing: border-box; text-decoration: none;">📄 Go to My Publications</a>
+                    <a href="/student/publish" class="btn-outline-details" style="width: 100%; box-sizing: border-box; text-decoration: none;" onclick="resetWizardForm(event)">📝 Publish Another Notes</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal Guidelines Dialog -->
+<div class="modal-dialog-overlay" id="guidelinesModal">
+    <div class="modal-dialog-content">
+        <h2 style="margin: 0 0 1rem 0; font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+            📌 Publication Guidelines
+        </h2>
+        <div style="font-size: 0.8rem; color: #334155; line-height: 1.6; max-height: 250px; overflow-y: auto; padding-right: 5px;">
+            <p style="margin-top: 0;">To ensure high-quality resources, all submissions must comply with the following standards:</p>
+            <ul style="padding-left: 20px; margin-bottom: 0;">
+                <li style="margin-bottom: 8px;"><strong>Academic Relevancy:</strong> Upload only projects, study materials, notes, or book summaries.</li>
+                <li style="margin-bottom: 8px;"><strong>Clear Quality:</strong> Ensure PDF/DOCX documents are correctly compiled, readable, and properly titled.</li>
+                <li style="margin-bottom: 8px;"><strong>Copyright Check:</strong> Do not upload plagiarized content, scanned commercial textbooks, or unoriginal books.</li>
+                <li style="margin-bottom: 8px;"><strong>Review Phase:</strong> Submissions are locked as read-only once published, pending moderator verification.</li>
+            </ul>
+        </div>
+        <button onclick="closeGuidelinesModal()" class="btn-next-step" style="width: 100%; margin-top: 1.5rem; justify-content: center;">Got it, thanks!</button>
+    </div>
+</div>
+
+<script>
+    // Global upload XHR ref
+    let currentXhr = null;
+    let createdDraftId = <%= draft ? draft.id : 'null' %>;
+
+    // Initialize character counters & drag-and-drop on load
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCharCount('titleInput', 'titleCount', 100);
+        updateCharCount('tagsInput', 'tagsCount', 50);
+        updateCharCount('descTextarea', 'descCount', 500);
+        
+        if (createdDraftId) {
+            // Enable Step 3 if editing an existing draft
+            const step3 = document.getElementById('stepNode-3');
+            if(step3) step3.classList.remove('disabled');
+        }
+
+        // Set up drag and drop event listeners on dropzones
+        setupDragAndDrop('coverUploadBox', 'coverFileInput', handleCoverSelection);
+        setupDragAndDrop('docUploadBox', 'docFileInput', handleDocSelection);
+    });
+
+    // Setup Drag and Drop
+    function setupDragAndDrop(boxId, inputId, selectionHandler) {
+        const box = document.getElementById(boxId);
+        const input = document.getElementById(inputId);
+        if (!box || !input) return;
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            box.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                box.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            box.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                box.classList.remove('dragover');
+            }, false);
+        });
+
+        box.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                input.files = files;
+                selectionHandler();
+            }
+        }, false);
+    }
+
+    // character limits helper
+    function updateCharCount(inputId, countId, limit) {
+        const input = document.getElementById(inputId);
+        const countSpan = document.getElementById(countId);
+        if (input && countSpan) {
+            const len = input.value.length;
+            countSpan.innerText = `${len}/${limit}`;
+            if (len >= limit) {
+                countSpan.style.color = '#ef4444';
+            } else {
+                countSpan.style.color = '#94a3b8';
+            }
+        }
+    }
+
+    // Modal dialog controls
+    function showGuidelinesModal() {
+        document.getElementById('guidelinesModal').style.display = 'flex';
+    }
+
+    // Close guidelines modal
+    function closeGuidelinesModal() {
+        document.getElementById('guidelinesModal').style.display = 'none';
+    }
+
+    // Cover Image processing
+    function handleCoverSelection() {
+        const input = document.getElementById('coverFileInput');
+        const box = document.getElementById('coverUploadBox');
+        const container = document.getElementById('coverThumbContainer');
+        const img = document.getElementById('coverThumbImg');
+        const previewRow = document.getElementById('coverSelectedPreview');
+        const previewName = document.getElementById('coverSelectedName');
+        const previewSize = document.getElementById('coverSelectedSize');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Size Validation
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Cover image size must be less than 2MB', 'error');
+                input.value = '';
+                return;
+            }
+
+            // Read & render local base64 preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                box.style.display = 'none';
+                container.style.display = 'block';
+                
+                previewName.innerText = file.name;
+                previewSize.innerText = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+                previewRow.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function clearCoverSelection(e) {
+        if(e) e.stopPropagation();
+        const input = document.getElementById('coverFileInput');
+        const box = document.getElementById('coverUploadBox');
+        const container = document.getElementById('coverThumbContainer');
+        const img = document.getElementById('coverThumbImg');
+        const previewRow = document.getElementById('coverSelectedPreview');
+
+        input.value = '';
+        img.src = '';
+        container.style.display = 'none';
+        previewRow.style.display = 'none';
+        box.style.display = 'block';
+    }
+
+    // Document processing
+    function handleDocSelection() {
+        const input = document.getElementById('docFileInput');
+        const box = document.getElementById('docUploadBox');
+        const previewRow = document.getElementById('docSelectedPreview');
+        const previewName = document.getElementById('docSelectedName');
+        const previewSize = document.getElementById('docSelectedSize');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Size Validation
+            if (file.size > 25 * 1024 * 1024) {
+                showToast('Document size must be less than 25MB', 'error');
+                input.value = '';
+                return;
+            }
+
+            box.style.display = 'none';
+            previewName.innerText = file.name;
+            previewSize.innerText = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            previewRow.style.display = 'flex';
+        }
+    }
+
+    function clearDocSelection(e) {
+        if(e) e.stopPropagation();
+        const input = document.getElementById('docFileInput');
+        const box = document.getElementById('docUploadBox');
+        const previewRow = document.getElementById('docSelectedPreview');
+
+        input.value = '';
+        previewRow.style.display = 'none';
+        box.style.display = 'block';
+        input.setAttribute('required', 'required');
+    }
+
+    // Step Nav logic
+    function goToStep(stepNum) {
+        // Toggle stepper styling
+        for (let i = 1; i <= 4; i++) {
+            const node = document.getElementById('stepNode-' + i);
+            const view = document.getElementById('stepView-' + i);
+            const circle = node.querySelector('.step-circle');
+            
+            if (i < stepNum) {
+                node.classList.remove('active');
+                node.classList.add('completed');
+                node.classList.remove('disabled');
+                // Checkmark SVG inside the completed step circle
+                circle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            } else if (i === stepNum) {
+                node.classList.add('active');
+                node.classList.remove('completed');
+                node.classList.remove('disabled');
+                circle.innerHTML = i;
+            } else {
+                node.classList.remove('active');
+                node.classList.remove('completed');
+                circle.innerHTML = i;
+                if (i > 2 && !createdDraftId) {
+                    node.classList.add('disabled');
+                }
+            }
+
+            if (i === stepNum) {
+                view.classList.add('active');
+            } else {
+                view.classList.remove('active');
+            }
+        }
+
+        // Stepper line progress fill
+        const line = document.getElementById('stepperLineProgress');
+        let percentage = '0%';
+        if (stepNum === 2) percentage = '35%';
+        else if (stepNum === 3) percentage = '68%';
+        else if (stepNum === 4) percentage = '100%';
+        line.style.background = `linear-gradient(90deg, #5c3cf3 ${percentage}, #e2e8f0 ${percentage})`;
+    }
+
+    // Form data extraction helpers
+    function getSubjectAndCategory(combinedVal) {
+        if (!combinedVal) return { subject: 'General', category: 'Notes' };
+        const parts = combinedVal.split('|');
+        return {
+            subject: parts[0] || 'General',
+            category: parts[1] || 'Notes'
+        };
+    }
+
+    // Step 1 validation
+    function validateStep1() {
+        const title = document.getElementById('titleInput').value.trim();
+        const combined = document.getElementById('subjectCategorySelect').value;
+        const desc = document.getElementById('descTextarea').value.trim();
+        const doc = document.getElementById('docFileInput').files[0];
+        
+        // If we editing a draft, we might not have selected a new file since the old one is preserved
+        const hasExistingDoc = <%= draft && draft.file_url ? 'true' : 'false' %>;
+
+        if (!title) {
+            showToast('Please enter a descriptive title', 'error');
+            document.getElementById('titleInput').focus();
+            return false;
+        }
+        if (!combined) {
+            showToast('Please select a subject or category', 'error');
+            document.getElementById('subjectCategorySelect').focus();
+            return false;
+        }
+        if (!desc) {
+            showToast('Please enter a description for your content', 'error');
+            document.getElementById('descTextarea').focus();
+            return false;
+        }
+        if (!hasExistingDoc && !doc) {
+            showToast('Please upload a document file (PDF, DOCX, etc.)', 'error');
+            return false;
+        }
+        return true;
+    }
+
+    // Direct Draft Saving
+    function saveAsDraftDirectly() {
+        if (!validateStep1()) return;
+        showToast('Saving draft...', 'info');
+        submitFormAjax(true);
+    }
+
+    // XMLHttp upload trigger
+    function startUploadPhase() {
+        if (!validateStep1()) return;
+
+        // Switch to Step 2: Upload progress
+        goToStep(2);
+        submitFormAjax(false);
+    }
+
+    // AJAX Form submission with progress listener
+    function submitFormAjax(redirectImmediately) {
+        const form = document.getElementById('publishForm');
+        
+        // Reset status views
+        document.getElementById('uploadProgressBarFill').style.width = '0%';
+        document.getElementById('uploadProgressPercent').innerText = '0%';
+        document.getElementById('uploadProgressBytes').innerText = '0 MB of 0 MB';
+        
+        document.getElementById('uploadStatusTitle').innerText = 'Uploading Document';
+        document.getElementById('uploadStatusSubtitle').innerText = 'We are securely uploading your files to the Digital Library.';
+        document.getElementById('uploadErrorActionRow').innerHTML = `<button type="button" class="btn-outline-details" onclick="cancelUploadXhr()" style="max-width: 200px;">Cancel Upload</button>`;
+
+        currentXhr = new XMLHttpRequest();
+        
+        currentXhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                document.getElementById('uploadProgressPercent').innerText = percent + '%';
+                document.getElementById('uploadProgressBarFill').style.width = percent + '%';
+                
+                const loadedMB = (e.loaded / (1024 * 1024)).toFixed(1);
+                const totalMB = (e.total / (1024 * 1024)).toFixed(1);
+                document.getElementById('uploadProgressBytes').innerText = `${loadedMB} MB of ${totalMB} MB`;
+            }
+        });
+
+        currentXhr.addEventListener('load', function() {
+            if (currentXhr.status >= 200 && currentXhr.status < 300) {
+                try {
+                    const res = JSON.parse(currentXhr.responseText);
+                    if (res.status === 'success') {
+                        createdDraftId = res.draft_id;
+                        document.getElementById('draftIdField').value = res.draft_id;
+                        
+                        if (redirectImmediately) {
+                            showToast('Draft saved successfully!', 'success');
+                            setTimeout(() => {
+                                window.location.href = res.redirect;
+                            }, 1200);
+                        } else {
+                            // Populate live preview details for Step 3
+                            prepareStep3Preview();
+                            // Transition to Step 3
+                            setTimeout(() => {
+                                goToStep(3);
+                            }, 400);
+                        }
+                    } else {
+                        showUploadError(res.message || 'Upload failed');
+                    }
+                } catch(e) {
+                    showUploadError('Invalid server response');
+                }
+            } else {
+                showUploadError(`Server error: ${currentXhr.status}`);
+            }
+        });
+
+        currentXhr.addEventListener('error', function() {
+            showUploadError('Connection lost. Please check your network.');
+        });
+
+        currentXhr.open('POST', '/student/publish');
+        currentXhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        const formData = new FormData(form);
+        
+        // Append splits of Subject / Category
+        const combined = document.getElementById('subjectCategorySelect').value;
+        const meta = getSubjectAndCategory(combined);
+        formData.set('subject', meta.subject);
+        formData.set('category', meta.category);
+
+        currentXhr.send(formData);
+    }
+
+    function cancelUploadXhr() {
+        if(currentXhr) {
+            currentXhr.abort();
+            currentXhr = null;
+            showToast('Upload cancelled', 'warning');
+            goToStep(1);
+        }
+    }
+
+    function showUploadError(errMsg) {
+        document.getElementById('uploadStatusTitle').innerText = 'Upload Failed';
+        document.getElementById('uploadStatusSubtitle').innerText = errMsg;
+        document.getElementById('uploadProgressPercent').innerText = '0%';
+        document.getElementById('uploadProgressBarFill').style.width = '0%';
+        
+        document.getElementById('uploadErrorActionRow').innerHTML = `
+            <button type="button" class="btn-outline-details" onclick="goToStep(1)">Go Back</button>
+            <button type="button" class="btn-next-step" onclick="startUploadPhase()">Try Again</button>
+        `;
+    }
+
+    // Step 3 Live Preview Renderer
+    function prepareStep3Preview() {
+        const title = document.getElementById('titleInput').value.trim();
+        const combined = document.getElementById('subjectCategorySelect').value;
+        const meta = getSubjectAndCategory(combined);
+        const grade = document.getElementById('classSelect').value || 'General';
+        const desc = document.getElementById('descTextarea').value.trim();
+        const tags = document.getElementById('tagsInput').value.trim();
+
+        // Title & texts
+        document.getElementById('previewTitle').innerText = title;
+        document.getElementById('previewCategoryBadge').innerText = meta.category;
+        document.getElementById('previewClassSubject').innerHTML = `${meta.subject} &bull; ${grade}`;
+        document.getElementById('previewDescription').innerText = desc;
+
+        // Render Cover Mockup (Ebook style fallback or Image thumbnail)
+        const coverImg = document.getElementById('coverThumbImg').src;
+        const coverWrapper = document.getElementById('previewCoverWrapper');
+        
+        if (coverImg && !coverImg.endsWith('/student/publish') && coverImg !== window.location.href) {
+            coverWrapper.innerHTML = `<img src="${coverImg}" style="width: 84px; height: 120px; object-fit: cover; border-radius: 8px; box-shadow: -4px 6px 14px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1);">`;
+        } else {
+            // Render highly professional dynamic textbook cover mockup matching subject/category
+            coverWrapper.innerHTML = `
+                <div class="ebook-mockup">
+                    <span class="ebook-mockup-cat">${meta.category}</span>
+                    <div class="ebook-mockup-title">${title}</div>
+                    <div class="ebook-mockup-author">${meta.subject}</div>
+                </div>
+            `;
+        }
+
+        // Render file size details
+        const docFile = document.getElementById('docFileInput').files[0];
+        const metaRow = document.getElementById('previewFileMetaRow').querySelector('span');
+        if (docFile) {
+            const size = (docFile.size / (1024 * 1024)).toFixed(2);
+            metaRow.innerText = `${docFile.name} (${size} MB)`;
+        } else {
+            metaRow.innerText = `Document preserved successfully`;
+        }
+
+        // Render Tags list
+        const tagsContainer = document.getElementById('previewTagsContainer');
+        const tagsWrapper = document.getElementById('previewTagsWrapper');
+        tagsContainer.innerHTML = '';
+        if (tags) {
+            tagsWrapper.style.display = 'block';
+            tags.split(',').forEach(tag => {
+                const clean = tag.trim();
+                if(clean) {
+                    const tagSpan = document.createElement('span');
+                    tagSpan.style.cssText = 'font-size: 0.65rem; background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 700;';
+                    tagSpan.innerText = '#' + clean;
+                    tagsContainer.appendChild(tagSpan);
+                }
+            });
+        } else {
+            tagsWrapper.style.display = 'none';
+        }
+    }
+
+    // Finalize step 3 -> 4
+    function finalizeAndPublish() {
+        if(!createdDraftId) {
+            showToast('Unable to publish. Draft ID not found.', 'error');
+            return;
+        }
+
+        showToast('Publishing notes...', 'info');
+
+        fetch(`/api/publish-finalize/${createdDraftId}`, {
+            method: 'POST'
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status === 'success') {
+                showToast('Published successfully!', 'success');
+                goToStep(4);
+            } else {
+                showToast(res.message || 'Publication failed', 'error');
+            }
+        })
+        .catch(() => {
+            showToast('Network error occurred.', 'error');
+        });
+    }
+
+    // Reset Form for next publish
+    function resetWizardForm(e) {
+        e.preventDefault();
+        
+        // Reset JS fields
+        createdDraftId = null;
+        document.getElementById('draftIdField').value = '';
+        document.getElementById('publishForm').reset();
+        
+        // Reset selections
+        clearCoverSelection();
+        clearDocSelection();
+
+        // Reset Counters
+        updateCharCount('titleInput', 'titleCount', 100);
+        updateCharCount('tagsInput', 'tagsCount', 50);
+        updateCharCount('descTextarea', 'descCount', 500);
+
+        // Go to Step 1
+        goToStep(1);
+    }
+</script>
+<%%>

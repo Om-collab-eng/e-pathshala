@@ -1,0 +1,125 @@
+<%- include('layouts/header', { title: 'Publish Digital Book - Personal Library' }) %>
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.file-drop { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(255,255,255,0.01); }
+.file-drop:hover { border-color: #8b5cf6; background: rgba(139,92,246,0.04); }
+.file-drop-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+</style>
+
+<div class="personal-layout">
+    <aside class="personal-sidebar">
+        <div class="personal-brand"><span>📚</span><span>Librika Personal</span></div>
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="if(this.value === 'manage_collections') { window.location.href='/personal/libraries'; } else { window.location.href='/personal/libraries/switch/' + this.value; }" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    <% (locals.personal_my_libraries || []).forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>><%= l.library_name %></option>
+                    <% }) %>
+                </optgroup>
+                <% if (locals.personal_shared_libraries && locals.personal_shared_libraries.length > 0) { %>
+                <optgroup label="Shared with Me">
+                    <% locals.personal_shared_libraries.forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>>🤝 <%= l.library_name %> (<%= l.owner_name %>)</option>
+                    <% }) %>
+                </optgroup>
+                <% } %>
+                <optgroup label="Actions">
+                    <option value="manage_collections">📂 Manage Collections (+)</option>
+                </optgroup>
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link"><span>🏠</span> Dashboard</a>
+            <a href="/personal/books" class="personal-nav-link"><span>📖</span> My Books</a>
+            <a href="/personal/reading" class="personal-nav-link"><span>⏱️</span> Reading Tracker</a>
+            <a href="/personal/borrowing" class="personal-nav-link"><span>🤝</span> Lending System</a>
+            <a href="/personal/wishlist" class="personal-nav-link"><span>✨</span> Wishlist</a>
+            <a href="/personal/favorites" class="personal-nav-link"><span>⭐</span> Favorites</a>
+            <a href="/personal/libraries" class="personal-nav-link"><span>📂</span> Collections</a>
+            <a href="/personal/elibrary" class="personal-nav-link active"><span>🌐</span> E-Library</a>
+            <a href="/personal/scan" class="personal-nav-link"><span>📷</span> AI Scanner</a>
+            <a href="/personal/settings" class="personal-nav-link"><span>⚙️</span> Settings & Plan</a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: #f43f5e;"><span>🚪</span> Sign Out</a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="<%= lib.profile_photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' %>" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= session.user_name %></div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;"><%= lib.plan_name %> PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="personal-content">
+        <% if (locals.messages && messages.success) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><%= messages.success %></div><% } %>
+        <% if (locals.messages && messages.error) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2);"><%= messages.error %></div><% } %>
+
+        <div style="margin-bottom: 2rem;">
+            <a href="/personal/elibrary" style="color: #8b5cf6; text-decoration: none; font-weight: 600;">&larr; Back to E-Library</a>
+            <h1 style="margin: 10px 0 0 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Publish Digital Book</h1>
+            <p style="color: #9ca3af; margin: 4px 0 0 0;">Share your writing with the personal library community.</p>
+        </div>
+
+        <div class="personal-card">
+            <form method="POST" action="/personal/elibrary/publish" enctype="multipart/form-data">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="input-group">
+                        <label for="title">Book Title</label>
+                        <input type="text" id="title" name="title" required placeholder="E.g. The Art of Programming">
+                    </div>
+                    <div class="input-group">
+                        <label for="subject">Author Name</label>
+                        <input type="text" id="subject" name="subject" required placeholder="E.g. John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label for="category">Category</label>
+                        <input type="text" id="category" name="category" required placeholder="E.g. Technology, Fiction">
+                    </div>
+                    <div class="input-group">
+                        <label for="tags">Tags (comma separated)</label>
+                        <input type="text" id="tags" name="tags" placeholder="E.g. programming, beginners, tutorial">
+                    </div>
+                </div>
+                <div class="input-group" style="margin-top: 20px;">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="5" placeholder="Write a short description of your book..." style="width:100%; padding:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--bg-input); color:white; font-family:inherit;"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div class="input-group">
+                        <label>Cover Image</label>
+                        <div class="file-drop" onclick="document.getElementById('coverInput').click()">
+                            <div class="file-drop-icon">🖼️</div>
+                            <p style="color: #9ca3af; font-size: 0.85rem;">Upload cover image (JPG, PNG)</p>
+                            <input type="file" id="coverInput" name="cover" accept="image/*" style="display:none;" onchange="updateFileName(this, 'coverName')">
+                            <div id="coverName" style="color: #10b981; font-size: 0.8rem; margin-top: 5px;"></div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>PDF Document *</label>
+                        <div class="file-drop" onclick="document.getElementById('docInput').click()">
+                            <div class="file-drop-icon">📄</div>
+                            <p style="color: #9ca3af; font-size: 0.85rem;">Upload PDF document</p>
+                            <input type="file" id="docInput" name="document" accept=".pdf" required style="display:none;" onchange="updateFileName(this, 'docName')">
+                            <div id="docName" style="color: #10b981; font-size: 0.8rem; margin-top: 5px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; margin-top: 2rem; justify-content: flex-end;">
+                    <a href="/personal/elibrary" class="btn-alt">Cancel</a>
+                    <button type="submit" class="btn-neon">📤 Publish to E-Library</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script>
+function updateFileName(input, displayId) {
+    const display = document.getElementById(displayId);
+    if (input.files.length > 0) display.innerHTML = '✅ ' + input.files[0].name;
+    else display.innerHTML = '';
+}
+</script>
+<%- include('layouts/footer') %>

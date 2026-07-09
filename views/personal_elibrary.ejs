@@ -1,0 +1,163 @@
+<%- include('layouts/header', { title: 'E-Library - Personal Library' }) %>
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.elibrary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+.ebook-card { background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; transition: all 0.3s ease; }
+.ebook-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+.ebook-cover { width: 100%; height: 260px; object-fit: cover; border-bottom: 1px solid var(--glass-border); }
+.ebook-info { padding: 1rem; }
+.ebook-title { font-size: 0.95rem; font-weight: 700; color: white; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ebook-author { font-size: 0.8rem; color: #9ca3af; margin: 0; }
+.ebook-badge { display: inline-block; font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-top: 6px; }
+.tab-bar { display: flex; gap: 0; margin-bottom: 2rem; border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; }
+.tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: 700; font-size: 0.9rem; color: #9ca3af; background: transparent; transition: all 0.3s ease; border: none; }
+.tab.active { background: var(--premium-gradient); color: white; }
+</style>
+
+<div class="personal-layout">
+    <aside class="personal-sidebar">
+        <div class="personal-brand"><span>📚</span><span>Librika Personal</span></div>
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="if(this.value === 'manage_collections') { window.location.href='/personal/libraries'; } else { window.location.href='/personal/libraries/switch/' + this.value; }" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    <% (locals.personal_my_libraries || []).forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>><%= l.library_name %></option>
+                    <% }) %>
+                </optgroup>
+                <% if (locals.personal_shared_libraries && locals.personal_shared_libraries.length > 0) { %>
+                <optgroup label="Shared with Me">
+                    <% locals.personal_shared_libraries.forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>>🤝 <%= l.library_name %> (<%= l.owner_name %>)</option>
+                    <% }) %>
+                </optgroup>
+                <% } %>
+                <optgroup label="Actions">
+                    <option value="manage_collections">📂 Manage Collections (+)</option>
+                </optgroup>
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link"><span>🏠</span> Dashboard</a>
+            <a href="/personal/books" class="personal-nav-link"><span>📖</span> My Books</a>
+            <a href="/personal/reading" class="personal-nav-link"><span>⏱️</span> Reading Tracker</a>
+            <a href="/personal/borrowing" class="personal-nav-link"><span>🤝</span> Lending System</a>
+            <a href="/personal/wishlist" class="personal-nav-link"><span>✨</span> Wishlist</a>
+            <a href="/personal/favorites" class="personal-nav-link"><span>⭐</span> Favorites</a>
+            <a href="/personal/libraries" class="personal-nav-link"><span>📂</span> Collections</a>
+            <a href="/personal/elibrary" class="personal-nav-link active"><span>🌐</span> E-Library</a>
+            <a href="/personal/scan" class="personal-nav-link"><span>📷</span> AI Scanner</a>
+            <a href="/personal/settings" class="personal-nav-link"><span>⚙️</span> Settings & Plan</a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: #f43f5e;"><span>🚪</span> Sign Out</a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="<%= lib.profile_photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' %>" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= session.user_name %></div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;"><%= lib.plan_name %> PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="personal-content">
+        <% if (locals.messages && messages.success) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><%= messages.success %></div><% } %>
+        <% if (locals.messages && messages.error) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2);"><%= messages.error %></div><% } %>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h1 style="margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">E-Library Browser</h1>
+                <p style="color: #9ca3af; margin: 4px 0 0 0;">Browse published digital books from the personal community.</p>
+            </div>
+            <% if (lib.plan_name === 'PRO') { %>
+            <a href="/personal/elibrary/publish" class="btn-neon">✍️ Publish Your Book</a>
+            <% } %>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <form method="GET" action="/personal/elibrary" style="display: flex; gap: 10px;">
+                <input type="text" name="q" value="<%= query || '' %>" placeholder="Search by title, author, category, or tags..." style="flex: 1; padding: 12px 16px; border-radius: 20px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02); color: white;">
+                <button type="submit" class="btn-alt" style="border-color: #3b82f6; color: #3b82f6;">🔍 Search</button>
+            </form>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab active" onclick="switchTab('browse', this)">📚 Browse</button>
+            <% if (lib.plan_name === 'PRO') { %>
+            <button class="tab" onclick="switchTab('my', this)">📝 My Publications (<%= my_publications.length %>)</button>
+            <% } %>
+        </div>
+
+        <div id="browseTab">
+            <% if (books && books.length > 0) { %>
+            <div class="elibrary-grid">
+                <% books.forEach(function(book) { %>
+                <div class="ebook-card">
+                    <img src="<%= book.cover_url || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&q=80' %>" class="ebook-cover" alt="<%= book.title %>">
+                    <div class="ebook-info">
+                        <h4 class="ebook-title" title="<%= book.title %>"><%= book.title %></h4>
+                        <p class="ebook-author"><%= book.subject || 'Unknown Author' %></p>
+                        <% if (book.category) { %><span class="ebook-badge" style="background: rgba(139,92,246,0.1); color: #8b5cf6;"><%= book.category %></span><% } %>
+                        <% if (book.featured) { %><span class="ebook-badge" style="background: rgba(245,158,11,0.1); color: #f59e0b; margin-left: 4px;">⭐ Featured</span><% } %>
+                        <div style="margin-top: 10px;">
+                            <a href="<%= book.file_url %>" target="_blank" class="btn-alt" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; box-sizing: border-box; text-align: center; display: block;">📥 Read / Download</a>
+                        </div>
+                    </div>
+                </div>
+                <% }) %>
+            </div>
+            <% } else { %>
+            <div class="personal-card" style="text-align: center; padding: 3rem 2rem;">
+                <span style="font-size: 4rem;">📚</span>
+                <h3 style="color: white;">No Books Found</h3>
+                <p style="color: #9ca3af;"><%= query ? 'No results match your search query.' : 'The E-Library is empty. Be the first to publish!' %></p>
+                <% if (lib.plan_name === 'PRO') { %>
+                <a href="/personal/elibrary/publish" class="btn-neon">Publish Your First Book</a>
+                <% } %>
+            </div>
+            <% } %>
+        </div>
+
+        <% if (lib.plan_name === 'PRO') { %>
+        <div id="myTab" style="display: none;">
+            <% if (my_publications && my_publications.length > 0) { %>
+            <div class="elibrary-grid">
+                <% my_publications.forEach(function(pub) { %>
+                <div class="ebook-card">
+                    <img src="<%= pub.cover_url || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&q=80' %>" class="ebook-cover" alt="<%= pub.title %>">
+                    <div class="ebook-info">
+                        <h4 class="ebook-title"><%= pub.title %></h4>
+                        <p class="ebook-author"><%= pub.subject %> | <%= pub.status %></p>
+                        <div style="margin-top: 10px; display: flex; gap: 6px;">
+                            <a href="<%= pub.file_url %>" target="_blank" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; flex:1; text-align:center;">View</a>
+                            <form method="POST" action="/personal/elibrary/delete/<%= pub.id %>" style="flex:1;" onsubmit="return confirm('Delete this publication?');">
+                                <button type="submit" class="btn-alt" style="font-size: 0.7rem; padding: 4px 8px; width:100%; color: #f43f5e; border-color: #f43f5e;">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <% }) %>
+            </div>
+            <% } else { %>
+            <div class="personal-card" style="text-align: center; padding: 3rem 2rem;">
+                <span style="font-size: 4rem;">✍️</span>
+                <h3 style="color: white;">No Publications Yet</h3>
+                <p style="color: #9ca3af;">Publish your first digital book to share with the community.</p>
+                <a href="/personal/elibrary/publish" class="btn-neon">Publish Book</a>
+            </div>
+            <% } %>
+        </div>
+        <% } %>
+    </main>
+</div>
+
+<script>
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('browseTab').style.display = tab === 'browse' ? 'block' : 'none';
+    const myTab = document.getElementById('myTab');
+    if (myTab) myTab.style.display = tab === 'my' ? 'block' : 'none';
+}
+</script>
+<%- include('layouts/footer') %>

@@ -1,0 +1,200 @@
+<%- include('layouts/header', { title: (book ? 'Edit Book' : 'Add New Book') + ' - Personal Library' }) %>
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+.ai-scan-box { background: rgba(139, 92, 246, 0.05); border: 1px dashed #8b5cf6; border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; }
+</style>
+
+<div class="personal-layout">
+    <aside class="personal-sidebar">
+        <div class="personal-brand"><span>📚</span><span>Librika Personal</span></div>
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="if(this.value === 'manage_collections') { window.location.href='/personal/libraries'; } else { window.location.href='/personal/libraries/switch/' + this.value; }" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    <% (locals.personal_my_libraries || []).forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>><%= l.library_name %></option>
+                    <% }) %>
+                </optgroup>
+                <% if (locals.personal_shared_libraries && locals.personal_shared_libraries.length > 0) { %>
+                <optgroup label="Shared with Me">
+                    <% locals.personal_shared_libraries.forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>>🤝 <%= l.library_name %> (<%= l.owner_name %>)</option>
+                    <% }) %>
+                </optgroup>
+                <% } %>
+                <optgroup label="Actions">
+                    <option value="manage_collections">📂 Manage Collections (+)</option>
+                </optgroup>
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link"><span>🏠</span> Dashboard</a>
+            <a href="/personal/books" class="personal-nav-link active"><span>📖</span> My Books</a>
+            <a href="/personal/reading" class="personal-nav-link"><span>⏱️</span> Reading Tracker</a>
+            <a href="/personal/borrowing" class="personal-nav-link"><span>🤝</span> Lending System</a>
+            <a href="/personal/wishlist" class="personal-nav-link"><span>✨</span> Wishlist</a>
+            <a href="/personal/favorites" class="personal-nav-link"><span>⭐</span> Favorites</a>
+            <a href="/personal/libraries" class="personal-nav-link"><span>📂</span> Collections</a>
+            <a href="/personal/elibrary" class="personal-nav-link"><span>🌐</span> E-Library</a>
+            <a href="/personal/scan" class="personal-nav-link"><span>📷</span> AI Scanner</a>
+            <a href="/personal/settings" class="personal-nav-link"><span>⚙️</span> Settings & Plan</a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: #f43f5e;"><span>🚪</span> Sign Out</a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="<%= lib.profile_photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' %>" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= session.user_name %></div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;"><%= lib.plan_name %> PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="personal-content">
+        <div style="margin-bottom: 2rem;">
+            <a href="/personal/books" style="color: #8b5cf6; text-decoration: none; font-weight: 600;">&larr; Back to Catalog</a>
+            <h1 style="margin: 10px 0 0 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                <%= book ? 'Edit Book Details' : 'Catalog New Book' %>
+            </h1>
+        </div>
+
+        <% if (!book && lib.plan_name !== 'FREE') { %>
+        <div class="ai-scan-box">
+            <h3 style="margin-top: 0; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">⚡ AI Auto-Fill Cover Scan</h3>
+            <p style="color: #9ca3af; font-size: 0.85rem; margin-bottom: 1rem;">Upload a cover image of the book. E-Pathshala AI will automatically extract Title, Author, Publisher, ISBN, Category, and Description!</p>
+            <div style="display: flex; justify-content: center; gap: 15px; align-items: center;">
+                <input type="file" id="aiCoverInput" accept="image/*" style="display: none;" onchange="handleAiScan(event)">
+                <button type="button" class="btn-alt" onclick="document.getElementById('aiCoverInput').click()" style="border-color: #3b82f6; color: #3b82f6;">Select Cover Photo</button>
+                <span id="aiScanStatus" style="color: #9ca3af; font-size: 0.9rem;">No file selected</span>
+            </div>
+        </div>
+        <% } else if (!book) { %>
+        <div class="personal-card" style="border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.03); margin-bottom: 2rem; padding: 1.2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span style="font-size: 1.5rem;">💡</span>
+                    <div>
+                        <strong style="color: white;">Tired of typing book info manually?</strong>
+                        <div style="font-size: 0.8rem; color: #9ca3af;">Upgrade to Basic or Pro plan to unlock the AI Cover Scanner and import libraries!</div>
+                    </div>
+                </div>
+                <a href="/personal/settings" class="btn-alt" style="border-color: #f59e0b; color: #f59e0b; padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;">View Plans</a>
+            </div>
+        </div>
+        <% } %>
+
+        <div class="personal-card">
+            <form id="bookForm" method="POST" action="<%= book ? '/personal/books/edit/' + book.id : '/personal/books/add' %>">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="title">Book Title</label>
+                        <input type="text" id="title" name="title" value="<%= book ? book.title : '' %>" required placeholder="E.g. The Great Gatsby">
+                    </div>
+                    <div class="input-group">
+                        <label for="author">Author Name</label>
+                        <input type="text" id="author" name="author" value="<%= book ? book.author : '' %>" required placeholder="E.g. F. Scott Fitzgerald">
+                    </div>
+                    <div class="input-group">
+                        <label for="category">Category / Genre</label>
+                        <input type="text" id="category" name="category" value="<%= book ? book.category : '' %>" required placeholder="E.g. Classics, Fiction">
+                    </div>
+                    <div class="input-group">
+                        <label for="publisher">Publisher</label>
+                        <input type="text" id="publisher" name="publisher" value="<%= book ? book.publisher : '' %>" required placeholder="E.g. Scribners">
+                    </div>
+                    <div class="input-group">
+                        <label for="isbn">ISBN</label>
+                        <input type="text" id="isbn" name="isbn" value="<%= book ? book.isbn : '' %>" required placeholder="E.g. 9780743273565">
+                    </div>
+                    <div class="input-group">
+                        <label for="language">Language</label>
+                        <input type="text" id="language" name="language" value="<%= book ? book.language : 'English' %>" required placeholder="E.g. English">
+                    </div>
+                    <div class="input-group">
+                        <label for="cover_image_url">Cover Image URL</label>
+                        <input type="url" id="cover_image_url" name="cover_image_url" value="<%= book ? book.cover_image_url : '' %>" required placeholder="E.g. https://domain.com/cover.jpg" oninput="updateCoverPreview(this.value)">
+                        <div id="cover_preview_container" style="margin-top: 10px; display: <%= (book && book.cover_image_url) ? 'block' : 'none' %>;">
+                            <img id="cover_preview" src="<%= book ? book.cover_image_url : '' %>" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--border); display: block;" alt="Cover Preview">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="quantity">Quantity In Stock</label>
+                        <input type="number" id="quantity" name="quantity" value="<%= book ? book.quantity : '1' %>" required min="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="book_condition">Book Condition</label>
+                        <select id="book_condition" name="book_condition" style="width:100%; padding:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--bg-input); color:white;">
+                            <option value="New" <%= (book && book.book_condition === 'New') ? 'selected' : '' %>>New</option>
+                            <option value="Fine" <%= (book && book.book_condition === 'Fine') ? 'selected' : '' %>>Fine / Like New</option>
+                            <option value="Good" <%= (!book || book.book_condition === 'Good') ? 'selected' : '' %>>Good (Used)</option>
+                            <option value="Fair" <%= (book && book.book_condition === 'Fair') ? 'selected' : '' %>>Fair / Worn</option>
+                            <option value="Poor" <%= (book && book.book_condition === 'Poor') ? 'selected' : '' %>>Poor / Damaged</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="purchase_date">Purchase Date</label>
+                        <input type="date" id="purchase_date" name="purchase_date" value="<%= book ? book.purchase_date : '' %>" required>
+                    </div>
+                </div>
+                <div class="input-group" style="margin-top: 20px;">
+                    <label for="description">Book Description / Synopsis</label>
+                    <textarea id="description" name="description" rows="5" required placeholder="Write a short summary or synopsis of the book here..." style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: white; font-family: inherit;"><%= book ? book.description : '' %></textarea>
+                </div>
+                <div style="display: flex; gap: 15px; margin-top: 2rem; justify-content: flex-end;">
+                    <a href="/personal/books" class="btn-alt">Cancel</a>
+                    <button type="submit" class="btn-neon"><%= book ? 'Save Changes' : 'Catalog Book' %></button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+async function handleAiScan(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById('aiScanStatus');
+    statusEl.innerHTML = "⚡ Uploading cover...";
+    const formData = new FormData();
+    formData.append('front', file);
+    try {
+        const uploadRes = await fetch('/admin/api/upload-cover', { method: 'POST', body: formData });
+        const uploadData = await uploadRes.json();
+        if (uploadData.status !== 'success') throw new Error("Upload failed: " + uploadData.message);
+        const absoluteCoverUrl = window.location.origin + uploadData.cover_url;
+        document.getElementById('cover_image_url').value = absoluteCoverUrl;
+        updateCoverPreview(absoluteCoverUrl);
+        statusEl.innerHTML = "⚡ Extracting text from cover...";
+        const worker = await Tesseract.createWorker('eng', 1, { logger: m => { if (m.status === 'recognizing text') statusEl.innerHTML = `OCR: ${Math.round(m.progress * 100)}%...`; } });
+        const ocrResult = await worker.recognize(file);
+        const ocrText = ocrResult.data.text;
+        await worker.terminate();
+        if (!ocrText || ocrText.trim().length === 0) throw new Error("No text could be extracted from the cover. Please try a clearer picture.");
+        statusEl.innerHTML = "🧠 AI is identifying book details...";
+        const chatRes = await fetch('/api/scan-ocr-text', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ ocr_text: ocrText, cover_url: uploadData.cover_url }) });
+        if (!chatRes.ok) { const errData = await chatRes.json(); throw new Error(errData.error || "Failed to parse book details."); }
+        const chatData = await chatRes.json();
+        const metadata = chatData.metadata || {};
+        if (metadata.title) document.getElementById('title').value = metadata.title;
+        if (metadata.author) document.getElementById('author').value = metadata.author;
+        if (metadata.category) document.getElementById('category').value = metadata.category;
+        if (metadata.publisher) document.getElementById('publisher').value = metadata.publisher;
+        if (metadata.isbn) document.getElementById('isbn').value = metadata.isbn;
+        if (metadata.language) document.getElementById('language').value = metadata.language || 'English';
+        if (metadata.description) document.getElementById('description').value = metadata.description;
+        statusEl.innerHTML = "<span style='color: #10b981; font-weight: 700;'>✅ AI Auto-Fill Complete!</span>";
+    } catch (err) {
+        console.error(err);
+        statusEl.innerHTML = `<span style='color: #f43f5e; font-weight: 700;'>❌ Scan Failed: ${err.message}</span>`;
+    }
+}
+function updateCoverPreview(url) {
+    const preview = document.getElementById('cover_preview');
+    const container = document.getElementById('cover_preview_container');
+    if (url && url.trim().length > 0) { preview.src = url; container.style.display = 'block'; }
+    else { container.style.display = 'none'; }
+}
+</script>
+<%- include('layouts/footer') %>

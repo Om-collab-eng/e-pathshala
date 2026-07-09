@@ -1,0 +1,222 @@
+<%- include('layouts/header', { title: 'Settings & Subscription - Personal Library' }) %>
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.plan-card { background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.5rem; text-align: center; transition: all 0.3s ease; cursor: pointer; }
+.plan-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+.plan-card.current { border-color: #8b5cf6; background: rgba(139,92,246,0.04); }
+.plan-card.free { border-color: rgba(156,163,175,0.3); }
+.plan-card.basic { border-color: rgba(59,130,246,0.3); }
+.plan-card.pro { border-color: rgba(139,92,246,0.3); }
+.plan-name { font-size: 1.3rem; font-weight: 800; margin: 10px 0; }
+.plan-price { font-size: 2.5rem; font-weight: 800; margin: 5px 0; }
+.plan-price span { font-size: 1rem; color: #9ca3af; font-weight: 400; }
+.plan-features { text-align: left; margin: 15px 0; padding: 0; list-style: none; }
+.plan-features li { padding: 8px 0; font-size: 0.85rem; color: #d1d5db; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 8px; }
+.plan-features li.disabled { color: #6b7280; text-decoration: line-through; }
+</style>
+
+<div class="personal-layout">
+    <aside class="personal-sidebar">
+        <div class="personal-brand"><span>📚</span><span>Librika Personal</span></div>
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="if(this.value === 'manage_collections') { window.location.href='/personal/libraries'; } else { window.location.href='/personal/libraries/switch/' + this.value; }" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    <% (locals.personal_my_libraries || []).forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>><%= l.library_name %></option>
+                    <% }) %>
+                </optgroup>
+                <% if (locals.personal_shared_libraries && locals.personal_shared_libraries.length > 0) { %>
+                <optgroup label="Shared with Me">
+                    <% locals.personal_shared_libraries.forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>>🤝 <%= l.library_name %> (<%= l.owner_name %>)</option>
+                    <% }) %>
+                </optgroup>
+                <% } %>
+                <optgroup label="Actions">
+                    <option value="manage_collections">📂 Manage Collections (+)</option>
+                </optgroup>
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link"><span>🏠</span> Dashboard</a>
+            <a href="/personal/books" class="personal-nav-link"><span>📖</span> My Books</a>
+            <a href="/personal/reading" class="personal-nav-link"><span>⏱️</span> Reading Tracker</a>
+            <a href="/personal/borrowing" class="personal-nav-link"><span>🤝</span> Lending System</a>
+            <a href="/personal/wishlist" class="personal-nav-link"><span>✨</span> Wishlist</a>
+            <a href="/personal/favorites" class="personal-nav-link"><span>⭐</span> Favorites</a>
+            <a href="/personal/libraries" class="personal-nav-link"><span>📂</span> Collections</a>
+            <a href="/personal/elibrary" class="personal-nav-link"><span>🌐</span> E-Library</a>
+            <a href="/personal/scan" class="personal-nav-link"><span>📷</span> AI Scanner</a>
+            <a href="/personal/settings" class="personal-nav-link active"><span>⚙️</span> Settings & Plan</a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: #f43f5e;"><span>🚪</span> Sign Out</a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="<%= lib.profile_photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' %>" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= session.user_name %></div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;"><%= lib.plan_name %> PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="personal-content">
+        <% if (locals.messages && messages.success) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><%= messages.success %></div><% } %>
+        <% if (locals.messages && messages.error) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2);"><%= messages.error %></div><% } %>
+
+        <div style="margin-bottom: 2rem;">
+            <h1 style="margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Settings & Subscription</h1>
+            <p style="color: #9ca3af; margin: 4px 0 0 0;">Manage your library profile, plan, and data.</p>
+        </div>
+
+        <div class="settings-grid">
+            <div class="personal-card">
+                <h2 style="margin-top: 0; font-size: 1.3rem; color: white;">Profile Settings</h2>
+                <form method="POST" action="/personal/settings/update" enctype="multipart/form-data">
+                    <div class="input-group">
+                        <label for="library_name">Library Name</label>
+                        <input type="text" id="library_name" name="library_name" value="<%= lib.library_name %>" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="owner_name">Your Name</label>
+                        <input type="text" id="owner_name" name="owner_name" value="<%= user.name %>" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" value="<%= user.email || '' %>">
+                    </div>
+                    <div class="input-group">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" name="phone" value="<%= user.phone %>" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">New Password (leave blank to keep current)</label>
+                        <input type="password" id="password" name="password" placeholder="New password">
+                    </div>
+                    <div class="input-group">
+                        <label for="profile_photo">Profile Photo</label>
+                        <input type="file" id="profile_photo" name="profile_photo" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn-neon" style="width: 100%; margin-top: 10px;">Save Profile Settings</button>
+                </form>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 25px;">
+                <div class="personal-card">
+                    <h2 style="margin-top: 0; font-size: 1.3rem; color: white;">Current Plan: <%= lib.plan_name %></h2>
+                    <div style="font-size: 0.85rem; color: #9ca3af;">Subscription Status: <strong style="color: #10b981;"><%= lib.subscription_status || 'active' %></strong></div>
+                    <div style="font-size: 0.85rem; color: #9ca3af;">Subscribed Since: <%= lib.created_at %></div>
+                    <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1rem 0;">
+                    <h3 style="color: white; font-size: 1.1rem; margin-top: 0;">Change Plan</h3>
+                    <form method="POST" action="/personal/settings/update_plan">
+                        <div class="input-group">
+                            <label for="plan_name">Select Plan</label>
+                            <select id="plan_name" name="plan_name" style="width:100%; background:#0f0f15; color:white; border:1px solid var(--glass-border); border-radius:8px; padding:8px;">
+                                <option value="FREE" <%= lib.plan_name === 'FREE' ? 'selected' : '' %>>FREE</option>
+                                <option value="BASIC" <%= lib.plan_name === 'BASIC' ? 'selected' : '' %>>BASIC</option>
+                                <option value="PRO" <%= lib.plan_name === 'PRO' ? 'selected' : '' %>>PRO</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-alt" style="width: 100%; border-color: #f59e0b; color: #f59e0b;">Update Plan</button>
+                    </form>
+                </div>
+
+                <div class="personal-card">
+                    <h2 style="margin-top: 0; font-size: 1.3rem; color: white;">Data Management</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem;">
+                        <a href="/personal/export/books" class="btn-alt" style="text-align: center;">Export Books</a>
+                        <a href="/personal/export/reading" class="btn-alt" style="text-align: center;">Export Reading</a>
+                        <a href="/personal/export/borrowing" class="btn-alt" style="text-align: center;">Export Lending</a>
+                        <a href="/personal/export/wishlist" class="btn-alt" style="text-align: center;">Export Wishlist</a>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1rem 0;">
+                    <h3 style="color: white; font-size: 1rem; margin-top: 0;">Import CSV</h3>
+                    <form method="POST" action="/personal/import/books" enctype="multipart/form-data">
+                        <div class="input-group">
+                            <label for="csv_module">Module</label>
+                            <select id="csv_module" name="module" style="width:100%; background:#0f0f15; color:white; border:1px solid var(--glass-border); border-radius:8px; padding:8px;">
+                                <option value="books">Books</option>
+                                <option value="reading">Reading Tracker</option>
+                                <option value="wishlist">Wishlist</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="csv_file">CSV File</label>
+                            <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn-alt" style="width: 100%; border-color: #3b82f6; color: #3b82f6;">Import CSV</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <h2 style="font-size: 1.5rem; color: white; margin-bottom: 1.5rem;">Choose Your Plan</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px;">
+                <div class="plan-card free <%= lib.plan_name === 'FREE' ? 'current' : '' %>">
+                    <div style="font-size: 2.5rem;">📘</div>
+                    <div class="plan-name">FREE</div>
+                    <div class="plan-price">₹0<span>/mo</span></div>
+                    <ul class="plan-features">
+                        <li>✅ Up to 2 Collections</li>
+                        <li>✅ Up to 500 Books</li>
+                        <li>✅ Reading Tracker</li>
+                        <li>✅ Lending System</li>
+                        <li class="disabled">❌ AI Cover Scanner</li>
+                        <li class="disabled">❌ E-Library Publishing</li>
+                        <li class="disabled">❌ Library Sharing</li>
+                        <li class="disabled">❌ CSV Export/Import</li>
+                    </ul>
+                    <% if (lib.plan_name === 'FREE') { %>
+                    <div style="background: rgba(16,185,129,0.1); color: #10b981; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;">CURRENT PLAN</div>
+                    <% } else { %>
+                    <a href="/personal/settings" style="display:block; text-decoration:none;"><button class="btn-alt" style="width:100%;">Downgrade</button></a>
+                    <% } %>
+                </div>
+                <div class="plan-card basic <%= lib.plan_name === 'BASIC' ? 'current' : '' %>">
+                    <div style="font-size: 2.5rem;">📗</div>
+                    <div class="plan-name">BASIC</div>
+                    <div class="plan-price">₹99<span>/mo</span></div>
+                    <ul class="plan-features">
+                        <li>✅ Up to 100 Collections</li>
+                        <li>✅ Up to 5,000 Books</li>
+                        <li>✅ Reading Tracker</li>
+                        <li>✅ Lending System</li>
+                        <li>✅ AI Cover Scanner</li>
+                        <li class="disabled">❌ E-Library Publishing</li>
+                        <li>✅ Library Sharing</li>
+                        <li>✅ CSV Export/Import</li>
+                    </ul>
+                    <% if (lib.plan_name === 'BASIC') { %>
+                    <div style="background: rgba(16,185,129,0.1); color: #10b981; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;">CURRENT PLAN</div>
+                    <% } else { %>
+                    <a href="/personal/settings" style="display:block; text-decoration:none;"><button class="btn-neon" style="width:100%;">Upgrade to Basic</button></a>
+                    <% } %>
+                </div>
+                <div class="plan-card pro <%= lib.plan_name === 'PRO' ? 'current' : '' %>">
+                    <div style="font-size: 2.5rem;">📕</div>
+                    <div class="plan-name">PRO</div>
+                    <div class="plan-price">₹249<span>/mo</span></div>
+                    <ul class="plan-features">
+                        <li>✅ Unlimited Collections</li>
+                        <li>✅ Unlimited Books</li>
+                        <li>✅ Reading Tracker</li>
+                        <li>✅ Lending System</li>
+                        <li>✅ AI Cover Scanner</li>
+                        <li>✅ E-Library Publishing</li>
+                        <li>✅ Library Sharing</li>
+                        <li>✅ CSV Export/Import</li>
+                    </ul>
+                    <% if (lib.plan_name === 'PRO') { %>
+                    <div style="background: rgba(16,185,129,0.1); color: #10b981; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;">CURRENT PLAN</div>
+                    <% } else { %>
+                    <a href="/personal/settings" style="display:block; text-decoration:none;"><button class="btn-neon" style="width:100%;">Upgrade to Pro</button></a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<%- include('layouts/footer') %>

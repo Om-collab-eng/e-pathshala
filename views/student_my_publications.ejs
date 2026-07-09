@@ -1,0 +1,832 @@
+<%- layout("base") %>
+<% contentFor("title") %>My Publications - librika.in<%%>
+<% contentFor("content") %>
+<!-- Load Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- Local Style overrides for high fidelity representation of the mockup -->
+<style>
+    :root {
+        --sp-purple: #5c3cf3;
+        --sp-purple-light: #f0eeff;
+        --sp-pink-light: #fff0f3;
+        --sp-pink: #ff4d6d;
+        --sp-orange-light: #fff4eb;
+        --sp-orange: #ff8800;
+        --sp-green-light: #ebfbf2;
+        --sp-green: #00b050;
+        --sp-text-dark: #0f172a;
+        --sp-text-muted: #64748b;
+        --sp-bg-light: #f8fafc;
+        --sp-white: #ffffff;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--sp-bg-light);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .portal-main {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding-bottom: 90px;
+        box-sizing: border-box;
+    }
+
+    /* Layout overrides for mobile view/mockup within wrapper on mobile */
+    .my-pub-header {
+        background: #ffffff;
+        padding: 1.5rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .pub-back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--sp-text-dark);
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .pub-back-btn:hover {
+        background: #f8fafc;
+        transform: scale(1.05);
+    }
+
+    /* Stats container grid */
+    .pub-stats-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 1.25rem;
+    }
+
+    .pub-stat-box {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 12px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        position: relative;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        border: 1px solid #f1f5f9;
+        min-height: 85px;
+        justify-content: space-between;
+    }
+
+    .pub-stat-num {
+        font-size: 1.8rem;
+        font-weight: 800;
+        font-family: 'Outfit', sans-serif;
+        line-height: 1;
+    }
+
+    .pub-stat-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--sp-text-muted);
+        margin-top: 4px;
+    }
+
+    .pub-stat-icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    /* Filter Row */
+    .filter-pills-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 1.25rem 1rem;
+    }
+
+    .pills-group {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 4px 0;
+        flex-grow: 1;
+        margin-right: 12px;
+    }
+
+    .pills-group::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-pill {
+        padding: 6px 16px;
+        border-radius: 99px;
+        background: #ffffff;
+        color: var(--sp-text-muted);
+        border: 1px solid #e2e8f0;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .filter-pill:hover {
+        background: #f1f5f9;
+    }
+
+    .filter-pill.active {
+        background: var(--sp-purple);
+        color: #ffffff;
+        border-color: var(--sp-purple);
+        box-shadow: 0 4px 12px rgba(92, 60, 243, 0.25);
+    }
+
+    .outlined-filter-btn {
+        padding: 6px 14px;
+        border-radius: 10px;
+        background: #ffffff;
+        color: var(--sp-purple);
+        border: 1px solid rgba(92, 60, 243, 0.15);
+        font-size: 0.78rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .outlined-filter-btn:hover {
+        background: rgba(92, 60, 243, 0.04);
+    }
+
+    /* Publications List */
+    .pub-list-container {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 0 1.25rem 2rem;
+    }
+
+    .pub-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.01);
+        padding: 1.25rem;
+        display: flex;
+        gap: 15px;
+        position: relative;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .pub-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Left Cover Image */
+    .pub-cover-box {
+        width: 80px;
+        height: 110px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .pub-cover-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .pub-cover-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        padding: 8px;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .pub-cover-fallback-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.55rem;
+        font-weight: 900;
+        line-height: 1.2;
+        text-transform: uppercase;
+        margin-top: 4px;
+    }
+
+    /* Middle Details */
+    .pub-details {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .pub-badge-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .pub-type-badge {
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: capitalize;
+    }
+
+    .pub-type-badge.notes { background: #f0eeff; color: #5c3cf3; }
+    .pub-type-badge.project { background: #ecfdf5; color: #10b981; }
+    .pub-type-badge.article { background: #fff1f2; color: #f43f5e; }
+
+    .pub-status-badge {
+        padding: 4px 10px;
+        border-radius: 99px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pub-status-badge.pending { background: #fffbeb; color: #d97706; border: 1px solid rgba(217, 119, 6, 0.15); }
+    .pub-status-badge.published { background: #ecfdf5; color: #059669; border: 1px solid rgba(5, 150, 105, 0.15); }
+    .pub-status-badge.rejected { background: #fef2f2; color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.15); }
+    .pub-status-badge.draft { background: #f1f5f9; color: #475569; border: 1px solid rgba(71, 85, 105, 0.15); }
+
+    .pub-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin: 6px 0 4px 0;
+        line-height: 1.3;
+    }
+
+    .pub-meta {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--sp-text-muted);
+        margin: 0 0 6px 0;
+    }
+
+    .pub-date {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #94a3b8;
+        margin: 0;
+    }
+
+    .pub-rejection-box {
+        background: #fef2f2;
+        border: 1px solid rgba(220, 38, 38, 0.1);
+        border-radius: 12px;
+        padding: 8px 12px;
+        margin-top: 8px;
+    }
+    
+    .pub-rejection-text {
+        font-size: 0.72rem;
+        color: #dc2626;
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .pub-rejection-btn {
+        font-size: 0.72rem;
+        color: var(--sp-purple);
+        font-weight: 700;
+        text-decoration: underline;
+        background: none;
+        border: none;
+        padding: 0;
+        margin-top: 4px;
+        cursor: pointer;
+    }
+
+    /* Under Stats metrics */
+    .pub-metrics {
+        display: flex;
+        gap: 15px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #f8fafc;
+    }
+
+    .pub-metric {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        color: var(--sp-text-muted);
+        font-weight: 700;
+    }
+
+    .pub-menu-trigger {
+        background: none;
+        border: none;
+        font-size: 1.1rem;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        align-self: flex-start;
+        margin-top: -3px;
+        transition: color 0.2s;
+    }
+
+    .pub-menu-trigger:hover {
+        color: var(--sp-text-dark);
+    }
+
+    /* Bottom Share CTA Banner */
+    .share-cta-banner {
+        background: linear-gradient(135deg, #f0eeff 0%, #e8e4ff 100%);
+        border-radius: 20px;
+        padding: 1.25rem;
+        margin: 0 1.25rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        border: 1px solid rgba(92, 60, 243, 0.08);
+    }
+
+    .share-cta-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .share-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: #ffffff;
+        color: var(--sp-purple);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        box-shadow: 0 4px 10px rgba(92, 60, 243, 0.1);
+        flex-shrink: 0;
+    }
+
+    .share-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #311c9c;
+        margin: 0;
+    }
+
+    .share-desc {
+        font-size: 0.72rem;
+        color: #6d5bb0;
+        margin: 4px 0 0 0;
+        line-height: 1.3;
+        font-weight: 600;
+    }
+
+    .share-btn {
+        background: var(--sp-purple);
+        color: #ffffff;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(92, 60, 243, 0.3);
+        transition: all 0.2s;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .share-btn:hover {
+        background: #4b2bd3;
+        transform: translateY(-1px);
+    }
+
+    /* Fixed Bottom Nav Bar (Mobile only) */
+    .bottom-nav {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 100% !important;
+        max-width: 480px !important;
+        height: 75px !important;
+        background: #ffffff !important;
+        border-top: 1px solid #f1f5f9 !important;
+        display: flex !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        padding: 0 1rem !important;
+        z-index: 1000 !important;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.03) !important;
+        box-sizing: border-box;
+    }
+
+    .bottom-nav-item {
+        background: none !important;
+        border: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 4px !important;
+        color: #94a3b8 !important;
+        cursor: pointer !important;
+        text-decoration: none !important;
+        font-size: 0.65rem !important;
+        font-weight: 700 !important;
+        transition: color 0.2s !important;
+        padding: 8px 12px !important;
+    }
+
+    .bottom-nav-icon {
+        font-size: 1.35rem !important;
+        transition: transform 0.2s !important;
+    }
+
+    .bottom-nav-item:hover {
+        color: var(--sp-purple) !important;
+    }
+
+    .bottom-nav-item.active {
+        color: var(--sp-purple) !important;
+    }
+
+    .bottom-nav-item.active .bottom-nav-icon {
+        transform: scale(1.1) !important;
+    }
+
+    /* Responsive adjustments */
+    @media (min-width: 768px) {
+        .my-pub-header {
+            border-bottom: none;
+            padding: 2rem;
+        }
+
+        .pub-stats-row {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 20px;
+            padding: 0 2rem 1.5rem;
+        }
+
+        .filter-pills-row {
+            padding: 0 2rem 1.5rem;
+        }
+
+        .pub-list-container {
+            padding: 0 2rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+            gap: 20px;
+        }
+
+        .share-cta-banner {
+            margin: 0 2rem 3rem;
+            padding: 1.5rem;
+        }
+
+        .bottom-nav {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="portal-wrapper">
+    <!-- Desktop Sidebar Navigation -->
+    <aside class="desktop-sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">🌐</span>
+            <div class="brand-info">
+                <h4><%= school_name %></h4>
+                <p>Student Portal</p>
+            </div>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="/student" class="sidebar-link">
+                <span class="link-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="/student/browse" class="sidebar-link">
+                <span class="link-icon">📚</span>
+                <span>Digital Library</span>
+            </a>
+            <a href="/digital-library" class="sidebar-link">
+                <span class="link-icon">🌐</span>
+                <span>Community Library</span>
+            </a>
+            <a href="/student/publish" class="sidebar-link">
+                <span class="link-icon">✏️</span>
+                <span>Publish Content</span>
+            </a>
+            <a href="/student/my-publications" class="sidebar-link active">
+                <span class="link-icon">📄</span>
+                <span>Publications</span>
+            </a>
+            <a href="/student/bookmarks" class="sidebar-link">
+                <span class="link-icon">🔖</span>
+                <span>Saved Items</span>
+            </a>
+            <a href="/student/profile" class="sidebar-link">
+                <span class="link-icon">👤</span>
+                <span>My Profile</span>
+            </a>
+            <hr class="sidebar-divider">
+            <a href="/logout" class="sidebar-link logout-link">
+                <span class="link-icon">🚪</span>
+                <span>Log Out</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-profile-card">
+            <div class="profile-card-avatar">
+                <%= session.name ? session.name[0] : 'S' %>
+            </div>
+            <div class="profile-card-info">
+                <h5><%= session.name %></h5>
+                <p>Class: <%= session.class %></p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="portal-main">
+        <!-- Header -->
+        <header class="my-pub-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="pub-back-btn" onclick="window.history.back()" title="Go Back">&larr;</button>
+                <div>
+                    <h1 class="comm-header-title" style="font-size: 1.4rem; display: flex; align-items: center; gap: 8px;">
+                        My Publications 📄
+                    </h1>
+                    <p class="comm-header-subtitle" style="font-size: 0.8rem; margin-top: 2px;">Track the status of your published content</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="pub-back-btn" onclick="window.location.href='/student/bookmarks'" style="position: relative;" title="Saved Items">
+                    🔔
+                    <span style="position: absolute; top: -3px; right: -3px; background: #ef4444; color: white; font-size: 0.6rem; font-weight: 800; padding: 2px 5px; border-radius: 10px; border: 2px solid white; line-height: 1;">3</span>
+                </button>
+                <div class="profile-card-avatar" style="width: 40px; height: 40px; background: var(--sp-purple); color: white; cursor: pointer;" onclick="window.location.href='/student/profile'">
+                    <%= session.name ? session.name[0] : 'S' %>
+                </div>
+            </div>
+        </header>
+
+        <% var total_count = publications ? publications.length : 0; %>
+        <% var pending_count = 0; %>
+        <% var published_count = 0; %>
+        <% var rejected_count = 0; %>
+        <% publications.forEach(function(pub) { %>
+            <% if (pub.status === 'Submitted' || pub.status === 'Pending') { %>
+                <% pending_count++; %>
+            <% } else if (pub.status === 'Approved' || pub.status === 'Published') { %>
+                <% published_count++; %>
+            <% } else if (pub.status === 'Rejected') { %>
+                <% rejected_count++; %>
+            <% } %>
+        <% }); %>
+
+        <!-- Stats Row -->
+        <section class="pub-stats-row">
+            <div class="pub-stat-box" style="border-left: 4px solid var(--sp-purple);">
+                <div class="pub-stat-num" style="color: var(--sp-purple);"><%= total_count %></div>
+                <div class="pub-stat-label">Total</div>
+                <div class="pub-stat-icon" style="background: var(--sp-purple-light); color: var(--sp-purple);">📄</div>
+            </div>
+            <div class="pub-stat-box" style="border-left: 4px solid var(--sp-orange);">
+                <div class="pub-stat-num" style="color: var(--sp-orange);"><%= pending_count %></div>
+                <div class="pub-stat-label">Pending Review</div>
+                <div class="pub-stat-icon" style="background: var(--sp-orange-light); color: var(--sp-orange);">🕒</div>
+            </div>
+            <div class="pub-stat-box" style="border-left: 4px solid var(--sp-green);">
+                <div class="pub-stat-num" style="color: var(--sp-green);"><%= published_count %></div>
+                <div class="pub-stat-label">Published</div>
+                <div class="pub-stat-icon" style="background: var(--sp-green-light); color: var(--sp-green);">✓</div>
+            </div>
+            <div class="pub-stat-box" style="border-left: 4px solid var(--sp-pink);">
+                <div class="pub-stat-num" style="color: var(--sp-pink);"><%= rejected_count %></div>
+                <div class="pub-stat-label">Rejected</div>
+                <div class="pub-stat-icon" style="background: var(--sp-pink-light); color: var(--sp-pink);">✕</div>
+            </div>
+        </section>
+
+        <!-- Filter Row -->
+        <section class="filter-pills-row">
+            <div class="pills-group">
+                <button class="filter-pill active" onclick="filterPublications('all', this)">All</button>
+                <button class="filter-pill" onclick="filterPublications('pending', this)">Pending</button>
+                <button class="filter-pill" onclick="filterPublications('published', this)">Published</button>
+                <button class="filter-pill" onclick="filterPublications('rejected', this)">Rejected</button>
+            </div>
+            <button class="outlined-filter-btn">
+                <span>⚡</span> Filters
+            </button>
+        </section>
+
+        <!-- Publications List -->
+        <section class="pub-list-container">
+            <% if (!publications) { %>
+            <div class="glow-box" style="text-align: center; padding: 3rem; background: white; border-radius: 20px;">
+                <span style="font-size: 3rem;">📄</span>
+                <h2 style="color: var(--sp-text-dark); margin-top: 1rem;">No Publications Yet</h2>
+                <p style="color: var(--sp-text-muted); margin: 0.5rem 0 1.5rem;">You haven't submitted any content to the Digital Library yet. Start building your Creator Profile today!</p>
+                <a href="/student/publish" class="share-btn" style="display: inline-flex; justify-content: center; margin: 0 auto;">Publish First Asset</a>
+            </div>
+            <% } else { %>
+                <% publications.forEach(function(pub, index) { %>
+                <% var color_options = [
+                    ('linear-gradient(135deg, #0f766e 0%, #115e59 100%)', 'teal'),
+                    ('linear-gradient(135deg, #1e3a8a 0%, #172554 100%)', 'indigo'),
+                    ('linear-gradient(135deg, #311c9c 0%, #1e115e 100%)', 'purple'),
+                    ('linear-gradient(135deg, #065f46 0%, #064e3b 100%)', 'green'),
+                    ('linear-gradient(135deg, #851c5b 0%, #5b103e 100%)', 'pink')
+                ] %>
+                <% var color_idx = index % 5; %>
+                <% var selected_color = color_options[color_idx][0]; %>
+                
+                <% var p_status = 'draft'; %>
+                <% if (pub.status === 'Submitted' || pub.status === 'Pending') { %>
+                    <% p_status = 'pending'; %>
+                <% } else if (pub.status === 'Approved' || pub.status === 'Published') { %>
+                    <% p_status = 'published'; %>
+                <% } else if (pub.status === 'Rejected') { %>
+                    <% p_status = 'rejected'; %>
+                <% } %>
+
+                <div class="pub-card" data-status="<%= p_status %>">
+                    <!-- Left: Cover box -->
+                    <div class="pub-cover-box" style="background: <%= selected_color %>">
+                        <% if (pub.cover_url) { %>
+                        <img src="<%= pub.cover_url %>" class="pub-cover-img" alt="Cover">
+                        <% } else { %>
+                        <div class="pub-cover-fallback">
+                            <span style="font-size: 1.5rem;">📄</span>
+                            <div class="pub-cover-fallback-title"><%= pub.title.substring(0, 25) %>...</div>
+                        </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Middle: Details -->
+                    <div class="pub-details">
+                        <div class="pub-badge-row">
+                            <span class="pub-type-badge <%= pub.category.toLowerCase() %>"><%= pub.category %></span>
+                            
+                            <% if (pub.status === 'Submitted' || pub.status === 'Pending') { %>
+                            <span class="pub-status-badge pending">🕒 Pending Review</span>
+                            <% } else if (pub.status === 'Approved' || pub.status === 'Published') { %>
+                            <span class="pub-status-badge published">✓ Published</span>
+                            <% } else if (pub.status === 'Rejected') { %>
+                            <span class="pub-status-badge rejected">✕ Rejected</span>
+                            <% } else { %>
+                            <span class="pub-status-badge draft">✏️ Draft</span>
+                            <% } %>
+                        </div>
+
+                        <h3 class="pub-title"><%= pub.title %></h3>
+                        <p class="pub-meta">Class <%= pub.class || '11' %> &bull; <%= pub.subject %></p>
+                        <p class="pub-date">
+                            <% if (pub.status === 'Approved' || pub.status === 'Published') { %>
+                            Published on <%= pub.updated_at ? pub.updated_at.split(' ')[0] : 'recent' %>
+                            <% } else { %>
+                            Submitted on <%= pub.created_at ? pub.created_at.split(' ')[0] : 'recent' %>
+                            <% } %>
+                        </p>
+
+                        <% if (pub.status === 'Rejected' && pub.rejection_reason) { %>
+                        <div class="pub-rejection-box">
+                            <p class="pub-rejection-text">Reason: <%= pub.rejection_reason %></p>
+                            <button class="pub-rejection-btn" onclick="showModal('Rejection Feedback', '<%= pub.rejection_reason %> <%= pub.suggested_changes %>')">View Feedback</button>
+                        </div>
+                        <% } %>
+
+                        <!-- Stats metrics and actions -->
+                        <div class="pub-metrics">
+                            <div class="pub-metric">
+                                <span>👁️</span> <strong><%= pub.views || 0 %></strong> Views
+                            </div>
+                            <div class="pub-metric">
+                                <span>📥</span> <strong><%= pub.downloads || 0 %></strong> Downloads
+                            </div>
+                            <div class="pub-metric">
+                                <span>🔖</span> <strong><%= pub.bookmarks_count || 0 %></strong> Bookmarks
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Action menu trigger -->
+                    <button class="pub-menu-trigger" onclick="toggleMenuPopup(event, '<%= pub.id %>')" title="More Options">&bull;&bull;&bull;</button>
+                </div>
+                <% }); %>
+            <% } %>
+        </section>
+
+        <!-- Bottom Share CTA Card -->
+        <section class="share-cta-banner">
+            <div class="share-cta-left">
+                <div class="share-icon-box">✍️</div>
+                <div>
+                    <h3 class="share-title">Share Your Knowledge</h3>
+                    <p class="share-desc">Publish more notes, projects and articles to help the community learn.</p>
+                </div>
+            </div>
+            <a href="/student/publish" class="share-btn">
+                <span>✏️</span> Publish New
+            </a>
+        </section>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="bottom-nav">
+            <a href="/student" class="bottom-nav-item">
+                <span class="bottom-nav-icon">🏠</span>
+                <span class="bottom-nav-label">Home</span>
+            </a>
+            <a href="/student/browse" class="bottom-nav-item">
+                <span class="bottom-nav-icon">📚</span>
+                <span class="bottom-nav-label">Library</span>
+            </a>
+            <a href="/digital-library" class="bottom-nav-item">
+                <span class="bottom-nav-icon">🌐</span>
+                <span class="bottom-nav-label">Community</span>
+            </a>
+            <a href="/student/publish" class="bottom-nav-item active">
+                <span class="bottom-nav-icon">✏️</span>
+                <span class="bottom-nav-label">Creator Hub</span>
+            </a>
+            <a href="/student/profile" class="bottom-nav-item">
+                <span class="bottom-nav-icon">👤</span>
+                <span class="bottom-nav-label">Profile</span>
+            </a>
+        </nav>
+    </div>
+</div>
+
+<script>
+    function filterPublications(status, button) {
+        document.querySelectorAll('.filter-pill').forEach(pill => {
+            pill.classList.remove('active');
+        });
+        button.classList.add('active');
+
+        const cards = document.querySelectorAll('.pub-card');
+        cards.forEach(card => {
+            const cardStatus = card.getAttribute('data-status');
+            if (status === 'all') {
+                card.style.display = 'flex';
+            } else if (cardStatus === status) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function toggleMenuPopup(event, pubId) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        showToast('Options for publication #' + pubId + ' coming soon!', 'info');
+    }
+</script>
+<%%>

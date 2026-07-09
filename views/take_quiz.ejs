@@ -1,0 +1,203 @@
+<%- layout("base") %>
+
+<% contentFor("title") %>Book Quiz: <%= book.title %> - librika.in<%%>
+
+<% contentFor("head") %>
+<style>
+    :root {
+        --sp-purple: #5c3cf3;
+        --sp-purple-light: #f0eeff;
+        --sp-white: #ffffff;
+        --sp-bg-light: #f8fafc;
+        --sp-text-dark: #0f172a;
+        --sp-text-muted: #64748b;
+    }
+
+    body {
+        background-color: var(--sp-bg-light);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .qz-container {
+        max-width: 700px;
+        margin: 4rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .qz-card {
+        background: var(--sp-white);
+        border-radius: 28px;
+        padding: 2.5rem;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.04);
+    }
+
+    .qz-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .qz-badge {
+        background: var(--sp-purple-light);
+        color: var(--sp-purple);
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        display: inline-block;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+    }
+
+    .qz-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--sp-text-dark);
+        margin: 0;
+    }
+
+    .qz-meta {
+        font-size: 0.9rem;
+        color: var(--sp-text-muted);
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    .qz-question-card {
+        margin-bottom: 2.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 2rem;
+    }
+
+    .qz-question-card:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .qz-question-text {
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: var(--sp-text-dark);
+        margin-bottom: 1rem;
+        line-height: 1.4;
+    }
+
+    .qz-options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .qz-option-label {
+        background: var(--sp-bg-light);
+        border: 2px solid #e2e8f0;
+        padding: 14px 20px;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--sp-text-dark);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s;
+    }
+
+    .qz-option-label:hover {
+        border-color: var(--sp-purple);
+        background: var(--sp-purple-light);
+    }
+
+    .qz-option-radio {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #cbd5e1;
+        border-radius: 50%;
+        outline: none;
+        transition: all 0.2s;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .qz-option-radio:checked {
+        border-color: var(--sp-purple);
+        background: var(--sp-purple);
+    }
+
+    .qz-option-radio:checked::after {
+        content: '';
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 8px;
+        height: 8px;
+        background: white;
+        border-radius: 50%;
+    }
+
+    .qz-option-label.checked {
+        border-color: var(--sp-purple);
+        background: var(--sp-purple-light);
+    }
+
+    .submit-btn {
+        background: var(--sp-purple);
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 16px;
+        border-radius: 18px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        margin-top: 1.5rem;
+        box-shadow: 0 10px 20px rgba(92, 60, 243, 0.15);
+    }
+
+    .submit-btn:hover {
+        opacity: 0.95;
+    }
+</style>
+<% contentFor("head") %>
+
+<% contentFor("content") %>
+<div class="qz-container">
+    <div class="qz-card">
+        <div class="qz-header">
+            <span class="qz-badge">💡 Comprehension Challenge</span>
+            <h1 class="qz-title"><%= book.title %></h1>
+            <p class="qz-meta">Answer all 5 questions correctly to pass (70% score required to pass).</p>
+        </div>
+
+        <form method="POST">
+            <% questions.forEach(function(q, qIdx) { %>
+            <div class="qz-question-card">
+                <div class="qz-question-text"><%= (qIdx + 1) %>. <%= q.question %></div>
+                <div class="qz-options-list">
+                    <% q.options.forEach(function(opt, optIdx) { %>
+                    <label class="qz-option-label" onclick="selectOption(this)">
+                        <input type="radio" name="q<%= qIdx %>" value="<%= optIdx %>" class="qz-option-radio" required>
+                        <span><%= opt %></span>
+                    </label>
+                    <% }); %>
+                </div>
+            </div>
+            <% }); %>
+
+            <button type="submit" class="submit-btn">Submit Quiz</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function selectOption(label) {
+        // Remove checked class from all labels in this question block
+        const container = label.closest('.qz-options-list');
+        container.querySelectorAll('.qz-option-label').forEach(lbl => lbl.classList.remove('checked'));
+        
+        // Add checked class to current label
+        label.classList.add('checked');
+    }
+</script>

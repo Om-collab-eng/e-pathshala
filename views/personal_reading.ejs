@@ -1,0 +1,190 @@
+<%- include('layouts/header', { title: 'Reading Tracker - Personal Library' }) %>
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.progress-bar-container { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+.progress-bar-fill { height: 100%; background: var(--premium-gradient); width: 0%; border-radius: 4px; transition: width 0.3s ease; }
+.reading-status-btn { padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; }
+</style>
+
+<div class="personal-layout">
+    <aside class="personal-sidebar">
+        <div class="personal-brand"><span>📚</span><span>Librika Personal</span></div>
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="if(this.value === 'manage_collections') { window.location.href='/personal/libraries'; } else { window.location.href='/personal/libraries/switch/' + this.value; }" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    <% (locals.personal_my_libraries || []).forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>><%= l.library_name %></option>
+                    <% }) %>
+                </optgroup>
+                <% if (locals.personal_shared_libraries && locals.personal_shared_libraries.length > 0) { %>
+                <optgroup label="Shared with Me">
+                    <% locals.personal_shared_libraries.forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>>🤝 <%= l.library_name %> (<%= l.owner_name %>)</option>
+                    <% }) %>
+                </optgroup>
+                <% } %>
+                <optgroup label="Actions">
+                    <option value="manage_collections">📂 Manage Collections (+)</option>
+                </optgroup>
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link"><span>🏠</span> Dashboard</a>
+            <a href="/personal/books" class="personal-nav-link"><span>📖</span> My Books</a>
+            <a href="/personal/reading" class="personal-nav-link active"><span>⏱️</span> Reading Tracker</a>
+            <a href="/personal/borrowing" class="personal-nav-link"><span>🤝</span> Lending System</a>
+            <a href="/personal/wishlist" class="personal-nav-link"><span>✨</span> Wishlist</a>
+            <a href="/personal/favorites" class="personal-nav-link"><span>⭐</span> Favorites</a>
+            <a href="/personal/libraries" class="personal-nav-link"><span>📂</span> Collections</a>
+            <a href="/personal/elibrary" class="personal-nav-link"><span>🌐</span> E-Library</a>
+            <a href="/personal/scan" class="personal-nav-link"><span>📷</span> AI Scanner</a>
+            <a href="/personal/settings" class="personal-nav-link"><span>⚙️</span> Settings & Plan</a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: #f43f5e;"><span>🚪</span> Sign Out</a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="<%= lib.profile_photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' %>" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= session.user_name %></div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;"><%= lib.plan_name %> PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="personal-content">
+        <% if (locals.messages && messages.success) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><%= messages.success %></div><% } %>
+        <% if (locals.messages && messages.error) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2);"><%= messages.error %></div><% } %>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h1 style="margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Reading Tracker</h1>
+                <p style="color: #9ca3af; margin: 4px 0 0 0;">Log pages, track streaks, and see your collection completion progress</p>
+            </div>
+            <button class="btn-neon" onclick="document.getElementById('startTrackingModal').style.display='flex'">➕ Track a Book</button>
+        </div>
+
+        <% if (tracked_books && tracked_books.length > 0) { %>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+            <% tracked_books.forEach(function(track) { 
+               var pct = track.total_pages > 0 ? Math.round((track.current_page / track.total_pages) * 100) : 0;
+            %>
+            <div class="personal-card" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                <img src="<%= track.cover_image_url || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200&q=80' %>" alt="<%= track.title %>" style="width: 70px; height: 100px; object-fit: cover; border-radius: 8px;">
+                <div style="flex: 1; min-width: 250px;">
+                    <h3 style="margin: 0; color: white;"><%= track.title %></h3>
+                    <p style="color: #9ca3af; margin: 2px 0 8px 0; font-size: 0.9rem;">By <%= track.author %></p>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #9ca3af;">
+                        <span>Progress: <%= track.current_page %> / <%= track.total_pages %> pages</span>
+                        <span><%= pct %>%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: <%= pct %>%;"></div>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #9ca3af; display: flex; gap: 15px; margin-top: 5px;">
+                        <span>Started: <%= track.start_date || 'N/A' %></span>
+                        <span>Finished: <%= track.finish_date || 'N/A' %></span>
+                        <span>Updated: <%= track.updated_at || 'N/A' %></span>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end;">
+                    <span class="reading-status-btn 
+                        <%= track.reading_status === 'Reading' ? 'status-available' : track.reading_status === 'Completed' ? 'badge-success' : track.reading_status === 'Paused' ? 'status-archived' : 'status-lent' %>">
+                        <%= track.reading_status %>
+                    </span>
+                    <button class="btn-alt" style="padding: 6px 16px; font-size: 0.8rem;" onclick="openUpdateModal('<%= track.id %>', '<%= track.current_page %>', '<%= track.total_pages %>', '<%= track.reading_status %>', '<%= track.start_date || '' %>', '<%= track.finish_date || '' %>')">Update Progress</button>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+        <% } else { %>
+        <div class="personal-card" style="text-align: center; padding: 4rem 2rem;">
+            <span style="font-size: 4rem;">⏱️</span>
+            <h3 style="margin-top: 1rem; color: white;">No Books Tracked Yet</h3>
+            <p style="color: #9ca3af; max-width: 400px; margin: 10px auto 20px auto;">Choose a book from your collection and start logging your reading progress.</p>
+            <button class="btn-neon" onclick="document.getElementById('startTrackingModal').style.display='flex'">Start Reading</button>
+        </div>
+        <% } %>
+
+        <!-- Start Tracking Modal -->
+        <div id="startTrackingModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <div class="personal-card" style="width: 450px;">
+                <h2 style="margin-top: 0; color: white;">Track a New Book</h2>
+                <form action="/personal/reading/add" method="POST" style="margin-top: 1.5rem;">
+                    <div class="input-group">
+                        <label for="book_id">Select Book</label>
+                        <select id="book_id" name="book_id" required style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: white;">
+                            <% (available_books || []).forEach(function(b) { %>
+                            <option value="<%= b.id %>"><%= b.title %> (by <%= b.author %>)</option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="total_pages">Total Pages</label>
+                        <input type="number" id="total_pages" name="total_pages" required min="1" placeholder="E.g. 320">
+                    </div>
+                    <div class="input-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" required value="<%= new Date().toISOString().slice(0, 10) %>">
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button type="button" class="btn-alt" onclick="document.getElementById('startTrackingModal').style.display='none'">Cancel</button>
+                        <button type="submit" class="btn-neon">Start Tracking</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Update Progress Modal -->
+        <div id="updateProgressModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <div class="personal-card" style="width: 450px;">
+                <h2 style="margin-top: 0; color: white;">Update Progress</h2>
+                <form action="/personal/reading/update" method="POST" style="margin-top: 1.5rem;">
+                    <input type="hidden" id="update_track_id" name="track_id">
+                    <div class="input-group">
+                        <label for="update_current_page">Current Page</label>
+                        <input type="number" id="update_current_page" name="current_page" required min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="update_total_pages">Total Pages</label>
+                        <input type="number" id="update_total_pages" name="total_pages" required min="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="update_status">Reading Status</label>
+                        <select id="update_status" name="reading_status" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: white;">
+                            <option value="Not Started">Not Started</option>
+                            <option value="Reading">Reading</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Paused">Paused</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="update_start_date">Start Date</label>
+                        <input type="date" id="update_start_date" name="start_date">
+                    </div>
+                    <div class="input-group">
+                        <label for="update_finish_date">Finish Date (If Completed)</label>
+                        <input type="date" id="update_finish_date" name="finish_date">
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button type="button" class="btn-alt" onclick="document.getElementById('updateProgressModal').style.display='none'">Cancel</button>
+                        <button type="submit" class="btn-neon">Save Progress</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+function openUpdateModal(id, current, total, status, start, finish) {
+    document.getElementById('update_track_id').value = id;
+    document.getElementById('update_current_page').value = current;
+    document.getElementById('update_total_pages').value = total;
+    document.getElementById('update_status').value = status;
+    if (start && start !== 'None') document.getElementById('update_start_date').value = start;
+    if (finish && finish !== 'None') document.getElementById('update_finish_date').value = finish;
+    else document.getElementById('update_finish_date').value = '';
+    document.getElementById('updateProgressModal').style.display = 'flex';
+}
+</script>
+<%- include('layouts/footer') %>

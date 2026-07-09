@@ -1,0 +1,159 @@
+<% layout('layouts/layout') -%>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-12">
+      <h1>Billing Dashboard</h1>
+      <% if (sub.status === 'active') { %>
+        <div class="alert alert-info">
+          Your current plan: <strong><%= sub.plan_name %></strong> (<%= sub.status %>)
+        </div>
+      <% } else { %>
+        <div class="alert alert-warning">
+          Your current plan: <strong><%= sub.plan_name %></strong> (<%= sub.status %>)
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Students</h5>
+          <p class="card-text display-4"><%= students_count %></p>
+          <p class="card-text">Current limit: <%= sub.max_students %></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Books</h5>
+          <p class="card-text display-4"><%= books_count %></p>
+          <p class="card-text">Current limit: <%= sub.max_books %></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Current Plan</h5>
+          <p class="card-text"><%= sub.plan_name %></p>
+          <p class="card-text">Status: <%= sub.status %></p>
+          <p class="card-text">Valid until: <%= sub.current_period_end %></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Available Plans</h5>
+          <div class="list-group">
+            <% Object.keys(plans).forEach(function(planId) { %>
+              <% const plan = plans[planId]; %>
+              <a href="#" class="list-group-item list-group-item-action plan-option" data-plan-id="<%= planId %>">
+                <div class="d-flex w-100 justify-content-between">
+                  <h5 class="mb-1"><%= planId %></h5>
+                  <small>$<%= plan.price %>/month</small>
+                </div>
+                <p class="mb-1"><%= plan.description %></p>
+                <small>Students: <%= plan.limits.studentLimit %>, Books: <%= plan.limits.max_books %></small>
+              </a>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <h2>Invoices</h2>
+      <% if (invoices.length === 0) { %>
+        <p>No invoices found.</p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Tax</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% invoices.forEach(function(inv) { %>
+                <tr>
+                  <td><%= new Date(inv.created_at).toLocaleDateString() %></td>
+                  <td>Subscription Fee</td>
+                  <td>$<%= inv.amount.toFixed(2) %></td>
+                  <td>$<%= inv.tax.toFixed(2) %></td>
+                  <td>$<%= inv.total.toFixed(2) %></td>
+                  <td><span class="badge bg-<%= inv.status === 'paid' ? 'success' : 'warning' %>"><%= inv.status %></span></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <h2>Upgrade Plan</h2>
+      <form id="upgradeForm" action="/billing/checkout" method="POST">
+        <div class="mb-3">
+          <label for="planSelect" class="form-label">Select Plan</label>
+          <select class="form-select" id="planSelect" name="plan_id" required>
+            <% Object.keys(plans).forEach(function(planId) { %>
+              <% const plan = plans[planId]; %>
+              <option value="<%= planId %>"><%= planId %> - $<%= plan.price %>/month</option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="cycleSelect" class="form-label">Billing Cycle</label>
+          <select class="form-select" id="cycleSelect" name="billing_cycle">
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual (Save 10%)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Upgrade Now</button>
+      </form>
+    </div>
+    <div class="col-md-6">
+      <h2>Current Subscription</h2>
+      <% if (sub.plan_id !== 'FREE') { %>
+        <p>You are currently on the <strong><%= sub.plan_name %></strong> plan.</p>
+        <p>Next billing date: <%= new Date(sub.current_period_end).toLocaleDateString() %></p>
+        <form action="/billing/cancel" method="POST" id="cancelForm">
+          <button type="submit" class="btn btn-danger">Cancel Plan</button>
+        </form>
+      <% } else { %>
+        <p>You are currently on the FREE plan.</p>
+        <p>Consider upgrading to access more features.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Highlight selected plan
+    const planOptions = document.querySelectorAll('.plan-option');
+    planOptions.forEach(option => {
+      option.addEventListener('click', function(e) {
+        e.preventDefault();
+        const planId = this.getAttribute('data-plan-id');
+        document.getElementById('planSelect').value = planId;
+        // Update UI to show selected
+        planOptions.forEach(opt => opt.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  });
+</script>

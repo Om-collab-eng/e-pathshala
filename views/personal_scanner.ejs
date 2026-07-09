@@ -1,0 +1,182 @@
+<%- include('layouts/header', { title: 'AI Cover Scanner - Personal Library' }) %>
+<link rel="stylesheet" href="/static/personal.css">
+<style>
+.drop-zone { border: 2px dashed var(--glass-border); border-radius: 24px; padding: 3rem; text-align: center; transition: all 0.3s ease; cursor: pointer; background: rgba(255,255,255,0.01); }
+.drop-zone:hover, .drop-zone.dragover { border-color: #8b5cf6; background: rgba(139,92,246,0.04); }
+.drop-zone-icon { font-size: 4rem; margin-bottom: 1rem; }
+.scan-preview { max-width: 300px; max-height: 400px; border-radius: 16px; margin: 1.5rem auto; display: block; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+.loader { width: 48px; height: 48px; border: 4px solid var(--glass-border); border-top: 4px solid #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+
+<div class="personal-layout">
+    <aside class="personal-sidebar">
+        <div class="personal-brand"><span>📚</span><span>Librika Personal</span></div>
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px;">
+            <label style="display: block; font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Active Collection</label>
+            <select onchange="if(this.value === 'manage_collections') { window.location.href='/personal/libraries'; } else { window.location.href='/personal/libraries/switch/' + this.value; }" style="width: 100%; background: #0f0f15; color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                <optgroup label="My Libraries">
+                    <% (locals.personal_my_libraries || []).forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>><%= l.library_name %></option>
+                    <% }) %>
+                </optgroup>
+                <% if (locals.personal_shared_libraries && locals.personal_shared_libraries.length > 0) { %>
+                <optgroup label="Shared with Me">
+                    <% locals.personal_shared_libraries.forEach(function(l) { %>
+                    <option value="<%= l.id %>" <%= locals.personal_active_library && locals.personal_active_library.id === l.id ? 'selected' : '' %>>🤝 <%= l.library_name %> (<%= l.owner_name %>)</option>
+                    <% }) %>
+                </optgroup>
+                <% } %>
+                <optgroup label="Actions">
+                    <option value="manage_collections">📂 Manage Collections (+)</option>
+                </optgroup>
+            </select>
+        </div>
+        <nav class="personal-nav">
+            <a href="/personal/dashboard" class="personal-nav-link"><span>🏠</span> Dashboard</a>
+            <a href="/personal/books" class="personal-nav-link"><span>📖</span> My Books</a>
+            <a href="/personal/reading" class="personal-nav-link"><span>⏱️</span> Reading Tracker</a>
+            <a href="/personal/borrowing" class="personal-nav-link"><span>🤝</span> Lending System</a>
+            <a href="/personal/wishlist" class="personal-nav-link"><span>✨</span> Wishlist</a>
+            <a href="/personal/favorites" class="personal-nav-link"><span>⭐</span> Favorites</a>
+            <a href="/personal/libraries" class="personal-nav-link"><span>📂</span> Collections</a>
+            <a href="/personal/elibrary" class="personal-nav-link"><span>🌐</span> E-Library</a>
+            <a href="/personal/scan" class="personal-nav-link active"><span>📷</span> AI Scanner</a>
+            <a href="/personal/settings" class="personal-nav-link"><span>⚙️</span> Settings & Plan</a>
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;">
+            <a href="/logout" class="personal-nav-link" style="color: #f43f5e;"><span>🚪</span> Sign Out</a>
+        </nav>
+        <div class="personal-sidebar-profile">
+            <img src="<%= lib.profile_photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80' %>" class="personal-profile-pic" alt="Profile">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= session.user_name %></div>
+                <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;"><%= lib.plan_name %> PLAN</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="personal-content">
+        <% if (locals.messages && messages.success) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><%= messages.success %></div><% } %>
+        <% if (locals.messages && messages.error) { %><div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2);"><%= messages.error %></div><% } %>
+
+        <div style="margin-bottom: 2rem;">
+            <h1 style="margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI Cover Scanner</h1>
+            <p style="color: #9ca3af; margin: 4px 0 0 0;">Upload a book cover to auto-fill details using AI + OCR.</p>
+        </div>
+
+        <div class="personal-card">
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('scanInput').click()">
+                <div class="drop-zone-icon">📸</div>
+                <h3 style="color: white; margin: 10px 0;">Drag & Drop Cover Image Here</h3>
+                <p style="color: #9ca3af; font-size: 0.9rem;">or click to browse. Supports JPG, PNG, WebP</p>
+                <input type="file" id="scanInput" accept="image/*" style="display:none;" onchange="handleScanFile(event)">
+            </div>
+            <div id="scanPreviewArea" style="display: none; text-align: center; margin-top: 1.5rem;">
+                <img id="scanPreview" class="scan-preview" alt="Preview">
+                <div id="scanStatus" style="color: #9ca3af; font-size: 0.9rem; margin-top: 10px;"></div>
+                <div id="scanLoader" class="loader" style="display: none;"></div>
+                <div id="scanResults" style="margin-top: 1.5rem; text-align: left; display: none;">
+                    <h3 style="color: white; font-size: 1.1rem;">Extracted Details</h3>
+                    <div id="resultFields"></div>
+                    <button class="btn-neon" onclick="fillBookForm()" style="margin-top: 15px; width: 100%;">📖 Add to Library</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+let scanData = {};
+
+document.getElementById('dropZone').addEventListener('dragover', function(e) {
+    e.preventDefault(); this.classList.add('dragover');
+});
+document.getElementById('dropZone').addEventListener('dragleave', function(e) {
+    e.preventDefault(); this.classList.remove('dragover');
+});
+document.getElementById('dropZone').addEventListener('drop', function(e) {
+    e.preventDefault(); this.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) processScanFile(files[0]);
+});
+
+function handleScanFile(e) { if (e.target.files.length > 0) processScanFile(e.target.files[0]); }
+
+async function processScanFile(file) {
+    const previewArea = document.getElementById('scanPreviewArea');
+    const preview = document.getElementById('scanPreview');
+    const status = document.getElementById('scanStatus');
+    const loader = document.getElementById('scanLoader');
+    const results = document.getElementById('scanResults');
+    const resultFields = document.getElementById('resultFields');
+
+    previewArea.style.display = 'block';
+    results.style.display = 'none';
+    loader.style.display = 'block';
+    status.innerHTML = 'Uploading cover...';
+
+    const reader = new FileReader();
+    reader.onload = function(e) { preview.src = e.target.result; };
+    reader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append('front', file);
+    try {
+        const uploadRes = await fetch('/admin/api/upload-cover', { method: 'POST', body: formData });
+        const uploadData = await uploadRes.json();
+        if (uploadData.status !== 'success') throw new Error('Upload failed: ' + (uploadData.message || 'Unknown error'));
+        const coverUrl = window.location.origin + uploadData.cover_url;
+
+        status.innerHTML = 'Extracting text from cover via OCR...';
+        const worker = await Tesseract.createWorker('eng', 1, { logger: m => { if (m.status === 'recognizing text') status.innerHTML = `OCR: ${Math.round(m.progress * 100)}%...`; } });
+        const ocrResult = await worker.recognize(file);
+        const ocrText = ocrResult.data.text;
+        await worker.terminate();
+
+        if (!ocrText || ocrText.trim().length === 0) throw new Error('No text could be extracted. Please try a clearer picture.');
+
+        status.innerHTML = 'AI is identifying book details...';
+        const chatRes = await fetch('/api/scan-ocr-text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ocr_text: ocrText, cover_url: coverUrl })
+        });
+        if (!chatRes.ok) { const errData = await chatRes.json(); throw new Error(errData.error || 'Failed to parse book details.'); }
+        const chatData = await chatRes.json();
+        scanData = chatData.metadata || {};
+        scanData.cover_image_url = coverUrl;
+
+        let html = '';
+        const fields = ['title', 'author', 'category', 'publisher', 'isbn', 'language', 'description'];
+        const labels = { title: 'Title', author: 'Author', category: 'Category', publisher: 'Publisher', isbn: 'ISBN', language: 'Language', description: 'Description' };
+        fields.forEach(f => {
+            const val = scanData[f] || '';
+            if (val) html += `<div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.01); border:1px solid var(--glass-border); padding:8px 12px; border-radius:8px; margin-bottom:6px;"><strong style="color:#9ca3af;">${labels[f]}:</strong><span style="color:white; text-align:right;">${val}</span></div>`;
+        });
+        if (!html) throw new Error('AI could not identify any book details from the cover.');
+        resultFields.innerHTML = html;
+        results.style.display = 'block';
+        loader.style.display = 'none';
+        status.innerHTML = '<span style="color: #10b981; font-weight: 700;">✅ AI Scan Complete!</span>';
+    } catch (err) {
+        console.error(err);
+        loader.style.display = 'none';
+        status.innerHTML = `<span style="color: #f43f5e; font-weight: 700;">❌ ${err.message}</span>`;
+    }
+}
+
+function fillBookForm() {
+    const params = new URLSearchParams();
+    if (scanData.title) params.set('title', scanData.title);
+    if (scanData.author) params.set('author', scanData.author);
+    if (scanData.category) params.set('category', scanData.category);
+    if (scanData.publisher) params.set('publisher', scanData.publisher);
+    if (scanData.isbn) params.set('isbn', scanData.isbn);
+    if (scanData.language) params.set('language', scanData.language || 'English');
+    if (scanData.description) params.set('description', scanData.description);
+    if (scanData.cover_image_url) params.set('cover_image_url', scanData.cover_image_url);
+    window.location.href = '/personal/books/add?' + params.toString();
+}
+</script>
+<%- include('layouts/footer') %>
