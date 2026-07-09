@@ -14,9 +14,9 @@ services:
           name: librika-storage
           property: connectionString
       - key: CLOUDINARY_CLOUD_NAME
-        value: dwnlpxe2v
+        value: azwohkqu
       - key: CLOUDINARY_API_KEY
-        value: "943486337222384"
+        value: "613621954564511"
       - key: CLOUDINARY_API_SECRET
         value: wwvKpb1qQs_fEbalCsCYa4bU-EY
       - key: INIT_DB
