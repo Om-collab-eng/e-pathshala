@@ -69,7 +69,7 @@ def sqlite_to_mysql_query(query_str):
     # 1. Handle schema PRAGMA replacements first
     if "SELECT" in query_upper and "SQL" in query_upper and "SQLITE_MASTER" in query_upper:
         if "personal_libraries" in query_str.lower():
-            return "SELECT 'CREATE TABLE personal_libraries (id INT)' AS sql"
+            return "SELECT 'CREATE TABLE personal_libraries (id INT)' AS `sql`"
             
     if "PRAGMA TABLE_INFO" in query_upper:
         tbl_match = re.search(r'(?i)PRAGMA\s+table_info\s*\(\s*([a-zA-Z0-9_]+)\s*\)', query_str)
