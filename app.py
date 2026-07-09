@@ -276,6 +276,8 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
+
+
 from permissions import get_school_plan, get_school_permissions, get_school_limits, PLANS, require_permission
 
 @app.context_processor

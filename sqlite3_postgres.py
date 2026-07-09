@@ -320,7 +320,7 @@ class PostgresConnectionWrapper:
 from psycopg2.pool import ThreadedConnectionPool
 
 class PostgresConnectionPool:
-    def __init__(self, dsn, max_size=3):
+    def __init__(self, dsn, max_size=20):
         url = urllib.parse.urlparse(dsn)
         self._pool = ThreadedConnectionPool(
             1, max_size,
