@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timedelta
-import sqlite3
+import sqlite3_mysql as sqlite3
 from permissions import PLANS
 
 def get_db_connection():

@@ -1,3 +1,97 @@
 [2026-06-03 22:46:08] Script error. at :0:0
 Stack: 
 
+[2026-06-30 17:17:57] Uncaught TypeError: Cannot read properties of null (reading 'style') at http://localhost:5001/admin?section=reservations:2112:41
+Stack: TypeError: Cannot read properties of null (reading 'style')
+    at openModal (http://localhost:5001/admin?section=reservations:2112:41)
+    at HTMLButtonElement.onclick (http://localhost:5001/admin?section=reservations:996:168)
+
+[2026-06-30 17:17:57] Uncaught TypeError: Cannot read properties of null (reading 'style') at http://localhost:5001/admin?section=reservations:2112:41
+Stack: TypeError: Cannot read properties of null (reading 'style')
+    at openModal (http://localhost:5001/admin?section=reservations:2112:41)
+    at HTMLButtonElement.onclick (http://localhost:5001/admin?section=reservations:996:168)
+
+[2026-06-30 17:36:40] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4358:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4358:120)
+
+[2026-06-30 17:36:40] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4358:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4358:120)
+
+[2026-06-30 17:36:40] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4358:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4358:120)
+
+[2026-06-30 17:36:40] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4358:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4358:120)
+
+[2026-06-30 17:36:40] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4358:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4358:120)
+
+[2026-06-30 17:36:40] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4358:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4358:120)
+
+[2026-06-30 17:36:40] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4358:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4358:120)
+
+[2026-06-30 17:36:40] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4358:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4358:120)
+
+[2026-06-30 17:40:09] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:40:10] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:40:10] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:40:10] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:40:11] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:40:11] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:40:11] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:40:11] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:40:11] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:42:05] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:42:05] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:42:06] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+
+[2026-06-30 17:46:15] Uncaught ReferenceError: toggleMobileView is not defined at http://localhost:5001/super-admin:4534:120
+Stack: ReferenceError: toggleMobileView is not defined
+    at HTMLDivElement.onclick (http://localhost:5001/super-admin:4534:120)
+

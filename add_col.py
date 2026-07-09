@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3_mysql as sqlite3
 
 def add_col():
     try:

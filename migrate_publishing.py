@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3_mysql as sqlite3
 import os
 
 DB_FILES = ['library_v3.db', 'library_demo.db']

@@ -71,7 +71,7 @@ def require_permission(perm_key):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            import sqlite3
+            import sqlite3_mysql as sqlite3
             try:
                 # Determine context DB
                 db_file = 'demo.db' if session.get('is_demo') else 'library_v3.db'

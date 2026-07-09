@@ -14,3 +14,10 @@ scratch/test_gemini.js
 
 # Virtual environments
 my_mac_env/
+node_modules/
+*.log
+.DS_Store
+static/uploads/
+static/digital_content/
+*.db-shm
+*.db-wal

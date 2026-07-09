@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from flask import Flask, render_template, request, redirect, session, url_for, has_request_context, jsonify, Response, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import sqlite3_mysql as sqlite3
 import os
 import io
 import csv
@@ -1207,6 +1207,7 @@ def init_db():
     
     conn.execute('UPDATE schools SET status = "active" WHERE status IS NULL')
     conn.execute('UPDATE users SET status = "active" WHERE status IS NULL')
+    conn.execute('UPDATE users SET permissions = \'["manage_books", "manage_students", "manage_transactions", "approve_content"]\' WHERE role = "admin" AND (permissions IS NULL OR permissions = "[]" OR permissions = "")')
 
     init_leaderboard_tables(conn)
     conn.commit()
@@ -1556,6 +1557,19 @@ def login():
                 session['permissions'] = json.loads(user.get('permissions', '[]')) if user.get('permissions') else []
             except:
                 session['permissions'] = []
+            
+            # Self-healing: if role is admin and permissions list is empty, grant all default permissions
+            if user['role'] == 'admin' and not session['permissions']:
+                session['permissions'] = ["manage_books", "manage_students", "manage_transactions", "approve_content"]
+                try:
+                    db_file = 'demo.db' if is_demo_session else 'library_v3.db'
+                    import sqlite3_mysql as sqlite3
+                    conn_sync = sqlite3.connect(db_file)
+                    conn_sync.execute('UPDATE users SET permissions = ? WHERE id = ?', (json.dumps(session['permissions']), user['id']))
+                    conn_sync.commit()
+                    conn_sync.close()
+                except Exception as e:
+                    print("Failed to save default admin permissions on login:", e)
             if is_demo_session: session['is_demo'] = True
 
             if user['role'] == 'super_super_admin': return redirect('/super-super-admin')

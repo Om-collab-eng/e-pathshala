@@ -1,6 +1,6 @@
 import csv
 import io
-import sqlite3
+import sqlite3_mysql as sqlite3
 from datetime import datetime
 from flask import Blueprint, request, session, Response, jsonify
 from openpyxl import load_workbook, Workbook
