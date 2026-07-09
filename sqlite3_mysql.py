@@ -140,6 +140,9 @@ def sqlite_to_mysql_query(query_str):
     sql = re.sub(r'(?i)\bCREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\b', 'CREATE INDEX', sql)
     sql = re.sub(r'(?i)\bCREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS\b', 'CREATE UNIQUE INDEX', sql)
     
+    # Map MySQL reserved keywords to backticks
+    sql = re.sub(r'(?i)(?<!`)\bcondition\b(?!`)', '`condition`', sql)
+    
     # SQLite sqlite_master -> information_schema.tables
     sql = re.sub(r'(?i)\bSELECT\s+name\s+FROM\s+sqlite_master\b', 'SELECT table_name AS name FROM sqlite_master', sql)
     sql = re.sub(
