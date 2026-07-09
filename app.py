@@ -1762,13 +1762,23 @@ def complete_profile():
 def super_admin_panel():
     if session.get('role') != 'super_admin': return redirect('/login')
     if session.get('is_super_super_admin'): return redirect('/super-super-admin')
-    return render_super_admin_dashboard_logic()
+    try:
+        return render_super_admin_dashboard_logic()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return '<h1>Dashboard Error</h1><pre>' + str(e) + '</pre>', 500
 
 @app.route('/super-super-admin')
 def super_super_admin_panel():
     if session.get('role') != 'super_admin' or not session.get('is_super_super_admin'):
         return redirect('/super-admin')
-    return render_super_admin_dashboard_logic()
+    try:
+        return render_super_admin_dashboard_logic()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return '<h1>Dashboard Error</h1><pre>' + str(e) + '</pre>', 500
 
 def format_render_time(dt_str):
     if not dt_str:

@@ -9,6 +9,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const ejsMate = require('ejs-mate');
 const flash = require('connect-flash');
+const expressLayouts = require('express-ejs-layouts');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -32,6 +33,7 @@ app.set('layout', 'base');
 app.use(express.static(path.join(__dirname, 'static')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(expressLayouts);
 
 app.use(session({
   store: new pgSession({ pool, tableName: 'sessions' }),
