@@ -1,4 +1,4 @@
-import sqlite3_mysql as sqlite3
+import db_adapter as sqlite3
 import json
 
 def init_billing_tables(db_name):

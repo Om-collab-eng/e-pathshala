@@ -1,9 +1,9 @@
 import os, uuid
 from dotenv import load_dotenv
 load_dotenv()
-from flask import Flask, render_template, request, redirect, session, url_for, has_request_context, jsonify, Response, flash
+from flask import Flask, render_template, request, redirect, session, url_for, has_request_context, jsonify, Response, flash, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3_mysql as sqlite3
+import db_adapter as sqlite3
 import os
 import io
 import csv
@@ -27,6 +27,16 @@ app.secret_key = "supersecretkey"
 app.permanent_session_lifetime = timedelta(days=30)
 app.register_blueprint(data_bp, url_prefix='/data')
 app.register_blueprint(billing_bp)
+
+# Custom static file routes for Render persistent storage
+if os.environ.get('PERSISTENT_STORAGE_DIR'):
+    @app.route('/static/uploads/<path:filename>')
+    def serve_uploads(filename):
+        return send_from_directory(UPLOADS_DIR, filename)
+
+    @app.route('/static/digital_content/<path:filename>')
+    def serve_digital_content(filename):
+        return send_from_directory(DIGITAL_CONTENT_DIR, filename)
 SUPER_ADMIN_PASS = "MASTER_99" # Hard admin password for global access
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -36,8 +46,14 @@ TMP_DIR = BASE_DIR
 DB_FILE = os.path.join(TMP_DIR, 'library_v3.db')
 DEMO_DB_FILE = os.path.join(TMP_DIR, 'demo.db')
 BARCODE_DIR = os.path.join(TMP_DIR, 'static', 'barcodes')
-DIGITAL_CONTENT_DIR = os.path.join(TMP_DIR, 'static', 'digital_content')
-UPLOADS_DIR = os.path.join(TMP_DIR, 'static', 'uploads')
+
+PERSISTENT_STORAGE_DIR = os.environ.get('PERSISTENT_STORAGE_DIR', '')
+if PERSISTENT_STORAGE_DIR:
+    DIGITAL_CONTENT_DIR = os.path.join(PERSISTENT_STORAGE_DIR, 'digital_content')
+    UPLOADS_DIR = os.path.join(PERSISTENT_STORAGE_DIR, 'uploads')
+else:
+    DIGITAL_CONTENT_DIR = os.path.join(TMP_DIR, 'static', 'digital_content')
+    UPLOADS_DIR = os.path.join(TMP_DIR, 'static', 'uploads')
 
 if not os.path.exists(BARCODE_DIR):
     os.makedirs(BARCODE_DIR)
@@ -184,7 +200,8 @@ if CLOUDINARY_CONFIGURED:
             if filename != ".emptyFolderPlaceholder" and filename:
                 remote_path = f"backups/digital_content/{filename}"
                 local_path = os.path.join(DIGITAL_CONTENT_DIR, filename)
-                download_from_supabase(remote_path, local_path)
+                if not os.path.exists(local_path):
+                    download_from_supabase(remote_path, local_path)
         print("Restored digital content from Cloudinary.")
     except Exception as files_err:
         print(f"Warning: Could not restore digital content from Cloudinary: {files_err}")
@@ -196,10 +213,12 @@ if CLOUDINARY_CONFIGURED:
             if filename != ".emptyFolderPlaceholder" and filename:
                 remote_path = f"backups/uploads/{filename}"
                 local_path = os.path.join(UPLOADS_DIR, filename)
-                download_from_supabase(remote_path, local_path)
+                if not os.path.exists(local_path):
+                    download_from_supabase(remote_path, local_path)
         print("Restored uploaded covers from Cloudinary.")
     except Exception as uploads_err:
         print(f"Warning: Could not restore uploads from Cloudinary: {uploads_err}")
+
 
     # Register lifecycle hook (background sync after POST/PUT/DELETE)
     supabase_sync_lock = threading.Lock()
@@ -979,7 +998,6 @@ def init_personal_tables(conn):
 
 def init_db():
     conn = get_db_connection()
-    init_personal_tables(conn)
     
     # Create global library sections table
     conn.execute('''
@@ -1248,6 +1266,7 @@ def init_db():
     conn.execute('UPDATE users SET status = "active" WHERE status IS NULL')
     conn.execute('UPDATE users SET permissions = \'["manage_books", "manage_students", "manage_transactions", "approve_content"]\' WHERE role = "admin" AND (permissions IS NULL OR permissions = "[]" OR permissions = "")')
 
+    init_personal_tables(conn)
     init_leaderboard_tables(conn)
     conn.commit()
     conn.close()
@@ -1603,7 +1622,7 @@ def login():
                 session['permissions'] = ["manage_books", "manage_students", "manage_transactions", "approve_content"]
                 try:
                     db_file = 'demo.db' if is_demo_session else 'library_v3.db'
-                    import sqlite3_mysql as sqlite3
+                    import db_adapter as sqlite3
                     conn_sync = sqlite3.connect(db_file)
                     conn_sync.execute('UPDATE users SET permissions = ? WHERE id = ?', (json.dumps(session['permissions']), user['id']))
                     conn_sync.commit()
@@ -8731,9 +8750,13 @@ def mark_transaction_lost(tx_id):
     conn.close()
     return redirect('/admin')
 
-# Ensure database is initialized even when run via Gunicorn
-init_db()
+# Ensure database is initialized even when run via Gunicorn / release commands
+if os.environ.get('INIT_DB') == 'true' or __name__ == '__main__':
+    init_db()
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
+
