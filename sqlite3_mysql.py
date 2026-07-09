@@ -136,6 +136,10 @@ def sqlite_to_mysql_query(query_str):
     # Map TEXT columns with DEFAULT constraints to VARCHAR(255) for MySQL compatibility
     sql = re.sub(r'(?i)\bTEXT\s+DEFAULT\b', 'VARCHAR(255) DEFAULT', sql)
     
+    # Map SQLite CREATE INDEX IF NOT EXISTS -> CREATE INDEX
+    sql = re.sub(r'(?i)\bCREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\b', 'CREATE INDEX', sql)
+    sql = re.sub(r'(?i)\bCREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS\b', 'CREATE UNIQUE INDEX', sql)
+    
     # SQLite sqlite_master -> information_schema.tables
     sql = re.sub(r'(?i)\bSELECT\s+name\s+FROM\s+sqlite_master\b', 'SELECT table_name AS name FROM sqlite_master', sql)
     sql = re.sub(
@@ -210,6 +214,9 @@ class MySQLCursorWrapper:
         try:
             self.cursor.execute(translated, parameters)
         except Exception as e:
+            # Bypass duplicate index/key name error (MySQL error code 1061)
+            if hasattr(e, 'args') and len(e.args) > 0 and e.args[0] == 1061:
+                return self
             raise map_exception(e)
         return self
         
