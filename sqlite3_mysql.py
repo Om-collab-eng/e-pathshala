@@ -28,12 +28,12 @@ def resolve_host(host):
             pass
     return host
 
-MYSQL_HOST = resolve_host(os.getenv('MYSQL_HOST'))
-MYSQL_PORT = int(os.getenv('MYSQL_PORT', '3306')) if os.getenv('MYSQL_PORT') else 3306
-MYSQL_USER = os.getenv('MYSQL_USER', 'root')
-MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '')
-MYSQL_DB_PROD = os.getenv('MYSQL_DB_PROD', 'library_v3')
-MYSQL_DB_DEMO = os.getenv('MYSQL_DB_DEMO', 'library_demo')
+MYSQL_HOST = resolve_host(os.getenv('MYSQL_HOST').strip() if os.getenv('MYSQL_HOST') else None)
+MYSQL_PORT = int(os.getenv('MYSQL_PORT').strip()) if os.getenv('MYSQL_PORT') else 3306
+MYSQL_USER = os.getenv('MYSQL_USER', 'root').strip()
+MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '').strip()
+MYSQL_DB_PROD = os.getenv('MYSQL_DB_PROD', 'library_v3').strip()
+MYSQL_DB_DEMO = os.getenv('MYSQL_DB_DEMO', 'library_demo').strip()
 
 # Expose standard exception types so code can catch them transparently
 if not MYSQL_HOST:
