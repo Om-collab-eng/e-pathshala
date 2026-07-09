@@ -853,6 +853,75 @@ Format: ACC-[SCHOOL_CODE]-[SERIAL]</textarea>
             </div>
         </div>
 
+        {% if session.get('is_super_super_admin') %}
+        <!-- ================= DEPLOYS TAB ================= -->
+        <div id="tab-deploys" class="tab-content" style="display: none;">
+            <div class="sa-section-header">
+                <div class="sa-section-title">🚀 Render Deployments</div>
+            </div>
+            
+            {% if render_deploys %}
+                <div class="sa-list-container">
+                    {% for d in render_deploys %}
+                    <div class="sa-list-item" style="background: white; border-color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 1.2rem; margin-bottom: 0.8rem; border-radius: 8px;">
+                        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                            <!-- Status Indicator Icon -->
+                            <div style="font-size: 1.5rem; line-height: 1; margin-top: 0.2rem;">
+                                {% if d.status == 'live' %}
+                                    🟢
+                                {% elif d.status in ['build_failed', 'update_failed', 'pre_deploy_failed'] %}
+                                    🔴
+                                {% elif d.status == 'canceled' %}
+                                    ⚪
+                                {% else %}
+                                    ⏳
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: bold; font-size: 0.95rem; color: #1e293b;">
+                                    Deploy {{ d.status | upper }}
+                                    {% if d.commit %}
+                                        for <span style="font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; color: #0f172a;">{{ d.commit.id[:7] }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if d.commit %}
+                                    <div style="font-size: 0.88rem; color: #475569; margin: 0.4rem 0;">
+                                        "{{ d.commit.message }}"
+                                    </div>
+                                {% endif %}
+                                <div style="font-size: 0.8rem; color: #64748b;">
+                                    Trigger: <strong>{{ d.trigger | replace('_', ' ') | upper }}</strong> • Created: {{ d.createdAt }}
+                                    {% if d.finishedAt %}
+                                        • Finished: {{ d.finishedAt }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            {% if d.status == 'live' %}
+                                <span class="sa-badge sa-badge-active">LIVE</span>
+                            {% elif d.status in ['build_failed', 'update_failed', 'pre_deploy_failed'] %}
+                                <span class="sa-badge sa-badge-inactive">FAILED</span>
+                            {% elif d.status == 'canceled' %}
+                                <span class="sa-badge" style="background: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">CANCELED</span>
+                            {% else %}
+                                <span class="sa-badge sa-badge-pending">{{ d.status | upper }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="background: white; border: 1px solid #e2e8f0; padding: 2.5rem; border-radius: 12px; text-align: center; color: #475569;">
+                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: bold; color: #1e293b;">No Render Deployments Data</p>
+                    <p style="font-size: 0.85rem; color: #64748b; max-width: 450px; margin: 0 auto;">
+                        Please make sure both <strong>RENDER_API_KEY</strong> and <strong>RENDER_SERVICE_ID</strong> environment variables are correctly configured in your <code>.env</code> file.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
     </div>
 
     <!-- Bottom Navigation (Transforms to Vertical Sidebar on Desktop) -->
@@ -908,6 +977,12 @@ Format: ACC-[SCHOOL_CODE]-[SERIAL]</textarea>
         <button class="sa-nav-item" onclick="switchTab('global-library', 'Global Library Catalog', 'Manage global sections and books', this)">
             <span class="sa-nav-icon">🌍</span>
             <span>Global Library</span>
+        </button>
+        {% endif %}
+        {% if session.get('is_super_super_admin') %}
+        <button class="sa-nav-item" onclick="switchTab('deploys', 'Render Deployments', 'View active pushes and deployment states', this)">
+            <span class="sa-nav-icon">🚀</span>
+            <span>Render Deploys</span>
         </button>
         {% endif %}
         <button class="sa-nav-item" onclick="switchTab('personal', 'Personal Libraries', 'Manage personal user collections and subscriptions', this)">

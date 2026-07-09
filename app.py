@@ -1712,6 +1712,50 @@ def super_super_admin_panel():
         return redirect('/super-admin')
     return render_super_admin_dashboard_logic()
 
+def format_render_time(dt_str):
+    if not dt_str:
+        return ""
+    try:
+        from datetime import datetime
+        dt = datetime.strptime(dt_str[:19], "%Y-%m-%dT%H:%M:%S")
+        return dt.strftime("%B %d, %Y at %I:%M %p")
+    except Exception as e:
+        return dt_str
+
+def get_render_deploys():
+    api_key = os.getenv('RENDER_API_KEY')
+    service_id = os.getenv('RENDER_SERVICE_ID')
+    if not api_key or not service_id:
+        return []
+    import requests
+    headers = {
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {api_key}'
+    }
+    try:
+        response = requests.get(f'https://api.render.com/v1/services/{service_id}/deploys', headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            deploys = []
+            for item in data:
+                if isinstance(item, dict):
+                    if 'deploy' in item:
+                        deploy_obj = item['deploy']
+                    else:
+                        deploy_obj = item
+                    
+                    if 'createdAt' in deploy_obj:
+                        deploy_obj['createdAt'] = format_render_time(deploy_obj['createdAt'])
+                    if 'startedAt' in deploy_obj:
+                        deploy_obj['startedAt'] = format_render_time(deploy_obj['startedAt'])
+                    if 'finishedAt' in deploy_obj:
+                        deploy_obj['finishedAt'] = format_render_time(deploy_obj['finishedAt'])
+                    deploys.append(deploy_obj)
+            return deploys
+    except Exception as e:
+        print("Error fetching Render deploys:", e)
+    return []
+
 def render_super_admin_dashboard_logic():
     conn = get_db_connection()
     
@@ -1860,6 +1904,10 @@ def render_super_admin_dashboard_logic():
     global_books = [dict(r) for r in conn.execute('SELECT * FROM books WHERE school_code = "GLOBAL" ORDER BY id DESC').fetchall()]
     global_digital_books = [dict(r) for r in conn.execute('SELECT * FROM digital_content WHERE school_code = "GLOBAL" ORDER BY id DESC').fetchall()]
 
+    render_deploys = []
+    if session.get('is_super_super_admin'):
+        render_deploys = get_render_deploys()
+
     conn.close()
     return render_template('super_admin.html', 
                            stats=stats, 
@@ -1877,7 +1925,8 @@ def render_super_admin_dashboard_logic():
                            acquisitions_sa=acquisitions_sa,
                            global_sections=global_sections,
                            global_books=global_books,
-                           global_digital_books=global_digital_books)
+                           global_digital_books=global_digital_books,
+                           render_deploys=render_deploys)
 
 @app.route('/super-admin/global-sections/add', methods=['POST'])
 def global_sections_add():
