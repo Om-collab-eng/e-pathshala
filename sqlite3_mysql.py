@@ -8,7 +8,27 @@ from dotenv import load_dotenv
 # Load env variables if .env exists
 load_dotenv()
 
-MYSQL_HOST = os.getenv('MYSQL_HOST')
+import socket
+import subprocess
+
+def resolve_host(host):
+    if not host or host == 'localhost' or host == '127.0.0.1':
+        return host
+    try:
+        return socket.gethostbyname(host)
+    except Exception:
+        try:
+            output = subprocess.check_output(["nslookup", host], text=True)
+            for line in output.splitlines():
+                if "Address:" in line and "#" not in line:
+                    ip = line.split("Address:")[1].strip()
+                    if ip:
+                        return ip
+        except Exception:
+            pass
+    return host
+
+MYSQL_HOST = resolve_host(os.getenv('MYSQL_HOST'))
 MYSQL_PORT = int(os.getenv('MYSQL_PORT', '3306')) if os.getenv('MYSQL_PORT') else 3306
 MYSQL_USER = os.getenv('MYSQL_USER', 'root')
 MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '')
@@ -109,7 +129,11 @@ def sqlite_to_mysql_query(query_str):
     sql = re.sub(r'(?i)\b(INTEGER|INT)\s+PRIMARY\s+KEY\b', 'INT AUTO_INCREMENT PRIMARY KEY', sql)
     sql = re.sub(r'(?i)\bAUTOINCREMENT\b', 'AUTO_INCREMENT', sql)
     
+    # Map TEXT columns with DEFAULT constraints to VARCHAR(255) for MySQL compatibility
+    sql = re.sub(r'(?i)\bTEXT\s+DEFAULT\b', 'VARCHAR(255) DEFAULT', sql)
+    
     # SQLite sqlite_master -> information_schema.tables
+    sql = re.sub(r'(?i)\bSELECT\s+name\s+FROM\s+sqlite_master\b', 'SELECT table_name AS name FROM sqlite_master', sql)
     sql = re.sub(
         r'(?i)\bFROM\s+sqlite_master\s+WHERE\s+type\s*=\s*[\'"]table[\'"]\s+AND\s+name\s*=\s*([^\s\)]+)', 
         r'FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = \1', 

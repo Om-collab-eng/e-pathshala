@@ -7,7 +7,27 @@ from dotenv import load_dotenv
 # Load env variables from .env
 load_dotenv()
 
-MYSQL_HOST = os.getenv('MYSQL_HOST', 'localhost')
+import subprocess
+import socket
+
+def resolve_host(host):
+    if not host or host == 'localhost' or host == '127.0.0.1':
+        return host
+    try:
+        return socket.gethostbyname(host)
+    except Exception:
+        try:
+            output = subprocess.check_output(["nslookup", host], text=True)
+            for line in output.splitlines():
+                if "Address:" in line and "#" not in line:
+                    ip = line.split("Address:")[1].strip()
+                    if ip:
+                        return ip
+        except Exception:
+            pass
+    return host
+
+MYSQL_HOST = resolve_host(os.getenv('MYSQL_HOST', 'localhost'))
 MYSQL_PORT = int(os.getenv('MYSQL_PORT', '3306')) if os.getenv('MYSQL_PORT') else 3306
 MYSQL_USER = os.getenv('MYSQL_USER', 'root')
 MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '')
@@ -34,7 +54,17 @@ def map_sqlite_type_to_mysql(col_name, col_type, is_pk=False):
         'error_message'
     }
     
-    if col_name_lower in long_text_cols:
+    # Map explicit TEXT columns (not part of keys/uniques) to TEXT in MySQL
+    unique_like_cols = {
+        'barcode_id', 'session_token', 'email', 'phone', 'admission_no', 
+        'school_code', 'setting_key', 'accession_number', 'name'
+    }
+    if 'TEXT' in col_type_upper:
+        if col_name_lower not in unique_like_cols:
+            return "TEXT"
+
+    # Check if column is standard long text / URL / path / image columns
+    if col_name_lower in long_text_cols or any(x in col_name_lower for x in ['url', 'path', 'image', 'avatar', 'cover']):
         return "TEXT"
         
     if 'INT' in col_type_upper:
@@ -109,8 +139,11 @@ def migrate_database(sqlite_file, mysql_db_name):
             if c_notnull and not c_pk:
                 def_str += " NOT NULL"
             if c_dflt is not None and not c_pk:
-                # Handle default value escaping
-                def_str += f" DEFAULT {c_dflt}"
+                # Handle default value escaping & MySQL parenthesized expressions for TEXT defaults
+                dflt_val = c_dflt
+                if dflt_val.startswith('"') and dflt_val.endswith('"'):
+                    dflt_val = "'" + dflt_val[1:-1].replace("'", "''") + "'"
+                def_str += f" DEFAULT ({dflt_val})"
                 
             col_defs.append(def_str)
             col_names.append(c_name)
