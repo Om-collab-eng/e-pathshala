@@ -282,6 +282,114 @@ class MySQLConnectionWrapper:
     def close(self):
         self.conn.close()
 
+# ─── Connection Pool ───────────────────────────────────────────────────────
+import queue
+import threading
+
+class ConnectionPool:
+    """Thread-safe MySQL connection pool to avoid per-request TCP+SSL overhead."""
+    def __init__(self, db_name, max_size=5):
+        self.db_name = db_name
+        self.max_size = max_size
+        self._pool = queue.Queue(maxsize=max_size)
+        self._lock = threading.Lock()
+        self._created = 0
+
+    def _new_connection(self):
+        conn = pymysql.connect(
+            host=MYSQL_HOST,
+            port=MYSQL_PORT,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=self.db_name,
+            client_flag=pymysql.constants.CLIENT.MULTI_STATEMENTS,
+            connect_timeout=10,
+            read_timeout=30,
+            write_timeout=30,
+            autocommit=False,
+        )
+        return conn
+
+    def get(self):
+        # Try to reuse from pool first
+        try:
+            conn = self._pool.get_nowait()
+            # Verify the connection is still alive
+            try:
+                conn.ping(reconnect=False)
+                return conn
+            except Exception:
+                # Dead connection, create a new one
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                with self._lock:
+                    self._created -= 1
+        except queue.Empty:
+            pass
+
+        # Create a new connection if under limit
+        with self._lock:
+            if self._created < self.max_size:
+                self._created += 1
+            else:
+                # Wait for one to be returned
+                conn = self._pool.get(timeout=10)
+                try:
+                    conn.ping(reconnect=False)
+                    return conn
+                except Exception:
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+                    self._created -= 1
+                    self._created += 1
+
+        return self._new_connection()
+
+    def put(self, conn):
+        try:
+            self._pool.put_nowait(conn)
+        except queue.Full:
+            # Pool is full, just close this connection
+            try:
+                conn.close()
+            except Exception:
+                pass
+            with self._lock:
+                self._created -= 1
+
+# Global pools (one per database)
+_pools = {}
+_pools_lock = threading.Lock()
+
+def _get_pool(db_name):
+    if db_name not in _pools:
+        with _pools_lock:
+            if db_name not in _pools:
+                _pools[db_name] = ConnectionPool(db_name, max_size=5)
+    return _pools[db_name]
+
+
+class PooledMySQLConnectionWrapper(MySQLConnectionWrapper):
+    """Wrapper that returns connections to the pool on close() instead of destroying them."""
+    def __init__(self, conn, pool):
+        super().__init__(conn)
+        self._pool = pool
+        self._closed = False
+
+    def close(self):
+        if not self._closed:
+            self._closed = True
+            try:
+                self.conn.commit()  # commit any pending changes
+            except Exception:
+                pass
+            self._pool.put(self.conn)
+
+
 # Proxy connect function
 def connect(database, *args, **kwargs):
     if not MYSQL_HOST:
@@ -293,13 +401,8 @@ def connect(database, *args, **kwargs):
     if 'demo.db' in database:
         db_name = MYSQL_DB_DEMO
         
-    # Connect to MySQL
-    conn = pymysql.connect(
-        host=MYSQL_HOST,
-        port=MYSQL_PORT,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        database=db_name,
-        client_flag=pymysql.constants.CLIENT.MULTI_STATEMENTS
-    )
-    return MySQLConnectionWrapper(conn)
+    # Get a pooled connection
+    pool = _get_pool(db_name)
+    raw_conn = pool.get()
+    return PooledMySQLConnectionWrapper(raw_conn, pool)
+

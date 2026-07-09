@@ -262,14 +262,13 @@ def get_db_connection():
         if session.get('is_demo'):
             use_db = DEMO_DB_FILE
     
-    print("CONNECTING TO DB:", os.path.basename(use_db))
     conn = sqlite3.connect(use_db, timeout=10.0)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute('PRAGMA journal_mode=WAL')
         conn.execute('PRAGMA busy_timeout=10000')
-    except Exception as e:
-        print("PRAGMA setting failed:", e)
+    except Exception:
+        pass
     return conn
 
 def init_leaderboard_tables(conn):
