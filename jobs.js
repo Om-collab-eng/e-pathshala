@@ -8,11 +8,14 @@ require('dotenv').config();
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const hasCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+if (hasCloudinary) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 const UPLOADS_DIR = path.join(__dirname, 'static', 'uploads');
 const DIGITAL_CONTENT_DIR = path.join(__dirname, 'static', 'digital_content');
@@ -52,6 +55,10 @@ async function markOverdueBooks() {
 }
 
 async function syncCloudinaryFolder(cloudFolder, localDir, label) {
+  if (!hasCloudinary) {
+    console.log(`[Jobs] Skipping Cloudinary sync for '${cloudFolder}' — Cloudinary not configured`);
+    return;
+  }
   console.log(`[Jobs] Syncing Cloudinary folder '${cloudFolder}' to ${localDir}...`);
   fs.ensureDirSync(localDir);
   try {
@@ -84,7 +91,11 @@ async function syncCloudinaryFolder(cloudFolder, localDir, label) {
     }
     console.log(`[Jobs] ${label}: downloaded ${downloaded}, skipped ${skipped}, total ${resources.length}`);
   } catch (err) {
-    console.error(`[Jobs] Cloudinary sync error (${label}):`, err.message);
+    if (err.http_code === 401 || err.message.includes('api_secret')) {
+      console.error(`[Jobs] Cloudinary auth failed for '${cloudFolder}' — check CLOUDINARY_API_SECRET`);
+    } else {
+      console.error(`[Jobs] Cloudinary sync error (${label}):`, err.message);
+    }
   }
 }
 

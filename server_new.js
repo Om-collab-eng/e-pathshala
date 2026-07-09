@@ -44,8 +44,8 @@ app.use(session({
 app.use(flash());
 
 app.use((req, res, next) => {
-  res.locals.session = req.session;
-  res.locals.messages = req.flash();
+  res.locals.session = req.session || {};
+  try { res.locals.messages = req.flash(); } catch (e) { res.locals.messages = {}; }
   next();
 });
 
@@ -298,8 +298,14 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).send('Server error');
+  console.error('Unhandled error:', err.message || err);
+  if (res.headersSent) return next(err);
+  const accepts = req.accepts(['html', 'json']);
+  if (accepts === 'json') {
+    res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+  } else {
+    res.status(500).type('html').send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Error</title></head><body><h1>500</h1><p>Internal Server Error</p></body></html>');
+  }
 });
 
 // ── Server Startup ──────────────────────────────────────────────
