@@ -906,6 +906,7 @@ tr:hover td {
         flex-direction: row !important;
         box-shadow: none !important;
         border-radius: 0 !important;
+        overflow: visible !important;
     }
 
     .portal-main {
@@ -929,6 +930,7 @@ tr:hover td {
         position: sticky;
         top: 0;
         height: 100vh;
+        overflow-y: auto;
         z-index: 100;
     }
 
