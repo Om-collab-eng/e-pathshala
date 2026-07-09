@@ -113,7 +113,7 @@ def sqlite_to_mysql_query(query_str):
             new_chars.append(c)
         elif c == '"' and not in_single:
             in_double = not in_double
-            new_chars.append(c)
+            new_chars.append("'")
         elif c == '?' and not in_single and not in_double:
             new_chars.append('%s')
         else:
