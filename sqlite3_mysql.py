@@ -134,13 +134,30 @@ class Row:
 
     def __getitem__(self, item):
         if isinstance(item, int):
-            return self._values[item]
+            val = self._values[item]
+            col_name = self._keys[item].lower()
+            if col_name in ('is_banned', 'is_read', 'cancel_at_period_end', 'featured', 'passed', 'finished'):
+                if val is not None:
+                    if str(val) in ('1', 'True'):
+                        return 1
+                    elif str(val) in ('0', 'False'):
+                        return 0
+            return val
         elif isinstance(item, str):
             if item in self._map:
-                return self._map[item]
-            if item.lower() in self._map:
-                return self._map[item.lower()]
-            raise KeyError(item)
+                val = self._map[item]
+            elif item.lower() in self._map:
+                val = self._map[item.lower()]
+            else:
+                raise KeyError(item)
+                
+            if item.lower() in ('is_banned', 'is_read', 'cancel_at_period_end', 'featured', 'passed', 'finished'):
+                if val is not None:
+                    if str(val) in ('1', 'True'):
+                        return 1
+                    elif str(val) in ('0', 'False'):
+                        return 0
+            return val
         raise TypeError("Row indices must be integers or strings")
 
     def keys(self):
