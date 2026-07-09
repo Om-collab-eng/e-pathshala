@@ -18,3 +18,4 @@ python-dotenv==1.2.1
 pymupdf==1.26.5
 pymysql==1.1.0
 cryptography==42.0.5
+cloudinary==1.40.0

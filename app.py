@@ -46,108 +46,136 @@ if not os.path.exists(DIGITAL_CONTENT_DIR):
 if not os.path.exists(UPLOADS_DIR):
     os.makedirs(UPLOADS_DIR)
 
-# --- SUPABASE PERSISTENCE SYNC FOR SERVERLESS ---
-SUPABASE_URL = os.environ.get('SUPABASE_URL')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
-SUPABASE_BUCKET = 'library-backups'
+# --- CLOUDINARY PERSISTENCE SYNC (replaces Supabase) ---
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', '')
+
+# Keep old env var names for backward compat check
+SUPABASE_URL = CLOUDINARY_CLOUD_NAME  # truthy if configured
+SUPABASE_KEY = CLOUDINARY_API_KEY     # truthy if configured
+
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True
+    )
+    CLOUDINARY_CONFIGURED = True
+    print("Cloudinary configured successfully.")
+else:
+    CLOUDINARY_CONFIGURED = False
+    print("WARNING: Cloudinary credentials not found. App is running without cloud persistence.")
+
+def _remote_to_public_id(remote_path):
+    """Convert a remote path like 'backups/uploads/cover.jpg' to a Cloudinary public_id like 'librika/uploads/cover'."""
+    # Remove file extension for Cloudinary public_id
+    base = remote_path.rsplit('.', 1)[0] if '.' in remote_path else remote_path
+    return f"librika/{base}"
 
 def upload_to_supabase(local_path, remote_path):
-    if not SUPABASE_URL or not SUPABASE_KEY:
+    """Upload a file to Cloudinary. Keeps old function name for compatibility."""
+    if not CLOUDINARY_CONFIGURED:
         return False
-    base_url = SUPABASE_URL.rstrip('/')
-    url = f"{base_url}/storage/v1/object/{SUPABASE_BUCKET}/{remote_path}"
-    headers = {
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "apikey": SUPABASE_KEY,
-        "x-upsert": "true"
-    }
     try:
-        with open(local_path, 'rb') as f:
-            files = {'file': f}
-            response = requests.post(url, headers=headers, files=files)
-            if response.status_code in [200, 201]:
-                return True
-            else:
-                print(f"Supabase Upload Error to {remote_path}: Status {response.status_code}, Body: {response.text}")
-                return False
+        public_id = _remote_to_public_id(remote_path)
+        result = cloudinary.uploader.upload(
+            local_path,
+            public_id=public_id,
+            resource_type="auto",
+            overwrite=True,
+            invalidate=True
+        )
+        return bool(result.get('public_id'))
     except Exception as e:
-        print(f"Supabase Upload Exception to {remote_path}: {e}")
+        print(f"Cloudinary Upload Error to {remote_path}: {e}")
         return False
 
 def download_from_supabase(remote_path, local_path):
-    if not SUPABASE_URL or not SUPABASE_KEY:
+    """Download a file from Cloudinary. Keeps old function name for compatibility."""
+    if not CLOUDINARY_CONFIGURED:
         return False
-    base_url = SUPABASE_URL.rstrip('/')
-    url = f"{base_url}/storage/v1/object/authenticated/{SUPABASE_BUCKET}/{remote_path}"
-    headers = {
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "apikey": SUPABASE_KEY
-    }
     try:
-        response = requests.get(url, headers=headers)
+        public_id = _remote_to_public_id(remote_path)
+        # Build the raw URL for binary files
+        ext = remote_path.rsplit('.', 1)[-1] if '.' in remote_path else ''
+        
+        # Determine resource type
+        image_exts = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'}
+        video_exts = {'mp4', 'webm', 'mov', 'avi'}
+        
+        if ext.lower() in image_exts:
+            res_type = 'image'
+        elif ext.lower() in video_exts:
+            res_type = 'video'
+        else:
+            res_type = 'raw'
+        
+        url = cloudinary.utils.cloudinary_url(
+            public_id,
+            resource_type=res_type,
+            format=ext if ext else None
+        )[0]
+        
+        response = requests.get(url, timeout=30)
         if response.status_code == 200:
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
             with open(local_path, 'wb') as f:
                 f.write(response.content)
             return True
         elif response.status_code == 404:
-            print(f"Supabase Download Info: No file found at {remote_path} (404).")
             return False
         else:
-            print(f"Supabase Download Error from {remote_path}: Status {response.status_code}, Body: {response.text}")
+            print(f"Cloudinary Download Error from {remote_path}: Status {response.status_code}")
             return False
     except Exception as e:
-        print(f"Supabase Download Exception from {remote_path}: {e}")
+        print(f"Cloudinary Download Exception from {remote_path}: {e}")
         return False
 
 def list_supabase_files(prefix):
-    if not SUPABASE_URL or not SUPABASE_KEY:
+    """List files in a Cloudinary folder. Keeps old function name for compatibility."""
+    if not CLOUDINARY_CONFIGURED:
         return []
-    base_url = SUPABASE_URL.rstrip('/')
-    url = f"{base_url}/storage/v1/object/list/{SUPABASE_BUCKET}"
-    headers = {
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "apikey": SUPABASE_KEY,
-        "Content-Type": "application/json"
-    }
-    body = {
-        "prefix": prefix,
-        "limit": 100
-    }
     try:
-        response = requests.post(url, headers=headers, json=body)
-        if response.status_code == 200:
-            items = response.json()
-            return [item['name'] for item in items if isinstance(item, dict) and 'name' in item]
-        else:
-            print(f"Supabase List Error: Status {response.status_code}, Body: {response.text}")
-            return []
+        folder = f"librika/{prefix}"
+        result = cloudinary.api.resources(
+            type="upload",
+            prefix=folder,
+            resource_type="auto",
+            max_results=500
+        )
+        filenames = []
+        for r in result.get('resources', []):
+            pid = r.get('public_id', '')
+            name = pid.split('/')[-1]
+            ext = r.get('format', '')
+            if ext:
+                name = f"{name}.{ext}"
+            if name:
+                filenames.append(name)
+        return filenames
     except Exception as e:
-        print(f"Supabase List Exception: {e}")
+        print(f"Cloudinary List Exception: {e}")
         return []
 
 def delete_from_supabase(remote_path):
-    if not SUPABASE_URL or not SUPABASE_KEY:
+    """Delete a file from Cloudinary. Keeps old function name for compatibility."""
+    if not CLOUDINARY_CONFIGURED:
         return False
-    base_url = SUPABASE_URL.rstrip('/')
-    url = f"{base_url}/storage/v1/object/{SUPABASE_BUCKET}/{remote_path}"
-    headers = {
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "apikey": SUPABASE_KEY
-    }
     try:
-        response = requests.delete(url, headers=headers)
-        return response.status_code in [200, 204]
+        public_id = _remote_to_public_id(remote_path)
+        result = cloudinary.uploader.destroy(public_id, resource_type="raw", invalidate=True)
+        return result.get('result') == 'ok'
     except Exception as e:
-        print(f"Supabase Delete Exception for {remote_path}: {e}")
+        print(f"Cloudinary Delete Exception for {remote_path}: {e}")
         return False
 
-if SUPABASE_URL and SUPABASE_KEY:
-    print("Supabase configured successfully. Starting download/restore process...")
-    # Restoring database on startup
-    if download_from_supabase('backups/library_v3.db', DB_FILE):
-        print("Restored library_v3.db from Supabase Storage (Cold Start).")
-    
+if CLOUDINARY_CONFIGURED:
     # Restoring digital content on startup
     try:
         remote_files = list_supabase_files("backups/digital_content")
@@ -156,9 +184,9 @@ if SUPABASE_URL and SUPABASE_KEY:
                 remote_path = f"backups/digital_content/{filename}"
                 local_path = os.path.join(DIGITAL_CONTENT_DIR, filename)
                 download_from_supabase(remote_path, local_path)
-        print("Restored digital content from Supabase Storage.")
+        print("Restored digital content from Cloudinary.")
     except Exception as files_err:
-        print(f"Warning: Could not restore digital content from Supabase Storage: {files_err}")
+        print(f"Warning: Could not restore digital content from Cloudinary: {files_err}")
 
     # Restoring uploaded covers on startup
     try:
@@ -168,22 +196,17 @@ if SUPABASE_URL and SUPABASE_KEY:
                 remote_path = f"backups/uploads/{filename}"
                 local_path = os.path.join(UPLOADS_DIR, filename)
                 download_from_supabase(remote_path, local_path)
-        print("Restored uploaded covers from Supabase Storage.")
+        print("Restored uploaded covers from Cloudinary.")
     except Exception as uploads_err:
-        print(f"Warning: Could not restore uploads from Supabase Storage: {uploads_err}")
+        print(f"Warning: Could not restore uploads from Cloudinary: {uploads_err}")
 
-    # Register lifecycle hook (Runs asynchronously in a background thread to prevent blocking HTTP responses)
+    # Register lifecycle hook (background sync after POST/PUT/DELETE)
     supabase_sync_lock = threading.Lock()
 
     def async_supabase_sync():
         if not supabase_sync_lock.acquire(blocking=False):
-            print("Supabase Sync: Already in progress, skipping duplicate sync request.")
             return
         try:
-            # Sync Database
-            if os.path.exists(DB_FILE):
-                upload_to_supabase(DB_FILE, 'backups/library_v3.db')
-            
             # Sync digital content files
             for root, _, files in os.walk(DIGITAL_CONTENT_DIR):
                 for file in files:
@@ -197,9 +220,8 @@ if SUPABASE_URL and SUPABASE_KEY:
                     local_path = os.path.join(root, file)
                     remote_path = f"backups/uploads/{file}"
                     upload_to_supabase(local_path, remote_path)
-            print("Lifecycle Sync: Synced DB, digital content, and uploads to Supabase Storage in the background.")
         except Exception as e:
-            print(f"Supabase Lifecycle Sync Error: {e}")
+            print(f"Cloudinary Lifecycle Sync Error: {e}")
         finally:
             supabase_sync_lock.release()
 
@@ -208,9 +230,6 @@ if SUPABASE_URL and SUPABASE_KEY:
         if request.method in ["POST", "PUT", "DELETE"]:
             threading.Thread(target=async_supabase_sync).start()
         return response
-else:
-    print("WARNING: Supabase credentials not found. App is running without cloud persistence.")
-# --------------------------------------------
 
 from flask import Flask, render_template, request, redirect, session, url_for, has_request_context
 
@@ -2659,10 +2678,10 @@ def super_admin_force_backup():
     otp = request.form.get('otp', '').strip().upper()
     if otp != get_om_totp(0) and otp != get_om_totp(-1):
         return "Incorrect or expired passcode.", 400
-    # Trigger an immediate Supabase backup
+    # Trigger an immediate Cloudinary backup
     try:
-        if not SUPABASE_URL or not SUPABASE_KEY:
-            flash("Backup failed: Supabase credentials not configured.", "error")
+        if not CLOUDINARY_CONFIGURED:
+            flash("Backup failed: Cloudinary credentials not configured.", "error")
         elif os.path.exists(DB_FILE):
             success = upload_to_supabase(DB_FILE, 'backups/library_v3.db')
             if success:
