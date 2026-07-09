@@ -1523,7 +1523,8 @@ def login():
         if user:
             user = dict(user)
             
-            if user.get('is_banned'):
+            is_banned_val = str(user.get('is_banned') or '0')
+            if is_banned_val in ['1', 'True']:
                 conn.close()
                 error = "This account has been banned or the school has been suspended. Please contact the administrator."
                 return render_template('login.html', error=error)
@@ -1717,7 +1718,7 @@ def render_super_admin_dashboard_logic():
     # Overview Stats
     stats = {
         'total_schools': conn.execute('SELECT COUNT(*) FROM schools').fetchone()[0],
-        'active_schools': conn.execute('SELECT COUNT(*) FROM schools WHERE status="active"').fetchone()[0],
+        'active_schools': conn.execute('SELECT COUNT(*) FROM schools WHERE LOWER(status)="active"').fetchone()[0],
         'total_students': conn.execute('SELECT COUNT(*) FROM users WHERE role="student"').fetchone()[0],
         'total_librarians': conn.execute('SELECT COUNT(*) FROM users WHERE role="admin"').fetchone()[0],
         'total_books': conn.execute('SELECT SUM(total_copies) FROM books').fetchone()[0] or 0,
@@ -2092,7 +2093,7 @@ def super_admin_add_school():
         
     conn = get_db_connection()
     try:
-        conn.execute('INSERT INTO schools (name, school_code, librarian_name, created_at) VALUES (?, ?, ?, ?)',
+        conn.execute('INSERT INTO schools (name, school_code, librarian_name, created_at, status) VALUES (?, ?, ?, ?, "active")',
                      (name, code, lib_name, datetime.now().strftime('%Y-%m-%d %H:%M')))
         conn.execute('INSERT INTO users (name, phone, email, password, role, school_code) VALUES (?, ?, ?, ?, ?, ?)',
                      (lib_name, lib_phone, lib_email, lib_pass, 'admin', code))
@@ -2166,7 +2167,8 @@ def super_admin_toggle_user_ban(id):
     if target_user and target_user['name'] == 'OM' and target_user['role'] == 'super_admin':
         conn.close()
         return "Cannot ban OM.", 403
-    new_val = 1 if not target_user or target_user['is_banned'] == 0 else 0
+    is_banned_val = str(target_user['is_banned']) if target_user else '0'
+    new_val = 0 if is_banned_val in ['1', 'True'] else 1
     conn.execute('UPDATE users SET is_banned = ? WHERE id = ?', (new_val, id))
     conn.commit()
     conn.close()
@@ -2210,7 +2212,8 @@ def super_admin_toggle_school_block(id):
     if session.get('role') != 'super_admin': return redirect('/login')
     conn = get_db_connection()
     current = conn.execute('SELECT status FROM schools WHERE id = ?', (id,)).fetchone()
-    new_status = 'Blocked' if not current or current['status'] == 'Active' else 'Active'
+    is_blocked = current and current['status'] and current['status'].lower() == 'blocked'
+    new_status = 'active' if is_blocked else 'Blocked'
     conn.execute('UPDATE schools SET status = ? WHERE id = ?', (new_status, id))
     # Also ban/unban all students under this school
     ban_val = 1 if new_status == 'Blocked' else 0
@@ -2349,7 +2352,8 @@ def super_admin_personal_user_toggle_ban(user_id):
     try:
         user = conn.execute("SELECT is_banned FROM users WHERE id = ?", (user_id,)).fetchone()
         if user:
-            new_ban = 0 if user['is_banned'] else 1
+            is_banned_val = str(user['is_banned'] or '0')
+            new_ban = 0 if is_banned_val in ['1', 'True'] else 1
             conn.execute("UPDATE users SET is_banned = ? WHERE id = ?", (new_ban, user_id))
             conn.commit()
             status_text = "banned" if new_ban else "unbanned"
@@ -2867,7 +2871,8 @@ def admin_toggle_student_ban(id):
     conn = get_db_connection()
     user = conn.execute('SELECT * FROM users WHERE id = ? AND school_code = ?', (id, s_code)).fetchone()
     if user:
-        new_status = 0 if user['is_banned'] else 1
+        is_banned_val = str(user['is_banned'] or '0')
+        new_status = 0 if is_banned_val in ['1', 'True'] else 1
         conn.execute('UPDATE users SET is_banned = ? WHERE id = ?', (new_status, id))
         conn.commit()
     conn.close()
@@ -4437,7 +4442,8 @@ def chat_action():
         else:
             user = conn.execute('SELECT * FROM users WHERE name = ? AND school_code = ?', (name, s_code)).fetchone()
         if user:
-            new_status = 0 if user.get('is_banned') else 1
+            is_banned_val = str(user.get('is_banned') or '0')
+            new_status = 0 if is_banned_val in ['1', 'True'] else 1
             conn.execute('UPDATE users SET is_banned = ? WHERE id = ?', (new_status, user['id']))
             conn.commit()
             conn.close()
