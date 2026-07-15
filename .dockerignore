@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+.github
+
+# Virtual Environments
+venv/
+my_mac_env/
+.python-version
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Local Databases (these will be mapped via volumes)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Environments and Secrets
+.env
+firebase-key.json
+cookies.txt
+
+# Logs & temp files
+*.log
+.DS_Store
+scratch/
+uploads/
+static/uploads/*
+static/digital_content/*
+static/barcodes/*
+ocr-scanner-system/uploads/*
+ocr-scanner-system/library_ocr.db
+ocr-scanner-system/node_modules/

@@ -1,0 +1,12 @@
+node_modules/
+npm-debug.log
+.env
+.git
+.DS_Store
+uploads/*
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+pnpm-lock.yaml
+pnpm-workspace.yaml

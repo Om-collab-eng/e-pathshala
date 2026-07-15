@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  librika-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: librika-backend
+    restart: always
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    environment:
+      - PORT=5001
+      - MYSQL_HOST=
+    volumes:
+      - ./library_v3.db:/app/library_v3.db
+      - ./demo.db:/app/demo.db
+      - ./static/uploads:/app/static/uploads
+      - ./static/digital_content:/app/static/digital_content
+      - ./static/barcodes:/app/static/barcodes
+
+  ocr-scanner:
+    build:
+      context: ./ocr-scanner-system
+      dockerfile: Dockerfile
+    container_name: ocr-scanner
+    restart: always
+    ports:
+      - "5002:5002"
+    env_file:
+      - ./ocr-scanner-system/.env
+    environment:
+      - PORT=5002
+    volumes:
+      - ./ocr-scanner-system/library_ocr.db:/app/library_ocr.db
+      - ./ocr-scanner-system/uploads:/app/uploads
