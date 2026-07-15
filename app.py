@@ -6773,11 +6773,73 @@ def terms():
 def refund():
     return render_template('page.html', title='Refund Policy')
 
-import requests
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 def send_organization_email(to_email, contact_person, code=None, login_id=None, password=None):
-    # This is deprecated as we are moving EmailJS to the frontend
-    pass
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_pass = os.environ.get('SMTP_PASS')
+    
+    if not smtp_user or not smtp_pass:
+        print("WARNING: SMTP_USER or SMTP_PASS not set. Backend email skipped.")
+        return False
+        
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['From'] = f"Librika <{smtp_user}>"
+        msg['To'] = to_email
+        
+        if code:
+            msg['Subject'] = "Librika - Organization Registration Approved!"
+            body_text = f"Hello {contact_person},\n\nYour request to register your school/organization on Librika has been approved!\n\nHere are your login credentials:\n- School Code: {code}\n- Login ID: {login_id}\n- Password: {password}\n\nPlease log in and change your password immediately.\n\nRegards,\nTeam Librika"
+            body_html = f"""
+            <html>
+              <body>
+                <h2>Welcome to Librika!</h2>
+                <p>Hello <strong>{contact_person}</strong>,</p>
+                <p>Your request to register your school/organization on Librika has been approved!</p>
+                <p><strong>Your Admin Login Credentials:</strong></p>
+                <ul>
+                  <li><strong>School Code:</strong> {code}</li>
+                  <li><strong>Login ID:</strong> {login_id}</li>
+                  <li><strong>Password:</strong> {password}</li>
+                </ul>
+                <p>Please log in at <a href="http://librika.in/login">librika.in/login</a> and change your password immediately.</p>
+                <br/>
+                <p>Regards,<br/>Team Librika</p>
+              </body>
+            </html>
+            """
+        else:
+            msg['Subject'] = "Librika - Registration Request Update"
+            body_text = f"Hello {contact_person},\n\nThank you for your interest in Librika. Unfortunately, we were unable to approve your registration request at this time.\n\nIf you have any questions, please contact our support team.\n\nRegards,\nTeam Librika"
+            body_html = f"""
+            <html>
+              <body>
+                <p>Hello <strong>{contact_person}</strong>,</p>
+                <p>Thank you for your interest in Librika. Unfortunately, we were unable to approve your registration request at this time.</p>
+                <p>If you have any questions, please contact our support team.</p>
+                <br/>
+                <p>Regards,<br/>Team Librika</p>
+              </body>
+            </html>
+            """
+            
+        msg.attach(MIMEText(body_text, 'plain'))
+        msg.attach(MIMEText(body_html, 'html'))
+        
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, to_email, msg.as_string())
+            
+        print(f"Email successfully sent to {to_email}")
+        return True
+    except Exception as e:
+        print(f"SMTP Error sending email to {to_email}: {e}")
+        return False
+
 
 @app.route('/api/check-user', methods=['POST'])
 def check_user():
@@ -6853,7 +6915,10 @@ def accept_org_request(req_id):
             conn.execute('UPDATE organization_requests SET status = "Approved" WHERE id = ?', (req_id,))
             conn.commit()
             
-            # We don't send from backend anymore. Return data so frontend can send it via emailjs
+            # Send notification from backend via Gmail SMTP
+            send_organization_email(req['email'], req['contact_person'], org_id, req['phone'], password)
+            
+            # Return data so frontend can also send it via emailjs if needed
             return jsonify({
                 "status": "success", 
                 "org_id": org_id, 

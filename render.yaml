@@ -31,6 +31,11 @@ services:
         sync: false
       - key: BREVO_API_KEY
         sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+
 
   # 2. OCR Scanner System (Node.js App)
   - type: web
