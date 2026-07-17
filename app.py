@@ -5509,13 +5509,8 @@ Rules:
             }
         }
     ]
-    if base64_back:
-        user_content.append({
-            "type": "image_url",
-            "image_url": {
-                "url": f"data:image/jpeg;base64,{base64_back}"
-            }
-        })
+    # Note: meta/llama-3.2-11b-vision-instruct supports only 1 image per prompt.
+    # Front cover contains all key metadata (title, author, publisher, ISBN) so back cover is not needed.
         
     messages = [
         {
