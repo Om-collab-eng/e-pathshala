@@ -242,7 +242,7 @@
 
     .grid-row {
         display: grid;
-        grid-template-columns: 140px 180px 140px 80px 90px 100px 100px 120px 80px;
+        grid-template-columns: 140px 180px 140px 80px 90px 100px 100px 120px 120px 80px;
         gap: 8px;
         margin-bottom: 8px;
         align-items: center;
@@ -553,6 +553,7 @@
                 <div>Shelf</div>
                 <div>Rack</div>
                 <div>Category / Subject</div>
+                <div>Cover</div>
                 <div>Actions</div>
             </div>
             <div id="gridBody">
@@ -801,6 +802,7 @@
             <div class="grid-cell"><input type="text" class="row-shelf" value="${data.shelf || 'A1'}" placeholder="Shelf"></div>
             <div class="grid-cell"><input type="text" class="row-rack" value="${data.rack || 'R1'}" placeholder="Rack"></div>
             <div class="grid-cell"><input type="text" class="row-category" value="${data.category || 'General'}" placeholder="Category"></div>
+            <div class="grid-cell"><input type="file" class="row-cover" accept="image/*" style="font-size: 0.7rem;" title="Cover Image"></div>
             <div class="grid-cell"><button onclick="document.getElementById('${rowId}').remove()" style="background:none; border:none; color:#f87171; cursor:pointer; font-weight:bold;">✕</button></div>
         `;
         body.appendChild(row);
@@ -940,21 +942,29 @@
         const acquisitionId = document.getElementById('editAcquisitionId').value;
         const invoiceImage = document.getElementById('uploadedInvoiceUrl').value;
 
-        const data = {
-            acquisition_id: acquisitionId || null,
-            invoice_image: invoiceImage || '',
-            bill_number: billNo,
-            bill_date: billDate,
-            vendor_id: vendorId,
-            total_amount: billAmount,
-            items: items
-        };
+        const formData = new FormData();
+        formData.append('acquisition_id', acquisitionId || '');
+        formData.append('invoice_image', invoiceImage || '');
+        formData.append('bill_number', billNo);
+        formData.append('bill_date', billDate);
+        formData.append('vendor_id', vendorId);
+        formData.append('total_amount', billAmount);
+        
+        // Append items as JSON
+        formData.append('items', JSON.stringify(items));
+        
+        // Append cover image files
+        rows.forEach((row, index) => {
+            const fileInput = row.querySelector('.row-cover');
+            if (fileInput && fileInput.files.length > 0) {
+                formData.append(`cover_file_${index}`, fileInput.files[0]);
+            }
+        });
         
         try {
             const r = await fetch('/admin/acquisitions/complete', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: formData
             });
             const res = await r.json();
             if (res.status === 'success') {

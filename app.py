@@ -1226,10 +1226,11 @@ def init_db():
                         ('pending_requests', 'phone'), ('pending_requests', 'password'),
                         ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'),
                         ('schools', 'status'), ('users', 'status'), ('users', 'is_banned'), ('users', 'permissions'),
-                        ('books', 'is_banned'), ('books', 'isbn'), ('books', 'publisher'), ('books', 'class'), ('books', 'subject')]:
+                        ('books', 'is_banned'), ('books', 'isbn'), ('books', 'publisher'), ('books', 'class'), ('books', 'subject'),
+                        ('books', 'edition'), ('books', 'ddc'), ('books', 'category'), ('books', 'book_type'), ('books', 'language'), ('books', 'quiz')]:
         try:
             conn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
-        except sqlite3.OperationalError:
+        except Exception:
             pass
             
     # Database Indexes for Performance
@@ -3014,6 +3015,7 @@ def admin_delete_student(id):
 @app.route('/admin/settings', methods=['GET', 'POST'])
 def admin_settings():
     if session.get('role') != 'admin': return redirect('/login')
+    if 'approve_content' not in session.get('permissions', []): return redirect('/admin')
     old_code = session.get('school_code')
     
     conn = get_db_connection()
@@ -3315,8 +3317,9 @@ def open_library_lookup(isbn):
 
 @app.route('/admin/acquisitions')
 def list_acquisitions():
-    if session.get('role') != 'admin':
-        return redirect('/login')
+    if session.get('role') != 'admin': return redirect('/login')
+    if 'manage_books' not in session.get('permissions', []): return redirect('/admin')
+    
     s_code = session.get('school_code')
     conn = get_db_connection()
     
@@ -3591,8 +3594,20 @@ def get_acquisition(acq_id):
 def complete_acquisition():
     if session.get('role') != 'admin':
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    if 'manage_books' not in session.get('permissions', []):
+        return jsonify({'status': 'error', 'message': 'Permission Denied'}), 403
         
-    data = request.get_json(force=True)
+    if request.is_json:
+        data = request.get_json(force=True)
+        items = data.get('items', [])
+    else:
+        data = request.form
+        import json
+        try:
+            items = json.loads(data.get('items', '[]'))
+        except:
+            items = []
+            
     acquisition_id = data.get('acquisition_id')
     invoice_image = data.get('invoice_image', '')
     
@@ -3601,7 +3616,6 @@ def complete_acquisition():
     vendor_id_raw = data.get('vendor_id')
     vendor_name = data.get('vendor_name', '').strip()
     total_amount = float(data.get('total_amount') or 0.0)
-    items = data.get('items', [])
     
     s_code = session.get('school_code')
     user_id = session.get('user_id')
@@ -3658,9 +3672,12 @@ def complete_acquisition():
             
         generated_accessions = []
         import random
+        import uuid
+        import os
+        from werkzeug.utils import secure_filename
         
         # 3. Process each item
-        for item in items:
+        for index, item in enumerate(items):
             title = item.get('title', '').strip()
             author = item.get('author', '').strip()
             isbn = item.get('isbn', '').strip()
@@ -3685,21 +3702,68 @@ def complete_acquisition():
             if not book:
                 book = conn.execute('SELECT * FROM books WHERE title = ? AND author = ? AND school_code = ?', (title, author, s_code)).fetchone()
                 
+            # Handle Cover Image Upload
+            cover_file = request.files.get(f'cover_file_{index}')
+            cover_url = ""
+            if cover_file and cover_file.filename:
+                unique_fn = f"{uuid.uuid4().hex}_{secure_filename(cover_file.filename)}"
+                cover_path = os.path.join(app.config.get('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'static', 'uploads')), unique_fn)
+                cover_file.save(cover_path)
+                cover_url = f"/static/uploads/{unique_fn}"
+
             if book:
                 # Increment copies
-                conn.execute('UPDATE books SET total_copies = total_copies + ?, available_copies = available_copies + ? WHERE id = ?',
-                             (quantity, quantity, book['id']))
                 book_id = book['id']
+                if cover_url:
+                    conn.execute('UPDATE books SET total_copies = total_copies + ?, available_copies = available_copies + ?, cover_url = ? WHERE id = ?',
+                                 (quantity, quantity, cover_url, book_id))
+                else:
+                    conn.execute('UPDATE books SET total_copies = total_copies + ?, available_copies = available_copies + ? WHERE id = ?',
+                                 (quantity, quantity, book_id))
                 item_status = 'Existing'
             else:
                 # Create Book Master
                 barcode_id = f"BC{random.randint(100000, 999999)}"
                 cursor.execute('''
-                    INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, publisher, edition, ddc, category, book_type, subject, language)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (title, author, category, barcode_id, quantity, quantity, s_code, publisher, edition, ddc, category, book_type, subject, language))
+                    INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, publisher, edition, ddc, category, book_type, subject, language, cover_url)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (title, author, category, barcode_id, quantity, quantity, s_code, publisher, edition, ddc, category, book_type, subject, language, cover_url))
                 book_id = cursor.lastrowid
                 item_status = 'New'
+                
+                # If no cover was provided, launch AI generation
+                if not cover_url:
+                    def auto_gen_book_details(b_id, b_title, b_author, sch_code):
+                        try:
+                            import threading
+                            # We must give the thread a moment to ensure the main transaction commits
+                            import time
+                            time.sleep(2)
+                            
+                            thread_conn = get_db_connection()
+                            try:
+                                import google.generativeai as genai
+                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                desc_prompt = f"Write a short, engaging description (max 3 sentences) for the book '{b_title}' by '{b_author}'."
+                                resp = model.generate_content(desc_prompt)
+                                desc = resp.text.strip()
+                                thread_conn.execute('UPDATE books SET description = ? WHERE id = ?', (desc, b_id))
+                            except Exception as e:
+                                print("AI Description failed:", e)
+                                
+                            try:
+                                q_json = ai_generate_quiz(b_title, b_author)
+                                thread_conn.execute('UPDATE books SET quiz = ? WHERE id = ?', (q_json, b_id))
+                            except Exception as e:
+                                print("AI Quiz failed:", e)
+                                
+                            thread_conn.commit()
+                            thread_conn.close()
+                        except Exception as thread_err:
+                            print("Background AI Thread Error:", thread_err)
+                            
+                    import threading
+                    threading.Thread(target=auto_gen_book_details, args=(book_id, title, author, s_code)).start()
                 
             # Create Acquisition Item
             conn.execute('''
@@ -3737,6 +3801,8 @@ def complete_acquisition():
 def delete_acquisition(acq_id):
     if session.get('role') != 'admin':
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    if 'manage_books' not in session.get('permissions', []):
+        return jsonify({'status': 'error', 'message': 'Permission Denied'}), 403
     # Check for school admin permission level
     if 'manage_students' not in session.get('permissions', []):
         return jsonify({'status': 'error', 'message': 'Only School Admins can delete acquisitions.'}), 403
