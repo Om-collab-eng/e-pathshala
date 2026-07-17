@@ -8828,8 +8828,11 @@ def mark_transaction_lost(tx_id):
     return redirect('/admin')
 
 # Ensure database is initialized even when run via Gunicorn / release commands
-if os.environ.get('INIT_DB') == 'true' or __name__ == '__main__':
+try:
     init_db()
+except Exception as e:
+    print("Database initialization failed:", e)
+
 
 
 if __name__ == '__main__':
