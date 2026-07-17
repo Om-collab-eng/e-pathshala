@@ -522,11 +522,12 @@ Example structure:
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="mistralai/mistral-nemotron",
+            model="deepseek-ai/deepseek-v4-pro",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.6,
             top_p=0.7,
             max_tokens=4096,
+            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         content = completion.choices[0].message.content.strip()
@@ -617,10 +618,11 @@ Return ONLY the word "correct" or "incorrect". Do not include any other text or 
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="mistralai/mistral-nemotron",
+            model="deepseek-ai/deepseek-v4-pro",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=10,
+            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         grade = completion.choices[0].message.content.strip().lower()
@@ -698,11 +700,12 @@ Here is the chapter text:
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="mistralai/mistral-nemotron",
+            model="deepseek-ai/deepseek-v4-pro",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.4,
             top_p=0.7,
             max_tokens=4096,
+            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         content = completion.choices[0].message.content.strip()
@@ -3357,6 +3360,7 @@ def run_invoice_ocr():
         return jsonify({'status': 'error', 'message': 'No file uploaded'}), 400
         
     import random
+    import uuid
     from werkzeug.utils import secure_filename
     
     # Save the file to static/uploads/
@@ -3418,16 +3422,17 @@ def run_invoice_ocr():
             response = requests.post(
                 "https://integrate.api.nvidia.com/v1/chat/completions",
                 json={
-                    "model": "nvidia/nemotron-nano-12b-v2-vl",
+                    "model": "minimaxai/minimax-m3",
                     "messages": messages,
                     "temperature": 1.0,
-                    "top_p": 1.0,
+                    "top_p": 0.95,
                     "max_tokens": 4096,
                     "stream": False
                 },
                 headers={
                     "Authorization": f"Bearer {nvidia_key.strip()}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
                 },
                 timeout=60
             )
@@ -3459,48 +3464,6 @@ def run_invoice_ocr():
         except Exception as e:
             print("NVIDIA OCR scan failed:", e)
 
-    # Use Gemini API if configured in environment
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if api_key:
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
-            image_parts = [{"mime_type": file.content_type or "image/jpeg", "data": file_bytes}]
-            
-            prompt = """
-            Analyze this invoice and extract the details. Return ONLY a valid JSON object matching this structure (no markdown wrapper, no extra text):
-            {
-              "bill_number": "INV-12345",
-              "bill_date": "YYYY-MM-DD",
-              "vendor_name": "Vendor Name",
-              "total_amount": 1000.0,
-              "items": [
-                {
-                  "isbn": "ISBN string if visible",
-                  "title": "Title of the book",
-                  "author": "Author of the book",
-                  "quantity": 5,
-                  "unit_price": 200.0
-                }
-              ]
-            }
-            """
-            response = model.generate_content([prompt, image_parts[0]])
-            text = response.text.strip()
-            
-            # Clean up markdown JSON codeblocks if any
-            if text.startswith("```"):
-                lines = text.split("\n")
-                if lines[0].startswith("```json") or lines[0].startswith("```"):
-                    text = "\n".join(lines[1:-1])
-                    
-            extracted = json.loads(text.strip())
-            return jsonify({'status': 'success', 'data': extracted, 'invoice_image': web_path})
-        except Exception as e:
-            print("Gemini API call failed, falling back to mock:", e)
-            
     # Reliable mock data fallback for seamless local validation
     mock_data = {
         "bill_number": f"INV-{random.randint(10000, 99999)}",
@@ -3742,11 +3705,20 @@ def complete_acquisition():
                             
                             thread_conn = get_db_connection()
                             try:
-                                import google.generativeai as genai
-                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                from openai import OpenAI
+                                nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
+                                client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=nvidia_key)
                                 desc_prompt = f"Write a short, engaging description (max 3 sentences) for the book '{b_title}' by '{b_author}'."
-                                resp = model.generate_content(desc_prompt)
-                                desc = resp.text.strip()
+                                completion = client.chat.completions.create(
+                                    model="deepseek-ai/deepseek-v4-pro",
+                                    messages=[{"role": "user", "content": desc_prompt}],
+                                    temperature=0.6,
+                                    top_p=0.7,
+                                    max_tokens=256,
+                                    extra_body={"chat_template_kwargs":{"thinking":False}},
+                                    stream=False
+                                )
+                                desc = completion.choices[0].message.content.strip()
                                 thread_conn.execute('UPDATE books SET description = ? WHERE id = ?', (desc, b_id))
                             except Exception as e:
                                 print("AI Description failed:", e)
@@ -5113,11 +5085,12 @@ def api_chat():
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="mistralai/mistral-nemotron",
+            model="deepseek-ai/deepseek-v4-pro",
             messages=messages,
             temperature=0.6,
             top_p=0.7,
             max_tokens=4096,
+            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         reply = completion.choices[0].message.content
@@ -5265,11 +5238,12 @@ Books List:
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="mistralai/mistral-nemotron",
+            model="deepseek-ai/deepseek-v4-pro",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.6,
             top_p=0.7,
             max_tokens=4096,
+            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         content = completion.choices[0].message.content.strip()
@@ -5331,13 +5305,14 @@ def api_scan_ocr_text():
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="mistralai/mistral-nemotron",
+            model="deepseek-ai/deepseek-v4-pro",
             messages=[
                 {"role": "user", "content": prompt}
             ],
             temperature=0.6,
             top_p=0.7,
             max_tokens=4096,
+            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         ai_reply = completion.choices[0].message.content.strip()
@@ -5406,13 +5381,14 @@ JSON Schema:
                     api_key=nvidia_key
                 )
                 completion = client.chat.completions.create(
-                    model="mistralai/mistral-nemotron",
+                    model="deepseek-ai/deepseek-v4-pro",
                     messages=[
                         {"role": "user", "content": validation_prompt}
                     ],
                     temperature=0.6,
                     top_p=0.7,
                     max_tokens=4096,
+                    extra_body={"chat_template_kwargs":{"thinking":False}},
                     stream=False
                 )
                 val_reply = completion.choices[0].message.content.strip()
@@ -5560,16 +5536,17 @@ Rules:
         response = requests.post(
             "https://integrate.api.nvidia.com/v1/chat/completions",
             json={
-                "model": "nvidia/nemotron-nano-12b-v2-vl",
+                "model": "minimaxai/minimax-m3",
                 "messages": messages,
                 "temperature": 1.0,
-                "top_p": 1.0,
+                "top_p": 0.95,
                 "max_tokens": 4096,
                 "stream": False
             },
             headers={
                 "Authorization": f"Bearer {nvidia_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             },
             timeout=60
         )
@@ -5758,11 +5735,12 @@ JSON Schema:
                         api_key=nvidia_key
                     )
                     completion = client.chat.completions.create(
-                        model="mistralai/mistral-nemotron",
+                        model="deepseek-ai/deepseek-v4-pro",
                         messages=[{"role": "user", "content": refine_prompt}],
                         temperature=0.6,
                         top_p=0.7,
                         max_tokens=4096,
+                        extra_body={"chat_template_kwargs":{"thinking":False}},
                         stream=False
                     )
                     ref_reply = completion.choices[0].message.content.strip()
