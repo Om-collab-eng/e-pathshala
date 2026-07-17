@@ -1163,8 +1163,8 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     }
 
     document.getElementById('processBtn').addEventListener('click', async () => {
-        if (!frontFile || !backFile) {
-            showToast("Both Front and Back Covers are required!", "error");
+        if (!frontFile) {
+            showToast("Please upload the Front Cover first!", "error");
             return;
         }
 
@@ -1173,7 +1173,8 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 
         const formData = new FormData();
         formData.append('front', frontFile);
-        formData.append('back', backFile);
+        if (backFile) formData.append('back', backFile);
+
 
         try {
             // 1. Upload Covers to Server

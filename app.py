@@ -3405,13 +3405,13 @@ def run_invoice_ocr():
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": prompt},
                         {
                             "type": "image_url",
                             "image_url": {
                                 "url": f"data:image/jpeg;base64,{base64_image}"
                             }
-                        }
+                        },
+                        {"type": "text", "text": prompt}
                     ]
                 }
             ]
@@ -5477,40 +5477,37 @@ def api_scan_vision():
     if nvidia_key:
         nvidia_key = nvidia_key.strip()
         
-    prompt = """Analyze these book cover images (front cover and optionally back cover) and extract the following information.
+    prompt = """Look at this book cover image carefully. Read all text visible on the cover including title, author name, publisher, ISBN, edition, subject, class/grade level.
 
-Book Title:
-Subtitle:
-Author(s):
-Publisher:
-Publication Year:
-ISBN:
-Language:
-Category:
-Subject:
-Class/Grade:
-Target Audience:
-Quantity:
-Summary:
-Description:
-Tags:
-
-Rules:
-- Leave blank if unknown.
-- Do not explain anything.
-- Return only the fields above.
-"""
+Return ONLY a valid JSON object (no markdown, no explanation) with these exact keys:
+{
+  "title": "full book title as shown on cover",
+  "subtitle": "subtitle if present, else empty string",
+  "author": "author name(s) as shown",
+  "publisher": "publisher name if visible, else empty string",
+  "publicationYear": "year if visible, else empty string",
+  "isbn": "ISBN number if visible, else empty string",
+  "language": "English",
+  "category": "best category: Fiction/Non-Fiction/Textbook/Reference/Science/Math/Literature/History/etc",
+  "subject": "subject or topic of the book",
+  "class": "class or grade level if it is a textbook, else empty string",
+  "targetAudience": "intended readers e.g. Students, Adults, Children",
+  "description": "1-2 sentence description of what this book is about",
+  "tags": "comma separated keywords",
+  "summary50Words": "brief 50 word summary of the book content"
+}"""
     user_content = [
-        {"type": "text", "text": prompt},
         {
             "type": "image_url",
             "image_url": {
                 "url": f"data:image/jpeg;base64,{base64_image}"
             }
-        }
+        },
+        {"type": "text", "text": prompt},
     ]
     # Note: meta/llama-3.2-11b-vision-instruct supports only 1 image per prompt.
     # Front cover contains all key metadata (title, author, publisher, ISBN) so back cover is not needed.
+
         
     messages = [
         {
