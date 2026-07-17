@@ -522,12 +522,11 @@ Example structure:
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-v4-pro",
+            model="meta/llama-3.3-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.6,
             top_p=0.7,
             max_tokens=4096,
-            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         content = completion.choices[0].message.content.strip()
@@ -618,11 +617,10 @@ Return ONLY the word "correct" or "incorrect". Do not include any other text or 
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-v4-pro",
+            model="meta/llama-3.3-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=10,
-            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         grade = completion.choices[0].message.content.strip().lower()
@@ -700,12 +698,11 @@ Here is the chapter text:
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-v4-pro",
+            model="meta/llama-3.3-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.4,
             top_p=0.7,
             max_tokens=4096,
-            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         content = completion.choices[0].message.content.strip()
@@ -3403,7 +3400,7 @@ def run_invoice_ocr():
             messages = [
                 {
                     "role": "system",
-                    "content": "/think"
+                    "content": "You are a helpful assistant that extracts structured data from images."
                 },
                 {
                     "role": "user",
@@ -3422,7 +3419,7 @@ def run_invoice_ocr():
             response = requests.post(
                 "https://integrate.api.nvidia.com/v1/chat/completions",
                 json={
-                    "model": "minimaxai/minimax-m3",
+                    "model": "meta/llama-3.2-11b-vision-instruct",
                     "messages": messages,
                     "temperature": 1.0,
                     "top_p": 0.95,
@@ -3438,7 +3435,11 @@ def run_invoice_ocr():
             )
             if response.status_code == 200:
                 res_data = response.json()
-                message_obj = res_data['choices'][0]['message']
+                choices = res_data.get('choices', [])
+                if not choices:
+                    print("Vision API returned empty choices:", res_data)
+                    raise ValueError("Empty choices in vision API response")
+                message_obj = choices[0]['message']
                 ai_reply = message_obj.get('content')
                 if ai_reply is None:
                     ai_reply = message_obj.get('reasoning_content') or message_obj.get('reasoning')
@@ -3453,9 +3454,9 @@ def run_invoice_ocr():
                     
                     # Remove markdown JSON wrapper
                     if ai_reply.startswith("```"):
-                        lines = ai_reply.split("\n")
-                        if lines[0].startswith("```json") or lines[0].startswith("```"):
-                            ai_reply = "\n".join(lines[1:-1])
+                        lines_r = ai_reply.split("\n")
+                        if lines_r[0].startswith("```json") or lines_r[0].startswith("```"):
+                            ai_reply = "\n".join(lines_r[1:-1])
                             
                     extracted = json.loads(ai_reply.strip())
                     return jsonify({'status': 'success', 'data': extracted, 'invoice_image': web_path})
@@ -3710,12 +3711,11 @@ def complete_acquisition():
                                 client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=nvidia_key)
                                 desc_prompt = f"Write a short, engaging description (max 3 sentences) for the book '{b_title}' by '{b_author}'."
                                 completion = client.chat.completions.create(
-                                    model="deepseek-ai/deepseek-v4-pro",
+                                    model="meta/llama-3.3-70b-instruct",
                                     messages=[{"role": "user", "content": desc_prompt}],
                                     temperature=0.6,
                                     top_p=0.7,
                                     max_tokens=256,
-                                    extra_body={"chat_template_kwargs":{"thinking":False}},
                                     stream=False
                                 )
                                 desc = completion.choices[0].message.content.strip()
@@ -5085,12 +5085,11 @@ def api_chat():
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-v4-pro",
+            model="meta/llama-3.3-70b-instruct",
             messages=messages,
             temperature=0.6,
             top_p=0.7,
             max_tokens=4096,
-            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         reply = completion.choices[0].message.content
@@ -5238,12 +5237,11 @@ Books List:
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-v4-pro",
+            model="meta/llama-3.3-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.6,
             top_p=0.7,
             max_tokens=4096,
-            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         content = completion.choices[0].message.content.strip()
@@ -5305,14 +5303,13 @@ def api_scan_ocr_text():
             api_key=nvidia_key
         )
         completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-v4-pro",
+            model="meta/llama-3.3-70b-instruct",
             messages=[
                 {"role": "user", "content": prompt}
             ],
             temperature=0.6,
             top_p=0.7,
             max_tokens=4096,
-            extra_body={"chat_template_kwargs":{"thinking":False}},
             stream=False
         )
         ai_reply = completion.choices[0].message.content.strip()
@@ -5381,14 +5378,13 @@ JSON Schema:
                     api_key=nvidia_key
                 )
                 completion = client.chat.completions.create(
-                    model="deepseek-ai/deepseek-v4-pro",
+                    model="meta/llama-3.3-70b-instruct",
                     messages=[
                         {"role": "user", "content": validation_prompt}
                     ],
                     temperature=0.6,
                     top_p=0.7,
                     max_tokens=4096,
-                    extra_body={"chat_template_kwargs":{"thinking":False}},
                     stream=False
                 )
                 val_reply = completion.choices[0].message.content.strip()
@@ -5524,7 +5520,7 @@ Rules:
     messages = [
         {
             "role": "system",
-            "content": "/think"
+            "content": "You are a helpful assistant that extracts structured book metadata from cover images."
         },
         {
             "role": "user",
@@ -5536,7 +5532,7 @@ Rules:
         response = requests.post(
             "https://integrate.api.nvidia.com/v1/chat/completions",
             json={
-                "model": "minimaxai/minimax-m3",
+                "model": "meta/llama-3.2-11b-vision-instruct",
                 "messages": messages,
                 "temperature": 1.0,
                 "top_p": 0.95,
@@ -5735,12 +5731,11 @@ JSON Schema:
                         api_key=nvidia_key
                     )
                     completion = client.chat.completions.create(
-                        model="deepseek-ai/deepseek-v4-pro",
+                        model="meta/llama-3.3-70b-instruct",
                         messages=[{"role": "user", "content": refine_prompt}],
                         temperature=0.6,
                         top_p=0.7,
                         max_tokens=4096,
-                        extra_body={"chat_template_kwargs":{"thinking":False}},
                         stream=False
                     )
                     ref_reply = completion.choices[0].message.content.strip()
