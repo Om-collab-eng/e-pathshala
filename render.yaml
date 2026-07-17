@@ -1,6 +1,6 @@
-database:
-  name: librika-storage
-  plan: free
+databases:
+  - name: librika-storage
+    plan: free
 
 services:
   # 1. Main Backend (Python Flask App)

@@ -360,6 +360,10 @@ class PooledPostgresConnectionWrapper(PostgresConnectionWrapper):
                 pass
             self._pool.put(self.conn)
 
+    def __del__(self):
+        if not self._closed:
+            self.close()
+
 # Proxy connect function
 def connect(database, *args, **kwargs):
     global _pg_pool
@@ -370,7 +374,7 @@ def connect(database, *args, **kwargs):
     if _pg_pool is None:
         with _pg_pool_lock:
             if _pg_pool is None:
-                _pg_pool = PostgresConnectionPool(DATABASE_URL, max_size=3)
+                _pg_pool = PostgresConnectionPool(DATABASE_URL, max_size=30)
                 
     raw_conn = _pg_pool.get()
     return PooledPostgresConnectionWrapper(raw_conn, _pg_pool)
