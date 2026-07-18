@@ -515,7 +515,8 @@
                             <div style="background: var(--sp-bg-light); border: 1px solid var(--sp-border); padding: 15px; border-radius: 12px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                     <div style="color: #fbbf24; font-size: 0.9rem;">
-                                        {% for i in range(review.rating) %}★{% endfor %}{% for i in range(5 - review.rating) %}☆{% endfor %}
+                                        {% set rating_val = (review.rating | int) if review.rating else 5 %}
+                                        {% for i in range(rating_val) %}★{% endfor %}{% for i in range(5 - rating_val) %}☆{% endfor %}
                                     </div>
                                     <span style="font-size: 0.7rem; color: var(--sp-text-muted); font-weight: 600;">{{ review.created_at }}</span>
                                 </div>

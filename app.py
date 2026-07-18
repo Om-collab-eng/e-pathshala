@@ -1494,13 +1494,34 @@ def check_session():
                 # Only prompt once or provide skip logic handled in the template
                 pass 
 
+def safe_parse_date(val):
+    if not val:
+        return None
+    from datetime import date, datetime
+    if isinstance(val, (datetime, date)):
+        return val
+    val_str = str(val).strip().split()[0].split('T')[0]
+    try:
+        return datetime.strptime(val_str, '%Y-%m-%d')
+    except Exception:
+        try:
+            return datetime.strptime(val_str, '%d/%m/%Y')
+        except Exception:
+            return None
+
 def calculate_fine(due_date_str):
-    due_date = datetime.strptime(due_date_str, '%Y-%m-%d')
+    due_date = safe_parse_date(due_date_str)
+    if not due_date:
+        return 0, False
+    from datetime import datetime
     today = datetime.now()
-    if today > due_date:
-        days_overdue = (today - due_date).days
+    due_date_only = due_date.date() if isinstance(due_date, datetime) else due_date
+    today_only = today.date()
+    if today_only > due_date_only:
+        days_overdue = (today_only - due_date_only).days
         return days_overdue * 5, True
     return 0, False
+
 
 @app.route('/demo-mode')
 def enter_demo():
@@ -3229,8 +3250,8 @@ def return_book(tx_id):
         
         # Calculate score points
         due_date_str = tx['due_date']
-        due_date = datetime.strptime(due_date_str, '%Y-%m-%d')
-        return_date = datetime.strptime(return_date_str, '%Y-%m-%d')
+        due_date = safe_parse_date(due_date_str)
+        return_date = safe_parse_date(return_date_str)
         
         # Check cooldown
         cooldown_applies = check_90_day_cooldown(conn, tx['user_id'], tx['book_id'], 'physical')
@@ -3238,8 +3259,14 @@ def return_book(tx_id):
         # Check minimum reading period eligibility
         book = conn.execute('SELECT pages, title FROM books WHERE id = ?', (tx['book_id'],)).fetchone()
         pages = book['pages'] or 120
-        issue_date = datetime.strptime(tx['issue_date'], '%Y-%m-%d')
-        days_kept = (return_date - issue_date).days
+        issue_date = safe_parse_date(tx['issue_date'])
+        
+        # Ensure proper comparison of date objects
+        due_date_only = due_date.date() if isinstance(due_date, datetime) else due_date
+        return_date_only = return_date.date() if isinstance(return_date, datetime) else return_date
+        issue_date_only = issue_date.date() if isinstance(issue_date, datetime) else issue_date
+        days_kept = (return_date_only - issue_date_only).days if (return_date_only and issue_date_only) else 0
+        
         
         meets_min_period = True
         if pages < 100 and days_kept < 2:
@@ -3513,12 +3540,15 @@ def get_acquisition(acq_id):
             return jsonify({'status': 'error', 'message': 'Acquisition not found'}), 404
             
         items = conn.execute('''
-            SELECT DISTINCT ON (ai.id) ai.*, b.publisher, b.edition, b.ddc, b.category, b.book_type, b.subject, b.language, BC.shelf, BC.rack
+            SELECT ai.*, b.publisher, b.edition, b.ddc, b.category, b.book_type, b.subject, b.language, BC.shelf, BC.rack
             FROM acquisition_items ai
             LEFT JOIN books b ON ai.book_id = b.id
-            LEFT JOIN book_copies BC ON BC.book_id = b.id AND BC.acquisition_id = ai.acquisition_id
+            LEFT JOIN (
+                SELECT book_id, acquisition_id, MIN(shelf) as shelf, MIN(rack) as rack
+                FROM book_copies
+                GROUP BY book_id, acquisition_id
+            ) BC ON BC.book_id = b.id AND BC.acquisition_id = ai.acquisition_id
             WHERE ai.acquisition_id = ?
-            ORDER BY ai.id
         ''', (acq_id,)).fetchall()
         
         items_list = []
@@ -4084,9 +4114,14 @@ def student_panel():
         total_fine += fine
         
         # Calculate days until due
-        due_date = datetime.strptime(tx['due_date'], '%Y-%m-%d')
-        days_until_due = (due_date - datetime.now()).days
+        due_date = safe_parse_date(tx['due_date'])
+        if due_date:
+            due_date_only = due_date.date() if isinstance(due_date, datetime) else due_date
+            days_until_due = (due_date_only - datetime.now().date()).days
+        else:
+            days_until_due = 999
         tx['days_until_due'] = days_until_due
+        
         
         if is_overdue:
             overdue_books.append(tx)
@@ -6053,9 +6088,9 @@ def view_digital_content(content_id):
     ''', (content_id,)).fetchone()
     
     reviews = conn.execute('''
-        SELECT r.*, u.name as reviewer_name
+        SELECT r.*, COALESCE(u.name, 'Anonymous') as reviewer_name
         FROM content_reviews r
-        JOIN users u ON r.student_id = u.id
+        LEFT JOIN users u ON r.student_id = u.id
         WHERE r.content_id = ?
         ORDER BY r.created_at DESC
     ''', (content_id,)).fetchall()
@@ -6168,10 +6203,31 @@ def api_report_content():
     if 'user_id' not in session: return {"status": "error"}
     data = request.json
     conn = get_db_connection()
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+    
+    # Insert report
     conn.execute('''
         INSERT INTO content_reports (content_id, reported_by, reason, school_code, created_at)
         VALUES (?, ?, ?, ?, ?)
-    ''', (data['content_id'], session['user_id'], data['reason'], session.get('school_code'), datetime.now().strftime('%Y-%m-%d %H:%M')))
+    ''', (data['content_id'], session['user_id'], data['reason'], session.get('school_code'), now_str))
+    
+    # Fetch content details
+    content = conn.execute('SELECT title FROM digital_content WHERE id = ?', (data['content_id'],)).fetchone()
+    content_title = content['title'] if content else f"ID {data['content_id']}"
+    
+    # Fetch reporter details
+    user = conn.execute('SELECT name FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    reporter_name = user['name'] if user else f"User ID {session['user_id']}"
+    
+    # Send notification to super-admins and super-super-admins
+    admins = conn.execute("SELECT id FROM users WHERE role IN ('super_admin', 'super_super_admin')").fetchall()
+    msg = f"🚩 REPORT: '{content_title}' has been reported by {reporter_name} for: {data['reason']}"
+    for admin in admins:
+        conn.execute('''
+            INSERT INTO notifications (user_id, message, type, is_read, created_at, school_code)
+            VALUES (?, ?, 'report', 0, ?, 'GLOBAL')
+        ''', (admin['id'], msg, now_str))
+        
     conn.commit()
     conn.close()
     return {"status": "success"}
@@ -8731,9 +8787,14 @@ def is_transaction_eligible_for_quiz(tx, book):
     if not tx['return_date'] or tx['return_date'] == 'LOST':
         return False, "Book is not returned yet."
     
-    issue_date = datetime.strptime(tx['issue_date'], '%Y-%m-%d')
-    return_date = datetime.strptime(tx['return_date'], '%Y-%m-%d')
-    days_kept = (return_date - issue_date).days
+    issue_date = safe_parse_date(tx['issue_date'])
+    return_date = safe_parse_date(tx['return_date'])
+    if not issue_date or not return_date:
+        return False, "Invalid transaction dates."
+        
+    issue_date_only = issue_date.date() if isinstance(issue_date, datetime) else issue_date
+    return_date_only = return_date.date() if isinstance(return_date, datetime) else return_date
+    days_kept = (return_date_only - issue_date_only).days
     
     pages = book['pages'] or 120
     if pages < 100 and days_kept < 2:
@@ -8749,9 +8810,13 @@ def is_digital_eligible_for_quiz(progress):
     if not progress['started_reading_at']:
         return False, "Not started reading."
     
-    start_date = datetime.strptime(progress['started_reading_at'].split()[0], '%Y-%m-%d')
-    now_date = datetime.strptime(datetime.now().strftime('%Y-%m-%d'), '%Y-%m-%d')
-    days_reading = (now_date - start_date).days
+    start_date = safe_parse_date(progress['started_reading_at'])
+    if not start_date:
+        return False, "Invalid starting date."
+        
+    start_date_only = start_date.date() if isinstance(start_date, datetime) else start_date
+    now_date = datetime.now().date()
+    days_reading = (now_date - start_date_only).days
     
     pages = progress['total_pages'] or 1
     if pages < 100 and days_reading < 2:
@@ -8913,7 +8978,7 @@ except Exception as e:
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 10000))
     debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
 

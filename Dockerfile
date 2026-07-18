@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PORT=5001
+ENV PORT=10000
 
 # Set work directory
 WORKDIR /app
@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY . /app/
 
 # Expose port
-EXPOSE 5001
+EXPOSE 10000
 
 # Start the application using server.py (waitress server)
 CMD ["python", "server.py"]
