@@ -3513,12 +3513,12 @@ def get_acquisition(acq_id):
             return jsonify({'status': 'error', 'message': 'Acquisition not found'}), 404
             
         items = conn.execute('''
-            SELECT ai.*, b.publisher, b.edition, b.ddc, b.category, b.book_type, b.subject, b.language, BC.shelf, BC.rack
+            SELECT DISTINCT ON (ai.id) ai.*, b.publisher, b.edition, b.ddc, b.category, b.book_type, b.subject, b.language, BC.shelf, BC.rack
             FROM acquisition_items ai
             LEFT JOIN books b ON ai.book_id = b.id
             LEFT JOIN book_copies BC ON BC.book_id = b.id AND BC.acquisition_id = ai.acquisition_id
             WHERE ai.acquisition_id = ?
-            GROUP BY ai.id
+            ORDER BY ai.id
         ''', (acq_id,)).fetchall()
         
         items_list = []
@@ -6193,10 +6193,44 @@ def digital_library_reader(content_id):
     if not content: return "Content not found", 404
     
     # If not a PDF, fall back to standard content view
-    if not content['file_url'].lower().endswith('.pdf'):
+    file_url = content['file_url'] or ''
+    if not file_url.lower().endswith('.pdf'):
         return redirect(f'/digital-library/content/{content_id}')
+    
+    # Use proxy URL to avoid CORS issues with PDF.js
+    proxy_url = f'/digital-library/pdf-proxy/{content_id}'
         
-    return render_template('reader.html', content=content, start_page=last_page)
+    return render_template('reader.html', content=content, start_page=last_page, proxy_url=proxy_url)
+
+@app.route('/digital-library/pdf-proxy/<int:content_id>')
+def pdf_proxy(content_id):
+    """Proxy PDF file through the server to avoid CORS issues in the browser PDF reader."""
+    if 'user_id' not in session:
+        return 'Unauthorized', 401
+    conn = get_db_connection()
+    content = conn.execute('SELECT file_url FROM digital_content WHERE id = ?', (content_id,)).fetchone()
+    conn.close()
+    if not content:
+        return 'Not found', 404
+    file_url = content['file_url']
+    try:
+        # If it's a relative/static path, serve directly from disk
+        if file_url.startswith('/static/'):
+            from flask import send_from_directory
+            rel_path = file_url[len('/static/'):]
+            static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+            return send_from_directory(static_dir, rel_path, mimetype='application/pdf')
+        # Otherwise fetch from remote URL and stream back
+        import requests as req_lib
+        r = req_lib.get(file_url, timeout=30, stream=True)
+        from flask import Response
+        def generate():
+            for chunk in r.iter_content(chunk_size=8192):
+                yield chunk
+        return Response(generate(), content_type='application/pdf',
+                       headers={'Content-Disposition': 'inline'})
+    except Exception as e:
+        return f'Error loading PDF: {str(e)}', 500
 
 @app.route('/api/save-progress', methods=['POST'])
 def api_save_progress():

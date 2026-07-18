@@ -105,8 +105,8 @@
 <div id="toast" class="toast">🔖 Progress Saved</div>
 
 <script>
-    // PDF.js setup
-    const url = '{{ content.file_url }}';
+    // PDF.js setup — use server proxy to avoid CORS issues
+    const url = '{{ proxy_url }}';
     const contentId = {{ content.id }};
     
     let pdfDoc = null,
