@@ -303,11 +303,39 @@
                     return;
                 }
                 
-                const title = scanData.title || "";
-                const author = scanData.author || "";
-                const isbn = scanData.isbn || "";
-                const publisher = scanData.publisher || "";
-                const description = scanData.description || "";
+                // If book already exists in library, offer to issue it directly
+                if (scanData.existing_book) {
+                    const book = scanData.existing_book;
+                    scanBtn.disabled = false;
+                    statusText.innerText = `Book found: "${book.title}"`;
+                    showModal(
+                        "Book Found in Library",
+                        `"${book.title}" by ${book.author} is already in your library (${book.available_copies} available). Issue it to ${studentName}?`,
+                        async () => {
+                            statusText.innerText = "Issuing book...";
+                            const issueRes = await fetch('/api/issue-scanned-book', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ student_id: studentId, book_id: book.id })
+                            });
+                            const issueData = await issueRes.json();
+                            if (issueData.success) {
+                                alert(issueData.message);
+                                window.location.reload();
+                            } else {
+                                alert(issueData.error);
+                            }
+                        }
+                    );
+                    return;
+                }
+                
+                const meta = scanData.metadata || {};
+                const title = meta.title || "";
+                const author = meta.author || "";
+                const isbn = meta.isbn || "";
+                const publisher = meta.publisher || "";
+                const description = meta.description || "";
                 
                 if (!title || !author) {
                     statusText.innerText = "AI could not identify Title/Author. Please try again.";

@@ -1124,12 +1124,9 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         reader.onload = (e) => {
             document.getElementById('frontPreview').src = e.target.result;
             document.getElementById('previewArea').style.display = 'block';
-            
-            // Auto trigger back cover selection
-            showToast("Front Cover selected! Now upload the Back Cover.", "info");
-            setTimeout(() => {
-                document.getElementById('backInput').click();
-            }, 800);
+            // Enable process button once front cover is selected — back is optional
+            document.getElementById('processBtn').disabled = false;
+            showToast("Front Cover selected! You can now scan or optionally add Back Cover too.", "info");
         };
         reader.readAsDataURL(file);
     }
@@ -1144,9 +1141,8 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         reader.onload = (e) => {
             document.getElementById('backPreview').src = e.target.result;
             document.getElementById('previewArea').style.display = 'block';
-            if (frontFile && backFile) {
-                document.getElementById('processBtn').disabled = false;
-            }
+            showToast("Back Cover added!", "success");
+            // Button already enabled from front cover — no change needed
         };
         reader.readAsDataURL(file);
     }
