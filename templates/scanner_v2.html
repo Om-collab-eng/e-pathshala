@@ -616,7 +616,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
                                 <select id="f_acquisition" class="ld-input" style="border-color: var(--lp-mid);">
                                     <option value="">-- Direct Cataloging (Non-Acquisition Book) --</option>
                                     {% for a in acquisitions %}
-                                    <option value="{{ a.id }}">{{ a.bill_number }} ({{ a.bill_date }})</option>
+                                    <option value="{{ a.id }}">Bill #{{ a.bill_number }} — {{ a.vendor_name }} ({{ a.bill_date }})</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -1216,7 +1216,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
             if (scanData.existing_book) {
                 showExistingBookPopup(scanData.existing_book, scanData.acquisition);
             } else {
-                populateReviewScreen(meta, persistentCoverUrl);
+                populateReviewScreen(meta, persistentCoverUrl, scanData.acquisition);
             }
 
         } catch (err) {
@@ -1229,14 +1229,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 
     let coverImageUrl = "";
 
-    function populateReviewScreen(json, coverUrl) {
+    function populateReviewScreen(json, coverUrl, acquisition = null) {
         coverImageUrl = coverUrl;
         document.getElementById('uploadSection').style.display = 'none';
         document.getElementById('reviewSection').style.display = 'block';
         adjustResponsiveLayout();
 
         document.getElementById('reviewThumbnail').src = coverUrl;
-        document.getElementById('rawOcr').value = json.description || "NVIDIA Vision AI analyzed";
+        document.getElementById('rawOcr').value = json.description || "AI analyzed";
 
         // Map fields
         const map = {
@@ -1265,6 +1265,21 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         }
         if (json.tags) {
             document.getElementById('f_tags').value = Array.isArray(json.tags) ? json.tags.join(', ') : json.tags;
+        }
+
+        // Auto-select acquisition if AI detected one — user can still change it
+        const acqSelect = document.getElementById('f_acquisition');
+        if (acqSelect && acquisition && acquisition.acq_id) {
+            acqSelect.value = acquisition.acq_id;
+            if (acqSelect.value) {
+                // Highlight to show it was auto-detected
+                acqSelect.style.borderColor = '#22c55e';
+                acqSelect.title = `Auto-detected from Bill #${acquisition.bill_number} — ${acquisition.vendor_name || ''}`;
+                showToast(`🟢 Linked to acquisition: Bill #${acquisition.bill_number}`, "success");
+            } else {
+                // acq_id not found in dropdown options — reset
+                acqSelect.value = '';
+            }
         }
     }
 

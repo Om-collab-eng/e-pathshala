@@ -5819,7 +5819,19 @@ JSON Schema:
 @require_permission('canUseAIScanner')
 def smart_scanner():
     if session.get('role') not in ['admin', 'demo_admin']: return redirect('/login')
-    return render_template('scanner_v2.html')
+    s_code = session.get('school_code')
+    conn = get_db_connection()
+    # Fetch active (unfinalized) acquisitions so admin can link scanned books
+    acquisitions = conn.execute('''
+        SELECT a.id, a.bill_number, a.bill_date, v.name as vendor_name
+        FROM acquisitions a
+        JOIN vendors v ON a.vendor_id = v.id
+        WHERE a.school_code = ?
+        ORDER BY a.created_at DESC
+        LIMIT 50
+    ''', (s_code,)).fetchall()
+    conn.close()
+    return render_template('scanner_v2.html', acquisitions=acquisitions)
 
 @app.route('/admin/api/upload-cover', methods=['POST'])
 @require_permission('canUseAIScanner')
