@@ -1277,6 +1277,9 @@ def init_db():
     
     conn.execute('CREATE INDEX IF NOT EXISTS idx_digital_content_school ON digital_content(school_code)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_digital_content_student ON digital_content(student_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_reading_progress_sub ON reading_progress(student_id, content_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_sub ON quiz_attempts(user_id, book_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_book_reviews_sub ON book_reviews(user_id, book_id)')
     
     conn.execute('CREATE INDEX IF NOT EXISTS idx_logs_school ON logs(school_code)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_invoices_school ON invoices(school_code)')

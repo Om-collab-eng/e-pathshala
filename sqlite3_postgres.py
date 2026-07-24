@@ -371,7 +371,20 @@ class PostgresConnectionPool:
         )
 
     def get(self):
-        return self._pool.getconn()
+        conn = self._pool.getconn()
+        try:
+            if conn.closed != 0:
+                self._pool.putconn(conn, close=True)
+                conn = self._pool.getconn()
+            else:
+                conn.poll()
+        except Exception:
+            try:
+                self._pool.putconn(conn, close=True)
+            except Exception:
+                pass
+            conn = self._pool.getconn()
+        return conn
 
     def put(self, conn):
         try:
