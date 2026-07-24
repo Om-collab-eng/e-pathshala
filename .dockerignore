@@ -12,17 +12,17 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Node.js
+# Node.js (not needed for Python app)
 node_modules/
 package-lock.json
 
-# Local Databases (these will be mapped via volumes)
+# Local Databases (production uses PostgreSQL via DATABASE_URL)
 *.db
 *.db-journal
 *.db-shm
 *.db-wal
 
-# Environments and Secrets
+# Environments and Secrets (injected via Railway env vars)
 .env
 firebase-key.json
 cookies.txt
@@ -38,3 +38,13 @@ static/barcodes/*
 ocr-scanner-system/uploads/*
 ocr-scanner-system/library_ocr.db
 ocr-scanner-system/node_modules/
+
+# Android build artifacts
+android/
+android-app/
+
+# Large PDF docs
+*.pdf
+
+# Capacitor / APK build files
+static/Librika.apk
