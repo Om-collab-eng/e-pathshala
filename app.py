@@ -1247,7 +1247,7 @@ def init_db():
                     UNIQUE(user_id, chapter_id))''')
     
     # Automated Migrations for Main DB
-    for table, col in [('users', 'session_token'), ('users', 'admission_no'), ('books', 'genre'), 
+    for table, col in [('users', 'session_token'), ('users', 'fcm_token'), ('users', 'admission_no'), ('books', 'genre'), 
                         ('users', 'school_code'), ('books', 'school_code'), ('transactions', 'school_code'),
                         ('pending_requests', 'phone'), ('pending_requests', 'password'),
                         ('books', 'cover_url'), ('books', 'description'), ('books', 'shelf_location'),
@@ -8936,6 +8936,204 @@ def mark_transaction_lost(tx_id):
         flash("Transaction not found or already returned.", "error")
     conn.close()
     return redirect('/admin')
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MOBILE APK REST API & FIREBASE PUSH NOTIFICATION ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_user_from_auth_header(conn=None):
+    """
+    Authenticate user from Bearer Token in Authorization header or session.
+    Returns user dict or None.
+    """
+    auth_header = request.headers.get('Authorization', '')
+    token = None
+    if auth_header.startswith('Bearer '):
+        token = auth_header.split(' ', 1)[1].strip()
+    elif 'token' in request.args:
+        token = request.args.get('token')
+        
+    close_conn = False
+    if not conn:
+        conn = get_db_connection()
+        close_conn = True
+        
+    try:
+        if token:
+            user = conn.execute('SELECT * FROM users WHERE session_token = ? AND (is_banned IS NULL OR is_banned != 1 AND is_banned != "1")', (token,)).fetchone()
+            if user:
+                return dict(user)
+                
+        if 'user_id' in session:
+            user = conn.execute('SELECT * FROM users WHERE id = ? AND (is_banned IS NULL OR is_banned != 1 AND is_banned != "1")', (session['user_id'],)).fetchone()
+            if user:
+                return dict(user)
+    finally:
+        if close_conn:
+            conn.close()
+    return None
+
+@app.route('/api/mobile/login', methods=['POST'])
+def api_mobile_login():
+    data = request.json or request.form or {}
+    username = str(data.get('username') or data.get('phone') or data.get('admission_no') or '').strip()
+    password = str(data.get('password') or '').strip()
+    school_code = str(data.get('school_code') or '').strip().upper()
+    fcm_token = str(data.get('fcm_token') or '').strip()
+
+    if not username or not password:
+        return jsonify({"success": False, "error": "Username/Phone/Admission No and password required."}), 400
+
+    conn = get_db_connection()
+    try:
+        user = conn.execute('''SELECT * FROM users 
+                                WHERE (phone = ? OR admission_no = ?) 
+                                AND password = ? 
+                                AND (school_code = ? OR ? = '')''', 
+                            (username, username, password, school_code, school_code)).fetchone()
+        if not user:
+            return jsonify({"success": False, "error": "Invalid credentials or school code."}), 401
+            
+        user_dict = dict(user)
+        if str(user_dict.get('is_banned')) in ['1', 'True']:
+            return jsonify({"success": False, "error": "Account is suspended."}), 403
+            
+        new_token = str(uuid.uuid4())
+        if fcm_token:
+            conn.execute('UPDATE users SET session_token = ?, fcm_token = ? WHERE id = ?', (new_token, fcm_token, user_dict['id']))
+        else:
+            conn.execute('UPDATE users SET session_token = ? WHERE id = ?', (new_token, user_dict['id']))
+        conn.commit()
+
+        return jsonify({
+            "success": True,
+            "token": new_token,
+            "user": {
+                "id": user_dict['id'],
+                "name": user_dict.get('name'),
+                "role": user_dict.get('role'),
+                "school_code": user_dict.get('school_code'),
+                "admission_no": user_dict.get('admission_no'),
+                "class": user_dict.get('class'),
+                "email": user_dict.get('email')
+            }
+        })
+    finally:
+        conn.close()
+
+@app.route('/api/mobile/register-fcm-token', methods=['POST'])
+def api_mobile_register_fcm_token():
+    conn = get_db_connection()
+    try:
+        user = get_user_from_auth_header(conn)
+        if not user:
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+        data = request.json or request.form or {}
+        fcm_token = data.get('fcm_token', '').strip()
+        if not fcm_token:
+            return jsonify({"success": False, "error": "FCM token is required."}), 400
+
+        conn.execute('UPDATE users SET fcm_token = ? WHERE id = ?', (fcm_token, user['id']))
+        conn.commit()
+        return jsonify({"success": True, "message": "FCM token registered successfully."})
+    finally:
+        conn.close()
+
+@app.route('/api/mobile/dashboard', methods=['GET'])
+def api_mobile_dashboard():
+    conn = get_db_connection()
+    try:
+        user = get_user_from_auth_header(conn)
+        if not user:
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+        user_id = user['id']
+        s_code = user.get('school_code', 'DEFAULT')
+
+        txs = conn.execute('SELECT t.*, b.title, b.author, b.cover_url FROM transactions t JOIN books b ON b.id = t.book_id WHERE t.user_id = ? AND t.return_date IS NULL', (user_id,)).fetchall()
+        total_issued = conn.execute('SELECT COUNT(*) FROM transactions WHERE user_id = ?', (user_id,)).fetchone()[0]
+        total_books_read = conn.execute('SELECT COUNT(*) FROM transactions WHERE user_id = ? AND return_date IS NOT NULL', (user_id,)).fetchone()[0]
+        
+        due_soon = 0
+        overdue_count = 0
+        for tx in txs:
+            fine, is_overdue = calculate_fine(tx['due_date'])
+            if is_overdue:
+                overdue_count += 1
+            else:
+                due_date = safe_parse_date(tx['due_date'])
+                if due_date:
+                    due_date_only = due_date.date() if isinstance(due_date, datetime) else due_date
+                    days_until_due = (due_date_only - datetime.now().date()).days
+                    if 0 <= days_until_due <= 7:
+                        due_soon += 1
+
+        stats = {
+            'total_issued': total_issued,
+            'currently_borrowed': len(txs),
+            'due_soon_count': due_soon,
+            'overdue_count': overdue_count,
+            'total_read': total_books_read
+        }
+
+        # Borrowed transactions
+        transactions = [dict(r) for r in txs]
+
+        # Recommended books
+        rec_rows = conn.execute('SELECT id, title, author, cover_url, genre FROM books WHERE school_code = ? OR school_code = "GLOBAL" LIMIT 6', (s_code,)).fetchall()
+        recommended = [dict(r) for r in rec_rows]
+
+        return jsonify({
+            "success": True,
+            "user": {
+                "id": user['id'],
+                "name": user.get('name'),
+                "role": user.get('role'),
+                "school_code": user.get('school_code'),
+                "class": user.get('class')
+            },
+            "stats": stats,
+            "active_transactions": transactions,
+            "recommended_books": recommended
+        })
+    finally:
+        conn.close()
+
+def send_push_notification(user_id, title, body, extra_data=None):
+    """
+    Triggers a Firebase Cloud Messaging push notification to the specified user's device.
+    """
+    conn = get_db_connection()
+    try:
+        user = conn.execute('SELECT fcm_token FROM users WHERE id = ?', (user_id,)).fetchone()
+        if not user or not user['fcm_token']:
+            return False
+            
+        fcm_token = user['fcm_token']
+        fcm_key = os.environ.get('FCM_SERVER_KEY', '').strip()
+        if fcm_key:
+            headers = {
+                "Authorization": f"key={fcm_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "to": fcm_token,
+                "notification": {
+                    "title": title,
+                    "body": body,
+                    "sound": "default"
+                },
+                "data": extra_data or {}
+            }
+            try:
+                requests.post("https://fcm.googleapis.com/fcm/send", json=payload, headers=headers, timeout=5)
+                return True
+            except Exception as e:
+                print(f"[FCM Push Error for user {user_id}]:", e)
+    finally:
+        conn.close()
+    return False
 
 # Ensure database is initialized even when run via Gunicorn / release commands
 try:
