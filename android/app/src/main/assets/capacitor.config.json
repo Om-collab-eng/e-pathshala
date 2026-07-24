@@ -4,7 +4,7 @@
 	"webDir": "static",
 	"bundledWebRuntime": false,
 	"server": {
-		"url": "https://diligence-driving-washout.ngrok-free.dev",
+		"url": "https://e-pathshala-kg86.onrender.com",
 		"cleartext": true
 	},
 	"plugins": {
