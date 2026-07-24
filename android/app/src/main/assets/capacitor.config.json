@@ -1,0 +1,19 @@
+{
+	"appId": "in.librika.app",
+	"appName": "Librika",
+	"webDir": "static",
+	"bundledWebRuntime": false,
+	"server": {
+		"url": "https://diligence-driving-washout.ngrok-free.dev",
+		"cleartext": true
+	},
+	"plugins": {
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		}
+	}
+}
