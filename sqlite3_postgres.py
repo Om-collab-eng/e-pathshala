@@ -109,17 +109,33 @@ def sqlite_to_postgres_query(query_str):
     sql = re.sub(r'(?i)\bAUTOINCREMENT\b', '', sql)
     
     # SQLite sqlite_master -> information_schema.tables
-    sql = re.sub(r'(?i)\bSELECT\s+name\s+FROM\s+sqlite_master\b', "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public'", sql)
-    sql = re.sub(
-        r'(?i)\bFROM\s+sqlite_master\s+WHERE\s+type\s*=\s*[\'"]table[\'"]\s+AND\s+name\s*=\s*([^\s\)]+)', 
-        r"FROM information_schema.tables WHERE table_schema = 'public' AND table_name = \1", 
-        sql
-    )
-    sql = re.sub(
-        r'(?i)\bFROM\s+sqlite_master\s+WHERE\s+type\s*=\s*[\'"]table[\'"]', 
-        "FROM information_schema.tables WHERE table_schema = 'public'", 
-        sql
-    )
+    if "sqlite_master" in sql.lower():
+        sql = re.sub(
+            r'(?i)\bSELECT\s+name\s+FROM\s+sqlite_master\s+WHERE\s+type\s*=\s*[\'"]table[\'"]', 
+            "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public'", 
+            sql
+        )
+        sql = re.sub(
+            r'(?i)\bFROM\s+sqlite_master\s+WHERE\s+type\s*=\s*[\'"]table[\'"]\s+AND\s+name\s*=\s*([^\s\)]+)', 
+            r"FROM information_schema.tables WHERE table_schema = 'public' AND table_name = \1", 
+            sql
+        )
+        sql = re.sub(
+            r'(?i)\bFROM\s+sqlite_master\s+WHERE\s+type\s*=\s*[\'"]table[\'"]', 
+            "FROM information_schema.tables WHERE table_schema = 'public'", 
+            sql
+        )
+        sql = re.sub(
+            r'(?i)\bSELECT\s+name\s+FROM\s+sqlite_master\b', 
+            "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public'", 
+            sql
+        )
+        sql = re.sub(
+            r'(?i)\bsqlite_master\b', 
+            "information_schema.tables", 
+            sql
+        )
+        sql = re.sub(r'(?i)\bWHERE\s+table_schema\s*=\s*\'public\'\s+WHERE\b', "WHERE table_schema = 'public' AND", sql)
     
     # Translate INSERT OR REPLACE into ON CONFLICT UPDATE for settings
     if "INSERT OR REPLACE INTO settings" in sql:
@@ -179,11 +195,17 @@ class Row:
     def keys(self):
         return self._keys
 
+    def values(self):
+        return self._values
+
+    def items(self):
+        return list(zip(self._keys, self._values))
+
     def __len__(self):
         return len(self._values)
 
     def __iter__(self):
-        return iter(self._values)
+        return iter(zip(self._keys, self._values))
         
     def __repr__(self):
         return f"<Row {dict(zip(self._keys, self._values))}>"
@@ -276,13 +298,28 @@ class PostgresCursorWrapper:
         
     @property
     def lastrowid(self):
-        # Postgres uses RETURNING to get insert IDs, but for standard SERIAL primary keys,
-        # we can query lastval() if supported, or fetch it. Since Flask app doesn't rely
-        # heavily on lastrowid in SQLite code, we return cursor.lastrowid or 0.
+        # Safely fetch lastval inside a savepoint so failure doesn't abort the transaction
+        conn = self.conn_wrapper.conn
+        has_sp = False
         try:
-            self.cursor.execute("SELECT lastval()")
-            return self.cursor.fetchone()[0]
+            with conn.cursor() as tx_cur:
+                tx_cur.execute("SAVEPOINT pg_lastrowid_sp")
+            has_sp = True
+            with conn.cursor() as tx_cur:
+                tx_cur.execute("SELECT lastval()")
+                res = tx_cur.fetchone()[0]
+            if has_sp:
+                with conn.cursor() as tx_cur:
+                    tx_cur.execute("RELEASE SAVEPOINT pg_lastrowid_sp")
+            return res
         except Exception:
+            if has_sp:
+                try:
+                    with conn.cursor() as tx_cur:
+                        tx_cur.execute("ROLLBACK TO SAVEPOINT pg_lastrowid_sp")
+                        tx_cur.execute("RELEASE SAVEPOINT pg_lastrowid_sp")
+                except Exception:
+                    pass
             return 0
         
     def close(self):
@@ -355,9 +392,18 @@ class PooledPostgresConnectionWrapper(PostgresConnectionWrapper):
         if not self._closed:
             self._closed = True
             try:
-                self.conn.commit()
+                if self.conn.status == psycopg2.extensions.STATUS_IN_TRANSACTION:
+                    try:
+                        self.conn.commit()
+                    except Exception:
+                        self.conn.rollback()
+                else:
+                    self.conn.rollback()
             except Exception:
-                pass
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
             self._pool.put(self.conn)
 
     def __del__(self):

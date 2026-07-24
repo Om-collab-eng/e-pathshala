@@ -739,7 +739,8 @@
         }
 
         .portal-wrapper {
-            max-width: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
             margin: 0 !important;
             height: auto !important;
             min-height: 100vh !important;
@@ -750,10 +751,13 @@
         }
 
         .portal-main {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            flex: 1 1 0% !important;
+            min-width: 0 !important;
+            width: calc(100% - 260px) !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 100vh !important;
             background-color: var(--sp-bg-light);
             overflow-y: auto;
         }

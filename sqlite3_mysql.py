@@ -198,11 +198,17 @@ class Row:
     def keys(self):
         return self._keys
 
+    def values(self):
+        return self._values
+
+    def items(self):
+        return list(zip(self._keys, self._values))
+
     def __len__(self):
         return len(self._values)
 
     def __iter__(self):
-        return iter(self._values)
+        return iter(zip(self._keys, self._values))
         
     def __repr__(self):
         return f"<Row {dict(zip(self._keys, self._values))}>"

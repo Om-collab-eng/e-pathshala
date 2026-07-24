@@ -25,8 +25,16 @@ import requests
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 app.permanent_session_lifetime = timedelta(days=30)
+app.config['MAX_CONTENT_LENGTH'] = 25 * 1024 * 1024  # 25MB Maximum upload size
 app.register_blueprint(data_bp, url_prefix='/data')
 app.register_blueprint(billing_bp)
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({"error": "File size exceeds the 25MB limit. Please upload a smaller file."}), 413
+    flash("File size exceeds the 25MB limit. Please upload a smaller file.", "error")
+    return redirect(request.referrer or '/')
 
 # Custom static file routes for Render persistent storage
 if os.environ.get('PERSISTENT_STORAGE_DIR'):
@@ -193,31 +201,34 @@ def delete_from_supabase(remote_path):
         return False
 
 if CLOUDINARY_CONFIGURED:
-    # Restoring digital content on startup
-    try:
-        remote_files = list_supabase_files("backups/digital_content")
-        for filename in remote_files:
-            if filename != ".emptyFolderPlaceholder" and filename:
-                remote_path = f"backups/digital_content/{filename}"
-                local_path = os.path.join(DIGITAL_CONTENT_DIR, filename)
-                if not os.path.exists(local_path):
-                    download_from_supabase(remote_path, local_path)
-        print("Restored digital content from Cloudinary.")
-    except Exception as files_err:
-        print(f"Warning: Could not restore digital content from Cloudinary: {files_err}")
+    def _async_cloudinary_restore():
+        # Restoring digital content on startup
+        try:
+            remote_files = list_supabase_files("backups/digital_content")
+            for filename in remote_files:
+                if filename != ".emptyFolderPlaceholder" and filename:
+                    remote_path = f"backups/digital_content/{filename}"
+                    local_path = os.path.join(DIGITAL_CONTENT_DIR, filename)
+                    if not os.path.exists(local_path):
+                        download_from_supabase(remote_path, local_path)
+            print("Restored digital content from Cloudinary.")
+        except Exception as files_err:
+            print(f"Warning: Could not restore digital content from Cloudinary: {files_err}")
 
-    # Restoring uploaded covers on startup
-    try:
-        remote_uploads = list_supabase_files("backups/uploads")
-        for filename in remote_uploads:
-            if filename != ".emptyFolderPlaceholder" and filename:
-                remote_path = f"backups/uploads/{filename}"
-                local_path = os.path.join(UPLOADS_DIR, filename)
-                if not os.path.exists(local_path):
-                    download_from_supabase(remote_path, local_path)
-        print("Restored uploaded covers from Cloudinary.")
-    except Exception as uploads_err:
-        print(f"Warning: Could not restore uploads from Cloudinary: {uploads_err}")
+        # Restoring uploaded covers on startup
+        try:
+            remote_uploads = list_supabase_files("backups/uploads")
+            for filename in remote_uploads:
+                if filename != ".emptyFolderPlaceholder" and filename:
+                    remote_path = f"backups/uploads/{filename}"
+                    local_path = os.path.join(UPLOADS_DIR, filename)
+                    if not os.path.exists(local_path):
+                        download_from_supabase(remote_path, local_path)
+            print("Restored uploaded covers from Cloudinary.")
+        except Exception as uploads_err:
+            print(f"Warning: Could not restore uploads from Cloudinary: {uploads_err}")
+
+    threading.Thread(target=_async_cloudinary_restore, daemon=True).start()
 
 
     # Register lifecycle hook (background sync after POST/PUT/DELETE)
@@ -497,11 +508,70 @@ def update_score(conn, user_id, score_type, points, description=""):
     
     check_and_award_badges(conn, user_id)
 
-def ai_generate_quiz(title, author):
-    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
-    if nvidia_key:
-        nvidia_key = nvidia_key.strip()
+def call_fast_ai(prompt, system_prompt=None, temperature=0.6, max_tokens=4096):
+    """
+    Fast AI completion helper using OpenRouter fast models (gpt-4o-mini, gemini-2.5-flash-lite, deepseek-chat)
+    with fallback to NVIDIA API.
+    """
+    openrouter_key = os.environ.get('OPENROUTER_API_KEY', '').strip()
+    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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').strip()
     
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    # Fast models on OpenRouter
+    fast_models = [
+        "openai/gpt-4o-mini",
+        "google/gemini-2.5-flash-lite",
+        "deepseek/deepseek-chat"
+    ]
+    
+    if openrouter_key:
+        headers = {
+            "Authorization": f"Bearer {openrouter_key}",
+            "Content-Type": "application/json"
+        }
+        for m in fast_models:
+            try:
+                payload = {
+                    "model": m,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                }
+                r = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers, timeout=12)
+                if r.status_code == 200:
+                    res_data = r.json()
+                    choices = res_data.get('choices', [])
+                    if choices:
+                        content = choices[0]['message'].get('content')
+                        if content and content.strip():
+                            return content.strip()
+            except Exception as e:
+                print(f"OpenRouter Model {m} Error:", e)
+
+    if nvidia_key:
+        try:
+            from openai import OpenAI
+            client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=nvidia_key)
+            completion = client.chat.completions.create(
+                model="meta/llama-3.3-70b-instruct",
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=12
+            )
+            content = completion.choices[0].message.content
+            if content and content.strip():
+                return content.strip()
+        except Exception as e:
+            print("NVIDIA Fallback AI Error:", e)
+
+    raise RuntimeError("AI service unavailable or timed out.")
+
+def ai_generate_quiz(title, author):
     prompt = f"""Generate a 5-question multiple-choice quiz about the book "{title}" by "{author}" suitable for school students.
 Each question must be designed to verify that the student actually read and comprehended the book (avoid questions that can be guessed easily).
 Format the output as a valid JSON array of objects. Do NOT include markdown code blocks (like ```json), thinking tags, or other text outside the JSON. Return only the raw JSON array.
@@ -516,20 +586,7 @@ Example structure:
 ]"""
     
     try:
-        from openai import OpenAI
-        client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=nvidia_key
-        )
-        completion = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.6,
-            top_p=0.7,
-            max_tokens=4096,
-            stream=False
-        )
-        content = completion.choices[0].message.content.strip()
+        content = call_fast_ai(prompt, temperature=0.4)
         if content.startswith("```"):
             lines = content.splitlines()
             if lines[0].startswith("```"):
@@ -597,11 +654,6 @@ def clean_chapter_name(filename):
     return cleaned.title()
 
 def ai_grade_short_answer(question, suggested_answer, student_answer):
-    import os
-    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
-    if nvidia_key:
-        nvidia_key = nvidia_key.strip()
-    
     prompt = f"""You are a school teacher grading a short answer question.
 Question: "{question}"
 Expected Correct Answer: "{suggested_answer}"
@@ -611,19 +663,8 @@ Grade the student's answer as either "correct" (if it captures the key concept/m
 Return ONLY the word "correct" or "incorrect". Do not include any other text or reasoning.
 """
     try:
-        from openai import OpenAI
-        client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=nvidia_key
-        )
-        completion = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,
-            max_tokens=10,
-            stream=False
-        )
-        grade = completion.choices[0].message.content.strip().lower()
+        content = call_fast_ai(prompt, temperature=0.1)
+        grade = content.strip().lower()
         if 'correct' in grade and 'incorrect' not in grade:
             return 'correct'
     except Exception as e:
@@ -631,11 +672,6 @@ Return ONLY the word "correct" or "incorrect". Do not include any other text or 
     return 'incorrect'
 
 def ai_process_chapter(chapter_title, chapter_text):
-    import os, json
-    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
-    if nvidia_key:
-        nvidia_key = nvidia_key.strip()
-        
     prompt = f"""You are an expert educator. Analyze the following chapter text of "{chapter_title}" and generate study materials.
 Return ONLY a valid JSON object. Do NOT include markdown code blocks (like ```json), thinking tags, or other text outside the JSON. Return only the raw JSON.
 
@@ -692,20 +728,7 @@ Here is the chapter text:
 """
 
     try:
-        from openai import OpenAI
-        client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=nvidia_key
-        )
-        completion = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.4,
-            top_p=0.7,
-            max_tokens=4096,
-            stream=False
-        )
-        content = completion.choices[0].message.content.strip()
+        content = call_fast_ai(prompt, temperature=0.4)
         if content.startswith("```"):
             lines = content.splitlines()
             if lines[0].startswith("```"):
@@ -713,10 +736,13 @@ Here is the chapter text:
             if lines[-1].startswith("```"):
                 lines = lines[:-1]
             content = "\n".join(lines).strip()
+        if "<thought>" in content and "</thought>" in content:
+            content = content.split("</thought>")[1].strip()
             
         parsed = json.loads(content)
         return parsed
     except Exception as e:
+        print("AI chapter processing failed:", e)
         print("AI Chapter processing failed:", e)
         # Fallback dictionary
         fallback = {
@@ -2152,6 +2178,9 @@ def global_library_add_digital_book():
             cover_url = f"/static/uploads/{cover_filename}"
             
         if doc_file and doc_file.filename:
+            if doc_file.filename.lower().endswith('.zip'):
+                flash("ZIP files are not allowed. Please upload PDF, EPUB, DOC, or DOCX files up to 25MB.", "error")
+                return redirect_to_sa()
             doc_filename = f"d_global_{int(time.time())}_{secure_filename(doc_file.filename)}"
             doc_path = os.path.join(DIGITAL_CONTENT_DIR, doc_filename)
             doc_file.save(doc_path)
@@ -4309,30 +4338,11 @@ def student_browse():
         query += ' AND (title LIKE ? OR author LIKE ? OR subject LIKE ? OR genre LIKE ?)'
         params.extend([f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
         
+    # Physical library books catalog
     books_rows = conn.execute(query, params).fetchall()
     books = [dict(r) for r in books_rows]
     for b in books:
         b['book_type'] = 'physical'
-        
-    # Fetch global digital books to display in the main catalog
-    digital_query = '''
-        SELECT id, title, 'Manager' as author, category as genre, cover_url, 'GLOBAL' as school_code, 'digital' as book_type 
-        FROM digital_content 
-        WHERE school_code = "GLOBAL" AND status = "Published"
-    '''
-    digital_params = []
-    
-    if genre_filter:
-        digital_query += ' AND category = ?'
-        digital_params.append(genre_filter)
-        
-    if search_query and not ai_search:
-        digital_query += ' AND (title LIKE ? OR description LIKE ? OR subject LIKE ? OR category LIKE ?)'
-        digital_params.extend([f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
-        
-    digital_rows = conn.execute(digital_query, digital_params).fetchall()
-    for r in digital_rows:
-        books.append(dict(r))
         
     # Sort books alphabetically by title if not AI searching
     if not (search_query and ai_search):
@@ -4412,6 +4422,11 @@ def student_publish():
             cover_url = f"/static/uploads/{cover_filename}"
             
         if doc_file and doc_file.filename:
+            if doc_file.filename.lower().endswith('.zip'):
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({"error": "ZIP files are not allowed. Please upload PDF, EPUB, DOC, or DOCX files up to 25MB."}), 400
+                flash("ZIP files are not allowed. Please upload PDF, EPUB, DOC, or DOCX files up to 25MB.", "error")
+                return redirect('/student/my-publications')
             doc_filename = f"d_{user_id}_{int(time.time())}_{secure_filename(doc_file.filename)}"
             doc_path = os.path.join(DIGITAL_CONTENT_DIR, doc_filename)
             doc_file.save(doc_path)
@@ -5109,25 +5124,10 @@ def api_chat():
         finally:
             conn.close()
 
-    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
-    if nvidia_key:
-        nvidia_key = nvidia_key.strip()
-        
     try:
-        from openai import OpenAI
-        client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=nvidia_key
-        )
-        completion = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=messages,
-            temperature=0.6,
-            top_p=0.7,
-            max_tokens=4096,
-            stream=False
-        )
-        reply = completion.choices[0].message.content
+        last_msg = messages[-1].get('content', '') if messages else ''
+        system_prompt = "You are a helpful school AI tutor, librarian, and learning assistant."
+        reply = call_fast_ai(last_msg, system_prompt=system_prompt, temperature=0.7)
         return jsonify({"reply": reply})
     except Exception as e:
         return jsonify({"error": f"Failed to connect to AI: {str(e)}"}), 500
@@ -5266,20 +5266,7 @@ Books List:
 """
 
     try:
-        from openai import OpenAI
-        client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=nvidia_key
-        )
-        completion = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.6,
-            top_p=0.7,
-            max_tokens=4096,
-            stream=False
-        )
-        content = completion.choices[0].message.content.strip()
+        content = call_fast_ai(prompt, temperature=0.3)
             
         if "```json" in content:
             content = content.split("```json")[1].split("```")[0].strip()
@@ -5310,10 +5297,6 @@ def api_scan_ocr_text():
     if not ocr_text:
         return jsonify({"error": "No OCR text provided."}), 400
         
-    nvidia_key = os.environ.get('NVIDIA_API_KEY', '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')
-    if nvidia_key:
-        nvidia_key = nvidia_key.strip()
-        
     prompt = f"""Extract book details.
  
  Return JSON:
@@ -5332,22 +5315,7 @@ def api_scan_ocr_text():
  {ocr_text}
  """
     try:
-        from openai import OpenAI
-        client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=nvidia_key
-        )
-        completion = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.6,
-            top_p=0.7,
-            max_tokens=4096,
-            stream=False
-        )
-        ai_reply = completion.choices[0].message.content.strip()
+        ai_reply = call_fast_ai(prompt, temperature=0.3)
         
         # Parse JSON
         # cleanup markdown wrapping
@@ -5981,13 +5949,13 @@ def digital_library():
     ai_search = request.args.get('ai') == 'true'
     
     conn = get_db_connection()
-    # Fetch approved/published content with is_bookmarked field
+    # Fetch student & community publications (prioritizing student-authored works)
     query = '''
         SELECT d.*, u.name as student_name, u.class as student_class,
                (SELECT 1 FROM reading_progress rp WHERE rp.student_id = ? AND rp.content_id = d.id) as is_bookmarked
         FROM digital_content d
         LEFT JOIN users u ON d.student_id = u.id
-        WHERE (d.school_code = ? OR d.school_code = 'GLOBAL') AND d.status = 'Published'
+        WHERE d.status = 'Published' AND (d.school_code = ? OR d.school_code = 'GLOBAL' OR d.student_id != -1)
     '''
     params = [user_id, s_code]
     
@@ -8678,9 +8646,9 @@ def take_book_quiz(book_type, book_id):
         # Get book details
         book = None
         if book_type == 'physical':
-            book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+            book = conn.execute('SELECT * FROM books WHERE id = ? AND (school_code = ? OR school_code = "GLOBAL")', (book_id, s_code)).fetchone()
         else:
-            book = conn.execute('SELECT * FROM digital_content WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+            book = conn.execute('SELECT * FROM digital_content WHERE id = ? AND (school_code = ? OR school_code = "GLOBAL" OR student_id != -1)', (book_id, s_code)).fetchone()
             
         if not book:
             flash("Book or digital resource not found.", "error")
@@ -8729,8 +8697,8 @@ def take_book_quiz(book_type, book_id):
         # Get or generate quiz
         quiz = conn.execute('SELECT * FROM book_quizzes WHERE book_id = ? AND book_type = ?', (book_id, book_type)).fetchone()
         if not quiz:
-            import json
-            questions_json = ai_generate_quiz(book['title'], book['author'] if book_type == 'physical' else session.get('user_name', 'Student'))
+            book_author = dict(book).get('author') or 'Manager' if book_type != 'physical' else dict(book).get('author', 'Author')
+            questions_json = ai_generate_quiz(book['title'], book_author)
             conn.execute('''
                 INSERT INTO book_quizzes (book_id, book_type, questions, created_at)
                 VALUES (?, ?, ?, ?)
@@ -8849,9 +8817,9 @@ def submit_book_review(book_type, book_id):
         # Get book details
         book = None
         if book_type == 'physical':
-            book = conn.execute('SELECT * FROM books WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+            book = conn.execute('SELECT * FROM books WHERE id = ? AND (school_code = ? OR school_code = "GLOBAL")', (book_id, s_code)).fetchone()
         else:
-            book = conn.execute('SELECT * FROM digital_content WHERE id = ? AND school_code = ?', (book_id, s_code)).fetchone()
+            book = conn.execute('SELECT * FROM digital_content WHERE id = ? AND (school_code = ? OR school_code = "GLOBAL" OR student_id != -1)', (book_id, s_code)).fetchone()
             
         if not book:
             flash("Book or digital resource not found.", "error")

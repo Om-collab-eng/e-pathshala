@@ -586,7 +586,8 @@
         }
 
         .portal-wrapper {
-            max-width: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
             margin: 0 !important;
             height: auto !important;
             min-height: 100vh !important;
@@ -597,10 +598,13 @@
         }
 
         .portal-main {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            flex: 1 1 0% !important;
+            min-width: 0 !important;
+            width: calc(100% - 260px) !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 100vh !important;
             background-color: var(--sp-bg-light);
             overflow-y: auto;
         }
@@ -735,12 +739,19 @@
             font-weight: 600;
         }
 
+        .portal-content {
+            padding: 2rem 2.5rem 4rem 2.5rem !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
         /* 2-Column layout grid on laptop viewports */
         .portal-grid {
             display: grid !important;
-            grid-template-columns: 1.7fr 1fr !important;
-            gap: 1.5rem !important;
+            grid-template-columns: 1fr 340px !important;
+            gap: 2rem !important;
             align-items: start !important;
+            width: 100% !important;
         }
 
         /* Convert Stats Grid to a 2x2 layout inside the right sidebar column */
