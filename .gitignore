@@ -26,4 +26,4 @@ static/digital_content/
 *.zip
 *.egg-info/
 dist/
-build/
+build/static/Librika.apk

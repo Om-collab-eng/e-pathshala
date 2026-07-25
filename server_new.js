@@ -244,6 +244,7 @@ app.use('/author', digitalRoutes);
 app.use('/leaderboard', digitalRoutes);
 
 // API routes
+app.use('/api', require('./routes/apiRoutes'));
 app.use('/api', digitalRoutes);
 
 // Personal library routes

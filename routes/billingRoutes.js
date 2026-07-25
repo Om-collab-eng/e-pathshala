@@ -8,12 +8,12 @@ const billingController = require('../controllers/billingController');
 router.use(authMiddleware);
 
 // Dashboard route
-router.get('/', billingController.dashboard);
+router.get('/', billingController.getDashboard);
 
 // Checkout route
-router.post('/checkout', billingController.checkout);
+router.post('/checkout', billingController.postCheckout);
 
 // Cancel route
-router.post('/cancel', billingController.cancel);
+router.post('/cancel', billingController.postCancel);
 
 module.exports = router;

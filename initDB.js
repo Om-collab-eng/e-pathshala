@@ -99,6 +99,15 @@ const createPersonalTables = `
     action TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS user_devices (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    fcm_token TEXT NOT NULL UNIQUE,
+    device_type VARCHAR(20) NOT NULL DEFAULT 'web',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_user_devices_user_id ON user_devices(user_id);
 `;
 
 async function initializeDatabase() {
@@ -108,7 +117,7 @@ async function initializeDatabase() {
       await client.query(createSessionTable);
       console.log('Session table ensured.');
       await client.query(createPersonalTables);
-      console.log('Personal library tables ensured.');
+      console.log('Personal library tables and user_devices table ensured.');
     } finally {
       client.release();
     }
