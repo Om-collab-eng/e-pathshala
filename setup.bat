@@ -171,7 +171,7 @@ if exist ".env.production" (
 )
 
 REM ================================================
-REM  CREATE THE RUN SCRIPT
+REM  CREATE THE RUN SCRIPT (with auto-pull)
 REM ================================================
 echo.
 echo  Creating run_librika.bat...
@@ -187,7 +187,23 @@ echo  Creating run_librika.bat...
     echo echo  ========================================
     echo echo.
     echo.
-    echo REM Load production env
+    echo REM ------- AUTO-PULL LATEST CODE -------
+    echo echo  Pulling latest code from GitHub...
+    echo git pull origin main --quiet 2^>nul
+    echo if %%errorlevel%% equ 0 ^(
+    echo     echo  [OK] Code is up to date!
+    echo ^) else ^(
+    echo     echo  [!!] Could not pull. Using current code.
+    echo ^)
+    echo echo.
+    echo.
+    echo REM ------- AUTO-UPDATE DEPENDENCIES -------
+    echo echo  Checking for new dependencies...
+    echo pip install -r requirements.txt --quiet 2^>nul
+    echo echo  [OK] Dependencies checked.
+    echo echo.
+    echo.
+    echo REM ------- LOAD ENV -------
     echo if exist ".env.production" ^(
     echo     for /f "usebackq tokens=1,* delims==" %%%%a in ^(".env.production"^) do ^(
     echo         echo %%%%a ^| findstr /r "^^#" ^>nul 2^>^&1
@@ -201,27 +217,60 @@ echo  Creating run_librika.bat...
     echo set USE_SQLITE=
     echo if "%%PORT%%"=="" set PORT=8080
     echo.
-    echo echo  Starting Librika on port %%PORT%%...
-    echo echo.
-    echo.
-    echo REM Start ngrok in background
+    echo REM ------- START NGROK -------
     echo start "ngrok" /min cmd /c "ngrok http %%PORT%% --log=stdout"
-    echo.
-    echo REM Wait for ngrok to start
     echo timeout /t 3 /nobreak ^>nul
     echo.
-    echo REM Show ngrok URL
+    echo REM ------- START AUTO-UPDATER IN BACKGROUND -------
+    echo start "Auto-Updater" /min cmd /c "auto_update.bat"
+    echo.
     echo echo  ========================================
-    echo echo  Your PUBLIC URL:
-    echo echo  Open http://localhost:4040 in browser
-    echo echo  to see your ngrok public URL
+    echo echo  PUBLIC URL: Open http://localhost:4040
+    echo echo  Auto-updates: Every 5 min from GitHub
     echo echo  ========================================
     echo echo.
     echo.
-    echo REM Start Flask server with Waitress
-    echo python -c "from waitress import serve; from app import app; print(''); print('  Librika is LIVE on http://localhost:%%PORT%%'); print('  ngrok dashboard: http://localhost:4040'); print(''); serve(app, host='0.0.0.0', port=int('%%PORT%%'), threads=8, channel_timeout=120)"
+    echo REM ------- START SERVER -------
+    echo python -c "from waitress import serve; from app import app; print(''); print('  Librika is LIVE on http://localhost:%%PORT%%'); print('  ngrok dashboard: http://localhost:4040'); print('  Auto-updating from GitHub every 5 minutes'); print(''); serve(app, host='0.0.0.0', port=int('%%PORT%%'), threads=8, channel_timeout=120)"
 ) > run_librika.bat
 echo  [OK] Created run_librika.bat
+
+REM ================================================
+REM  CREATE AUTO-UPDATE SCRIPT
+REM ================================================
+echo.
+echo  Creating auto_update.bat...
+(
+    echo @echo off
+    echo title Librika Auto-Updater
+    echo color 0E
+    echo.
+    echo echo  ========================================
+    echo echo   LIBRIKA AUTO-UPDATER
+    echo echo   Checking GitHub every 5 minutes...
+    echo echo  ========================================
+    echo echo.
+    echo.
+    echo :loop
+    echo timeout /t 300 /nobreak ^>nul
+    echo.
+    echo REM Check if there are new commits
+    echo git fetch origin main --quiet 2^>nul
+    echo git diff HEAD origin/main --quiet 2^>nul
+    echo if %%errorlevel%% neq 0 ^(
+    echo     echo [%%date%% %%time%%] New code found! Pulling...
+    echo     git pull origin main --quiet
+    echo     echo [%%date%% %%time%%] Updated! Restart run_librika.bat to apply.
+    echo     echo.
+    echo     REM Notify user
+    echo     msg * "Librika: New code pulled from GitHub! Restart run_librika.bat to apply changes." 2^>nul
+    echo ^) else ^(
+    echo     echo [%%date%% %%time%%] No updates.
+    echo ^)
+    echo.
+    echo goto loop
+) > auto_update.bat
+echo  [OK] Created auto_update.bat
 
 REM ================================================
 REM  DONE!
@@ -231,21 +280,22 @@ echo  ================================================
 echo     SETUP COMPLETE!
 echo  ================================================
 echo.
-echo  WHAT TO DO NOW:
+echo  HOW IT WORKS:
 echo.
-echo    1. Open .env.production in Notepad
-echo       Fill in your API keys from your Mac's .env
+echo    1. Open .env.production - fill in your API keys
 echo.
 echo    2. Double-click  run_librika.bat
-echo       This starts your server + ngrok together
+echo       - Auto-pulls latest code from GitHub
+echo       - Installs any new dependencies
+echo       - Starts server + ngrok
+echo       - Background auto-updater checks every 5 min
 echo.
-echo    3. Open http://localhost:4040 in browser
-echo       Copy the ngrok public URL (e.g. https://abc123.ngrok-free.app)
-echo       Share this URL - anyone can access your site!
+echo    3. When I push changes on your Mac:
+echo       - Your old PC auto-pulls in ~5 minutes
+echo       - You get a notification to restart
+echo       - Just close and re-open run_librika.bat
 echo.
-echo    4. To use librika.in domain with ngrok:
-echo       Get ngrok Pro ($8/mo) and run:
-echo       ngrok http 8080 --domain=librika.in
+echo    4. Open http://localhost:4040 for your public URL
 echo.
 echo  ================================================
 echo.
