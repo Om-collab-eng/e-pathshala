@@ -4,8 +4,8 @@
 
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   LIBRIKA LIBRARIAN DASHBOARD — UNIVERSAL LAPTOP & DESKTOP UI
-   Triggers Desktop Layout on all screens >= 769px (All Laptop resolutions & scalings)
+   LIBRIKA LIBRARIAN DASHBOARD — FLEXIBLE RESIZING LAPTOP & DESKTOP UI
+   Uses flex: 1; min-width: 0; for fluid 100% responsive resizing
    ═══════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
     box-sizing: border-box !important;
@@ -43,11 +43,12 @@ html, body {
 
 .ld-main {
     flex: 1 !important;
+    min-width: 0 !important; /* CRITICAL FOR FLUID RESIZING */
     display: flex !important;
     flex-direction: column !important;
     min-height: 100vh !important;
-    margin-left: 240px !important;
-    width: calc(100% - 240px) !important;
+    margin-left: 230px !important;
+    width: calc(100% - 230px) !important;
     max-width: 100vw !important;
     background: #f8fafc !important;
     padding-bottom: 30px !important;
@@ -110,7 +111,7 @@ html, body {
 }
 
 .ld-sidebar {
-    width: 240px !important;
+    width: 230px !important;
     max-width: 82vw !important;
     background: #ffffff !important;
     border-right: 1px solid #e2e8f0 !important;
@@ -204,9 +205,9 @@ html, body {
     .ld-overlay-dim, .ld-overlay-dim.active { display: none !important; opacity: 0 !important; pointer-events: none !important; visibility: hidden !important; }
 }
 
-.ld-content { padding: 1.5rem 1.75rem !important; display: flex !important; flex-direction: column !important; gap: 1.5rem !important; background: #f8fafc !important; width: 100% !important; }
+.ld-content { padding: 1.5rem 1.75rem !important; display: flex !important; flex-direction: column !important; gap: 1.5rem !important; background: #f8fafc !important; width: 100% !important; min-width: 0 !important; }
 
-/* ── UNIVERSAL 4-COLUMN STAT GRID ON ALL LAPTOPS (>= 769px) ── */
+/* ── UNIVERSAL 4-COLUMN STAT GRID ON ALL LAPTOPS (>= 600px) ── */
 .ld-stats-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
@@ -214,7 +215,7 @@ html, body {
     width: 100% !important;
 }
 
-@media (max-width: 599px) {
+@media (max-width: 768px) {
     .ld-stats-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
@@ -227,6 +228,7 @@ html, body {
     align-items: center !important; text-align: left !important; gap: 12px !important; min-height: 95px !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
     transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+    min-width: 0 !important;
 }
 .ld-stat-card:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(0,0,0,0.06) !important; }
 .ld-stat-icon {
@@ -242,7 +244,7 @@ html, body {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important; border-radius: 18px !important;
     padding: 1.5rem !important; color: #0f172a !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important; min-width: 0 !important;
 }
 
 .ld-table-container {
