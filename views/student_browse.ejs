@@ -1,1030 +1,240 @@
-<style>
-    /* Fonts import */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+<%- layout('base') %>
 
-    :root {
-        --sp-purple: #5c3cf3;
-        --sp-purple-light: #f0eeff;
-        --sp-pink-light: #fff0f3;
-        --sp-pink: #ff4d6d;
-        --sp-orange-light: #fff4eb;
-        --sp-orange: #ff8800;
-        --sp-green-light: #ebfbf2;
-        --sp-green: #00b050;
-        --sp-text-dark: #0f172a;
-        --sp-text-muted: #64748b;
-        --sp-bg-light: #f8fafc;
-        --sp-white: #ffffff;
-        --sp-blue-light: #e0f2fe;
-        --sp-blue: #0284c7;
-    }
-
-    /* Toggle Switch styling */
-    .sa-toggle-switch input:checked + .sa-toggle-slider {
-        background-color: var(--sp-purple);
-    }
-    .sa-toggle-switch .sa-toggle-slider:before {
-        position: absolute;
-        content: "";
-        height: 16px;
-        width: 16px;
-        left: 3px;
-        bottom: 3px;
-        background-color: white;
-        transition: .3s;
-        border-radius: 50%;
-    }
-    .sa-toggle-switch input:checked + .sa-toggle-slider:before {
-        transform: translateX(18px);
-    }
-    .ai-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: linear-gradient(135deg, #5c3cf3, #ff4d6d);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 20px;
-        font-size: 0.72rem;
-        font-weight: 800;
-        z-index: 10;
-        box-shadow: 0 4px 12px rgba(92, 60, 243, 0.3);
-        display: flex;
-        align-items: center;
-        gap: 3px;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-        background-color: #0f172a; /* Same global base theme background */
-        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-    }
-
-    .portal-wrapper {
-        width: 100%;
-        max-width: 480px;
-        margin: 0 auto;
-        background-color: var(--sp-bg-light);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
-        overflow-x: hidden;
-    }
-
-    .desktop-sidebar {
-        display: none;
-    }
-
-    .portal-main {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .portal-header {
-        background: linear-gradient(180deg, #3b2bc4 0%, #5c3cf3 100%);
-        padding: 2.5rem 1.5rem 4rem 1.5rem;
-        color: var(--sp-white);
-        position: relative;
-        overflow: hidden;
-        border-bottom-left-radius: 32px;
-        border-bottom-right-radius: 32px;
-    }
-
-    .portal-header-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .portal-header-actions {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-    }
-
-    .header-btn {
-        background: rgba(255, 255, 255, 0.15);
-        border: none;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--sp-white);
-        cursor: pointer;
-        font-size: 1.2rem;
-        transition: background 0.2s;
-        position: relative;
-    }
-
-    .header-btn:hover {
-        background: rgba(255, 255, 255, 0.25);
-    }
-
-    .header-badge {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        background: #ef4444;
-        color: white;
-        font-size: 0.65rem;
-        font-weight: 800;
-        padding: 2px 6px;
-        border-radius: 10px;
-        border: 2px solid #3b2bc4;
-    }
-
-    .header-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.3);
-        border: 2px solid rgba(255, 255, 255, 0.5);
-        color: white;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        text-transform: uppercase;
-        cursor: pointer;
-    }
-
-    .portal-welcome {
-        max-width: 60%;
-        position: relative;
-        z-index: 10;
-    }
-
-    .portal-welcome h2 {
-        margin: 0;
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.6rem;
-        font-weight: 900;
-    }
-
-    .portal-welcome p {
-        margin: 4px 0 0 0;
-        font-size: 0.8rem;
-        opacity: 0.9;
-        font-weight: 500;
-    }
-
-    .header-illustration {
-        position: absolute;
-        right: -10px;
-        bottom: -10px;
-        height: 120px;
-        width: auto;
-        opacity: 0.95;
-        z-index: 5;
-    }
-
-    .portal-content {
-        padding: 0 1.25rem 6.5rem 1.25rem;
-        margin-top: -32px;
-        position: relative;
-        z-index: 20;
-    }
-
-    /* Search and Filter Row */
-    .search-filter-row {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 1.5rem;
-    }
-
-    .search-container {
-        flex-grow: 1;
-        position: relative;
-    }
-
-    .search-input {
-        width: 100%;
-        background: var(--sp-white);
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 14px 14px 14px 44px;
-        box-sizing: border-box;
-        font-family: inherit;
-        font-size: 0.85rem;
-        color: var(--sp-text-dark);
-        outline: none;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .search-input:focus {
-        border-color: var(--sp-purple);
-        box-shadow: 0 4px 20px rgba(92, 60, 243, 0.08);
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--sp-text-muted);
-        pointer-events: none;
-    }
-
-    .filter-btn {
-        background: var(--sp-white);
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 0 16px;
-        font-family: inherit;
-        font-weight: 700;
-        font-size: 0.85rem;
-        color: var(--sp-text-dark);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-        transition: background 0.2s;
-    }
-
-    .filter-btn:hover {
-        background: #f8fafc;
-    }
-
-    /* Categories Horizontal Scroller */
-    .categories-section {
-        margin-bottom: 1.5rem;
-    }
-
-    .categories-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-    }
-
-    .categories-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: var(--sp-text-dark);
-        margin: 0;
-    }
-
-    .categories-link {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--sp-purple);
-        text-decoration: none;
-    }
-
-    .categories-scroll {
-        display: flex;
-        gap: 12px;
-        overflow-x: auto;
-        padding: 4px 0 12px 0;
-        scrollbar-width: none; /* Hide scrollbar on Firefox */
-    }
-
-    .categories-scroll::-webkit-scrollbar {
-        display: none; /* Hide scrollbar on Chrome/Safari */
-    }
-
-    .category-card {
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: var(--sp-white);
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 12px 18px;
-        cursor: pointer;
-        text-decoration: none;
-        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .category-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-
-    .category-card.active {
-        background: linear-gradient(135deg, #312e81, #4338ca);
-        border-color: var(--sp-purple);
-        color: var(--sp-purple);
-    }
-
-    .category-card.active .category-icon-wrapper {
-        background: var(--sp-purple);
-        color: var(--sp-white);
-    }
-
-    .category-icon-wrapper {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-        background: #f1f5f9;
-        transition: background 0.2s, color 0.2s;
-    }
-
-    .category-text {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--sp-text-dark);
-    }
-
-    .category-card.active .category-text {
-        color: var(--sp-purple);
-    }
-
-    /* Featured Collection Banner & Carousel */
-    .featured-carousel-wrapper {
-        position: relative;
-        width: 100%;
-        margin-bottom: 0.75rem;
-        overflow: hidden;
-        border-radius: 24px;
-        touch-action: pan-y;
-        user-select: none;
-        cursor: grab;
-    }
-    .featured-carousel-wrapper:active { cursor: grabbing; }
-    .featured-carousel {
-        display: flex;
-        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        width: 100%;
-    }
-    .featured-carousel .featured-banner {
-        flex: 0 0 100%;
-        width: 100%;
-        box-sizing: border-box;
-        border-radius: 24px;
-        padding: 1.5rem;
-        position: relative;
-        overflow: hidden;
-        min-height: 160px;
-    }
-    .featured-banner {
-        background: linear-gradient(135deg, #f5f3ff 0%, #edd8ff 100%);
-        border-radius: 24px;
-        padding: 1.5rem;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(92, 60, 243, 0.04);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .featured-info {
-        max-width: 100%;
-        z-index: 10;
-    }
-
-    .featured-label {
-        font-size: 0.75rem;
-        font-weight: 800;
-        color: var(--sp-purple);
-        text-transform: uppercase;
-        margin-bottom: 6px;
-        letter-spacing: 0.5px;
-    }
-
-    .featured-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.35rem;
-        font-weight: 900;
-        color: var(--sp-text-dark);
-        margin: 0 0 6px 0;
-        line-height: 1.25;
-    }
-
-    .featured-subtitle {
-        font-size: 0.8rem;
-        color: var(--sp-text-muted);
-        margin: 0 0 16px 0;
-        font-weight: 500;
-        line-height: 1.4;
-    }
-
-    .featured-btn {
-        background: var(--sp-purple);
-        color: var(--sp-white);
-        border: none;
-        border-radius: 12px;
-        padding: 10px 18px;
-        font-family: inherit;
-        font-weight: 700;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.2s;
-        display: inline-block;
-        text-decoration: none;
-    }
-
-    .featured-btn:hover {
-        background: #4b2bd3;
-        transform: translateY(-1px);
-    }
-
-    /* Carousel dots */
-    .carousel-dots {
-        display: flex;
-        justify-content: center;
-        gap: 6px;
-        margin-top: -12px;
-        margin-bottom: 1.5rem;
-    }
-
-    .carousel-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #cbd5e1;
-        transition: background 0.2s, width 0.2s;
-    }
-
-    .carousel-dot.active {
-        background: var(--sp-purple);
-        width: 16px;
-        border-radius: 3px;
-    }
-
-    /* Book Rows (Trending & New Arrivals) */
-    .book-section {
-        margin-bottom: 2rem;
-    }
-
-    .book-row-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .book-row-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: var(--sp-text-dark);
-        margin: 0;
-    }
-
-    .book-row-link {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--sp-purple);
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .book-scroller {
-        display: flex;
-        gap: 16px;
-        overflow-x: auto;
-        padding: 4px 4px 16px 4px;
-        scrollbar-width: none;
-    }
-
-    .book-scroller::-webkit-scrollbar {
-        display: none;
-    }
-
-    .book-card {
-        flex-shrink: 0;
-        width: 140px;
-        background: var(--sp-white);
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        padding: 10px;
-        box-sizing: border-box;
-        text-decoration: none;
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .book-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 24px rgba(92, 60, 243, 0.08);
-    }
-
-    .book-cover-placeholder {
-        width: 100%;
-        height: 155px;
-        border-radius: 14px;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.06);
-        margin-bottom: 10px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        padding: 16px 12px;
-        box-sizing: border-box;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        overflow: hidden;
-        position: relative;
-    }
-
-    .book-cover-placeholder::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%);
-        z-index: 1;
-    }
-
-    .cover-tag {
-        font-size: 0.6rem;
-        background: rgba(255,255,255,0.25);
-        backdrop-filter: blur(4px);
-        padding: 2px 8px;
-        border-radius: 20px;
-        align-self: flex-start;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        z-index: 2;
-    }
-
-    .cover-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.8rem;
-        font-weight: 800;
-        margin: 0;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        z-index: 2;
-        line-height: 1.25;
-    }
-
-    .book-details {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        flex-grow: 1;
-    }
-
-    .book-title {
-        font-size: 0.8rem;
-        font-weight: 800;
-        color: var(--sp-text-dark);
-        margin: 0;
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        line-height: 1.3;
-    }
-
-    .book-author {
-        font-size: 0.7rem;
-        color: var(--sp-text-muted);
-        margin: 0;
-        font-weight: 500;
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .book-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 6px;
-    }
-
-    .book-rating {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: #d97706;
-    }
-
-    .book-action-trigger {
-        background: transparent;
-        border: none;
-        color: var(--sp-text-muted);
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.2s;
-    }
-
-    .book-action-trigger:hover {
-        background: #f1f5f9;
-        color: var(--sp-text-dark);
-    }
-
-    /* Books Grid (For Search/Filter Results) */
-    .books-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        margin-bottom: 2rem;
-    }
-
-    .results-header {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: var(--sp-text-dark);
-        margin: 0 0 1rem 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    /* Bottom Navigation Tab Bar */
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-width: 480px;
-        margin: 0 auto;
-        height: 68px;
-        background: rgba(255, 255, 255, 0.96);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-top: 1px solid rgba(226, 232, 240, 0.9);
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        align-items: center;
-        padding: 0 4px;
-        box-sizing: border-box;
-        z-index: 1000;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    .bottom-nav-item {
-        background: none;
-        border: none;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
-        color: #64748b;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 0.68rem;
-        font-weight: 700;
-        transition: all 0.2s ease;
-        padding: 6px 2px;
-        width: 100%;
-        box-sizing: border-box;
-        text-align: center;
-        line-height: 1.1;
-    }
-
-    .bottom-nav-icon {
-        font-size: 1.25rem;
-        line-height: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .bottom-nav-item span:last-child {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
-        letter-spacing: -0.2px;
-    }
-
-    .bottom-nav-item:hover,
-    .bottom-nav-item.active {
-        color: var(--sp-purple);
-    }
-
-    .bottom-nav-item.active .bottom-nav-icon {
-        transform: translateY(-2px) scale(1.12);
-    }
-
-    /* Chat Float Action Button */
-    .chat-fab {
-        position: fixed;
-        right: 20px;
-        bottom: 90px;
-        width: 56px;
-        height: 56px;
-        background: var(--sp-purple);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        box-shadow: 0 8px 24px rgba(92, 60, 243, 0.35);
-        cursor: pointer;
-        z-index: 900;
-        transition: transform 0.2s, background 0.2s;
-    }
-
-    .chat-fab:hover {
-        transform: scale(1.05);
-        background: #4b2bd3;
-    }
-
-    /* Responsive adjustments for desktop and laptop */
-    @media (min-width: 768px) {
-        body {
-            background-color: var(--sp-bg-light) !important;
-        }
-
-        .portal-wrapper {
-            max-width: none !important;
-            margin: 0 !important;
-            height: auto !important;
-            min-height: 100vh !important;
-            flex-direction: row !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            overflow: visible !important;
-        }
-
-        .portal-main {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            background-color: var(--sp-bg-light);
-            overflow-y: auto;
-        }
-
-        .desktop-sidebar {
-            display: flex !important;
-            flex-direction: column;
-            width: 260px;
-            background: var(--sp-white);
-            border-right: 1px solid #e2e8f0;
-            padding: 2rem 1.5rem;
-            box-sizing: border-box;
-            flex-shrink: 0;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-        }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 2.5rem;
-        }
-
-        .brand-icon {
-            font-size: 2rem;
-        }
-
-        .brand-info h4 {
-            margin: 0;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
-            font-weight: 800;
-            color: var(--sp-text-dark);
-        }
-
-        .brand-info p {
-            margin: 2px 0 0 0;
-            font-size: 0.75rem;
-            color: var(--sp-text-muted);
-            font-weight: 600;
-        }
-
-        .sidebar-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex-grow: 1;
-        }
-
-        .sidebar-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: 12px;
-            color: var(--sp-text-dark);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 700;
-            transition: background 0.2s, color 0.2s;
-        }
-
-        .sidebar-link:hover {
-            background: linear-gradient(135deg, #312e81, #4338ca);
-            color: var(--sp-purple);
-        }
-
-        .sidebar-link.active {
-            background: var(--sp-purple);
-            color: var(--sp-white);
-        }
-
-        .sidebar-divider {
-            border: none;
-            border-top: 1px solid #f1f5f9;
-            margin: 15px 0;
-        }
-
-        .logout-link {
-            color: #ef4444;
-        }
-
-        .logout-link:hover {
-            background: var(--sp-pink-light);
-            color: var(--sp-pink);
-        }
-
-        .sidebar-profile-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 12px;
-            margin-top: auto;
-        }
-
-        .profile-card-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: var(--sp-purple);
-            color: white;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-transform: uppercase;
-        }
-
-        .profile-card-info h5 {
-            margin: 0;
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: var(--sp-text-dark);
-        }
-
-        .profile-card-info p {
-            margin: 2px 0 0 0;
-            font-size: 0.65rem;
-            color: var(--sp-text-muted);
-            font-weight: 600;
-        }
-
-        /* Hide bottom nav on desktop */
-        .bottom-nav {
-            display: none;
-        }
-
-        /* Reposition Chat FAB */
-        .chat-fab {
-            right: 40px;
-            bottom: 40px;
-        }
-
-        /* Adapt main elements */
-        .portal-header {
-            padding: 3rem 2.5rem 5.5rem 2.5rem !important;
-            border-radius: 0 0 40px 40px !important;
-        }
-
-        .portal-welcome {
-            max-width: 50% !important;
-        }
-
-        .header-illustration {
-            right: 40px !important;
-            bottom: -20px !important;
-            height: 150px !important;
-        }
-
-        .portal-content {
-            padding: 0 2.5rem 4rem 2.5rem !important;
-            margin-top: -40px !important;
-        }
-
-        /* Books grid multi-column adapt */
-        .books-grid {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
-
-        /* scroller adjustments for desktop mouse use */
-        .book-scroller {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 transparent;
-            padding-bottom: 8px;
-        }
-        
-        .book-scroller::-webkit-scrollbar {
-            display: block;
-            height: 6px;
-        }
-
-        .book-scroller::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .book-scroller::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-
-        .book-scroller::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-    }
-
-    @media (min-width: 1024px) {
-        .books-grid {
-            grid-template-columns: repeat(5, 1fr);
-        }
-    }
- 
-/* ── REMOVE ALL BOTTOM NAV BARS ── */
-.bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav {
-    display: none !important;
-    height: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <style>
-/* ══ DIGITAL LIBRARY RESPONSIVE OVERHAUL ══ */
+/* ═══════════════════════════════════════════════
+   LIBRIKA DIGITAL LIBRARY — PRISTINE UNIFIED UI
+   Simple, Clean, High-Contrast & 100% Mobile Responsive
+═══════════════════════════════════════════════ */
 *, *::before, *::after {
     box-sizing: border-box !important;
 }
 
 html, body {
     background: #060d1f !important;
+    background-color: #060d1f !important;
     color: #f1f5f9 !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden !important;
     width: 100% !important;
     max-width: 100vw !important;
+    min-height: 100vh !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
 
-/* Featured Hero Banner High-Contrast Fix */
-.featured-card, .hero-banner, .featured-collection-card {
-    background: linear-gradient(135deg, #1e1b4b, #3730a3) !important;
+:root {
+    --sp-purple: #818cf8;
+    --sp-purple-mid: #6366f1;
+    --sp-purple-light: rgba(99, 102, 241, 0.15);
+    --sp-green: #34d399;
+    --sp-orange: #fb923c;
+    --sp-red: #f87171;
+    --sp-bg: #060d1f;
+    --sp-card-bg: #0d1630;
+    --sp-sidebar-bg: #080f22;
+    --sp-border: rgba(99, 102, 241, 0.16);
+    --sp-text: #f1f5f9;
+    --sp-muted: #94a3b8;
+}
+
+/* ── LAYOUT SHELL ── */
+.st-shell {
+    display: flex !important;
+    min-height: 100vh !important;
+    background: #060d1f !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    position: relative !important;
+    overflow-x: hidden !important;
+}
+
+.st-main {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+    margin-left: 280px !important;
+    width: calc(100vw - 280px) !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    background: #060d1f !important;
+    padding-bottom: 30px !important;
+}
+@media (max-width: 900px) {
+    .st-main { margin-left: 0 !important; width: 100vw !important; max-width: 100vw !important; }
+}
+
+/* ── TOPBAR ── */
+.st-topbar {
+    background: rgba(8, 15, 34, 0.92) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid var(--sp-border) !important;
+    padding: 0.85rem 1.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    gap: 12px !important;
+}
+.st-topbar-left { display: flex !important; align-items: center !important; gap: 12px !important; }
+.st-menu-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+    width: 38px !important; height: 38px !important; border-radius: 10px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 1.1rem !important; cursor: pointer !important;
+}
+@media (min-width: 901px) { .st-menu-btn { display: none !important; } }
+
+.st-brand-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+}
+
+.st-topbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
+
+/* ── SIDEBAR DRAWER ── */
+.st-sidebar {
+    width: 280px !important;
+    max-width: 82vw !important;
+    background: var(--sp-sidebar-bg) !important;
+    border-right: 1px solid var(--sp-border) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    height: 100vh !important; height: 100dvh !important;
+    z-index: 9999 !important;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
+    transform: translateX(-105%) !important;
+}
+@media (max-width: 900px) {
+    .st-sidebar.open { transform: translateX(0) !important; box-shadow: 20px 0 60px rgba(0, 0, 0, 0.8) !important; }
+}
+@media (min-width: 901px) {
+    .st-sidebar { transform: translateX(0) !important; position: sticky !important; }
+}
+
+.st-sidebar-header {
+    padding: 1.1rem 1rem !important;
+    border-bottom: 1px solid var(--sp-border) !important;
+    display: flex !important; align-items: center !important; justify-content: space-between !important;
+    gap: 10px !important; flex-shrink: 0 !important; background: var(--sp-sidebar-bg) !important;
+}
+.st-sidebar-user { display: flex !important; align-items: center !important; gap: 10px !important; flex: 1 !important; min-width: 0 !important; }
+.st-avatar-lg {
+    width: 40px !important; height: 40px !important; border-radius: 50% !important;
+    background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important;
+    font-weight: 800 !important; font-size: 1.05rem !important; display: flex !important;
+    align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+}
+.st-user-meta { min-width: 0 !important; flex: 1 !important; }
+.st-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.st-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: var(--sp-muted) !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+.st-sidebar-close {
+    background: rgba(255, 255, 255, 0.06) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: var(--sp-muted) !important; width: 32px !important; height: 32px !important; border-radius: 50% !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 0.95rem !important; cursor: pointer !important; flex-shrink: 0 !important;
+}
+
+.st-sidebar-nav {
+    flex: 1 !important; overflow-y: auto !important; padding: 0.85rem 0.75rem !important;
+    display: flex !important; flex-direction: column !important; gap: 4px !important;
+}
+
+.st-nav-item {
+    display: flex !important; align-items: center !important; height: 48px !important; min-height: 48px !important;
+    padding: 0 12px !important; border-radius: 12px !important; color: var(--sp-muted) !important;
+    font-size: 0.88rem !important; font-weight: 600 !important; text-decoration: none !important;
+    background: transparent !important; border: none !important; border-left: 3.5px solid transparent !important;
+    width: 100% !important; cursor: pointer !important; transition: all 0.2s ease !important;
+    box-sizing: border-box !important; white-space: nowrap !important;
+}
+.st-nav-item:hover { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; }
+.st-nav-item.active { background: rgba(99, 102, 241, 0.18) !important; color: #ffffff !important; border-left: 4px solid #818cf8 !important; font-weight: 700 !important; }
+
+.st-nav-icon { width: 24px !important; height: 24px !important; font-size: 1.15rem !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; margin-right: 12px !important; }
+.st-nav-text { flex: 1 !important; text-align: left !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+.st-sidebar-footer {
+    padding: 0.85rem 0.75rem !important; border-top: 1px solid var(--sp-border) !important;
+    flex-shrink: 0 !important; background: var(--sp-sidebar-bg) !important; display: flex !important; flex-direction: column !important; gap: 6px !important;
+}
+.st-footer-btn {
+    display: flex !important; align-items: center !important; height: 44px !important; min-height: 44px !important;
+    padding: 0 12px !important; border-radius: 10px !important; font-size: 0.85rem !important; font-weight: 700 !important;
+    color: var(--sp-muted) !important; text-decoration: none !important; background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important; transition: all 0.2s ease !important; width: 100% !important; cursor: pointer !important;
+}
+.st-footer-btn:hover { background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; }
+.st-footer-btn.danger { background: rgba(239, 68, 68, 0.12) !important; color: #f87171 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+
+.st-overlay-dim {
+    position: fixed !important; inset: 0 !important; background: rgba(3, 7, 18, 0.8) !important;
+    backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 9998 !important; opacity: 0 !important; pointer-events: none !important; transition: opacity 0.28s ease !important;
+}
+.st-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
+
+/* ── CONTENT AREA ── */
+.st-content { padding: 1.25rem !important; display: flex !important; flex-direction: column !important; gap: 1.25rem !important; background: #060d1f !important; }
+
+/* HERO BANNER HIGH-CONTRAST */
+.browse-hero-card {
+    background: linear-gradient(135deg, #1e1b4b, #312e81) !important;
     border: 1px solid rgba(99, 102, 241, 0.3) !important;
     border-radius: 20px !important;
     padding: 1.5rem !important;
     color: #ffffff !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
-}
-.featured-card h2, .featured-card h3, .featured-card p, .hero-banner h1, .hero-banner p {
-    color: #ffffff !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Category Scroller Touch Fix */
-.categories-scroller, .category-pills, .genre-scroller {
+/* SEARCH BAR & FILTERS */
+.browse-search-bar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-top: 1rem !important;
+}
+.browse-search-input {
+    flex: 1 !important;
+    min-width: 220px !important;
+    background: #0d1630 !important;
+    border: 1px solid rgba(99, 102, 241, 0.25) !important;
+    color: #ffffff !important;
+    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    font-size: 0.88rem !important;
+    outline: none !important;
+}
+
+/* CATEGORY SCROLLER TOUCH */
+.browse-category-scroller {
     display: flex !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     gap: 10px !important;
-    padding: 6px 2px 12px 2px !important;
+    padding: 4px 2px 10px 2px !important;
     width: 100% !important;
     scrollbar-width: none !important;
 }
-.categories-scroller::-webkit-scrollbar { display: none !important; }
+.browse-category-scroller::-webkit-scrollbar { display: none !important; }
 
-.category-pill, .genre-chip {
+.browse-cat-pill {
     flex-shrink: 0 !important;
     background: #0d1630 !important;
     border: 1px solid rgba(99, 102, 241, 0.2) !important;
@@ -1033,35 +243,29 @@ html, body {
     padding: 8px 16px !important;
     font-size: 0.85rem !important;
     font-weight: 700 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
+    text-decoration: none !important;
     white-space: nowrap !important;
 }
-.category-pill.active, .genre-chip.active {
+.browse-cat-pill.active {
     background: linear-gradient(135deg, #6366f1, #a855f7) !important;
     color: #ffffff !important;
     border-color: transparent !important;
 }
 
-/* Books Grid Layout Fix */
-.books-grid, .recommend-grid, .catalog-grid {
+/* BOOKS GRID */
+.browse-books-grid {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 12px !important;
     width: 100% !important;
     box-sizing: border-box !important;
 }
-@media (min-width: 600px) {
-    .books-grid, .recommend-grid, .catalog-grid { grid-template-columns: repeat(3, 1fr) !important; }
-}
-@media (min-width: 900px) {
-    .books-grid, .recommend-grid, .catalog-grid { grid-template-columns: repeat(5, 1fr) !important; }
-}
+@media (min-width: 600px) { .browse-books-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+@media (min-width: 900px) { .browse-books-grid { grid-template-columns: repeat(5, 1fr) !important; } }
 
-.book-card, .recommend-card {
-    background: #0d1630 !important;
-    border: 1px solid rgba(99, 102, 241, 0.2) !important;
+.browse-book-card {
+    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    border: 1px solid var(--sp-border) !important;
     border-radius: 16px !important;
     padding: 10px !important;
     display: flex !important;
@@ -1069,655 +273,212 @@ html, body {
     overflow: hidden !important;
     box-sizing: border-box !important;
 }
-.book-card img, .recommend-card img {
+.browse-book-cover {
     width: 100% !important;
     height: 170px !important;
     object-fit: cover !important;
     border-radius: 10px !important;
+    background: #080f22 !important;
 }
-.book-card-title {
+.browse-book-title {
     font-size: 0.85rem !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
     color: #ffffff !important;
-    margin-top: 8px !important;
+    margin: 8px 0 2px 0 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
-.book-card-author {
+.browse-book-author {
     font-size: 0.75rem !important;
-    color: #94a3b8 !important;
+    color: var(--sp-muted) !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
 
-/* Search bar flex alignment */
-.search-form, .catalog-search-wrapper {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 10px !important;
-    width: 100% !important;
-    align-items: center !important;
+/* BUTTONS */
+.st-btn {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    gap: 8px !important; padding: 9px 16px !important; min-height: 40px !important; border-radius: 12px !important;
+    font-size: 0.85rem !important; font-weight: 700 !important; cursor: pointer !important;
+    transition: all 0.2s ease !important; text-decoration: none !important; border: none !important;
+    background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; box-sizing: border-box !important;
 }
-.search-input-box {
-    flex: 1 !important;
-    min-width: 200px !important;
-    background: #0d1630 !important;
-    border: 1px solid rgba(99, 102, 241, 0.25) !important;
-    color: #ffffff !important;
-    border-radius: 12px !important;
-    padding: 10px 14px !important;
-    font-size: 0.88rem !important;
-}
+.st-btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important; }
+.st-btn-xs { padding: 4px 10px !important; min-height: 32px !important; font-size: 0.75rem !important; border-radius: 8px !important; }
 
-/* Absolutely hide bottom navs and legacy unstyled sidebars */
-.desktop-sidebar, .bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav {
-    display: none !important;
-    height: 0 !important;
-    visibility: hidden !important;
-}
+/* REMOVE ALL BOTTOM NAVS */
+.bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav { display: none !important; height: 0 !important; visibility: hidden !important; }
 </style>
-</style>
-<style>
-/* sp- conversion overrides */
-.desktop-sidebar, .bottom-nav, #sidebarBackdrop, nav.bottom-nav { display: none !important; }
-.portal-wrapper { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; }
-.portal-main { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; overflow: visible !important; }
-.portal-header-top { display: none !important; }
-</style>
-<% contentFor("head") %>
-<% contentFor("content") %>
-<div class="sp-page">
-  <div class="sp-layout">
-    <%- include('partials/student_sidebar', { active: 'browse' }) %>
-    <div class="sp-main">
-      <%- include('partials/student_topbar', { title: 'Digital Library' }) %>
-      <main class="sp-content">
-<div class="portal-wrapper">
-    <!-- Desktop Sidebar Navigation -->
-    <aside class="desktop-sidebar">
-        <div class="sidebar-brand">
-            <span class="brand-icon">🌐</span>
-            <div class="brand-info">
-                <h4><%= school_name %></h4>
-                <p>Student Portal</p>
+
+<div class="st-overlay-dim" id="studentDim" onclick="toggleStudentSidebar()"></div>
+
+<div class="st-shell">
+    <!-- ══ SIDEBAR DRAWER ══ -->
+    <aside class="st-sidebar" id="studentSidebar">
+        <!-- Header -->
+        <div class="st-sidebar-header">
+            <div class="st-sidebar-user">
+                <% const stuName = (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Student'; %>
+                <% const stuInitial = stuName.trim()[0].toUpperCase(); %>
+                <div class="st-avatar-lg">
+                    <%= stuInitial %>
+                </div>
+                <div class="st-user-meta">
+                    <h4 class="st-user-name"><%= stuName %></h4>
+                    <p class="st-user-school"><%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'E-Pathshala Network' %></p>
+                </div>
             </div>
+            <button class="st-sidebar-close" onclick="toggleStudentSidebar()" aria-label="Close sidebar">✕</button>
         </div>
-        <nav class="sidebar-menu">
-            <a href="/student" class="sidebar-link">
-                <span class="link-icon">📊</span>
-                <span>Dashboard</span>
+
+        <!-- Navigation List -->
+        <nav class="st-sidebar-nav">
+            <a href="/student" class="st-nav-item">
+                <span class="st-nav-icon">🏠</span>
+                <span class="st-nav-text">Dashboard</span>
             </a>
-            <a href="/student/browse" class="sidebar-link active">
-                <span class="link-icon">📚</span>
-                <span>Digital Library</span>
+            <a href="/student/browse" class="st-nav-item active">
+                <span class="st-nav-icon">📚</span>
+                <span class="st-nav-text">Digital Library</span>
             </a>
-            <a href="/digital-library" class="sidebar-link">
-                <span class="link-icon">🌐</span>
-                <span>Community Library</span>
+            <a href="/digital-library" class="st-nav-item">
+                <span class="st-nav-icon">🌐</span>
+                <span class="st-nav-text">Community Library</span>
             </a>
-            <a href="/student/publish" class="sidebar-link">
-                <span class="link-icon">✏️</span>
-                <span>Publish Content</span>
+            <a href="/student/my-publications" class="st-nav-item">
+                <span class="st-nav-icon">📖</span>
+                <span class="st-nav-text">My Books</span>
             </a>
-            <a href="/student/my-publications" class="sidebar-link">
-                <span class="link-icon">📄</span>
-                <span>Publications</span>
+            <a href="/student/assignments" class="st-nav-item">
+                <span class="st-nav-icon">📝</span>
+                <span class="st-nav-text">Assignments</span>
             </a>
-            <a href="/student/bookmarks" class="sidebar-link">
-                <span class="link-icon">🔖</span>
-                <span>Saved Items</span>
+            <a href="/student/requests" class="st-nav-item">
+                <span class="st-nav-icon">📋</span>
+                <span class="st-nav-text">Book Requests</span>
             </a>
-            <a href="/student/profile" class="sidebar-link">
-                <span class="link-icon">👤</span>
-                <span>My Profile</span>
+            <a href="/student/calendar" class="st-nav-item">
+                <span class="st-nav-icon">📅</span>
+                <span class="st-nav-text">Calendar</span>
             </a>
-            <hr class="sidebar-divider">
-            <a href="/logout" class="sidebar-link logout-link">
-                <span class="link-icon">🚪</span>
-                <span>Log Out</span>
+            <a href="/student/goals" class="st-nav-item">
+                <span class="st-nav-icon">🎯</span>
+                <span class="st-nav-text">Reading Goals</span>
+            </a>
+            <a href="/student/ai" class="st-nav-item">
+                <span class="st-nav-icon">🤖</span>
+                <span class="st-nav-text">AI Chat</span>
+            </a>
+            <a href="/student/notifications" class="st-nav-item">
+                <span class="st-nav-icon">🔔</span>
+                <span class="st-nav-text">Notifications</span>
+            </a>
+            <a href="/student/profile" class="st-nav-item">
+                <span class="st-nav-icon">👤</span>
+                <span class="st-nav-text">My Profile</span>
+            </a>
+            <a href="/student/settings" class="st-nav-item">
+                <span class="st-nav-icon">⚙️</span>
+                <span class="st-nav-text">Settings</span>
+            </a>
+            <a href="/student/help" class="st-nav-item">
+                <span class="st-nav-icon">❓</span>
+                <span class="st-nav-text">Help & Support</span>
             </a>
         </nav>
-        
-        <div class="sidebar-profile-card">
-            <div class="profile-card-avatar">
-                <%= session.user_name ? session.user_name[0] : 'S' %>
-            </div>
-            <div class="profile-card-info">
-                <h5><%= session.user_name %></h5>
-                <p>Class: <%= session.class %></p>
-            </div>
+
+        <!-- Sticky Footer -->
+        <div class="st-sidebar-footer">
+            <a href="/logout" class="st-footer-btn danger">
+                <span class="st-nav-icon">🚪</span>
+                <span>Logout</span>
+            </a>
         </div>
     </aside>
 
-    <!-- Main Container -->
-    <div class="portal-main">
-        <!-- Header -->
-        <header class="portal-header">
-            <div class="portal-header-top">
-                <!-- Hamburger button and User Profile (top-left) -->
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button class="header-btn" onclick="toggleSidebarMenu()" title="Main Menu">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                    <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.href='/student/profile'">
-                        <% const userBrowseName = (session && (session.user_name || session.name) ? (session.user_name || session.name) : 'Student'); %>
-                        <% const userBrowseInitial = userBrowseName.trim()[0].toUpperCase(); %>
-                        <div class="header-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.15)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
-                            <% if (session && session.profile_photo) { %>
-                                <img src="<%= session.profile_photo %>" style="width: 100%; height: 100%; object-fit: cover;" alt="<%= userBrowseName %>">
-                            <% } else { %>
-                                <%= userBrowseInitial %>
-                            <% } %>
-                        </div>
-                        <span style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;"><%= userBrowseName %></span>
-                    </div>
-                </div>
-                <div class="portal-header-actions">
-                    <button class="header-btn" onclick="window.location.href='/student/bookmarks'" title="Notifications" style="position: relative;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <span class="header-badge" style="background: var(--sp-purple); border-color: #3b2bc4;">3</span>
-                    </button>
-                </div>
+    <!-- ══ MAIN CONTENT ══ -->
+    <main class="st-main">
+        <!-- Topbar -->
+        <div class="st-topbar">
+            <div class="st-topbar-left">
+                <button class="st-menu-btn" onclick="toggleStudentSidebar()" aria-label="Menu">☰</button>
+                <span class="st-brand-title">📚 Digital Library Catalog</span>
             </div>
-            <div class="portal-welcome">
-                <h2 style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 1.6rem; line-height: 1;">🌐</span> Digital Library</h2>
-                <p>Explore, learn and grow every day.</p>
+            <div class="st-topbar-right">
+                <a href="/student" class="st-btn st-btn-primary st-btn-xs">🏠 Home</a>
             </div>
-            <img src="/student_books_illustration.png" class="header-illustration" alt="Digital Library" onerror="this.style.display='none';">
-        </header>
-
-        <!-- Content overlapping -->
-        <div class="portal-content">
-            
-            <form method="GET" action="/student/browse" class="search-filter-row" style="flex-wrap: wrap; gap: 10px; align-items: center; display: flex; width: 100%;">
-                <div class="search-container" style="flex: 1; min-width: 200px; display: flex; align-items: center; position: relative;">
-                    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 14px;">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" name="q" placeholder="Search by title, author, subject, keyword..." value="<%= search_query || '' %>" class="search-input" style="width: 100%; padding-left: 42px; height: 46px; border-radius: 12px; border: 1.5px solid var(--sp-border); background: var(--sp-white); outline: none;">
-                    <% if (active_genre) { %>
-                    <input type="hidden" name="genre" value="<%= active_genre %>">
-                    <% } %>
-                </div>
-                
-                <div style="display: flex; align-items: center; gap: 8px; background: var(--sp-white); border: 1.5px solid #e2e8f0; padding: 10px 14px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: var(--sp-text-dark); height: 46px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-                    <label class="sa-toggle-switch" style="position: relative; display: inline-block; width: 40px; height: 22px; margin: 0; cursor: pointer;">
-                        <input type="checkbox" name="ai" value="true" <% if (ai_search) { %>checked<% } %> style="opacity: 0; width: 0; height: 0;" onchange="this.form.submit()">
-                        <span class="sa-toggle-slider" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
-                    </label>
-                    <span>🤖 AI Chat</span>
-                </div>
-                
-                <button type="submit" class="filter-btn" style="height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--sp-purple); color: var(--sp-white); border: none; border-radius: 12px; padding: 0 20px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                    </svg>
-                    <span>Search</span>
-                </button>
-            </form>
-
-            <% if (!search_query && !active_genre) { %>
-            <!-- Categories Scroller -->
-            <div class="categories-section">
-                <div class="categories-header">
-                    <h3 class="categories-title">Categories</h3>
-                    <a href="/student/browse" class="categories-link">View All ></a>
-                </div>
-                <div class="categories-scroll">
-                    <a href="/student/browse" class="category-card <% if (!active_genre) { %>active<% } %>">
-                        <div class="category-icon-wrapper">📱</div>
-                        <span class="category-text">All</span>
-                    </a>
-                    <% global_sections.forEach(function(sec) { %>
-                    <a href="/student/browse?genre=<%= sec.name %>" class="category-card <% if (active_genre == sec.name) { %>active<% } %>">
-                        <div class="category-icon-wrapper">
-                            <% if (sec.name == 'Self Help') { %>🌿
-                            <% } else if (sec.name == 'Science') { %>🧪
-                            <% } else if (sec.name == 'Technology') { %>💻
-                            <% } else if (sec.name == 'Business') { %>💼
-                            <% } else if (sec.name == 'Story') { %>📖
-                            <% } else if (sec.name == 'Reference') { %>📚
-                            <% } else if (sec.name == 'Novel') { %>📕
-                            <% } else { %>📚
-                            <% } %>
-                        </div>
-                        <span class="category-text"><%= sec.name %></span>
-                    </a>
-                    <% }); %>
-                </div>
-            </div>
-
-            <div class="featured-carousel-wrapper">
-                <div class="featured-carousel">
-                    <!-- Slide 1 -->
-                    <div class="featured-banner">
-                        <div class="featured-info">
-                            <div class="featured-label">Featured Collection</div>
-                            <h4 class="featured-title">Top Reads This Week</h4>
-                            <p class="featured-subtitle">Handpicked popular books and resources just for you!</p>
-                            <a href="/student/browse?genre=Self+Help" class="featured-btn">Explore Now</a>
-                        </div>
-                    </div>
-                    <!-- Slide 2 -->
-                    <div class="featured-banner" style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);">
-                        <div class="featured-info">
-                            <div class="featured-label">Featured Collection</div>
-                            <h4 class="featured-title">Science & Innovation</h4>
-                            <p class="featured-subtitle">Dive into chemistry, physics, and world discoveries!</p>
-                            <a href="/student/browse?genre=Science" class="featured-btn" style="background: #0284c7;">Start Reading</a>
-                        </div>
-                    </div>
-                    <!-- Slide 3 -->
-                    <div class="featured-banner" style="background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%);">
-                        <div class="featured-info">
-                            <div class="featured-label">Featured Collection</div>
-                            <h4 class="featured-title">Coding & Technology</h4>
-                            <p class="featured-subtitle">Learn Python, Web Development, and cutting-edge AI!</p>
-                            <a href="/student/browse?genre=Technology" class="featured-btn" style="background: #059669;">Explore Tech</a>
-                        </div>
-                    </div>
-                    <!-- Slide 4 -->
-                    <div class="featured-banner" style="background: linear-gradient(135deg, #fffbeb 0%, #fde68a 100%);">
-                        <div class="featured-info">
-                            <div class="featured-label">Featured Collection</div>
-                            <h4 class="featured-title">Business & Leadership</h4>
-                            <p class="featured-subtitle">Master finance, entrepreneurship, and team building!</p>
-                            <a href="/student/browse?genre=Business" class="featured-btn" style="background: #d97706;">View Collection</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="carousel-dots">
-                <div class="carousel-dot active" data-index="0"></div>
-                <div class="carousel-dot" data-index="1"></div>
-                <div class="carousel-dot" data-index="2"></div>
-                <div class="carousel-dot" data-index="3"></div>
-            </div>
-
-            <!-- Trending Now Section -->
-            <div class="book-section">
-                <div class="book-row-header">
-                    <h3 class="book-row-title">Trending Now</h3>
-                    <a href="/student/browse" class="book-row-link">View All ></a>
-                </div>
-                <div class="book-scroller">
-                    <% books.slice(0, 5).forEach(function(book) { %>
-                    <% var card_url = (book.book_type === 'digital') ? '/digital-library/content/' + book.id : '/student/book/' + book.id; %>
-                    <a href="<%= card_url %>" class="book-card">
-                        <div class="book-cover-placeholder" data-title="<%= book.title %>" style="position: relative;">
-                            <img src="<%= book.cover_url || '/static/placeholder-cover.jpg' %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;" alt="<%= book.title %>" onerror="generateBookCoverFallback(this, '<%= book.title %>', '<%= book.author %>', '<%= book.genre || book.category || 'Library' %>')" data-fallback-title="<%= book.title %>" data-fallback-author="<%= book.author %>" data-fallback-genre="<%= book.genre || book.category || 'Library' %>">
-                            <span class="cover-tag" style="z-index: 2;"><%= book.genre || 'Trending' %></span>
-                            <h4 class="cover-title" style="z-index: 2; margin-top: auto;"><%= book.title %></h4>
-                        </div>
-                        <div class="book-details">
-                            <h4 class="book-title"><%= book.title %></h4>
-                            <p class="book-author"><%= book.author %> <% if (book.book_type == 'digital') { %>📖<% } %></p>
-                            <div class="book-meta">
-                                <div class="book-rating">
-                                    <span>⭐</span>
-                                    <span><%= (4.5 + (book.id % 5) / 10).toFixed(1) %></span>
-                                </div>
-                                <% if (book.book_type !== 'digital') { %>
-                                <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('<%= book.id %>');">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                        <circle cx="12" cy="5" r="1"></circle>
-                                        <circle cx="12" cy="19" r="1"></circle>
-                                    </svg>
-                                </button>
-                                <% } %>
-                            </div>
-                        </div>
-                    </a>
-                    <% }); %>
-                    <% if (books.slice(0, 5).length === 0) { %>
-                    <p style="color: var(--sp-text-muted); font-size: 0.85rem; padding-left: 5px;">No trending books available right now.</p>
-                    <% } %>
-                </div>
-            </div>
-
-            <!-- New Arrivals Section -->
-            <div class="book-section">
-                <div class="book-row-header">
-                    <h3 class="book-row-title">New Arrivals</h3>
-                    <a href="/student/browse" class="book-row-link">View All ></a>
-                </div>
-                <div class="book-scroller">
-                    <% books.slice(5, 10).forEach(function(book) { %>
-                    <% var card_url = (book.book_type === 'digital') ? '/digital-library/content/' + book.id : '/student/book/' + book.id; %>
-                    <a href="<%= card_url %>" class="book-card">
-                        <div class="book-cover-placeholder" data-title="<%= book.title %>" style="position: relative;">
-                            <img src="<%= book.cover_url || '/static/placeholder-cover.jpg' %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;" alt="<%= book.title %>" onerror="generateBookCoverFallback(this, '<%= book.title %>', '<%= book.author %>', '<%= book.genre || book.category || 'Library' %>')" data-fallback-title="<%= book.title %>" data-fallback-author="<%= book.author %>" data-fallback-genre="<%= book.genre || book.category || 'Library' %>">
-                            <span class="cover-tag" style="z-index: 2;">NEW</span>
-                            <h4 class="cover-title" style="z-index: 2; margin-top: auto;"><%= book.title %></h4>
-                        </div>
-                        <div class="book-details">
-                            <h4 class="book-title"><%= book.title %></h4>
-                            <p class="book-author"><%= book.author %> <% if (book.book_type == 'digital') { %>📖<% } %></p>
-                            <div class="book-meta">
-                                <div class="book-rating">
-                                    <span>⭐</span>
-                                    <span><%= (4.4 + (book.id % 6) / 10).toFixed(1) %></span>
-                                </div>
-                                <% if (book.book_type !== 'digital') { %>
-                                <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('<%= book.id %>');">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                        <circle cx="12" cy="5" r="1"></circle>
-                                        <circle cx="12" cy="19" r="1"></circle>
-                                    </svg>
-                                </button>
-                                <% } %>
-                            </div>
-                        </div>
-                    </a>
-                    <% }); %>
-                    <% if (books.slice(5, 10).length === 0) { %>
-                    <p style="color: var(--sp-text-muted); font-size: 0.85rem; padding-left: 5px;">No new arrivals available right now.</p>
-                    <% } %>
-                </div>
-            </div>
-
-            <% } else { %>
-            <!-- Search / Filter Results Grid View -->
-            <div class="book-section">
-                <div class="results-header">
-                    <span>
-                        <% if (search_query) { %>Search Results: "<%= search_query %>"<% } %>
-                        <% if (active_genre) { %>Genre: <%= active_genre %><% } %>
-                    </span>
-                    <a href="/student/browse" class="book-row-link" style="font-size: 0.75rem;">Clear Filters</a>
-                </div>
-                <div class="books-grid">
-                    <% books.forEach(function(book) { %>
-                    <% var card_url = (book.book_type === 'digital') ? '/digital-library/content/' + book.id : '/student/book/' + book.id; %>
-                    <a href="<%= card_url %>" class="book-card" style="width: auto;">
-                        <div class="book-cover-placeholder" data-title="<%= book.title %>" style="position: relative;">
-                            <img src="<%= book.cover_url || '/static/placeholder-cover.jpg' %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;" alt="<%= book.title %>" onerror="generateBookCoverFallback(this, '<%= book.title %>', '<%= book.author %>', '<%= book.genre || book.category || 'Library' %>')" data-fallback-title="<%= book.title %>" data-fallback-author="<%= book.author %>" data-fallback-genre="<%= book.genre || book.category || 'Library' %>">
-                            <% if (book.ai_score) { %>
-                            <div class="ai-badge" style="z-index: 2;">🤖 <%= book.ai_score %>% Match</div>
-                            <% } %>
-                            <span class="cover-tag" style="z-index: 2;"><%= book.genre || 'General' %></span>
-                            <h4 class="cover-title" style="z-index: 2; margin-top: auto;"><%= book.title %></h4>
-                        </div>
-                        <div class="book-details">
-                            <h4 class="book-title"><%= book.title %></h4>
-                            <p class="book-author"><%= book.author %> <% if (book.book_type == 'digital') { %>📖<% } %></p>
-                            <div class="book-meta">
-                                <div class="book-rating">
-                                    <span>⭐</span>
-                                    <span><%= (4.3 + (book.id % 7) / 10).toFixed(1) %></span>
-                                </div>
-                                <% if (book.book_type !== 'digital') { %>
-                                <button class="book-action-trigger" onclick="event.preventDefault(); showBookOptions('<%= book.id %>');">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                        <circle cx="12" cy="5" r="1"></circle>
-                                        <circle cx="12" cy="19" r="1"></circle>
-                                    </svg>
-                                </button>
-                                <% } %>
-                            </div>
-                        </div>
-                    </a>
-                    <% }); %>
-                    <% if (books.length === 0) { %>
-                    <div style="grid-column: span 2; text-align: center; padding: 3rem; color: var(--sp-text-muted); font-size: 0.9rem;">
-                        No books matching your query were found.
-                    </div>
-                    <% } %>
-                </div>
-            </div>
-            <% } %>
-
         </div>
-    </div>
-</div>
 
-<!-- Mobile Bottom Navigation Tab Bar -->
+        <div class="st-content">
+            <!-- Hero Featured Banner -->
+            <div class="browse-hero-card">
+                <h2 style="font-family: 'Outfit'; font-size: 1.3rem; color: #ffffff; margin: 0 0 4px 0;">📚 Explore & Read Digital Books</h2>
+                <p style="margin: 0; color: #a5b4fc; font-size: 0.85rem;">Handpicked popular books and resources for your school digital collection!</p>
+                <form action="/student/browse" method="GET" class="browse-search-bar">
+                    <input type="text" name="q" value="<%= typeof search_query !== 'undefined' ? search_query : '' %>" placeholder="Search by title, author, category..." class="browse-search-input">
+                    <button type="submit" class="st-btn st-btn-primary">🔍 Search Catalog</button>
+                </form>
+            </div>
 
+            <!-- Category Pills Touch Scroller -->
+            <div class="browse-category-scroller">
+                <a href="/student/browse" class="browse-cat-pill <%= (!active_genre) ? 'active' : '' %>">All Books</a>
+                <% if (typeof genres !== 'undefined' && genres && genres.length > 0) { %>
+                    <% genres.forEach(g => { %>
+                        <a href="/student/browse?genre=<%= encodeURIComponent(g) %>" class="browse-cat-pill <%= (active_genre === g) ? 'active' : '' %>"><%= g %></a>
+                    <% }) %>
+                <% } else { %>
+                    <a href="/student/browse?genre=Fiction" class="browse-cat-pill">Fiction</a>
+                    <a href="/student/browse?genre=Science" class="browse-cat-pill">Science</a>
+                    <a href="/student/browse?genre=History" class="browse-cat-pill">History</a>
+                    <a href="/student/browse?genre=Business" class="browse-cat-pill">Business</a>
+                    <a href="/student/browse?genre=Fantasy" class="browse-cat-pill">Fantasy</a>
+                <% } %>
+            </div>
 
-<!-- Mobile Sidebar Drawer Menu -->
-<div id="portalSidebar" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; z-index: 11000; box-shadow: 10px 0 30px rgba(0,0,0,0.15); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden;">
-    <div style="background: linear-gradient(135deg, #3b2bc4 0%, #5c3cf3 100%); padding: 2.5rem 1.5rem; color: white;">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🌐</div>
-        <h4 style="margin: 0; font-family: 'Outfit'; font-size: 1.15rem; font-weight: 800;"><%= school_name %></h4>
-        <p style="margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.8;">Student Portal</p>
-    </div>
-    <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto;">
-        <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Academic Profile</p>
-        <div style="background: #f8fafc; border-radius: 12px; padding: 12px; font-size: 0.85rem; margin-bottom: 1rem;">
-            <div style="margin-bottom: 6px;">Name: <strong style="color: var(--sp-text-dark);"><%= session.user_name %></strong></div>
-            <div style="margin-bottom: 6px;">ID: <strong style="color: var(--sp-text-dark);">#<%= session.admission_no %></strong></div>
-            <div>Class: <strong style="color: var(--sp-text-dark);"><%= session.class %></strong></div>
+            <!-- Books Grid -->
+            <div>
+                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 12px 0;">📖 Catalog Books</h3>
+                <div class="browse-books-grid">
+                    <% if (typeof books !== 'undefined' && books && books.length > 0) { %>
+                        <% books.forEach(b => { %>
+                            <div class="browse-book-card">
+                                <img src="<%= b.cover_url || b.cover_image || '/static/placeholder-cover.jpg' %>" alt="Cover" class="browse-book-cover">
+                                <h4 class="browse-book-title"><%= b.title %></h4>
+                                <p class="browse-book-author"><%= b.author || 'Author' %></p>
+                                <a href="/student/book/<%= b.id %>" class="st-btn st-btn-primary st-btn-xs" style="width: 100%; margin-top: 8px;">View Details</a>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div style="grid-column: 1 / -1; text-align: center; color: var(--sp-muted); padding: 2rem;">No books found matching criteria.</div>
+                    <% } %>
+                </div>
+            </div>
         </div>
-        
-        <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Navigation</p>
-        <a href="/student" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📊 Dashboard Overview</a>
-        <a href="/student/browse" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #312e81, #4338ca); color: #5c3cf3;">📚 Digital Library</a>
-        <a href="/digital-library" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🌐 Community Library</a>
-        <a href="/student/publish" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">✏️ Publish Content</a>
-        <a href="/student/my-publications" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📄 My Publications</a>
-        <a href="/student/bookmarks" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🔖 Saved Bookmarks</a>
-        <a href="/student/profile" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">👤 Edit My Profile</a>
-        
-        <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 10px 0;">
-        <a href="/logout" style="color: #ef4444; text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#fff0f3';" onmouseout="this.style.background='transparent';">🚪 Log Out</a>
-    </div>
-</div>
-<!-- Sidebar backdrop overlay -->
-<div id="sidebarBackdrop" onclick="toggleSidebarMenu()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10500; display: none; opacity: 0; transition: opacity 0.3s ease;"></div>
-
-<!-- Quick Option Drawer Modal (reused from student.html style) -->
-<div id="optionModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 12000; display: none; align-items: flex-end;">
-    <div style="background: white; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 1.5rem; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Plus Jakarta Sans', sans-serif;">
-        <div style="width: 40px; height: 5px; background: #e2e8f0; border-radius: 3px; align-self: center; margin-bottom: 8px;"></div>
-        <h4 style="margin: 0 0 5px 0; font-family: 'Outfit'; font-size: 1.1rem; color: var(--sp-text-dark);">Book Options</h4>
-        <a id="optionBtnRead" href="#" style="background: var(--sp-purple); color: white; text-decoration: none; padding: 14px; border-radius: 12px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <span>📖 View Details / Issue</span>
-        </a>
-        <button onclick="closeOptionModal()" style="background: #f1f5f9; color: var(--sp-text-muted); border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer;">
-            <span>Close Menu</span>
-        </button>
-    </div>
+    </main>
 </div>
 
-<% contentFor("scripts") %>
 <script>
-    // Procedural covers: colors array
-    const colors = [
-        ['#ff9a9e', '#fecfef'],
-        ['#a1c4fd', '#c2e9fb'],
-        ['#f5f7fa', '#c3cfe2'],
-        ['#fbc2eb', '#a6c1ee'],
-        ['#fdcbf1', '#e6dee9'],
-        ['#a18cd1', '#fbc2eb'],
-        ['#ffb199', '#ff0844'],
-        ['#4facfe', '#00f2fe'],
-        ['#30cfd0', '#330867']
-    ];
+function toggleStudentSidebar() {
+    const sb = document.getElementById('studentSidebar');
+    const dim = document.getElementById('studentDim');
+    if (!sb) return;
+    sb.classList.toggle('open');
+    if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
+}
 
-    // Seeded hash code to pick colors deterministically based on book title
-    function getPastelGradient(title) {
-        let hash = 0;
-        for (let i = 0; i < title.length; i++) {
-            hash = title.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const index = Math.abs(hash) % colors.length;
-        return colors[index];
+function autoCloseStudentSidebar() {
+    if (window.innerWidth <= 900) {
+        const sb = document.getElementById('studentSidebar');
+        const dim = document.getElementById('studentDim');
+        if (sb) sb.classList.remove('open');
+        if (dim) dim.classList.remove('active');
     }
+}
 
-    // Apply procedural covers on load
-    document.addEventListener('DOMContentLoaded', () => {
-        const placeholders = document.querySelectorAll('.book-cover-placeholder');
-        placeholders.forEach(el => {
-            const title = el.getAttribute('data-title') || 'Book';
-            const grad = getPastelGradient(title);
-            el.style.background = `linear-gradient(135deg, ${grad[0]} 0%, ${grad[1]} 100%)`;
-        });
-
-        // Initialize Carousel Scroll Logic
-        // Featured Carousel & Ad Manager Controller
-        (function() {
-            let currentSlide = 0;
-            let autoPlayTimer = null;
-            const wrapper = document.querySelector('.featured-carousel-wrapper');
-            const track = document.querySelector('.featured-carousel');
-            const dotsContainer = document.querySelector('.carousel-dots');
-            if (!track || !wrapper || !dotsContainer) return;
-
-            // Fetch dynamic ads from server
-            fetch('/api/ads?section=digital_library')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success' && data.advertisements && data.advertisements.length > 0) {
-                        const adSlides = data.advertisements.map(ad => `
-                            <div class="featured-banner ad-banner-slide" data-ad-id="${ad.id}" style="background: ${ad.bg_gradient || 'linear-gradient(135deg, #f5f3ff 0%, #edd8ff 100%)'};">
-                                <div class="featured-info">
-                                    <div class="featured-label" style="color: rgba(255,255,255,0.9);">📢 PROMOTIONAL FEATURE</div>
-                                    <h4 class="featured-title" style="color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">${escapeHtml(ad.title)}</h4>
-                                    <p class="featured-subtitle" style="color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.3);">${escapeHtml(ad.subtitle || ad.description || '')}</p>
-                                    <a href="${ad.target_url}" onclick="trackAdClick(${ad.id})" class="featured-btn" style="background: rgba(255,255,255,0.25); backdrop-filter: blur(8px); color: white; border: 1px solid rgba(255,255,255,0.4);">${escapeHtml(ad.cta_text || 'Learn More')}</a>
-                                </div>
-                            </div>
-                        `).join('');
-                        
-                        track.insertAdjacentHTML('afterbegin', adSlides);
-                        rebuildDots();
-                    }
-                    initCarouselController();
-                })
-                .catch(() => initCarouselController());
-
-            function escapeHtml(str) {
-                return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            }
-
-            window.trackAdClick = function(adId) {
-                fetch('/api/ads/' + adId + '/click', { method: 'POST' }).catch(() => {});
-            };
-
-            function rebuildDots() {
-                const slides = track.querySelectorAll('.featured-banner');
-                dotsContainer.innerHTML = Array.from(slides).map((_, i) => `<div class="carousel-dot ${i===0?'active':''}" data-index="${i}"></div>`).join('');
-                bindDotClicks();
-            }
-
-            function bindDotClicks() {
-                const dots = dotsContainer.querySelectorAll('.carousel-dot');
-                dots.forEach((dot, idx) => {
-                    dot.onclick = () => {
-                        currentSlide = idx;
-                        updateSlide();
-                        startAutoPlay();
-                    };
-                });
-            }
-
-            function updateSlide() {
-                const slides = track.querySelectorAll('.featured-banner');
-                if (slides.length === 0) return;
-                track.style.transform = `translateX(-${currentSlide * 100}%)`;
-                const dots = dotsContainer.querySelectorAll('.carousel-dot');
-                dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentSlide));
-            }
-
-            function nextSlide() {
-                const slides = track.querySelectorAll('.featured-banner');
-                if (slides.length === 0) return;
-                currentSlide = (currentSlide + 1) % slides.length;
-                updateSlide();
-            }
-
-            function startAutoPlay() {
-                if (autoPlayTimer) clearInterval(autoPlayTimer);
-                autoPlayTimer = setInterval(nextSlide, 6000);
-            }
-
-            function initCarouselController() {
-                bindDotClicks();
-                let touchStartX = 0;
-                let touchEndX = 0;
-
-                wrapper.addEventListener('touchstart', (e) => {
-                    touchStartX = e.changedTouches[0].screenX;
-                    if (autoPlayTimer) clearInterval(autoPlayTimer);
-                }, { passive: true });
-
-                wrapper.addEventListener('touchend', (e) => {
-                    touchEndX = e.changedTouches[0].screenX;
-                    const diff = touchStartX - touchEndX;
-                    const slides = track.querySelectorAll('.featured-banner');
-                    if (Math.abs(diff) > 40 && slides.length > 0) {
-                        if (diff > 0) currentSlide = (currentSlide + 1) % slides.length;
-                        else currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-                        updateSlide();
-                    }
-                    startAutoPlay();
-                }, { passive: true });
-
-                wrapper.addEventListener('mouseenter', () => {
-                    if (autoPlayTimer) clearInterval(autoPlayTimer);
-                });
-
-                wrapper.addEventListener('mouseleave', () => {
-                    startAutoPlay();
-                });
-
-                startAutoPlay();
-            }
-        })();
-    });
-
-    // Mobile Sidebar Drawer Toggle
-    function toggleSidebarMenu() {
-        const sidebar = document.getElementById('portalSidebar');
-        const backdrop = document.getElementById('sidebarBackdrop');
-        if (sidebar.style.left === '0px') {
-            sidebar.style.left = '-280px';
-            backdrop.style.opacity = '0';
-            setTimeout(() => backdrop.style.display = 'none', 300);
-        } else {
-            backdrop.style.display = 'block';
-            setTimeout(() => backdrop.style.opacity = '1', 50);
-            sidebar.style.left = '0px';
-        }
-    }
-
-    // Book Actions Drawer Modal
-    let activeBookId = null;
-
-    function showBookOptions(bookId) {
-        activeBookId = bookId;
-        document.getElementById('optionBtnRead').href = '/student/book/' + bookId;
-        const modal = document.getElementById('optionModal');
-        modal.style.display = 'flex';
-        setTimeout(() => {
-            modal.firstElementChild.style.transform = 'translateY(0)';
-        }, 50);
-    }
-
-    function closeOptionModal() {
-        const modal = document.getElementById('optionModal');
-        modal.firstElementChild.style.transform = 'translateY(100%)';
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300);
-    }
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') autoCloseStudentSidebar();
+});
 </script>
-
-      </main>
-    </div>
-  </div>
-</div>
