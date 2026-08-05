@@ -1,0 +1,3625 @@
+<%- layout("base") %>
+
+<style>
+/* ═══════════════════════════════════════════════
+   SUPER ADMIN DASHBOARD — MASTER RESPONSIVE DESIGN
+   Complete Theme Isolation & Zero Layout Shifts
+═══════════════════════════════════════════════ */
+html, body {
+  background: #060d1f !important;
+  background-color: #060d1f !important;
+  color: #f1f5f9 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  padding-top: 0 !important;
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  min-height: 100vh !important;
+}
+
+.sa-page-wrapper {
+  background: #060d1f !important;
+  min-height: 100vh;
+  width: 100vw;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #f1f5f9;
+}
+
+.sa-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sa-sidebar {
+  width: 260px;
+  max-width: 85vw; /* 80-85% screen width max on mobile */
+  background: #080f22;
+  border-right: 1px solid rgba(99, 102, 241, 0.14);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 9999;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+}
+
+.sa-sidebar-brand {
+  padding: 1.1rem 1.2rem 0.9rem;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sa-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sa-brand-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.sa-brand-text h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  margin: 0;
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sa-brand-text p {
+  font-size: 0.67rem;
+  color: #475569;
+  margin: 1px 0 0;
+  font-weight: 600;
+}
+
+.sa-sidebar-close-mob {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.sa-sidebar-close-mob:active { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+.sa-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 0.6rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.sa-nav::-webkit-scrollbar { width: 4px; }
+.sa-nav::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 4px; }
+
+/* Collapsible / Group section headers */
+.sa-nav-section-title {
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #475569;
+  padding: 0.7rem 0.7rem 0.35rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+.sa-nav-section-title:first-child { margin-top: 0; }
+.sa-nav-section-title:hover { color: #818cf8; }
+.sa-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sa-nav-group.collapsed {
+  display: none;
+}
+
+.sa-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  min-height: 44px; /* 44px touch target */
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 2px;
+  border: 1px solid transparent;
+  background: none;
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+.sa-nav-link:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: #a5b4fc;
+}
+.sa-nav-link.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.24), rgba(168, 85, 247, 0.14));
+  color: #a5b4fc;
+  border-left: 3.5px solid #818cf8;
+  border-color: rgba(99, 102, 241, 0.25);
+  font-weight: 700;
+}
+.sa-nav-icon {
+  font-size: 1.05rem;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sa-sidebar-footer {
+  padding: 0.85rem;
+  border-top: 1px solid rgba(99, 102, 241, 0.12);
+  flex-shrink: 0;
+  background: #080f22;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sa-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border-radius: 11px;
+  border: 1px solid rgba(99, 102, 241, 0.14);
+}
+.sa-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+}
+.sa-user-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.2;
+}
+.sa-user-role {
+  font-size: 0.65rem;
+  color: #6366f1;
+  font-weight: 700;
+}
+
+/* Semi-transparent dark overlay for mobile */
+.sa-overlay-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sa-overlay-dim.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── MAIN CONTENT ── */
+.sa-main {
+  margin-left: 260px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: calc(100vw - 260px);
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+.sa-topbar {
+  background: rgba(8, 15, 34, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 12px;
+}
+.sa-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sa-mob-toggle {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 10px;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+}
+.sa-breadcrumbs {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.sa-topbar-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+.sa-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sa-content {
+  padding: 1.5rem;
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* ── TABS ── */
+.sa-tab-pane { display: none; }
+.sa-tab-pane.active { display: block; }
+
+/* ── STAT CARDS ── */
+.sa-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+.sa-stat-card {
+  background: linear-gradient(145deg, #0d1630, #111c3a);
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  border-radius: 16px;
+  padding: 1.2rem 1.3rem;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.sa-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(99, 102, 241, 0.15);
+}
+.sa-stat-card::after {
+  content: '';
+  position: absolute;
+  top: -24px;
+  right: -24px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--glow, rgba(99, 102, 241, 0.1));
+  pointer-events: none;
+}
+.sa-stat-icon { font-size: 1.6rem; margin-bottom: 0.4rem; display: block; line-height: 1; }
+.sa-stat-label { font-size: 0.67rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; }
+.sa-stat-value { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; color: #fff; margin: 3px 0 0; line-height: 1; }
+.sa-stat-sub { font-size: 0.72rem; color: #64748b; margin-top: 3px; }
+
+/* ── CARDS ── */
+.sa-card {
+  background: linear-gradient(145deg, #0d1630, #111c3a);
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  border-radius: 18px;
+  margin-bottom: 1.2rem;
+  overflow: hidden;
+}
+.sa-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.sa-card-title { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
+.sa-card-body { padding: 1.4rem; }
+.sa-card-body-np { padding: 0; }
+
+/* ── BUTTONS ── */
+.sa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  min-height: 44px; /* Accessible 44px touch target */
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.sa-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sa-btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3); }
+.sa-btn-primary:hover { box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45); transform: translateY(-1px); }
+.sa-btn-success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+.sa-btn-success:hover { transform: translateY(-1px); }
+.sa-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+.sa-btn-danger:hover { transform: translateY(-1px); }
+.sa-btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+.sa-btn-warning:hover { transform: translateY(-1px); }
+.sa-btn-info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+.sa-btn-ghost { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.08); }
+.sa-btn-ghost:hover { background: rgba(255, 255, 255, 0.09); color: #e2e8f0; }
+.sa-btn-sm { padding: 6px 12px; font-size: 0.78rem; min-height: 36px; border-radius: 8px; }
+.sa-btn-xs { padding: 4px 10px; font-size: 0.72rem; min-height: 32px; border-radius: 6px; }
+
+/* ── TABLE OVERFLOW & RESPONSIVENESS ── */
+.sa-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+  min-width: 600px;
+}
+.sa-table th {
+  padding: 10px 13px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #334155;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+  white-space: nowrap;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.2);
+}
+.sa-table td {
+  padding: 10px 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: #94a3b8;
+  vertical-align: middle;
+}
+.sa-table td:first-child { color: #e2e8f0; }
+.sa-table tr:hover td { background: rgba(99, 102, 241, 0.04); }
+.sa-table tr:last-child td { border-bottom: none; }
+.sa-table-actions { display: flex; gap: 5px; flex-wrap: nowrap; }
+.sa-col-check { width: 40px; }
+input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1; cursor: pointer; }
+
+/* ── BADGES ── */
+.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+.badge-indigo { background: rgba(99, 102, 241, 0.18); color: #a5b4fc; }
+.badge-purple { background: rgba(168, 85, 247, 0.18); color: #d8b4fe; }
+.badge-green { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+.badge-red { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+.badge-yellow { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+.badge-blue { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
+.badge-gray { background: rgba(100, 116, 139, 0.18); color: #94a3b8; }
+
+/* ── FILTERS / SEARCH ── */
+.sa-toolbar { display: flex; align-items: center; gap: 8px; padding: 1rem 1.4rem; border-bottom: 1px solid rgba(99, 102, 241, 0.08); flex-wrap: wrap; }
+.sa-search { display: flex; align-items: center; gap: 7px; background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(99, 102, 241, 0.18); border-radius: 10px; padding: 8px 12px; flex: 1; min-width: 180px; min-height: 44px; }
+.sa-search input { background: none; border: none; color: #e2e8f0; outline: none; font-size: 0.83rem; flex: 1; font-family: inherit; min-width: 80px; }
+.sa-search input::placeholder { color: #334155; }
+.sa-select { background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(99, 102, 241, 0.18); border-radius: 10px; color: #e2e8f0; font-size: 0.83rem; padding: 8px 12px; min-height: 44px; font-family: inherit; outline: none; cursor: pointer; }
+.sa-select option { background: #111c3a; }
+.sa-input { width: 100%; padding: 10px 14px; min-height: 44px; background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(99, 102, 241, 0.18); border-radius: 10px; color: #e2e8f0; font-size: 0.85rem; font-family: inherit; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.sa-input:focus, .sa-select:focus { border-color: #6366f1; background: rgba(99, 102, 241, 0.07); }
+.sa-input::placeholder { color: #334155; }
+.sa-textarea { width: 100%; padding: 10px 14px; background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(99, 102, 241, 0.18); border-radius: 10px; color: #e2e8f0; font-size: 0.85rem; font-family: inherit; outline: none; resize: vertical; min-height: 90px; box-sizing: border-box; }
+.sa-form-group { margin-bottom: 0.9rem; }
+.sa-form-group label { display: block; font-size: 0.72rem; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
+.sa-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sa-form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ── PAGINATION ── */
+.sa-pagination { display: flex; align-items: center; gap: 6px; padding: 0.9rem 1.4rem; border-top: 1px solid rgba(99, 102, 241, 0.08); flex-wrap: wrap; }
+.sa-page-info { font-size: 0.78rem; color: #475569; flex: 1; }
+.sa-page-btn { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(99, 102, 241, 0.15); color: #94a3b8; border-radius: 8px; padding: 6px 12px; min-height: 38px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.sa-page-btn:hover, .sa-page-btn.active { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.3); }
+.sa-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── BULK ACTION BAR ── */
+.sa-bulk-bar { display: none; align-items: center; gap: 10px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 10px; padding: 10px 16px; margin-bottom: 12px; flex-wrap: wrap; }
+.sa-bulk-bar.show { display: flex; }
+.sa-bulk-count { font-size: 0.83rem; font-weight: 700; color: #a5b4fc; flex: 1; }
+
+/* ── MODAL ── */
+.sa-modal-overlay { position: fixed; inset: 0; background: rgba(3, 7, 18, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1.2rem; }
+.sa-modal-overlay.open { display: flex; }
+.sa-modal { background: #0d1630; border: 1px solid rgba(99, 102, 241, 0.22); border-radius: 20px; width: 100%; max-width: 540px; max-height: 92vh; overflow-y: auto; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6); }
+.sa-modal-lg { max-width: 680px; }
+.sa-modal-header { padding: 1.3rem 1.5rem 1rem; border-bottom: 1px solid rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #0d1630; z-index: 1; }
+.sa-modal-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0; }
+.sa-modal-body { padding: 1.2rem 1.5rem; }
+.sa-modal-footer { padding: 0.9rem 1.5rem 1.4rem; display: flex; gap: 9px; justify-content: flex-end; border-top: 1px solid rgba(99, 102, 241, 0.08); }
+.sa-close-btn { background: none; border: none; color: #475569; font-size: 1.3rem; cursor: pointer; padding: 4px; line-height: 1; transition: color 0.15s; min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+.sa-close-btn:hover { color: #fff; }
+
+/* ── SKELETON ANIMATION ── */
+.sa-skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.5s infinite;
+  border-radius: 6px;
+  display: inline-block;
+}
+@keyframes skeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── RESPONSIVE BREAKPOINTS ── */
+@media (max-width: 900px) {
+  .sa-sidebar {
+    transform: translateX(-105%);
+  }
+  .sa-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 20px 0 60px rgba(0, 0, 0, 0.8);
+  }
+  .sa-sidebar-close-mob {
+    display: flex;
+  }
+  .sa-main {
+    margin-left: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+  .sa-mob-toggle {
+    display: flex;
+  }
+  .sa-content {
+    padding: 1rem;
+  }
+  .sa-topbar {
+    padding: 0.75rem 1rem;
+  }
+  .sa-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 0.8rem;
+  }
+  .sa-search, .sa-select {
+    width: 100%;
+    min-width: 100%;
+  }
+  .sa-form-row, .sa-form-row-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .sa-btn {
+    min-height: 44px; /* Accessible touch target */
+  }
+}
+@media (max-width: 480px) {
+  .sa-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .sa-quick-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   PREVENT GLOBAL TABLE CARD BREAKAGE & WHITE SPACE
+═══════════════════════════════════════════════ */
+.sa-page-wrapper table,
+.sa-page-wrapper thead,
+.sa-page-wrapper tbody,
+.sa-page-wrapper tfoot,
+.sa-page-wrapper tr,
+.sa-page-wrapper th,
+.sa-page-wrapper td {
+  display: table-cell !important;
+}
+
+.sa-page-wrapper table {
+  display: table !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+.sa-page-wrapper thead {
+  display: table-header-group !important;
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+.sa-page-wrapper tbody {
+  display: table-row-group !important;
+}
+
+.sa-page-wrapper tr {
+  display: table-row !important;
+  margin-bottom: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+.sa-page-wrapper th {
+  display: table-cell !important;
+  padding: 10px 14px !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: #64748b !important;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.12) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+}
+
+.sa-page-wrapper td {
+  display: table-cell !important;
+  padding: 10px 14px !important;
+  position: static !important;
+  padding-left: 14px !important;
+  text-align: left !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  vertical-align: middle !important;
+}
+
+.sa-page-wrapper td:before {
+  content: none !important;
+  display: none !important;
+}
+
+.sa-page-wrapper tr:hover td {
+  background: rgba(99, 102, 241, 0.06) !important;
+}
+
+.sa-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+
+</style>
+
+<div class="sa-page-wrapper">
+<div class="sa-layout">
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sa-sidebar" id="saSidebar">
+  <div class="sa-sidebar-brand">
+    <div class="sa-brand-logo">
+      <div class="sa-brand-icon">⚙️</div>
+      <div class="sa-brand-text">
+        <h2>Super Admin</h2>
+        <p>librika.in Control Center</p>
+      </div>
+    </div>
+    <button class="sa-sidebar-close-mob" onclick="closeSidebar()" title="Close Sidebar">✕</button>
+  </div>
+
+  <nav class="sa-nav">
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-overview')">
+      <span>📊 Overview</span><span class="sa-nav-arrow" id=arr-grp-overview>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-overview">
+      <button class="sa-nav-link active" onclick="switchTab('dashboard',this)" id="navDashboard">
+        <span class="sa-nav-icon">📊</span> Dashboard
+      </button>
+    </div>
+
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-users')">
+      <span>👥 User Management</span><span class="sa-nav-arrow" id=arr-grp-users>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-users">
+      <button class="sa-nav-link" onclick="switchTab('users',this)">
+        <span class="sa-nav-icon">👥</span> Users Directory
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('roles',this)">
+        <span class="sa-nav-icon">🛡️</span> Roles & Permissions
+      </button>
+    </div>
+
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-schools')">
+      <span>🏫 Schools</span><span class="sa-nav-arrow" id=arr-grp-schools>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-schools">
+      <button class="sa-nav-link" onclick="switchTab('schools',this)">
+        <span class="sa-nav-icon">🏫</span> Schools Directory
+      </button>
+    </div>
+
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-library')">
+      <span>📚 Library</span><span class="sa-nav-arrow" id=arr-grp-library>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-library">
+      <button class="sa-nav-link" onclick="switchTab('books',this)">
+        <span class="sa-nav-icon">📚</span> Books Catalog
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('digital',this)">
+        <span class="sa-nav-icon">🌐</span> Digital Library
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('community',this)">
+        <span class="sa-nav-icon">👨‍👩‍👧</span> Community Library
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('global',this)">
+        <span class="sa-nav-icon">🌍</span> Global Library
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('categories',this)">
+        <span class="sa-nav-icon">🏷️</span> Categories & Subjects
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('goals',this)">
+        <span class="sa-nav-icon">🎯</span> Reading Goals
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('requests',this)">
+        <span class="sa-nav-icon">📬</span> Book Requests
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('issued',this)">
+        <span class="sa-nav-icon">📤</span> Issued Books
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('rfid',this)">
+        <span class="sa-nav-icon">📡</span> RFID Records
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('transactions',this)">
+        <span class="sa-nav-icon">📋</span> Transactions
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('content',this)">
+        <span class="sa-nav-icon">🌐</span> Moderation Queue
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('ads',this)">
+        <span class="sa-nav-icon">📢</span> Advertisements
+      </button>
+    </div>
+
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-comm')">
+      <span>🔔 Communication</span><span class="sa-nav-arrow" id=arr-grp-comm>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-comm">
+      <button class="sa-nav-link" onclick="switchTab('notifications',this)">
+        <span class="sa-nav-icon">🔔</span> Broadcast Notifications
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('scheduled',this)">
+        <span class="sa-nav-icon">⏰</span> Scheduled Messages
+      </button>
+    </div>
+
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-analytics')">
+      <span>📈 Analytics</span><span class="sa-nav-arrow" id=arr-grp-analytics>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-analytics">
+      <button class="sa-nav-link" onclick="switchTab('analytics',this)">
+        <span class="sa-nav-icon">📈</span> Analytics Overview
+      </button>
+    </div>
+
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-system')">
+      <span>⚙️ System & AI</span><span class="sa-nav-arrow" id=arr-grp-system>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-system">
+      <button class="sa-nav-link" onclick="switchTab('settings',this)">
+        <span class="sa-nav-icon">⚙️</span> System Settings
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('aiconfig',this)">
+        <span class="sa-nav-icon">🤖</span> AI Search Config
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('maintenance',this)">
+        <span class="sa-nav-icon">🛠️</span> Maintenance Mode
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('masterauth',this)">
+        <span class="sa-nav-icon">🔑</span> Master Auth
+      </button>
+    </div>
+
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-security')">
+      <span>🔍 Security & Logs</span><span class="sa-nav-arrow" id=arr-grp-security>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-security">
+      <button class="sa-nav-link" onclick="switchTab('audit',this)">
+        <span class="sa-nav-icon">🔍</span> Audit Logs
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('login-history',this)">
+        <span class="sa-nav-icon">🔐</span> Login History
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('devices',this)">
+        <span class="sa-nav-icon">💻</span> Active Devices
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('two-factor',this)">
+        <span class="sa-nav-icon">🔏</span> Two-Factor Auth
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('ip-allowlist',this)">
+        <span class="sa-nav-icon">🛡️</span> IP Restrictions
+      </button>
+      <button class="sa-nav-link" onclick="switchTab('backups',this)">
+        <span class="sa-nav-icon">💾</span> Database Backups
+      </button>
+    </div>
+
+    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-reports')">
+      <span>📥 Reports</span><span class="sa-nav-arrow" id=arr-grp-reports>▾</span>
+    </div>
+    <div class="sa-nav-group" id="grp-reports">
+      <button class="sa-nav-link" onclick="switchTab('reports',this)">
+        <span class="sa-nav-icon">📥</span> Download Reports
+      </button>
+    </div>
+  </nav>
+
+  <div class="sa-sidebar-footer">
+    <div class="sa-user-chip">
+      <div class="sa-avatar">SA</div>
+      <div>
+        <div class="sa-user-name"><%= typeof session !== 'undefined' && session ? (session.name || 'Super Admin') : 'Super Admin' %></div>
+        <div class="sa-user-role">Super Administrator</div>
+      </div>
+    </div>
+    <a href="/" class="sa-btn sa-btn-ghost" style="width:100%;justify-content:center;" title="Go to public site">🏠 Public Site</a>
+    <a href="/logout" class="sa-btn sa-btn-danger" style="width:100%;justify-content:center;">🚪 Logout</a>
+  </div>
+</aside>
+<div class="sa-overlay-dim" id="saDim" onclick="closeSidebar()"></div>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="sa-main">
+  <!-- Topbar -->
+  <div class="sa-topbar">
+    <div class="sa-topbar-left">
+      <button class="sa-mob-toggle" onclick="toggleSidebar()">☰</button>
+      <div>
+        <div class="sa-breadcrumbs" id="saBreadcrumbs">Super Admin / Overview</div>
+        <h1 class="sa-topbar-title" id="pageTitle">Dashboard</h1>
+      </div>
+    </div>
+    <div class="sa-topbar-right">
+      <button class="sa-btn sa-btn-ghost sa-btn-sm" onclick="refreshCurrentTab()" title="Refresh Tab">↻ Refresh</button>
+      <a href="/logout" class="sa-btn sa-btn-danger sa-btn-sm">🚪 Logout</a>
+    </div>
+  </div>
+
+  <div class="sa-content">
+<div class="sa-tab-pane active" id="tab-dashboard">
+      <div class="sa-stats-grid">
+        <div class="sa-stat-card" style="--glow:rgba(99,102,241,.18)" onclick="switchTab('users',document.querySelector('[onclick*=\'users\']'))">
+          <span class="sa-stat-icon">👥</span>
+          <div class="sa-stat-label">Total Users</div>
+          <div class="sa-stat-value"><%= stats.users %></div>
+          <div class="sa-stat-sub">All roles & schools</div>
+        </div>
+        <div class="sa-stat-card" style="--glow:rgba(16,185,129,.15)" onclick="switchTab('schools',document.querySelector('[onclick*=\'schools\']'))">
+          <span class="sa-stat-icon">🏫</span>
+          <div class="sa-stat-label">Schools</div>
+          <div class="sa-stat-value"><%= stats.schools %></div>
+          <div class="sa-stat-sub">Registered institutions</div>
+        </div>
+        <div class="sa-stat-card" style="--glow:rgba(245,158,11,.15)" onclick="switchTab('books',document.querySelector('[onclick*=\'books\']'))">
+          <span class="sa-stat-icon">📚</span>
+          <div class="sa-stat-label">Total Books</div>
+          <div class="sa-stat-value"><%= stats.books %></div>
+          <div class="sa-stat-sub">Physical catalogue</div>
+        </div>
+        <div class="sa-stat-card" style="--glow:rgba(59,130,246,.15)" onclick="switchTab('transactions',document.querySelector('[onclick*=\'transactions\']'))">
+          <span class="sa-stat-icon">📖</span>
+          <div class="sa-stat-label">Active Borrows</div>
+          <div class="sa-stat-value"><%= stats.active %></div>
+          <div class="sa-stat-sub">Currently issued</div>
+        </div>
+        <div class="sa-stat-card" style="--glow:rgba(239,68,68,.15)" onclick="switchTab('transactions',document.querySelector('[onclick*=\'transactions\']'))">
+          <span class="sa-stat-icon">⚠️</span>
+          <div class="sa-stat-label">Overdue</div>
+          <div class="sa-stat-value"><%= stats.overdue %></div>
+          <div class="sa-stat-sub">Past due date</div>
+        </div>
+        <div class="sa-stat-card" style="--glow:rgba(245,158,11,.15)">
+          <span class="sa-stat-icon">💸</span>
+          <div class="sa-stat-label">Total Fines</div>
+          <div class="sa-stat-value">₹<%= stats.fines.toLocaleString() %></div>
+          <div class="sa-stat-sub">Accumulated fines</div>
+        </div>
+        <div class="sa-stat-card" style="--glow:rgba(168,85,247,.15)" onclick="switchTab('content',document.querySelector('[onclick*=\'content\']'))">
+          <span class="sa-stat-icon">🌐</span>
+          <div class="sa-stat-label">Digital Content</div>
+          <div class="sa-stat-value"><%= stats.content %></div>
+          <div class="sa-stat-sub">All uploads</div>
+        </div>
+        <div class="sa-stat-card" style="--glow:rgba(16,185,129,.15)" onclick="switchTab('ads',document.querySelector('[onclick*=\'ads\']'))">
+          <span class="sa-stat-icon">📢</span>
+          <div class="sa-stat-label">Active Ads</div>
+          <div class="sa-stat-value"><%= stats.ads %></div>
+          <div class="sa-stat-sub">Live banners</div>
+        </div>
+      </div>
+
+      <div class="sa-quick-grid">
+        <div class="sa-quick-card" onclick="openModal('createUserModal')"><div class="sa-quick-icon">➕</div><div class="sa-quick-label">Add User</div></div>
+        <div class="sa-quick-card" onclick="openModal('createSchoolModal')"><div class="sa-quick-icon">🏫</div><div class="sa-quick-label">Add School</div></div>
+        <div class="sa-quick-card" onclick="switchTab('notifications',document.querySelector('[onclick*=\'notifications\']'))"><div class="sa-quick-icon">📣</div><div class="sa-quick-label">Broadcast</div></div>
+        <div class="sa-quick-card" onclick="switchTab('settings',document.querySelector('[onclick*=\'settings\']'))"><div class="sa-quick-icon">🛠</div><div class="sa-quick-label">Settings</div></div>
+        <div class="sa-quick-card" onclick="switchTab('analytics',document.querySelector('[onclick*=\'analytics\']'))"><div class="sa-quick-icon">📈</div><div class="sa-quick-label">Analytics</div></div>
+        <div class="sa-quick-card" onclick="window.location.href='/super-admin/export-report'"><div class="sa-quick-icon">📥</div><div class="sa-quick-label">Export CSV</div></div>
+      </div>
+
+      <% if (advertisements && advertisements.length) { %>
+      <div class="sa-card">
+        <div class="sa-card-header">
+          <div class="sa-card-title">📢 Live Advertisements</div>
+          <button class="sa-btn sa-btn-ghost sa-btn-sm" onclick="switchTab('ads',document.querySelector('[onclick*=\'ads\']'))">View All →</button>
+        </div>
+        <div class="sa-card-body-np">
+          <div class="sa-table-wrap">
+            <table class="sa-table">
+              <thead><tr><th>Title</th><th>Section</th><th>Status</th><th>Views</th><th>Clicks</th><th>CTR</th></tr></thead>
+              <tbody>
+                <% advertisements.slice(0,6).forEach(ad => { %>
+                <tr>
+                  <td style="color:#e2e8f0;font-weight:600;"><%= ad.title %></td>
+                  <td><span class="badge badge-blue"><%= ad.target_section %></span></td>
+                  <td><span class="badge <%= ad.computed_status==='active'?'badge-green':ad.computed_status==='expired'?'badge-red':'badge-gray' %>"><%= ad.computed_status %></span></td>
+                  <td><%= ad.impressions||0 %></td>
+                  <td><%= ad.clicks||0 %></td>
+                  <td><%= ad.ctr||0 %>%</td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- ═══ TAB: SCHOOLS ═══ -->
+    <div class="sa-tab-pane" id="tab-schools">
+      <div class="sa-card">
+        <div class="sa-card-header">
+          <div class="sa-card-title">🏫 School Management</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('createSchoolModal')">+ Add School</button>
+        </div>
+        <div class="sa-toolbar">
+          <div class="sa-search"><span>🔍</span><input type="text" id="schoolSearch" placeholder="Search name or code..." oninput="filterSchools()"></div>
+          <select class="sa-select" id="schoolStatusFilter" onchange="filterSchools()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+        <div id="schoolsBulkBar" class="sa-bulk-bar" style="margin:0 1.4rem">
+          <span class="sa-bulk-count" id="schoolsBulkCount">0 selected</span>
+          <button class="sa-btn sa-btn-danger sa-btn-sm" onclick="bulkDeleteSchools()">🗑️ Delete Selected</button>
+        </div>
+        <div id="schoolsTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading schools...</div>
+        <div class="sa-pagination" id="schoolsPagination"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: USERS ═══ -->
+    <div class="sa-tab-pane" id="tab-users">
+      <div class="sa-card">
+        <div class="sa-card-header">
+          <div class="sa-card-title">👥 User Management</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('createUserModal')">+ Add User</button>
+        </div>
+        <div class="sa-toolbar">
+          <div class="sa-search" style="flex:2;"><span>🔍</span><input type="text" id="userSearch" placeholder="Name, phone, email, admission no..." oninput="debouncedLoadUsers()"></div>
+          <select class="sa-select" id="userRoleFilter" onchange="loadUsers(1)">
+            <option value="">All Roles</option>
+            <option value="super_admin">Super Admin</option>
+            <option value="admin">Admin</option>
+            <option value="librarian">Librarian</option>
+            <option value="teacher">Teacher</option>
+            <option value="parent">Parent</option>
+            <option value="student">Student</option>
+          </select>
+          <select class="sa-select" id="userBanFilter" onchange="loadUsers(1)">
+            <option value="">All Status</option>
+            <option value="false">Active</option>
+            <option value="true">Banned</option>
+          </select>
+          <select class="sa-select" id="userSchoolFilter" onchange="loadUsers(1)">
+            <option value="">All Schools</option>
+          </select>
+        </div>
+        <div id="usersBulkBar" class="sa-bulk-bar" style="margin:0 1.4rem">
+          <span class="sa-bulk-count" id="usersBulkCount">0 selected</span>
+          <button class="sa-btn sa-btn-danger sa-btn-sm" onclick="bulkDeleteUsers()">🗑️ Delete</button>
+          <button class="sa-btn sa-btn-warning sa-btn-sm" onclick="bulkBanUsers()">🚫 Ban</button>
+          <button class="sa-btn sa-btn-success sa-btn-sm" onclick="bulkUnbanUsers()">✅ Unban</button>
+        </div>
+        <div id="usersTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading users...</div>
+        <div class="sa-pagination" id="usersPagination"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: BOOKS ═══ -->
+    <div class="sa-tab-pane" id="tab-books">
+      <div class="sa-card">
+        <div class="sa-card-header">
+          <div class="sa-card-title">📚 Book Management</div>
+          <div style="display:flex;gap:6px">
+            <label class="sa-btn sa-btn-ghost sa-btn-sm" style="cursor:pointer">📤 Bulk Upload<input type="file" id="bulkBookCsv" accept=".csv" style="display:none" onchange="bulkUploadBooks(this)"></label>
+            <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('createBookModal')">+ Add Book</button>
+          </div>
+        </div>
+        <div class="sa-toolbar">
+          <div class="sa-search"><span>🔍</span><input type="text" id="bookSearch" placeholder="Title, author, ISBN, barcode..." oninput="debouncedLoadBooks()"></div>
+          <select class="sa-select" id="bookSchoolFilter" onchange="loadBooks(1)">
+            <option value="">All Schools</option>
+          </select>
+          <select class="sa-select" id="bookBanFilter" onchange="loadBooks(1)">
+            <option value="">All Status</option>
+            <option value="false">Active</option>
+            <option value="true">Banned</option>
+          </select>
+        </div>
+        <div id="booksBulkBar" class="sa-bulk-bar" style="margin:0 1.4rem">
+          <span class="sa-bulk-count" id="booksBulkCount">0 selected</span>
+          <button class="sa-btn sa-btn-danger sa-btn-sm" onclick="bulkDeleteBooks()">🗑️ Delete</button>
+        </div>
+        <div id="booksTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading books...</div>
+        <div class="sa-pagination" id="booksPagination"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: TRANSACTIONS ═══ -->
+    <div class="sa-tab-pane" id="tab-transactions">
+      <div class="sa-card">
+        <div class="sa-card-header">
+          <div class="sa-card-title">📋 Transaction Management</div>
+        </div>
+        <div class="sa-toolbar">
+          <select class="sa-select" id="txSchoolFilter" onchange="loadTransactions(1)"><option value="">All Schools</option></select>
+          <select class="sa-select" id="txStatusFilter" onchange="loadTransactions(1)">
+            <option value="">All Status</option>
+            <option value="issued">Issued</option>
+            <option value="returned">Returned</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+        <div id="txTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="txPagination"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: DIGITAL CONTENT ═══ -->
+    <div class="sa-tab-pane" id="tab-content">
+      <div class="sa-card">
+        <div class="sa-card-header">
+          <div class="sa-card-title">🌐 Digital Content Moderation</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('createDcModal')">+ Add Content</button>
+        </div>
+        <div class="sa-toolbar">
+          <select class="sa-select" id="dcStatusFilter" onchange="loadDigitalContent(1)">
+            <option value="">All Status</option>
+            <option value="pending">Pending Review</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select class="sa-select" id="dcSchoolFilter" onchange="loadDigitalContent(1)"><option value="">All Schools</option></select>
+        </div>
+        <div id="dcTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="dcPagination"></div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="createDcModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>🌐 Add Digital Content</h3><button class="sa-close-btn" onclick="closeModal('createDcModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <div class="sa-form-group"><label>Title *</label><input type="text" class="sa-input" id="cdcTitle"></div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Category</label><input type="text" class="sa-input" id="cdcCategory"></div>
+            <div class="sa-form-group"><label>Subject</label><input type="text" class="sa-input" id="cdcSubject"></div>
+          </div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Class</label><input type="text" class="sa-input" id="cdcClass"></div>
+            <div class="sa-form-group"><label>Tags</label><input type="text" class="sa-input" id="cdcTags" placeholder="comma, separated"></div>
+          </div>
+          <div class="sa-form-group"><label>File / External URL</label><input type="text" class="sa-input" id="cdcUrl" placeholder="https://... or /uploads/..."></div>
+          <div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="cdcSchool" placeholder="Leave blank for all, or GLOBAL"></div>
+          <div class="sa-form-group"><label>Description</label><textarea class="sa-textarea" id="cdcDesc" rows="2"></textarea></div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('createDcModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="createDigitalContent()">✅ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="editDcModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>✏️ Edit Content</h3><button class="sa-close-btn" onclick="closeModal('editDcModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <input type="hidden" id="edcId">
+          <div class="sa-form-group"><label>Title *</label><input type="text" class="sa-input" id="edcTitle"></div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Category</label><input type="text" class="sa-input" id="edcCategory"></div>
+            <div class="sa-form-group"><label>Subject</label><input type="text" class="sa-input" id="edcSubject"></div>
+          </div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Class</label><input type="text" class="sa-input" id="edcClass"></div>
+            <div class="sa-form-group"><label>Tags</label><input type="text" class="sa-input" id="edcTags" placeholder="comma, separated"></div>
+          </div>
+          <div class="sa-form-group"><label>File / External URL</label><input type="text" class="sa-input" id="edcUrl" placeholder="https://... or /uploads/..."></div>
+          <div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="edcSchool" placeholder="Blank for all, or GLOBAL"></div>
+          <div class="sa-form-group"><label>Description</label><textarea class="sa-textarea" id="edcDesc" rows="2"></textarea></div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('editDcModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="saveDigitalContent()">💾 Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: ADS ═══ -->
+    <div class="sa-tab-pane" id="tab-ads">
+      <div class="sa-card">
+        <div class="sa-card-header">
+          <div class="sa-card-title">📢 Advertisement Manager</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('createAdModal')">+ New Banner</button>
+        </div>
+        <div class="sa-card-body">
+          <div id="adsContent">
+            <% if (advertisements && advertisements.length) { %>
+            <div class="sa-ads-grid">
+              <% advertisements.forEach(ad => { %>
+              <div class="sa-ad-card">
+                <div class="sa-ad-preview" style="background:<%= ad.bg_gradient||'linear-gradient(135deg,#4f46e5,#7c3aed)' %>">
+                  <div style="position:absolute;top:8px;right:8px;"><span class="badge <%= ad.computed_status==='active'?'badge-green':ad.computed_status==='expired'?'badge-red':'badge-gray' %>" style="background:rgba(0,0,0,.35);backdrop-filter:blur(4px);"><%= ad.computed_status %></span></div>
+                  <div><div style="font-size:.95rem;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.5);"><%= ad.title %></div>
+                  <div style="font-size:.75rem;opacity:.85;margin-top:2px;"><%= ad.subtitle||'' %></div></div>
+                  <span style="background:rgba(255,255,255,.2);backdrop-filter:blur(4px);padding:3px 10px;border-radius:7px;font-size:.72rem;font-weight:800;display:inline-block;margin-top:8px;"><%= ad.cta_text||'Learn More' %></span>
+                </div>
+                <div class="sa-ad-info">
+                  <div style="font-size:.75rem;color:#475569;">Section: <strong style="color:#94a3b8;"><%= ad.target_section %></strong> · Priority: <strong><%= ad.priority %></strong></div>
+                  <div class="sa-ad-metrics"><span>👁️ <%= ad.impressions||0 %></span><span>👆 <%= ad.clicks||0 %></span><span>📈 <%= ad.ctr||0 %>%</span></div>
+                  <div class="sa-ad-actions">
+                    <button class="sa-btn sa-btn-ghost sa-btn-sm" style="flex:1" onclick='openEditAd(<%= JSON.stringify(ad).replace(/'/g,"&#39;") %>)'>✏️ Edit</button>
+                    <button class="sa-btn sa-btn-ghost sa-btn-sm" style="flex:1" onclick="toggleAd(<%= ad.id %>)"><%= ad.status==='active'?'⏸ Pause':'▶ Activate' %></button>
+                    <button class="sa-btn sa-btn-danger sa-btn-sm" onclick="deleteAd(<%= ad.id %>)">🗑️</button>
+                  </div>
+                </div>
+              </div>
+              <% }) %>
+            </div>
+            <% } else { %>
+            <div class="sa-empty"><div class="sa-empty-icon">📢</div><p>No advertisements yet.</p><button class="sa-btn sa-btn-primary" onclick="openModal('createAdModal')">+ Create Banner</button></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: NOTIFICATIONS ═══ -->
+    <div class="sa-tab-pane" id="tab-notifications">
+      <div class="sa-card" style="max-width:640px">
+        <div class="sa-card-header"><div class="sa-card-title">🔔 Send Notification</div></div>
+        <div class="sa-card-body">
+          <div class="sa-form-group">
+            <label>Target Audience</label>
+            <div class="sa-scope-grid">
+              <button class="sa-scope-btn active" onclick="setNotifScope('all',this)">🌍 Everyone</button>
+              <button class="sa-scope-btn" onclick="setNotifScope('school',this)">🏫 Specific School</button>
+              <button class="sa-scope-btn" onclick="setNotifScope('role',this)">👤 By Role</button>
+              <button class="sa-scope-btn" onclick="setNotifScope('user',this)">🎯 Single User</button>
+            </div>
+          </div>
+          <div id="notifScopeFields"></div>
+          <div class="sa-form-group">
+            <label>Message *</label>
+            <textarea class="sa-textarea" id="notifMessage" placeholder="Write your announcement or notification message here..." rows="4"></textarea>
+          </div>
+          <div class="sa-form-row">
+            <div class="sa-form-group">
+              <label>Notification Type</label>
+              <select class="sa-select" id="notifType">
+                <option value="info">ℹ️ Info</option>
+                <option value="success">✅ Success</option>
+                <option value="warning">⚠️ Warning</option>
+                <option value="error">🚨 Alert</option>
+              </select>
+            </div>
+          </div>
+          <button class="sa-btn sa-btn-primary" onclick="sendNotification()" style="width:100%;justify-content:center;">📣 Send Notification</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: ANALYTICS ═══ -->
+    <div class="sa-tab-pane" id="tab-analytics">
+      <div class="sa-stats-grid" id="analyticsStats">
+        <div class="sa-loading" style="grid-column:1/-1"><span class="sa-spinner"></span>Loading analytics...</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem">
+        <div class="sa-card">
+          <div class="sa-card-header"><div class="sa-card-title">👥 Users by Role</div></div>
+          <div class="sa-card-body"><div class="sa-bar-chart" id="roleChart"><div class="sa-loading"><span class="sa-spinner"></span></div></div></div>
+        </div>
+        <div class="sa-card">
+          <div class="sa-card-header"><div class="sa-card-title">🏥 System Health</div></div>
+          <div class="sa-card-body"><div class="sa-health-grid" id="healthGrid"><div class="sa-loading"><span class="sa-spinner"></span></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: AUDIT LOGS ═══ -->
+    <div class="sa-tab-pane" id="tab-audit">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🔍 Audit Logs</div></div>
+        <div class="sa-toolbar">
+          <div class="sa-search"><span>🔍</span><input type="text" id="auditSearch" placeholder="Search action or IP..." oninput="debouncedLoadAudit()"></div>
+          <select class="sa-select" id="auditModule" onchange="loadAudit(1)">
+            <option value="">All Modules</option>
+            <option value="login">Login</option>
+            <option value="book">Books</option>
+            <option value="transaction">Transactions</option>
+            <option value="user">Users</option>
+          </select>
+          <select class="sa-select" id="auditSchool" onchange="loadAudit(1)"><option value="">All Schools</option></select>
+        </div>
+        <div id="auditTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading logs...</div>
+        <div class="sa-pagination" id="auditPagination"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: SETTINGS ═══ -->
+    <div class="sa-tab-pane" id="tab-settings">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem">
+        <div class="sa-card">
+          <div class="sa-card-header"><div class="sa-card-title">🛠 System Controls</div></div>
+          <div class="sa-card-body">
+            <div class="sa-setting-row">
+              <div><div class="sa-setting-label">Maintenance Mode</div><div class="sa-setting-desc">Non-admins see a maintenance page</div></div>
+              <label class="sa-toggle"><input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()"><span class="sa-toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="sa-card">
+          <div class="sa-card-header"><div class="sa-card-title">⚙️ Custom Settings</div></div>
+          <div class="sa-card-body">
+            <div class="sa-form-row">
+              <div class="sa-form-group"><label>Key</label><input type="text" class="sa-input" id="settingKey" placeholder="e.g. platform_name"></div>
+              <div class="sa-form-group"><label>Value</label><input type="text" class="sa-input" id="settingVal" placeholder="e.g. librika.in"></div>
+            </div>
+            <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="saveSetting()">💾 Save Setting</button>
+            <div id="settingsList" style="margin-top:1.2rem"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: MASTER AUTH ═══ -->
+    <div class="sa-tab-pane" id="tab-masterauth">
+      <div class="sa-card" style="max-width:560px">
+        <div class="sa-card-header"><div class="sa-card-title">🔑 Master Authentication</div></div>
+        <div class="sa-card-body">
+          <p style="color:#64748b;font-size:.84rem;margin-bottom:1.2rem;">Log in as any user for troubleshooting. <strong style="color:#f59e0b;">⚠️ Your current session will be replaced.</strong></p>
+          <div class="sa-form-group"><label>User ID</label><input type="number" class="sa-input" id="masterUserId" placeholder="Enter user ID"></div>
+          <button class="sa-btn sa-btn-warning" onclick="masterLogin()" style="width:100%;justify-content:center;margin-bottom:1.5rem;">🔑 Login as User</button>
+          <div style="border-top:1px solid rgba(99,102,241,.1);padding-top:1.2rem">
+            <label style="font-size:.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:8px;">Find User</label>
+            <div class="sa-search" style="margin-bottom:.8rem"><span>🔍</span><input type="text" id="masterSearch" placeholder="Name or phone..." oninput="masterSearchFn()"></div>
+            <div id="masterSearchResults"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: REPORTS ═══ -->
+    <div class="sa-tab-pane" id="tab-reports">
+      <div class="sa-report-grid">
+        <div class="sa-report-card" style="background:rgba(99,102,241,.07);border-color:rgba(99,102,241,.2)">
+          <div style="font-size:1.8rem">🏫</div>
+          <div><div style="font-weight:800;color:#e2e8f0">Schools Report</div><div style="font-size:.78rem;color:#475569;margin-top:3px">User count, book count per school</div></div>
+          <a href="/super-admin/export-report" class="sa-btn sa-btn-primary sa-btn-sm">⬇️ Download CSV</a>
+        </div>
+        <div class="sa-report-card" style="background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.2)">
+          <div style="font-size:1.8rem">👥</div>
+          <div><div style="font-weight:800;color:#e2e8f0">Users Export</div><div style="font-size:.78rem;color:#475569;margin-top:3px">All users with role, school, status</div></div>
+          <a href="/super-admin/export/users" class="sa-btn sa-btn-success sa-btn-sm">⬇️ Download CSV</a>
+        </div>
+        <div class="sa-report-card" style="background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.2)">
+          <div style="font-size:1.8rem">📚</div>
+          <div><div style="font-weight:800;color:#e2e8f0">Books Export</div><div style="font-size:.78rem;color:#475569;margin-top:3px">Full book catalogue all schools</div></div>
+          <a href="/super-admin/export/books" class="sa-btn sa-btn-warning sa-btn-sm">⬇️ Download CSV</a>
+        </div>
+        <div class="sa-report-card" style="background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.2)">
+          <div style="font-size:1.8rem">📋</div>
+          <div><div style="font-weight:800;color:#e2e8f0">Transactions Export</div><div style="font-size:.78rem;color:#475569;margin-top:3px">All borrows with user & book info</div></div>
+          <a href="/super-admin/export/transactions" class="sa-btn sa-btn-info sa-btn-sm">⬇️ Download CSV</a>
+        </div>
+        <div class="sa-report-card" style="background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.2)">
+          <div style="font-size:1.8rem">💸</div>
+          <div><div style="font-weight:800;color:#e2e8f0">Fines Report</div><div style="font-size:.78rem;color:#475569;margin-top:3px">Overdue books & outstanding fines</div></div>
+          <a href="/super-admin/export/fines" class="sa-btn sa-btn-danger sa-btn-sm">⬇️ Download CSV</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ NEW TABS — PHASE 2 + 3 ═══ -->
+
+    <!-- TAB: ROLES & PERMISSIONS -->
+    <div class="sa-tab-pane" id="tab-roles">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🛡️ Roles & Permissions</div></div>
+        <div class="sa-card-body">
+          <p style="color:#94a3b8;font-size:.86rem;margin-bottom:1rem">Default role permissions stored in <code>system_settings.role_permissions</code>. Override per-user via the Users tab.</p>
+          <div id="rolePermWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DIGITAL LIBRARY (school + community) -->
+    <div class="sa-tab-pane" id="tab-digital">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🌐 Digital Library</div></div>
+        <div class="sa-toolbar">
+          <select class="sa-select" id="dlScope" onchange="loadDigitalList(1)">
+            <option value="all">All</option>
+            <option value="community">Community (school)</option>
+            <option value="global">Global</option>
+          </select>
+          <select class="sa-select" id="dlStatusFilter" onchange="loadDigitalList(1)">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div id="dlTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="dlPagination"></div>
+      </div>
+    </div>
+
+    <!-- TAB: COMMUNITY LIBRARY (alias of digital with scope=community) -->
+    <div class="sa-tab-pane" id="tab-community">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">👨‍👩‍👧 Community Library (school uploads)</div></div>
+        <div class="sa-toolbar"><input class="sa-search" placeholder="Search community uploads..." oninput="loadCommunityList(1)" id="communitySearch"></div>
+        <div id="commTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="commPagination"></div>
+      </div>
+    </div>
+
+    <!-- TAB: GLOBAL LIBRARY -->
+    <div class="sa-tab-pane" id="tab-global">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🌍 Global Library (system-wide)</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('addGlobalModal')">+ Add Global</button>
+        </div></div>
+        <div class="sa-toolbar"><input class="sa-search" placeholder="Search global content..." oninput="loadGlobalList(1)" id="globalSearch"></div>
+        <div id="globTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="globPagination"></div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="addGlobalModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>🌍 Add Global Content</h3><button class="sa-close-btn" onclick="closeModal('addGlobalModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <div class="sa-form-group"><label>Title *</label><input type="text" class="sa-input" id="aglTitle"></div>
+          <div class="sa-form-group"><label>URL / File Path</label><input type="text" class="sa-input" id="aglUrl" placeholder="https://..."></div>
+          <div class="sa-form-group"><label>Type</label><select class="sa-select" id="aglType"><option value="link">Link</option><option value="document">Document</option><option value="video">Video</option></select></div>
+          <div class="sa-form-group"><label>Description</label><textarea class="sa-textarea" id="aglDesc" rows="2"></textarea></div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('addGlobalModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="createGlobalContent()">✅ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CATEGORIES & SUBJECTS -->
+    <div class="sa-tab-pane" id="tab-categories">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🏷️ Categories & Subjects</div></div>
+        <div id="catWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+      </div>
+    </div>
+
+    <!-- TAB: READING GOALS -->
+    <div class="sa-tab-pane" id="tab-goals">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🎯 Reading Goals</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newGoalModal')">+ New Goal</button>
+        </div>
+        <div id="goalsTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+      </div>
+    </div>
+
+    <!-- TAB: BOOK REQUESTS -->
+    <div class="sa-tab-pane" id="tab-requests">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">📬 Book Requests</div></div>
+        <div class="sa-toolbar">
+          <select class="sa-select" id="reqStatusFilter" onchange="loadBookRequests(1)">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+        <div id="reqTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="reqPagination"></div>
+      </div>
+    </div>
+
+    <!-- TAB: ISSUED BOOKS -->
+    <div class="sa-tab-pane" id="tab-issued">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">📤 Issued Books</div></div>
+        <div class="sa-toolbar">
+          <select class="sa-select" id="issuedStatusFilter" onchange="loadIssuedBooks(1)">
+            <option value="">All Status</option>
+            <option value="issued">Issued</option>
+            <option value="returned">Returned</option>
+          </select>
+        </div>
+        <div id="issuedTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="issuedPagination"></div>
+      </div>
+    </div>
+
+    <!-- TAB: RFID RECORDS -->
+    <div class="sa-tab-pane" id="tab-rfid">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">📡 RFID Records</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newRfidModal')">+ New RFID</button>
+        </div>
+        <div class="sa-toolbar"><input class="sa-search" placeholder="Search RFID tag, accession..." oninput="loadRfid(1)" id="rfidSearch"></div>
+        <div id="rfidTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="rfidPagination"></div>
+      </div>
+    </div>
+
+    <!-- TAB: SCHEDULED NOTIFICATIONS -->
+    <div class="sa-tab-pane" id="tab-scheduled">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">⏰ Scheduled Notifications</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newScheduledModal')">+ Schedule</button>
+        </div>
+        <div id="schedTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+      </div>
+    </div>
+
+    <!-- TAB: AI CONFIG -->
+    <div class="sa-tab-pane" id="tab-aiconfig">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🤖 AI Configuration</div></div>
+        <div id="aiConfigWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+      </div>
+    </div>
+
+    <!-- TAB: MAINTENANCE -->
+    <div class="sa-tab-pane" id="tab-maintenance">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🛠️ Maintenance & Diagnostics</div></div>
+        <div class="sa-card-body">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem">
+            <button class="sa-btn sa-btn-info" onclick="runBackup('db')">💾 Backup Database Now</button>
+            <button class="sa-btn sa-btn-warning" onclick="clearCache()">🗑️ Clear Expired Sessions</button>
+            <button class="sa-btn sa-btn-ghost" onclick="runDiagnostics()">🔬 Run Diagnostics</button>
+            <button class="sa-btn sa-btn-ghost" onclick="runStorageScan()">📁 Scan Storage for Orphans</button>
+          </div>
+          <div id="maintOutput" style="margin-top:1rem"></div>
+        </div>
+      </div>
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">💾 Recent Backups</div></div>
+        <div id="backupsList" class="sa-card-body"></div>
+      </div>
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">⏰ Backup Schedules</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newBackupSchedModal')">+ New Schedule</button>
+        </div>
+        <div id="backupSchedWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+      </div>
+    </div>
+
+    <!-- TAB: LOGIN HISTORY -->
+    <div class="sa-tab-pane" id="tab-login-history">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🔐 Login History</div></div>
+        <div class="sa-toolbar">
+          <input type="date" class="sa-input" id="lhDateFrom" onchange="loadLoginHistory(1)" style="max-width:160px">
+          <input type="date" class="sa-input" id="lhDateTo" onchange="loadLoginHistory(1)" style="max-width:160px">
+          <select class="sa-select" id="lhSuccessFilter" onchange="loadLoginHistory(1)">
+            <option value="">All</option>
+            <option value="true">Successful</option>
+            <option value="false">Failed</option>
+          </select>
+        </div>
+        <div id="lhTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div class="sa-pagination" id="lhPagination"></div>
+      </div>
+    </div>
+
+    <!-- TAB: DEVICES -->
+    <div class="sa-tab-pane" id="tab-devices">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">💻 Active Devices / Sessions</div></div>
+        <div id="devicesWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+      </div>
+    </div>
+
+    <!-- TAB: 2FA -->
+    <div class="sa-tab-pane" id="tab-two-factor">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🔏 Two-Factor Authentication</div></div>
+        <div class="sa-card-body">
+          <p style="color:#94a3b8;font-size:.86rem">Use the Users tab to manage 2FA per user. This overview lists users with 2FA enabled.</p>
+          <div id="twofaWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: IP ALLOWLIST -->
+    <div class="sa-tab-pane" id="tab-ip-allowlist">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">🛡️ IP Restrictions</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newIpRuleModal')">+ Add Rule</button>
+        </div>
+        <div id="ipTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+      </div>
+    </div>
+
+    <!-- TAB: BACKUPS (alias to maintenance backups panel) -->
+    <div class="sa-tab-pane" id="tab-backups">
+      <div class="sa-card">
+        <div class="sa-card-header"><div class="sa-card-title">💾 Backups & Schedules</div></div>
+        <div id="backupsWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+      </div>
+    </div>
+
+    <!-- ═══ MODALS ═══ -->
+    <div class="sa-modal-overlay" id="newGoalModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>New Reading Goal</h3><button class="sa-close-btn" onclick="closeModal('newGoalModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <div class="sa-form-group"><label>Target</label><input class="sa-input" id="goalTarget" type="number" min="1" value="10"></div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Role</label><select class="sa-select" id="goalRole"><option value="student">Student</option><option value="teacher">Teacher</option><option value="parent">Parent</option></select></div>
+            <div class="sa-form-group"><label>Period</label><select class="sa-select" id="goalPeriod"><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+          </div>
+          <div class="sa-form-group"><label>Description</label><textarea class="sa-textarea" id="goalDescription"></textarea></div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('newGoalModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="createGoal()">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="editGoalModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>✏️ Edit Reading Goal</h3><button class="sa-close-btn" onclick="closeModal('editGoalModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <input type="hidden" id="egId">
+          <div class="sa-form-group"><label>Target</label><input class="sa-input" id="egTarget" type="number" min="1"></div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Role</label><select class="sa-select" id="egRole"><option value="student">Student</option><option value="teacher">Teacher</option><option value="parent">Parent</option></select></div>
+            <div class="sa-form-group"><label>Period</label><select class="sa-select" id="egPeriod"><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+          </div>
+          <div class="sa-form-group"><label>Description</label><textarea class="sa-textarea" id="egDescription"></textarea></div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('editGoalModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="saveGoal()">💾 Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="newRfidModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>New RFID Record</h3><button class="sa-close-btn" onclick="closeModal('newRfidModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <div class="sa-form-group"><label>RFID Tag *</label><input class="sa-input" id="rfidTag" placeholder="E200..."></div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Book ID</label><input class="sa-input" id="rfidBookId" type="number"></div>
+            <div class="sa-form-group"><label>Barcode</label><input class="sa-input" id="rfidBarcode"></div>
+          </div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Accession #</label><input class="sa-input" id="rfidAccession"></div>
+            <div class="sa-form-group"><label>Shelf</label><input class="sa-input" id="rfidShelf"></div>
+          </div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('newRfidModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="createRfid()">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="editRfidModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>Edit RFID Record</h3><button class="sa-close-btn" onclick="closeModal('editRfidModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <input type="hidden" id="erfidId">
+          <div class="sa-form-group"><label>RFID Tag *</label><input class="sa-input" id="erfidTag" placeholder="E200..."></div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Book ID</label><input class="sa-input" id="erfidBookId" type="number"></div>
+            <div class="sa-form-group"><label>Barcode</label><input class="sa-input" id="erfidBarcode"></div>
+          </div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Accession #</label><input class="sa-input" id="erfidAccession"></div>
+            <div class="sa-form-group"><label>Shelf</label><input class="sa-input" id="erfidShelf"></div>
+          </div>
+          <div class="sa-form-group"><label>Status</label><select class="sa-select" id="erfidStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('editRfidModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="saveRfid()">💾 Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="newScheduledModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>Schedule Notification</h3><button class="sa-close-btn" onclick="closeModal('newScheduledModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <div class="sa-form-group"><label>Message *</label><textarea class="sa-textarea" id="schedMessage"></textarea></div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Scope</label><select class="sa-select" id="schedScope"><option value="all">Everyone</option><option value="role">Role</option><option value="school">School</option></select></div>
+            <div class="sa-form-group"><label>Run At *</label><input class="sa-input" id="schedRunAt" type="datetime-local"></div>
+          </div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('newScheduledModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="createScheduled()">Schedule</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="newIpRuleModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>Add IP Rule</h3><button class="sa-close-btn" onclick="closeModal('newIpRuleModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <div class="sa-form-group"><label>CIDR / IP *</label><input class="sa-input" id="ipCidr" placeholder="1.2.3.0/24"></div>
+          <div class="sa-form-group"><label>Label</label><input class="sa-input" id="ipLabel" placeholder="Office, VPN, etc."></div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('newIpRuleModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="createIpRule()">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sa-modal-overlay" id="newBackupSchedModal">
+      <div class="sa-modal">
+        <div class="sa-modal-header"><h3>New Backup Schedule</h3><button class="sa-close-btn" onclick="closeModal('newBackupSchedModal')">✕</button></div>
+        <div class="sa-modal-body">
+          <div class="sa-form-group"><label>Name *</label><input class="sa-input" id="bsName"></div>
+          <div class="sa-form-row">
+            <div class="sa-form-group"><label>Cron *</label><input class="sa-input" id="bsCron" placeholder="0 2 * * *"></div>
+            <div class="sa-form-group"><label>Target</label><select class="sa-select" id="bsTarget"><option value="db">Database</option><option value="uploads">Uploads</option><option value="full">Full</option></select></div>
+          </div>
+          <div class="sa-form-group"><label>Retention (days)</label><input class="sa-input" id="bsRetention" type="number" value="30"></div>
+        </div>
+        <div class="sa-modal-footer">
+          <button class="sa-btn sa-btn-ghost" onclick="closeModal('newBackupSchedModal')">Cancel</button>
+          <button class="sa-btn sa-btn-primary" onclick="createBackupSchedule()">Create</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .sa-content -->
+</div><!-- end .sa-main -->
+</div><!-- end .sa-layout -->
+</div><!-- end .sa-page-wrapper -->
+
+<!-- ═══════════ MODALS ═══════════ -->
+
+<!-- Create School -->
+<div class="sa-modal-overlay" id="createSchoolModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>🏫 Add New School</h3><button class="sa-close-btn" onclick="closeModal('createSchoolModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>School Code *</label><input type="text" class="sa-input" id="sCode" placeholder="e.g. DPS001" style="text-transform:uppercase"></div>
+        <div class="sa-form-group"><label>School Name *</label><input type="text" class="sa-input" id="sName" placeholder="Full school name"></div>
+      </div>
+      <div class="sa-form-group"><label>Librarian Name</label><input type="text" class="sa-input" id="sLibrarian" placeholder="Head librarian name"></div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Plan</label>
+          <select class="sa-select" id="sPlan"><option value="FREE">FREE</option><option value="BASIC">BASIC (₹999/mo)</option><option value="PROFESSIONAL">PROFESSIONAL (₹2999/mo)</option></select>
+        </div>
+        <div class="sa-form-group"><label>Due Days</label><input type="number" class="sa-input" id="sDueDays" value="14"></div>
+      </div>
+      <div class="sa-form-row-3">
+        <div class="sa-form-group"><label>Student Limit</label><input type="number" class="sa-input" id="sStudentLimit" value="500"></div>
+        <div class="sa-form-group"><label>Librarian Limit</label><input type="number" class="sa-input" id="sLibLimit" value="2"></div>
+        <div class="sa-form-group"><label>Admin Limit</label><input type="number" class="sa-input" id="sAdminLimit" value="2"></div>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('createSchoolModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="createSchool()">✅ Create School</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit School -->
+<div class="sa-modal-overlay" id="editSchoolModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>✏️ Edit School</h3><button class="sa-close-btn" onclick="closeModal('editSchoolModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <input type="hidden" id="eSchoolCode">
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>School Name</label><input type="text" class="sa-input" id="eSchoolName"></div>
+        <div class="sa-form-group"><label>Librarian Name</label><input type="text" class="sa-input" id="eSchoolLibrarian"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Status</label>
+          <select class="sa-select" id="eSchoolStatus"><option value="active">Active</option><option value="suspended">Suspended</option></select>
+        </div>
+        <div class="sa-form-group"><label>Plan</label>
+          <select class="sa-select" id="eSchoolPlan"><option value="FREE">FREE</option><option value="BASIC">BASIC</option><option value="PROFESSIONAL">PROFESSIONAL</option></select>
+        </div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Due Days</label><input type="number" class="sa-input" id="eSchoolDue"></div>
+        <div class="sa-form-group"><label>Expiry Date</label><input type="date" class="sa-input" id="eSchoolExpiry"></div>
+      </div>
+      <div class="sa-form-row-3">
+        <div class="sa-form-group"><label>Student Limit</label><input type="number" class="sa-input" id="eStudentLimit"></div>
+        <div class="sa-form-group"><label>Librarian Limit</label><input type="number" class="sa-input" id="eLibLimit"></div>
+        <div class="sa-form-group"><label>Admin Limit</label><input type="number" class="sa-input" id="eAdminLimit"></div>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('editSchoolModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="saveSchool()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create User -->
+<div class="sa-modal-overlay" id="createUserModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>👤 Create User</h3><button class="sa-close-btn" onclick="closeModal('createUserModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Full Name *</label><input type="text" class="sa-input" id="cuName" placeholder="Full name"></div>
+        <div class="sa-form-group"><label>Phone *</label><input type="text" class="sa-input" id="cuPhone" placeholder="10-digit phone"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Email</label><input type="email" class="sa-input" id="cuEmail" placeholder="Email address"></div>
+        <div class="sa-form-group"><label>Password</label><input type="text" class="sa-input" id="cuPassword" placeholder="Default: password123"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Role *</label>
+          <select class="sa-select" id="cuRole"><option value="student">Student</option><option value="parent">Parent</option><option value="librarian">Librarian</option><option value="admin">Admin</option><option value="teacher">Teacher</option><option value="super_admin">Super Admin</option></select>
+        </div>
+        <div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="cuSchool" placeholder="School code"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Class</label><input type="text" class="sa-input" id="cuClass" placeholder="e.g. 10"></div>
+        <div class="sa-form-group"><label>Section</label><input type="text" class="sa-input" id="cuSection" placeholder="e.g. A"></div>
+      </div>
+      <div class="sa-form-group"><label>Admission No.</label><input type="text" class="sa-input" id="cuAdmNo" placeholder="Admission number"></div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('createUserModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="createUser()">✅ Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User -->
+<div class="sa-modal-overlay" id="editUserModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>✏️ Edit User</h3><button class="sa-close-btn" onclick="closeModal('editUserModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <input type="hidden" id="euId">
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Full Name</label><input type="text" class="sa-input" id="euName"></div>
+        <div class="sa-form-group"><label>Phone</label><input type="text" class="sa-input" id="euPhone"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Email</label><input type="email" class="sa-input" id="euEmail"></div>
+        <div class="sa-form-group"><label>Role</label>
+          <select class="sa-select" id="euRole"><option value="student">Student</option><option value="parent">Parent</option><option value="librarian">Librarian</option><option value="admin">Admin</option><option value="teacher">Teacher</option><option value="super_admin">Super Admin</option></select>
+        </div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="euSchool"></div>
+        <div class="sa-form-group"><label>Class</label><input type="text" class="sa-input" id="euClass"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Section</label><input type="text" class="sa-input" id="euSection"></div>
+        <div class="sa-form-group"><label>Admission No.</label><input type="text" class="sa-input" id="euAdmNo"></div>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('editUserModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="saveUser()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Book -->
+<div class="sa-modal-overlay" id="createBookModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>📚 Add New Book</h3><button class="sa-close-btn" onclick="closeModal('createBookModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Title *</label><input type="text" class="sa-input" id="cbTitle" placeholder="Book title"></div>
+        <div class="sa-form-group"><label>Author</label><input type="text" class="sa-input" id="cbAuthor" placeholder="Author name"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>ISBN</label><input type="text" class="sa-input" id="cbIsbn"></div>
+        <div class="sa-form-group"><label>Publisher</label><input type="text" class="sa-input" id="cbPublisher"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Genre</label><input type="text" class="sa-input" id="cbGenre"></div>
+        <div class="sa-form-group"><label>Category</label><input type="text" class="sa-input" id="cbCategory"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Subject</label><input type="text" class="sa-input" id="cbSubject"></div>
+        <div class="sa-form-group"><label>Language</label><input type="text" class="sa-input" id="cbLanguage" value="English"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Shelf Location</label><input type="text" class="sa-input" id="cbShelf"></div>
+        <div class="sa-form-group"><label>Barcode ID</label><input type="text" class="sa-input" id="cbBarcode"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="cbSchool" placeholder="Leave blank for all/global"></div>
+        <div class="sa-form-group"><label>Total Copies</label><input type="number" class="sa-input" id="cbCopies" value="1"></div>
+      </div>
+      <div class="sa-form-group"><label>Description</label><textarea class="sa-textarea" id="cbDesc" rows="2"></textarea></div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('createBookModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="createBook()">✅ Add Book</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Book -->
+<div class="sa-modal-overlay" id="editBookModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>📚 Edit Book</h3><button class="sa-close-btn" onclick="closeModal('editBookModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <input type="hidden" id="ebId">
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Title</label><input type="text" class="sa-input" id="ebTitle"></div>
+        <div class="sa-form-group"><label>Author</label><input type="text" class="sa-input" id="ebAuthor"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>ISBN</label><input type="text" class="sa-input" id="ebIsbn"></div>
+        <div class="sa-form-group"><label>Publisher</label><input type="text" class="sa-input" id="ebPublisher"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Genre</label><input type="text" class="sa-input" id="ebGenre"></div>
+        <div class="sa-form-group"><label>Category</label><input type="text" class="sa-input" id="ebCategory"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Shelf Location</label><input type="text" class="sa-input" id="ebShelf"></div>
+        <div class="sa-form-group"><label>Total Copies</label><input type="number" class="sa-input" id="ebCopies"></div>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('editBookModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="saveBook()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Issued Book -->
+<div class="sa-modal-overlay" id="editIssuedModal">
+  <div class="sa-modal" style="max-width:460px">
+    <div class="sa-modal-header"><h3>📤 Manage Issue / Return</h3><button class="sa-close-btn" onclick="closeModal('editIssuedModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <input type="hidden" id="iTxId">
+      <div class="sa-form-group"><label>Status</label>
+        <select class="sa-select" id="iTxStatus"><option value="issued">Issued</option><option value="returned">Returned</option><option value="overdue">Overdue</option><option value="lost">Lost</option></select>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Due Date</label><input type="date" class="sa-input" id="iTxDue"></div>
+        <div class="sa-form-group"><label>Return Date</label><input type="date" class="sa-input" id="iTxReturn"></div>
+      </div>
+      <div class="sa-form-group"><label>Fine (₹)</label><input type="number" class="sa-input" id="iTxFine" value="0" min="0"></div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('editIssuedModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="saveIssued()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Content Modal -->
+<div class="sa-modal-overlay" id="rejectContentModal">
+  <div class="sa-modal" style="max-width:420px">
+    <div class="sa-modal-header"><h3>❌ Reject Content</h3><button class="sa-close-btn" onclick="closeModal('rejectContentModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <input type="hidden" id="rejectContentId">
+      <div class="sa-form-group"><label>Rejection Reason *</label><textarea class="sa-textarea" id="rejectReason" placeholder="Explain why this content is being rejected..."></textarea></div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('rejectContentModal')">Cancel</button>
+      <button class="sa-btn sa-btn-danger" onclick="confirmRejectContent()">❌ Reject</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Ad Modal -->
+<div class="sa-modal-overlay" id="createAdModal">
+  <div class="sa-modal sa-modal-lg">
+    <div class="sa-modal-header"><h3>✨ Create Advertisement</h3><button class="sa-close-btn" onclick="closeModal('createAdModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <div class="sa-form-group"><label>Title *</label><input type="text" class="sa-input" id="adTitle" placeholder="Banner title" oninput="updateAdPreview()"></div>
+      <div class="sa-form-group"><label>Subtitle</label><input type="text" class="sa-input" id="adSubtitle" placeholder="Tagline" oninput="updateAdPreview()"></div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>CTA Text</label><input type="text" class="sa-input" id="adCta" value="Explore Now" oninput="updateAdPreview()"></div>
+        <div class="sa-form-group"><label>URL</label><input type="text" class="sa-input" id="adUrl" value="/student/browse"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Section</label>
+          <select class="sa-select" id="adSection"><option value="all">All Pages</option><option value="digital_library">Digital Library</option><option value="community_library">Community Library</option><option value="home">Student Home</option></select>
+        </div>
+        <div class="sa-form-group"><label>Priority (1-10)</label><input type="number" class="sa-input" id="adPriority" value="1" min="1" max="10"></div>
+      </div>
+      <div class="sa-form-group"><label>Background Gradient</label><input type="text" class="sa-input" id="adGradient" value="linear-gradient(135deg,#6366f1 0%,#a855f7 100%)" oninput="updateAdPreview()"></div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Start Date/Time</label><input type="datetime-local" class="sa-input" id="adStart"></div>
+        <div class="sa-form-group"><label>Expiry Date/Time</label><input type="datetime-local" class="sa-input" id="adEnd"></div>
+      </div>
+      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:1rem;margin-top:.5rem">
+        <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;color:#334155;margin-bottom:8px">Preview</div>
+        <div id="adPreviewBox" style="padding:1.1rem;border-radius:10px;color:#fff;background:linear-gradient(135deg,#6366f1,#a855f7)">
+          <div id="adPreviewTitle" style="font-weight:800;font-size:.95rem">Banner Title</div>
+          <div id="adPreviewSub" style="font-size:.78rem;opacity:.85;margin:3px 0 10px">Subtitle...</div>
+          <span id="adPreviewCta" style="background:rgba(255,255,255,.22);padding:3px 10px;border-radius:7px;font-size:.72rem;font-weight:800">Explore Now</span>
+        </div>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('createAdModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="createAd()">🚀 Publish</button>
+    </div>
+  </div>
+</div>
+
+<div class="sa-modal-overlay" id="editAdModal">
+  <div class="sa-modal sa-modal-lg">
+    <div class="sa-modal-header"><h3>✏️ Edit Advertisement</h3><button class="sa-close-btn" onclick="closeModal('editAdModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <input type="hidden" id="eadId">
+      <div class="sa-form-group"><label>Title *</label><input type="text" class="sa-input" id="eadTitle" placeholder="Banner title" oninput="updateEditAdPreview()"></div>
+      <div class="sa-form-group"><label>Subtitle</label><input type="text" class="sa-input" id="eadSubtitle" placeholder="Tagline" oninput="updateEditAdPreview()"></div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>CTA Text</label><input type="text" class="sa-input" id="eadCta" oninput="updateEditAdPreview()"></div>
+        <div class="sa-form-group"><label>URL</label><input type="text" class="sa-input" id="eadUrl"></div>
+      </div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Section</label>
+          <select class="sa-select" id="eadSection"><option value="all">All Pages</option><option value="digital_library">Digital Library</option><option value="community_library">Community Library</option><option value="home">Student Home</option></select>
+        </div>
+        <div class="sa-form-group"><label>Priority (1-10)</label><input type="number" class="sa-input" id="eadPriority" min="1" max="10"></div>
+      </div>
+      <div class="sa-form-group"><label>Background Gradient</label><input type="text" class="sa-input" id="eadGradient" oninput="updateEditAdPreview()"></div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Start Date/Time</label><input type="datetime-local" class="sa-input" id="eadStart"></div>
+        <div class="sa-form-group"><label>Expiry Date/Time</label><input type="datetime-local" class="sa-input" id="eadEnd"></div>
+      </div>
+      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:1rem;margin-top:.5rem">
+        <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;color:#334155;margin-bottom:8px">Preview</div>
+        <div id="eadPreviewBox" style="padding:1.1rem;border-radius:10px;color:#fff;background:linear-gradient(135deg,#6366f1,#a855f7)">
+          <div id="eadPreviewTitle" style="font-weight:800;font-size:.95rem">Banner Title</div>
+          <div id="eadPreviewSub" style="font-size:.78rem;opacity:.85;margin:3px 0 10px">Subtitle...</div>
+          <span id="eadPreviewCta" style="background:rgba(255,255,255,.22);padding:3px 10px;border-radius:7px;font-size:.72rem;font-weight:800">Explore Now</span>
+        </div>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('editAdModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="saveAd()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+const SA = {
+  schools: [], users: [], books: [], currentTab: 'dashboard',
+  selectedSchools: new Set(), selectedUsers: new Set(), selectedBooks: new Set(),
+  notifScope: 'all',
+  debounceTimers: {}
+};
+
+// ═══════════════════════════════════════
+//  SIDEBAR & TABS
+// ═══════════════════════════════════════
+function toggleSidebar() {
+  const sb = document.getElementById('saSidebar');
+  const dim = document.getElementById('saDim');
+  if (!sb) return;
+  sb.classList.toggle('open');
+  if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
+}
+function closeSidebar() {
+  const sb = document.getElementById('saSidebar');
+  const dim = document.getElementById('saDim');
+  if (sb) sb.classList.remove('open');
+  if (dim) dim.classList.remove('active');
+}
+
+const TAB_TITLES = {
+  dashboard:'Dashboard', schools:'School Management', users:'User Management',
+  books:'Book Management', transactions:'Transactions', content:'Digital Content',
+  ads:'Advertisements', notifications:'Notifications', analytics:'Analytics',
+  audit:'Audit Logs', settings:'System Settings', masterauth:'Master Auth', reports:'Reports'
+};
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.sa-tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sa-nav-link').forEach(l => l.classList.remove('active'));
+  const pane = document.getElementById('tab-' + name);
+  if (pane) pane.classList.add('active');
+  if (btn) btn.classList.add('active');
+  const titleName = TAB_TITLES[name] || (name.charAt(0).toUpperCase() + name.slice(1));
+  if (document.getElementById('pageTitle')) document.getElementById('pageTitle').textContent = titleName;
+  if (document.getElementById('saBreadcrumbs')) document.getElementById('saBreadcrumbs').textContent = 'Super Admin / ' + titleName;
+  SA.currentTab = name;
+  closeSidebar();
+  // Lazy load
+  const loaders = {
+    schools: () => loadSchools(),
+    users: () => loadUsers(1),
+    books: () => loadBooks(1),
+    transactions: () => loadTransactions(1),
+    content: () => loadDigitalContent(1),
+    analytics: () => loadAnalytics(),
+    audit: () => loadAudit(1),
+    settings: () => loadSettings(),
+    roles: () => loadRolePerms(),
+    digital: () => loadDigitalList(1),
+    community: () => loadCommunityList(1),
+    global: () => loadGlobalList(1),
+    categories: () => loadCategories(),
+    goals: () => loadGoals(),
+    requests: () => loadBookRequests(1),
+    issued: () => loadIssuedBooks(1),
+    rfid: () => loadRfid(1),
+    scheduled: () => loadScheduled(),
+    aiconfig: () => loadAiConfig(),
+    maintenance: () => { runDiagnostics(); loadBackups(); loadBackupSchedules(); },
+    backups: () => { loadBackups(); loadBackupSchedules(); },
+    'login-history': () => loadLoginHistory(1),
+    devices: () => loadDevices(),
+    'two-factor': () => loadTwoFactor(),
+    'ip-allowlist': () => loadIpAllowlist(),
+    notifications: () => {}
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+function refreshCurrentTab() { switchTab(SA.currentTab, document.querySelector('.sa-nav-link.active')); }
+
+// ═══════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('sa-modal-overlay')) e.target.classList.remove('open');
+});
+
+// ═══════════════════════════════════════
+//  DEBOUNCE
+// ═══════════════════════════════════════
+function debounce(fn, key, ms = 400) {
+  clearTimeout(SA.debounceTimers[key]);
+  SA.debounceTimers[key] = setTimeout(fn, ms);
+}
+const debouncedLoadUsers = () => debounce(() => loadUsers(1), 'users');
+const debouncedLoadBooks = () => debounce(() => loadBooks(1), 'books');
+const debouncedLoadAudit = () => debounce(() => loadAudit(1), 'audit');
+
+// ═══════════════════════════════════════
+//  PAGINATION HELPER
+// ═══════════════════════════════════════
+function renderPagination(containerId, page, total, limit, onPage) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const totalPages = Math.ceil(total / limit);
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  const start = (page-1)*limit+1, end = Math.min(page*limit, total);
+  let html = `<div class="sa-page-info">Showing ${start}–${end} of ${total}</div>`;
+  html += `<button class="sa-page-btn" onclick="${onPage}(${page-1})" ${page<=1?'disabled':''}>‹ Prev</button>`;
+  const startP = Math.max(1, page-2), endP = Math.min(totalPages, page+2);
+  for (let i=startP; i<=endP; i++) html += `<button class="sa-page-btn ${i===page?'active':''}" onclick="${onPage}(${i})">${i}</button>`;
+  html += `<button class="sa-page-btn" onclick="${onPage}(${page+1})" ${page>=totalPages?'disabled':''}>Next ›</button>`;
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+//  API HELPER
+// ═══════════════════════════════════════
+async function apiPost(url, data) {
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  return r.json();
+}
+
+// ═══════════════════════════════════════
+//  SCHOOLS
+// ═══════════════════════════════════════
+let _schoolsPage = 1;
+const SCHOOLS_PAGE_SIZE = 15;
+async function loadSchools() {
+  document.getElementById('schoolsTableWrap').innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading schools...</div>';
+  try {
+    const r = await fetch('/super-admin/schools');
+    const d = await r.json();
+    SA.schools = d.schools || [];
+    filterSchools();
+    // Populate school filter dropdowns
+    const codes = [...new Set(SA.schools.map(s => s.school_code).filter(Boolean))];
+    ['userSchoolFilter','bookSchoolFilter','txSchoolFilter','dcSchoolFilter','auditSchool'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const cur = el.value;
+      el.innerHTML = '<option value="">All Schools</option>' + codes.map(c => `<option value="${c}">${c}</option>`).join('');
+      el.value = cur;
+    });
+  } catch(e) {
+    document.getElementById('schoolsTableWrap').innerHTML = '<div class="sa-empty"><p>Failed to load schools.</p></div>';
+  }
+}
+
+function filterSchools(resetPage = true) {
+  if (resetPage) _schoolsPage = 1;
+  const q = (document.getElementById('schoolSearch')?.value || '').toLowerCase();
+  const st = document.getElementById('schoolStatusFilter')?.value || '';
+  const filtered = SA.schools.filter(s =>
+    (!q || (s.school_code||'').toLowerCase().includes(q) || (s.name||'').toLowerCase().includes(q)) &&
+    (!st || s.status === st)
+  );
+  const total = filtered.length;
+  const start = (_schoolsPage - 1) * SCHOOLS_PAGE_SIZE;
+  renderSchoolsTable(filtered.slice(start, start + SCHOOLS_PAGE_SIZE));
+  renderPagination('schoolsPagination', _schoolsPage, total, SCHOOLS_PAGE_SIZE, 'goSchoolsPage');
+}
+function goSchoolsPage(page) { _schoolsPage = page; filterSchools(false); }
+
+function renderSchoolsTable(schools) {
+  if (!schools.length) {
+    document.getElementById('schoolsTableWrap').innerHTML = '<div class="sa-empty"><div class="sa-empty-icon">🏫</div><p>No schools found.</p></div>';
+    return;
+  }
+  document.getElementById('schoolsTableWrap').innerHTML = `
+    <div class="sa-table-wrap"><table class="sa-table">
+      <thead><tr>
+        <th class="sa-col-check"><input type="checkbox" class="sa-check" onchange="toggleAllSchools(this)"></th>
+        <th>Code</th><th>Name</th><th>Plan</th><th>Status</th><th>Users</th><th>Books</th><th>Due Days</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${schools.map(s => `
+        <tr>
+          <td><input type="checkbox" class="sa-check school-check" value="${s.school_code}" onchange="updateSchoolBulk()"></td>
+          <td><span class="badge badge-indigo">${s.school_code||'—'}</span></td>
+          <td style="color:#e2e8f0;font-weight:600">${s.name||'—'}</td>
+          <td><span class="badge ${s.activePlan==='PROFESSIONAL'?'badge-yellow':s.activePlan==='BASIC'?'badge-blue':'badge-gray'}">${s.activePlan||'FREE'}</span></td>
+          <td><span class="badge ${s.status==='active'?'badge-green':'badge-red'}">${s.status||'active'}</span></td>
+          <td>${s.user_count||0}</td>
+          <td>${s.book_count||0}</td>
+          <td>${s.due_days||14}d</td>
+          <td><div class="sa-table-actions">
+            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick='editSchoolModal(${JSON.stringify(s).replace(/'/g,"&#39;")})'>✏️</button>
+            <button class="sa-btn sa-btn-${s.status==='active'?'warning':'success'} sa-btn-xs" onclick="toggleSchoolStatus('${s.school_code}')">${s.status==='active'?'⏸':'▶'}</button>
+            <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteSchool('${s.school_code}','${(s.name||'').replace(/'/g,"\\'")}')">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  SA.selectedSchools.clear();
+  document.getElementById('schoolsBulkBar').classList.remove('show');
+}
+
+function toggleAllSchools(cb) {
+  document.querySelectorAll('.school-check').forEach(c => { c.checked = cb.checked; if(cb.checked) SA.selectedSchools.add(c.value); else SA.selectedSchools.delete(c.value); });
+  updateSchoolBulk();
+}
+function updateSchoolBulk() {
+  SA.selectedSchools.clear();
+  document.querySelectorAll('.school-check:checked').forEach(c => SA.selectedSchools.add(c.value));
+  const bar = document.getElementById('schoolsBulkBar');
+  if (SA.selectedSchools.size > 0) { bar.classList.add('show'); document.getElementById('schoolsBulkCount').textContent = SA.selectedSchools.size + ' selected'; }
+  else bar.classList.remove('show');
+}
+
+async function createSchool() {
+  const body = { school_code: document.getElementById('sCode').value.trim().toUpperCase(), name: document.getElementById('sName').value.trim(), librarian_name: document.getElementById('sLibrarian').value.trim(), activePlan: document.getElementById('sPlan').value, due_days: document.getElementById('sDueDays').value, studentLimit: document.getElementById('sStudentLimit').value, librarianLimit: document.getElementById('sLibLimit').value, adminLimit: document.getElementById('sAdminLimit').value };
+  if (!body.school_code || !body.name) return showToast('Code and name required','error');
+  const d = await apiPost('/super-admin/schools/create', body);
+  if (d.success) { closeModal('createSchoolModal'); showToast('School created!','success'); SA.schools=[]; loadSchools(); }
+  else showToast(d.error||'Failed','error');
+}
+
+function editSchoolModal(s) {
+  document.getElementById('eSchoolCode').value = s.school_code;
+  document.getElementById('eSchoolName').value = s.name||'';
+  document.getElementById('eSchoolLibrarian').value = s.librarian_name||'';
+  document.getElementById('eSchoolStatus').value = s.status||'active';
+  document.getElementById('eSchoolPlan').value = s.activePlan||'FREE';
+  document.getElementById('eSchoolDue').value = s.due_days||14;
+  document.getElementById('eSchoolExpiry').value = s.expiryDate ? s.expiryDate.substr(0,10) : '';
+  document.getElementById('eStudentLimit').value = s.studentLimit||500;
+  document.getElementById('eLibLimit').value = s.librarianLimit||2;
+  document.getElementById('eAdminLimit').value = s.adminLimit||2;
+  openModal('editSchoolModal');
+}
+
+async function saveSchool() {
+  const code = document.getElementById('eSchoolCode').value;
+  const body = { name: document.getElementById('eSchoolName').value, librarian_name: document.getElementById('eSchoolLibrarian').value, status: document.getElementById('eSchoolStatus').value, activePlan: document.getElementById('eSchoolPlan').value, due_days: document.getElementById('eSchoolDue').value, expiryDate: document.getElementById('eSchoolExpiry').value, studentLimit: document.getElementById('eStudentLimit').value, librarianLimit: document.getElementById('eLibLimit').value, adminLimit: document.getElementById('eAdminLimit').value };
+  const d = await apiPost(`/super-admin/edit-school/${code}`, body);
+  if (d.success) { closeModal('editSchoolModal'); showToast('School updated!','success'); SA.schools=[]; loadSchools(); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function toggleSchoolStatus(code) {
+  const d = await apiPost(`/super-admin/schools/${code}/toggle-status`, {});
+  if (d.success) { showToast(`School ${d.status==='active'?'activated':'suspended'}`,'success'); SA.schools=[]; loadSchools(); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function deleteSchool(code, name) {
+  if (!confirm(`Delete school "${name}" (${code})?\nThis cannot be undone.`)) return;
+  const d = await apiPost(`/super-admin/delete-school/${code}`, {});
+  if (d.success) { showToast('School deleted','success'); SA.schools=[]; loadSchools(); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function bulkDeleteSchools() {
+  if (!SA.selectedSchools.size) return;
+  if (!confirm(`Delete ${SA.selectedSchools.size} school(s)?`)) return;
+  let ok=0;
+  for (const code of SA.selectedSchools) { const d = await apiPost(`/super-admin/delete-school/${code}`,{}); if(d.success) ok++; }
+  showToast(`${ok} school(s) deleted`,'success'); SA.schools=[]; loadSchools();
+}
+
+// ═══════════════════════════════════════
+//  USERS
+// ═══════════════════════════════════════
+let _usersPage = 1, _usersTotal = 0;
+async function loadUsers(page = 1) {
+  _usersPage = page;
+  document.getElementById('usersTableWrap').innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const search = document.getElementById('userSearch')?.value || '';
+  const role = document.getElementById('userRoleFilter')?.value || '';
+  const banned = document.getElementById('userBanFilter')?.value || '';
+  const school = document.getElementById('userSchoolFilter')?.value || '';
+  const params = new URLSearchParams({ page, limit:50 });
+  if (search) params.set('search', search);
+  if (role) params.set('role', role);
+  if (banned !== '') params.set('banned', banned);
+  if (school) params.set('school_code', school);
+  try {
+    const r = await fetch('/super-admin/users?' + params);
+    const d = await r.json();
+    SA.users = d.users || [];
+    _usersTotal = d.total || SA.users.length;
+    renderUsersTable(SA.users);
+    renderPagination('usersPagination', page, _usersTotal, 50, 'loadUsers');
+  } catch(e) {
+    document.getElementById('usersTableWrap').innerHTML = '<div class="sa-empty"><p>Failed to load users.</p></div>';
+  }
+}
+
+function renderUsersTable(users) {
+  if (!users.length) { document.getElementById('usersTableWrap').innerHTML = '<div class="sa-empty"><div class="sa-empty-icon">👥</div><p>No users found.</p></div>'; return; }
+  const roleBadge = r => ({'super_admin':'badge-yellow','admin':'badge-blue','librarian':'badge-green','student':'badge-indigo','teacher':'badge-purple','parent':'badge-pink'}[r]||'badge-gray');
+  document.getElementById('usersTableWrap').innerHTML = `
+    <div class="sa-table-wrap"><table class="sa-table">
+      <thead><tr>
+        <th class="sa-col-check"><input type="checkbox" class="sa-check" onchange="toggleAllUsers(this)"></th>
+        <th>ID</th><th>Name</th><th>Phone</th><th>Role</th><th>School</th><th>Class</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${users.map(u => `
+        <tr>
+          <td><input type="checkbox" class="sa-check user-check" value="${u.id}" onchange="updateUserBulk()"></td>
+          <td style="color:#334155;font-size:.75rem">#${u.id}</td>
+          <td style="color:#e2e8f0;font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name||'—'}</td>
+          <td>${u.phone||'—'}</td>
+          <td><span class="badge ${roleBadge(u.role)}">${u.role||'—'}</span></td>
+          <td><span class="badge badge-gray" style="font-size:.65rem">${u.school_code||'—'}</span></td>
+          <td style="font-size:.78rem">${u.class||''} ${u.section||''}</td>
+          <td><span class="badge ${(u.is_banned==='1'||u.is_banned===1)?'badge-red':'badge-green'}">${(u.is_banned==='1'||u.is_banned===1)?'Banned':'Active'}</span></td>
+          <td><div class="sa-table-actions">
+            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick='editUserModal(${JSON.stringify(u).replace(/'/g,"&#39;")})'>✏️</button>
+            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick="changeRolePrompt(${u.id},'${(u.name||'').replace(/'/g,"\\'")}','${u.role||''}')" title="Change role">🔄</button>
+            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick="transferSchoolPrompt(${u.id},'${(u.name||'').replace(/'/g,"\\'")}','${u.school_code||''}')" title="Transfer school">🏫</button>
+            <button class="sa-btn ${(u.is_banned==='1'||u.is_banned===1)?'sa-btn-success':'sa-btn-danger'} sa-btn-xs" onclick="toggleBanUser(${u.id})">${(u.is_banned==='1'||u.is_banned===1)?'✅':'🚫'}</button>
+            <button class="sa-btn sa-btn-warning sa-btn-xs" onclick="resetPasswordPrompt(${u.id},'${(u.name||'').replace(/'/g,"\\'")}')">🔑</button>
+            <button class="sa-btn sa-btn-info sa-btn-xs" onclick="forceLogout(${u.id})">⏏️</button>
+            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick="masterLoginAs(${u.id})">👁️</button>
+            <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteUser(${u.id},'${(u.name||'').replace(/'/g,"\\'")}')">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  SA.selectedUsers.clear();
+  document.getElementById('usersBulkBar').classList.remove('show');
+}
+
+function toggleAllUsers(cb) {
+  document.querySelectorAll('.user-check').forEach(c => { c.checked=cb.checked; if(cb.checked) SA.selectedUsers.add(c.value); else SA.selectedUsers.delete(c.value); });
+  updateUserBulk();
+}
+function updateUserBulk() {
+  SA.selectedUsers.clear();
+  document.querySelectorAll('.user-check:checked').forEach(c => SA.selectedUsers.add(c.value));
+  const bar = document.getElementById('usersBulkBar');
+  if(SA.selectedUsers.size>0){ bar.classList.add('show'); document.getElementById('usersBulkCount').textContent=SA.selectedUsers.size+' selected'; }
+  else bar.classList.remove('show');
+}
+
+async function createUser() {
+  const body = { name:document.getElementById('cuName').value, phone:document.getElementById('cuPhone').value, email:document.getElementById('cuEmail').value, password:document.getElementById('cuPassword').value||'password123', role:document.getElementById('cuRole').value, school_code:document.getElementById('cuSchool').value, class:document.getElementById('cuClass').value, section:document.getElementById('cuSection').value, admission_no:document.getElementById('cuAdmNo').value };
+  if (!body.name||!body.phone) return showToast('Name & phone required','error');
+  const d = await apiPost('/super-admin/users/create', body);
+  if (d.success) { closeModal('createUserModal'); showToast('User created!','success'); loadUsers(_usersPage); }
+  else showToast(d.error||'Failed','error');
+}
+
+function editUserModal(u) {
+  document.getElementById('euId').value=u.id; document.getElementById('euName').value=u.name||'';
+  document.getElementById('euPhone').value=u.phone||''; document.getElementById('euEmail').value=u.email||'';
+  document.getElementById('euRole').value=u.role||'student'; document.getElementById('euSchool').value=u.school_code||'';
+  document.getElementById('euClass').value=u.class||''; document.getElementById('euSection').value=u.section||'';
+  document.getElementById('euAdmNo').value=u.admission_no||'';
+  openModal('editUserModal');
+}
+
+async function saveUser() {
+  const id = document.getElementById('euId').value;
+  const body = { name:document.getElementById('euName').value, phone:document.getElementById('euPhone').value, email:document.getElementById('euEmail').value, role:document.getElementById('euRole').value, school_code:document.getElementById('euSchool').value, class:document.getElementById('euClass').value, section:document.getElementById('euSection').value, admission_no:document.getElementById('euAdmNo').value };
+  const d = await apiPost(`/super-admin/users/${id}/edit`, body);
+  if (d.success) { closeModal('editUserModal'); showToast('User updated!','success'); loadUsers(_usersPage); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function toggleBanUser(id) {
+  if (!confirm('Ban/unban this user?')) return;
+  const d = await apiPost(`/super-admin/users/${id}/toggle-ban`, {});
+  if (d.success) { showToast(d.is_banned?'User banned':'User unbanned', d.is_banned?'warning':'success'); loadUsers(_usersPage); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
+  const d = await apiPost(`/super-admin/users/${id}/delete`, {});
+  if (d.success) { showToast('User deleted','success'); loadUsers(_usersPage); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function resetPasswordPrompt(id, name) {
+  const np = prompt(`Set new password for "${name}" (leave blank for auto-generate):`);
+  if (np === null) return;
+  const body = np.trim() ? { new_password: np.trim() } : {};
+  const d = await apiPost(`/super-admin/users/${id}/reset-password`, body);
+  if (d.success) { alert(`Password reset!\nNew password: ${d.new_password}`); showToast('Password reset!','success'); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function forceLogout(id) {
+  if (!confirm('Force-logout this user from all devices?')) return;
+  const d = await apiPost(`/super-admin/users/${id}/force-logout`, {});
+  if (d.success) showToast('User logged out from all devices','success');
+  else showToast(d.error||'Failed','error');
+}
+
+function masterLoginAs(userId) {
+  document.getElementById('masterUserId').value = userId;
+  switchTab('masterauth', document.querySelector('[onclick*="masterauth"]'));
+}
+
+async function changeRolePrompt(id, name, currentRole) {
+  const allowed = ['student','parent','librarian','admin','teacher','super_admin'];
+  const role = prompt(`Change role for "${name}"?\nAllowed: ${allowed.join(', ')}\nCurrent: ${currentRole}`, currentRole || 'student');
+  if (!role) return;
+  if (!allowed.includes(role.toLowerCase().trim())) return showToast('Invalid role', 'error');
+  const d = await apiPost(`/super-admin/users/${id}/change-role`, { role: role.toLowerCase().trim() });
+  if (d.success) { showToast('Role updated', 'success'); loadUsers(_usersPage); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function transferSchoolPrompt(id, name, currentSchool) {
+  const school = prompt(`Transfer "${name}" to which school code?`, currentSchool || '');
+  if (school === null) return;
+  if (!school.trim()) return showToast('School code required', 'error');
+  const d = await apiPost(`/super-admin/users/${id}/transfer-school`, { school_code: school.trim().toUpperCase() });
+  if (d.success) { showToast('School updated', 'success'); loadUsers(_usersPage); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function bulkDeleteUsers() {
+  if (!SA.selectedUsers.size) return;
+  if (!confirm(`Delete ${SA.selectedUsers.size} user(s)?`)) return;
+  const ids = [...SA.selectedUsers];
+  const d = await apiPost('/super-admin/users/bulk-action', { ids, action: 'delete' });
+  if (d.success) showToast(`${d.affected} user(s) deleted`, 'success');
+  else showToast(d.error || 'Failed', 'error');
+  loadUsers(1);
+}
+async function bulkBanUsers() {
+  if (!SA.selectedUsers.size) return;
+  if (!confirm(`Ban ${SA.selectedUsers.size} user(s)?`)) return;
+  const ids = [...SA.selectedUsers];
+  const d = await apiPost('/super-admin/users/bulk-action', { ids, action: 'ban' });
+  if (d.success) showToast(`${d.affected} user(s) banned`, 'warning');
+  else showToast(d.error || 'Failed', 'error');
+  loadUsers(_usersPage);
+}
+async function bulkUnbanUsers() {
+  if (!SA.selectedUsers.size) return;
+  if (!confirm(`Unban ${SA.selectedUsers.size} user(s)?`)) return;
+  const ids = [...SA.selectedUsers];
+  const d = await apiPost('/super-admin/users/bulk-action', { ids, action: 'unban' });
+  if (d.success) showToast(`${d.affected} user(s) unbanned`, 'success');
+  else showToast(d.error || 'Failed', 'error');
+  loadUsers(_usersPage);
+}
+
+// ═══════════════════════════════════════
+//  BOOKS
+// ═══════════════════════════════════════
+let _booksPage = 1, _booksTotal = 0;
+async function loadBooks(page = 1) {
+  _booksPage = page;
+  document.getElementById('booksTableWrap').innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const search = document.getElementById('bookSearch')?.value||'';
+  const school = document.getElementById('bookSchoolFilter')?.value||'';
+  const banned = document.getElementById('bookBanFilter')?.value||'';
+  const params = new URLSearchParams({page, limit:50});
+  if(search) params.set('search',search); if(school) params.set('school_code',school); if(banned!=='') params.set('banned',banned);
+  try {
+    const r = await fetch('/super-admin/books?'+params);
+    const d = await r.json();
+    SA.books = d.books||[];
+    _booksTotal = d.total||SA.books.length;
+    renderBooksTable(SA.books);
+    renderPagination('booksPagination',page,_booksTotal,50,'loadBooks');
+  } catch(e) { document.getElementById('booksTableWrap').innerHTML='<div class="sa-empty"><p>Failed to load books.</p></div>'; }
+}
+
+function renderBooksTable(books) {
+  if (!books.length) { document.getElementById('booksTableWrap').innerHTML='<div class="sa-empty"><div class="sa-empty-icon">📚</div><p>No books found.</p></div>'; return; }
+  document.getElementById('booksTableWrap').innerHTML = `
+    <div class="sa-table-wrap"><table class="sa-table">
+      <thead><tr>
+        <th class="sa-col-check"><input type="checkbox" class="sa-check" onchange="toggleAllBooks(this)"></th>
+        <th>ID</th><th>Title</th><th>Author</th><th>School</th><th>ISBN</th><th>Copies</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${books.map(b => `
+        <tr>
+          <td><input type="checkbox" class="sa-check book-check" value="${b.id}" onchange="updateBookBulk()"></td>
+          <td style="color:#334155;font-size:.75rem">#${b.id}</td>
+          <td style="color:#e2e8f0;font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.title||'—'}</td>
+          <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.author||'—'}</td>
+          <td><span class="badge badge-gray" style="font-size:.65rem">${b.school_code||'—'}</span></td>
+          <td style="font-size:.78rem;color:#64748b">${b.isbn||'—'}</td>
+          <td><span style="color:${b.available_copies>0?'#34d399':'#f87171'}">${b.available_copies||0}/${b.total_copies||0}</span></td>
+          <td><span class="badge ${(b.is_banned==='1'||b.is_banned===1)?'badge-red':'badge-green'}">${(b.is_banned==='1'||b.is_banned===1)?'Banned':'Active'}</span></td>
+          <td><div class="sa-table-actions">
+            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick='editBookModal(${JSON.stringify(b).replace(/'/g,"&#39;")})'>✏️</button>
+            <button class="sa-btn ${(b.is_banned==='1'||b.is_banned===1)?'sa-btn-success':'sa-btn-warning'} sa-btn-xs" onclick="toggleBanBook(${b.id})">${(b.is_banned==='1'||b.is_banned===1)?'✅':'🚫'}</button>
+            <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteBook(${b.id},'${(b.title||'').replace(/'/g,"\\'")}')">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  SA.selectedBooks.clear(); document.getElementById('booksBulkBar').classList.remove('show');
+}
+
+function toggleAllBooks(cb) { document.querySelectorAll('.book-check').forEach(c=>{c.checked=cb.checked;if(cb.checked)SA.selectedBooks.add(c.value);else SA.selectedBooks.delete(c.value);}); updateBookBulk(); }
+function updateBookBulk() { SA.selectedBooks.clear(); document.querySelectorAll('.book-check:checked').forEach(c=>SA.selectedBooks.add(c.value)); const bar=document.getElementById('booksBulkBar'); if(SA.selectedBooks.size>0){bar.classList.add('show');document.getElementById('booksBulkCount').textContent=SA.selectedBooks.size+' selected';}else bar.classList.remove('show'); }
+
+function editBookModal(b) {
+  document.getElementById('ebId').value=b.id; document.getElementById('ebTitle').value=b.title||'';
+  document.getElementById('ebAuthor').value=b.author||''; document.getElementById('ebIsbn').value=b.isbn||'';
+  document.getElementById('ebPublisher').value=b.publisher||''; document.getElementById('ebGenre').value=b.genre||'';
+  document.getElementById('ebCategory').value=b.category||''; document.getElementById('ebShelf').value=b.shelf_location||'';
+  document.getElementById('ebCopies').value=b.total_copies||1;
+  openModal('editBookModal');
+}
+
+async function saveBook() {
+  const id = document.getElementById('ebId').value;
+  const body = { title:document.getElementById('ebTitle').value, author:document.getElementById('ebAuthor').value, isbn:document.getElementById('ebIsbn').value, publisher:document.getElementById('ebPublisher').value, genre:document.getElementById('ebGenre').value, category:document.getElementById('ebCategory').value, shelf_location:document.getElementById('ebShelf').value, total_copies:document.getElementById('ebCopies').value };
+  const d = await apiPost(`/super-admin/books/${id}/edit`, body);
+  if (d.success) { closeModal('editBookModal'); showToast('Book updated!','success'); loadBooks(_booksPage); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function toggleBanBook(id) {
+  const d = await apiPost(`/super-admin/books/${id}/toggle-ban`, {});
+  if (d.success) { showToast(d.is_banned?'Book banned':'Book unbanned','success'); loadBooks(_booksPage); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function deleteBook(id, title) {
+  if (!confirm(`Delete book "${title}"?`)) return;
+  const d = await apiPost(`/super-admin/books/${id}/delete`, {});
+  if (d.success) { showToast('Book deleted','success'); loadBooks(_booksPage); }
+  else showToast(d.error||'Failed','error');
+}
+
+async function bulkDeleteBooks() {
+  if (!SA.selectedBooks.size) return;
+  if (!confirm(`Delete ${SA.selectedBooks.size} book(s)?`)) return;
+  let ok=0; for(const id of SA.selectedBooks){const d=await apiPost(`/super-admin/books/${id}/delete`,{});if(d.success)ok++;}
+  showToast(`${ok} book(s) deleted`,'success'); loadBooks(1);
+}
+
+async function createBook() {
+  const body = {
+    title: document.getElementById('cbTitle').value.trim(),
+    author: document.getElementById('cbAuthor').value,
+    isbn: document.getElementById('cbIsbn').value,
+    publisher: document.getElementById('cbPublisher').value,
+    genre: document.getElementById('cbGenre').value,
+    category: document.getElementById('cbCategory').value,
+    subject: document.getElementById('cbSubject').value,
+    language: document.getElementById('cbLanguage').value,
+    shelf_location: document.getElementById('cbShelf').value,
+    barcode_id: document.getElementById('cbBarcode').value,
+    school_code: document.getElementById('cbSchool').value,
+    total_copies: document.getElementById('cbCopies').value,
+    description: document.getElementById('cbDesc').value,
+  };
+  if (!body.title) return showToast('Title required','error');
+  const d = await apiPost('/super-admin/books/create', body);
+  if (d.success) { closeModal('createBookModal'); showToast('Book added!','success'); loadBooks(1); }
+  else showToast(d.error || 'Failed','error');
+}
+
+async function bulkUploadBooks(input) {
+  if (!input.files || !input.files.length) return;
+  const file = input.files[0];
+  const fd = new FormData();
+  fd.append('csv', file);
+  const r = await fetch('/super-admin/books/bulk-upload', { method:'POST', body: fd });
+  const d = await r.json();
+  input.value = '';
+  if (d.success) { showToast(`Imported ${d.inserted} book(s), ${d.failed} failed`,'success'); loadBooks(1); }
+  else showToast(d.error || 'Import failed','error');
+}
+
+// ═══════════════════════════════════════
+//  TRANSACTIONS
+// ═══════════════════════════════════════
+let _txPage=1, _txTotal=0;
+async function loadTransactions(page=1) {
+  _txPage=page;
+  document.getElementById('txTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const school=document.getElementById('txSchoolFilter')?.value||'';
+  const status=document.getElementById('txStatusFilter')?.value||'';
+  const params=new URLSearchParams({page,limit:50});
+  if(school) params.set('school_code',school); if(status) params.set('status',status);
+  try {
+    const r=await fetch('/super-admin/transactions?'+params); const d=await r.json();
+    const txs=d.transactions||[]; _txTotal=d.total||txs.length;
+    if(!txs.length){document.getElementById('txTableWrap').innerHTML='<div class="sa-empty"><div class="sa-empty-icon">📋</div><p>No transactions found.</p></div>';return;}
+    document.getElementById('txTableWrap').innerHTML=`
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>#</th><th>User</th><th>Book</th><th>School</th><th>Issued</th><th>Due</th><th>Returned</th><th>Fine</th><th>Status</th></tr></thead>
+        <tbody>${txs.map(t=>`
+          <tr>
+            <td style="color:#334155;font-size:.75rem">#${t.id}</td>
+            <td style="color:#e2e8f0">${t.user_name||'—'}<br><span style="font-size:.72rem;color:#475569">${t.user_phone||''}</span></td>
+            <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.book_title||'—'}</td>
+            <td><span class="badge badge-gray" style="font-size:.62rem">${t.school_code||'—'}</span></td>
+            <td style="font-size:.78rem">${t.issue_date?t.issue_date.substr(0,10):'—'}</td>
+            <td style="font-size:.78rem;color:${t.return_date?'#64748b':new Date(t.due_date)<new Date()?'#f87171':'#94a3b8'}">${t.due_date?t.due_date.substr(0,10):'—'}</td>
+            <td style="font-size:.78rem;color:#34d399">${t.return_date?t.return_date.substr(0,10):'—'}</td>
+            <td style="color:${t.fine>0?'#f87171':'#64748b'}">${t.fine>0?'₹'+t.fine:'—'}</td>
+            <td><span class="badge ${t.status==='returned'?'badge-green':t.status==='issued'&&new Date(t.due_date)<new Date()?'badge-red':'badge-blue'}">${t.status||'—'}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    renderPagination('txPagination',page,_txTotal,50,'loadTransactions');
+  } catch(e){document.getElementById('txTableWrap').innerHTML='<div class="sa-empty"><p>Failed to load.</p></div>';}
+}
+
+// ═══════════════════════════════════════
+//  DIGITAL CONTENT
+// ═══════════════════════════════════════
+let _dcPage=1, _dcTotal=0;
+async function loadDigitalContent(page=1) {
+  _dcPage=page;
+  document.getElementById('dcTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const status=document.getElementById('dcStatusFilter')?.value||'';
+  const school=document.getElementById('dcSchoolFilter')?.value||'';
+  const params=new URLSearchParams({page,limit:50});
+  if(status) params.set('status',status); if(school) params.set('school_code',school);
+  try {
+    const r=await fetch('/super-admin/digital-content?'+params); const d=await r.json();
+    const items=d.content||[]; _dcTotal=d.total||items.length;
+    if(!items.length){document.getElementById('dcTableWrap').innerHTML='<div class="sa-empty"><div class="sa-empty-icon">🌐</div><p>No content found.</p></div>';return;}
+    document.getElementById('dcTableWrap').innerHTML=`
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>ID</th><th>Title</th><th>Uploader</th><th>School</th><th>Category</th><th>Status</th><th>Views</th><th>Actions</th></tr></thead>
+        <tbody>${items.map(c=>`
+          <tr>
+            <td style="color:#334155;font-size:.75rem">#${c.id}</td>
+            <td style="color:#e2e8f0;font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.title||'—'}</td>
+            <td style="font-size:.8rem">${c.uploader_name||'Unknown'}</td>
+            <td><span class="badge badge-gray" style="font-size:.62rem">${c.school_code||'—'}</span></td>
+            <td style="font-size:.78rem">${c.category||'—'}</td>
+            <td><span class="badge ${c.status==='approved'?'badge-green':c.status==='rejected'?'badge-red':'badge-yellow'}">${c.status||'pending'}</span></td>
+            <td>${c.views||0}</td>
+            <td><div class="sa-table-actions">
+              <button class="sa-btn sa-btn-info sa-btn-xs" onclick='openEditDcModal(${JSON.stringify(c).replace(/'/g,"&#39;")})'>✏️</button>
+              ${c.status!=='approved'?`<button class="sa-btn sa-btn-success sa-btn-xs" onclick="approveContent(${c.id})">✅ Approve</button>`:''}
+              ${c.status!=='rejected'?`<button class="sa-btn sa-btn-warning sa-btn-xs" onclick="openRejectModal(${c.id})">❌ Reject</button>`:''}
+              <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteContent(${c.id})">🗑️</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    renderPagination('dcPagination',page,_dcTotal,50,'loadDigitalContent');
+  } catch(e){document.getElementById('dcTableWrap').innerHTML='<div class="sa-empty"><p>Failed to load.</p></div>';}
+}
+
+async function approveContent(id) {
+  const d=await apiPost(`/super-admin/digital-content/${id}/approve`,{});
+  if(d.success){showToast('Content approved','success');loadDigitalContent(_dcPage);}
+  else showToast(d.error||'Failed','error');
+}
+function openRejectModal(id){document.getElementById('rejectContentId').value=id;document.getElementById('rejectReason').value='';openModal('rejectContentModal');}
+async function confirmRejectContent(){
+  const id=document.getElementById('rejectContentId').value;
+  const reason=document.getElementById('rejectReason').value.trim();
+  if(!reason) return showToast('Please enter a rejection reason','error');
+  const d=await apiPost(`/super-admin/digital-content/${id}/reject`,{reason});
+  if(d.success){closeModal('rejectContentModal');showToast('Content rejected','warning');loadDigitalContent(_dcPage);}
+  else showToast(d.error||'Failed','error');
+}
+async function deleteContent(id){
+  if(!confirm('Delete this content? Cannot be undone.')) return;
+  const d=await apiPost(`/super-admin/digital-content/${id}/delete`,{});
+  if(d.success){showToast('Deleted','success');loadDigitalContent(_dcPage);}
+  else showToast(d.error||'Failed','error');
+}
+async function createDigitalContent(){
+  const title=document.getElementById('cdcTitle').value.trim();
+  if(!title) return showToast('Title is required','error');
+  const body={
+    title,
+    category:document.getElementById('cdcCategory').value.trim(),
+    subject:document.getElementById('cdcSubject').value.trim(),
+    class:document.getElementById('cdcClass').value.trim(),
+    tags:document.getElementById('cdcTags').value.trim(),
+    file_url:document.getElementById('cdcUrl').value.trim(),
+    school_code:document.getElementById('cdcSchool').value.trim(),
+    description:document.getElementById('cdcDesc').value.trim(),
+    status:'approved',
+  };
+  const d=await apiPost('/super-admin/digital-content/create',body);
+  if(d.success){closeModal('createDcModal');document.getElementById('cdcTitle').value='';document.getElementById('cdcUrl').value='';showToast('Content added','success');loadDigitalContent(1);}
+  else showToast(d.error||'Failed','error');
+}
+function openEditDcModal(c){
+  document.getElementById('edcId').value=c.id;
+  document.getElementById('edcTitle').value=c.title||'';
+  document.getElementById('edcCategory').value=c.category||'';
+  document.getElementById('edcSubject').value=c.subject||'';
+  document.getElementById('edcClass').value=c.class_name||'';
+  document.getElementById('edcTags').value=(c.tags||'').split(',').join(', ');
+  document.getElementById('edcUrl').value=c.file_url||c.external_url||'';
+  document.getElementById('edcSchool').value=c.school_code||'';
+  document.getElementById('edcDesc').value=c.description||'';
+  openModal('editDcModal');
+}
+async function saveDigitalContent(){
+  const id=document.getElementById('edcId').value;
+  const title=document.getElementById('edcTitle').value.trim();
+  if(!title) return showToast('Title is required','error');
+  const body={
+    title,
+    category:document.getElementById('edcCategory').value.trim(),
+    subject:document.getElementById('edcSubject').value.trim(),
+    class:document.getElementById('edcClass').value.trim(),
+    tags:document.getElementById('edcTags').value.trim(),
+    file_url:document.getElementById('edcUrl').value.trim(),
+    school_code:document.getElementById('edcSchool').value.trim(),
+    description:document.getElementById('edcDesc').value.trim(),
+  };
+  const d=await apiPost(`/super-admin/digital-content/${id}/edit`,body);
+  if(d.success){closeModal('editDcModal');showToast('Content updated','success');loadDigitalContent(_dcPage);}
+  else showToast(d.error||'Failed','error');
+}
+
+// ═══════════════════════════════════════
+//  ADS
+// ═══════════════════════════════════════
+function updateAdPreview() {
+  document.getElementById('adPreviewTitle').textContent=document.getElementById('adTitle').value||'Banner Title';
+  document.getElementById('adPreviewSub').textContent=document.getElementById('adSubtitle').value||'Subtitle...';
+  document.getElementById('adPreviewCta').textContent=document.getElementById('adCta').value||'Explore Now';
+  document.getElementById('adPreviewBox').style.background=document.getElementById('adGradient').value||'linear-gradient(135deg,#6366f1,#a855f7)';
+}
+async function createAd(){
+  const body={title:document.getElementById('adTitle').value,subtitle:document.getElementById('adSubtitle').value,cta_text:document.getElementById('adCta').value,target_url:document.getElementById('adUrl').value,target_section:document.getElementById('adSection').value,priority:document.getElementById('adPriority').value,bg_gradient:document.getElementById('adGradient').value,start_time:document.getElementById('adStart').value||null,end_time:document.getElementById('adEnd').value||null,status:'active'};
+  if(!body.title) return showToast('Title required','error');
+  const d=await apiPost('/super-admin/ads/create',body);
+  if(d.success){closeModal('createAdModal');showToast('Ad published!','success');setTimeout(()=>window.location.reload(),700);}
+  else showToast(d.error||'Failed','error');
+}
+async function toggleAd(id){const d=await apiPost(`/super-admin/ads/toggle/${id}`,{});if(d.success){showToast('Status updated','success');setTimeout(()=>window.location.reload(),600);}else showToast(d.error||'Failed','error');}
+async function deleteAd(id){if(!confirm('Delete this advertisement?'))return;const d=await apiPost(`/super-admin/ads/delete/${id}`,{});if(d.success){showToast('Ad deleted','success');setTimeout(()=>window.location.reload(),600);}else showToast(d.error||'Failed','error');}
+function openEditAd(ad){
+  document.getElementById('eadId').value=ad.id;
+  document.getElementById('eadTitle').value=ad.title||'';
+  document.getElementById('eadSubtitle').value=ad.subtitle||'';
+  document.getElementById('eadCta').value=ad.cta_text||'Explore Now';
+  document.getElementById('eadUrl').value=ad.target_url||'';
+  document.getElementById('eadSection').value=ad.target_section||'all';
+  document.getElementById('eadPriority').value=ad.priority||1;
+  document.getElementById('eadGradient').value=ad.bg_gradient||'linear-gradient(135deg,#6366f1,#a855f7)';
+  document.getElementById('eadStart').value=(ad.start_time||'').toString().replace(' ','T');
+  document.getElementById('eadEnd').value=(ad.end_time||'').toString().replace(' ','T');
+  updateEditAdPreview();
+  openModal('editAdModal');
+}
+function updateEditAdPreview(){
+  document.getElementById('eadPreviewBox').style.background=document.getElementById('eadGradient').value||'linear-gradient(135deg,#6366f1,#a855f7)';
+  document.getElementById('eadPreviewTitle').textContent=document.getElementById('eadTitle').value||'Banner Title';
+  document.getElementById('eadPreviewSub').textContent=document.getElementById('eadSubtitle').value||'Subtitle...';
+  document.getElementById('eadPreviewCta').textContent=document.getElementById('eadCta').value||'Explore Now';
+}
+async function saveAd(){
+  const id=document.getElementById('eadId').value;
+  const title=document.getElementById('eadTitle').value.trim();
+  if(!title) return showToast('Title is required','error');
+  const body={title,subtitle:document.getElementById('eadSubtitle').value,cta_text:document.getElementById('eadCta').value,target_url:document.getElementById('eadUrl').value,target_section:document.getElementById('eadSection').value,priority:document.getElementById('eadPriority').value,bg_gradient:document.getElementById('eadGradient').value,start_time:document.getElementById('eadStart').value||null,end_time:document.getElementById('eadEnd').value||null};
+  const d=await apiPost(`/super-admin/ads/edit/${id}`,body);
+  if(d.success){closeModal('editAdModal');showToast('Ad updated','success');setTimeout(()=>window.location.reload(),600);}
+  else showToast(d.error||'Failed','error');
+}
+
+// ═══════════════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════════════
+function setNotifScope(scope, btn) {
+  SA.notifScope=scope;
+  document.querySelectorAll('.sa-scope-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const fields={
+    school:`<div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="notifSchool" placeholder="e.g. DPS001"></div>`,
+    role:`<div class="sa-form-group"><label>Role</label><select class="sa-select" id="notifRole"><option value="student">Student</option><option value="admin">Admin</option><option value="librarian">Librarian</option><option value="teacher">Teacher</option></select></div>`,
+    user:`<div class="sa-form-group"><label>User ID</label><input type="number" class="sa-input" id="notifUserId" placeholder="User ID"></div>`,
+    all:''
+  };
+  document.getElementById('notifScopeFields').innerHTML=fields[scope]||'';
+}
+
+async function sendNotification(){
+  const message=document.getElementById('notifMessage').value.trim();
+  const type=document.getElementById('notifType').value;
+  if(!message) return showToast('Message is required','error');
+  const body={message,type,scope:SA.notifScope};
+  if(SA.notifScope==='school') body.school_code=document.getElementById('notifSchool')?.value;
+  if(SA.notifScope==='role') body.role=document.getElementById('notifRole')?.value;
+  if(SA.notifScope==='user') body.user_id=document.getElementById('notifUserId')?.value;
+  const d=await apiPost('/super-admin/notify',body);
+  if(d.success){showToast(`Notification sent to ${d.sent_to} user(s)!`,'success');document.getElementById('notifMessage').value='';}
+  else showToast(d.error||'Failed','error');
+}
+
+// ═══════════════════════════════════════
+//  ANALYTICS
+// ═══════════════════════════════════════
+async function loadAnalytics(){
+  const [analytics, health] = await Promise.all([
+    fetch('/super-admin/analytics').then(r=>r.json()).catch(()=>{}),
+    fetch('/super-admin/system-health').then(r=>r.json()).catch(()=>{})
+  ]);
+  if(analytics && analytics.success){
+    document.getElementById('analyticsStats').innerHTML=`
+      <div class="sa-stat-card" style="--glow:rgba(99,102,241,.18)"><span class="sa-stat-icon">👥</span><div class="sa-stat-label">Users</div><div class="sa-stat-value">${analytics.users||0}</div></div>
+      <div class="sa-stat-card" style="--glow:rgba(16,185,129,.15)"><span class="sa-stat-icon">🏫</span><div class="sa-stat-label">Schools</div><div class="sa-stat-value">${analytics.schools||0}</div></div>
+      <div class="sa-stat-card" style="--glow:rgba(245,158,11,.15)"><span class="sa-stat-icon">📚</span><div class="sa-stat-label">Books</div><div class="sa-stat-value">${analytics.books||0}</div></div>
+      <div class="sa-stat-card" style="--glow:rgba(59,130,246,.15)"><span class="sa-stat-icon">📖</span><div class="sa-stat-label">Active Borrows</div><div class="sa-stat-value">${analytics.active_borrows||0}</div></div>
+      <div class="sa-stat-card" style="--glow:rgba(239,68,68,.15)"><span class="sa-stat-icon">⚠️</span><div class="sa-stat-label">Overdue</div><div class="sa-stat-value">${analytics.overdue||0}</div></div>
+      <div class="sa-stat-card" style="--glow:rgba(168,85,247,.15)"><span class="sa-stat-icon">🌐</span><div class="sa-stat-label">Digital Content</div><div class="sa-stat-value">${analytics.digital_content||0}</div></div>
+    `;
+    const byRole=analytics.by_role||{};
+    const maxVal=Math.max(...Object.values(byRole),1);
+    const roleLabels={'super_admin':'Super Admin','admin':'Admin','librarian':'Librarian','student':'Student','teacher':'Teacher'};
+    document.getElementById('roleChart').innerHTML=Object.entries(byRole).map(([r,c])=>`
+      <div class="sa-bar-row">
+        <div class="sa-bar-label">${roleLabels[r]||r}</div>
+        <div class="sa-bar-track"><div class="sa-bar-fill" style="width:${Math.round((c/maxVal)*100)}%"></div></div>
+        <div class="sa-bar-count">${c}</div>
+      </div>`).join('');
+  }
+  if(health && health.success){
+    document.getElementById('healthGrid').innerHTML=`
+      <div class="sa-health-item"><div class="sa-health-val sa-health-${health.db_status==='ok'?'ok':'err'}">${health.db_status==='ok'?'✓':'✗'}</div><div class="sa-health-label">Database</div></div>
+      <div class="sa-health-item"><div class="sa-health-val">${Math.round(health.uptime_seconds/3600)}h</div><div class="sa-health-label">Uptime</div></div>
+      <div class="sa-health-item"><div class="sa-health-val sa-health-${health.memory_mb>400?'warn':'ok'}">${health.memory_mb}MB</div><div class="sa-health-label">Memory</div></div>
+      <div class="sa-health-item"><div class="sa-health-val">${health.sessions||0}</div><div class="sa-health-label">Sessions</div></div>
+      <div class="sa-health-item"><div class="sa-health-val">${health.node_version||'?'}</div><div class="sa-health-label">Node</div></div>
+      <div class="sa-health-item"><div class="sa-health-val">${health.total_logs||0}</div><div class="sa-health-label">Log Entries</div></div>
+    `;
+  }
+}
+
+// ═══════════════════════════════════════
+//  AUDIT LOGS
+// ═══════════════════════════════════════
+let _auditPage=1, _auditTotal=0;
+async function loadAudit(page=1){
+  _auditPage=page;
+  document.getElementById('auditTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const search=document.getElementById('auditSearch')?.value||'';
+  const module=document.getElementById('auditModule')?.value||'';
+  const school=document.getElementById('auditSchool')?.value||'';
+  const params=new URLSearchParams({page,limit:50});
+  if(search) params.set('search',search); if(module) params.set('module',module); if(school) params.set('school_code',school);
+  try {
+    const r=await fetch('/super-admin/audit-logs?'+params); const d=await r.json();
+    const logs=d.logs||[]; _auditTotal=d.total||logs.length;
+    if(!logs.length){document.getElementById('auditTableWrap').innerHTML='<div class="sa-empty"><div class="sa-empty-icon">🔍</div><p>No audit logs found.</p></div>';return;}
+    document.getElementById('auditTableWrap').innerHTML=`
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>#</th><th>User</th><th>Role</th><th>Action</th><th>Module</th><th>IP</th><th>School</th><th>Time</th></tr></thead>
+        <tbody>${logs.map(l=>`
+          <tr>
+            <td style="color:#334155;font-size:.72rem">#${l.id}</td>
+            <td style="font-size:.8rem">${l.user_name||'#'+l.user_id}</td>
+            <td><span class="badge badge-gray" style="font-size:.62rem">${l.user_role||'—'}</span></td>
+            <td style="color:#e2e8f0;font-size:.8rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.action||'—'}</td>
+            <td><span class="badge badge-blue" style="font-size:.62rem">${l.module||'—'}</span></td>
+            <td style="font-size:.75rem;color:#475569">${l.ip_address||'—'}</td>
+            <td style="font-size:.72rem">${l.school_code||'—'}</td>
+            <td style="font-size:.72rem;color:#475569;white-space:nowrap">${l.created_at?l.created_at.substr(0,16):'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    renderPagination('auditPagination',page,_auditTotal,50,'loadAudit');
+  } catch(e){document.getElementById('auditTableWrap').innerHTML='<div class="sa-empty"><p>Failed to load logs.</p></div>';}
+}
+
+// ═══════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════
+async function loadSettings(){
+  try {
+    const r=await fetch('/super-admin/settings'); const s=await r.json();
+    if(document.getElementById('maintenanceToggle')) document.getElementById('maintenanceToggle').checked=(s.maintenance_mode==='true');
+    const entries=Object.entries(s).filter(([k])=>k!=='maintenance_mode');
+    const el=document.getElementById('settingsList');
+    if(!el) return;
+    el.innerHTML=entries.length?`<div class="sa-table-wrap"><table class="sa-table"><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody>${entries.map(([k,v])=>`<tr><td style="font-family:monospace;color:#94a3b8">${k}</td><td style="color:#e2e8f0">${v}</td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#334155;font-size:.82rem">No custom settings yet.</p>';
+  } catch(e){}
+}
+async function toggleMaintenance(){
+  const d=await apiPost('/super-admin/toggle-maintenance',{});
+  if(d.success) showToast(`Maintenance ${d.maintenance_mode==='true'?'ENABLED':'DISABLED'}`,d.maintenance_mode==='true'?'warning':'success');
+  else showToast(d.error||'Failed','error');
+}
+async function saveSetting(){
+  const k=document.getElementById('settingKey').value.trim(),v=document.getElementById('settingVal').value.trim();
+  if(!k||!v) return showToast('Both fields required','error');
+  const d=await apiPost('/super-admin/settings',{setting_key:k,setting_value:v});
+  if(d.success){showToast('Setting saved!','success');document.getElementById('settingKey').value='';document.getElementById('settingVal').value='';loadSettings();}
+  else showToast(d.error||'Failed','error');
+}
+
+// ═══════════════════════════════════════
+//  MASTER AUTH
+// ═══════════════════════════════════════
+async function masterLogin(){
+  const id=document.getElementById('masterUserId').value.trim();
+  if(!id) return showToast('Enter a user ID','error');
+  if(!confirm(`Login as user #${id}? Your super_admin session will be replaced.`)) return;
+  const d=await apiPost('/super-admin/master-login',{user_id:parseInt(id)});
+  if(d.success){showToast('Switching session...','success');setTimeout(()=>window.location.href=d.redirect||'/',700);}
+  else showToast(d.error||'User not found','error');
+}
+
+async function masterSearchFn(){
+  const q=document.getElementById('masterSearch').value.trim();
+  if(q.length<2){document.getElementById('masterSearchResults').innerHTML='';return;}
+  const r=await fetch(`/super-admin/users?search=${encodeURIComponent(q)}&limit=8`);
+  const d=await r.json(); const users=d.users||[];
+  if(!users.length){document.getElementById('masterSearchResults').innerHTML='<p style="color:#334155;font-size:.8rem;padding:.5rem 0">No users found.</p>';return;}
+  document.getElementById('masterSearchResults').innerHTML=`
+    <div class="sa-table-wrap"><table class="sa-table">
+      <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Role</th><th></th></tr></thead>
+      <tbody>${users.map(u=>`<tr>
+        <td style="color:#334155;font-size:.75rem">#${u.id}</td>
+        <td style="color:#e2e8f0">${u.name||'—'}</td>
+        <td style="font-size:.8rem">${u.phone||'—'}</td>
+        <td><span class="badge badge-gray" style="font-size:.62rem">${u.role||'—'}</span></td>
+        <td><button class="sa-btn sa-btn-warning sa-btn-xs" onclick="document.getElementById('masterUserId').value=${u.id};showToast('ID set to #${u.id}','info')">Use #${u.id}</button></td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+//  PHASE 2 + 3 — NEW ENTITY HANDLERS
+// ═══════════════════════════════════════
+
+async function loadRolePerms() {
+  try {
+    const d = await (await fetch('/super-admin/role-permissions')).json();
+    const perms = d.permissions || {};
+    const roles = ['super_admin','admin','librarian','student','teacher','parent','personal'];
+    document.getElementById('rolePermWrap').innerHTML = `
+      <table class="sa-table">
+        <thead><tr><th>Role</th><th>Permissions JSON</th><th>Actions</th></tr></thead>
+        <tbody>${roles.map(r => `
+          <tr>
+            <td><span class="badge badge-indigo">${r}</span></td>
+            <td><textarea class="sa-textarea" style="min-height:60px" id="rp-${r}">${JSON.stringify(perms[r] || {}, null, 2)}</textarea></td>
+            <td><button class="sa-btn sa-btn-primary sa-btn-xs" onclick="saveRolePerm('${r}')">Save</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch (e) { document.getElementById('rolePermWrap').innerHTML = '<p style="color:#f87171">Failed to load.</p>'; }
+}
+async function saveRolePerm(role) {
+  const txt = document.getElementById('rp-' + role).value;
+  try {
+    let json;
+    try { json = JSON.parse(txt); } catch (e) { return showToast('Invalid JSON', 'error'); }
+    // Backend merges with existing config, so only send the role being saved.
+    const d = await apiPost('/super-admin/role-permissions', { permissions: { [role]: json } });
+    if (d.success) { showToast(`Saved ${role}`, 'success'); SA.rolePerms = { ...SA.rolePerms, [role]: json }; }
+    else showToast(d.error || 'Failed', 'error');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function loadDigitalList(page=1) {
+  document.getElementById('dlTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const scope = document.getElementById('dlScope')?.value || 'all';
+  const status = document.getElementById('dlStatusFilter')?.value || '';
+  const params = new URLSearchParams({ scope, page, limit: 50 });
+  if (status) params.set('status', status);
+  try {
+    const d = await (await fetch('/super-admin/digital-content-list?' + params)).json();
+    const items = d.content || [];
+    if (!items.length) { document.getElementById('dlTableWrap').innerHTML='<div class="sa-empty"><div class="sa-empty-icon">🌐</div><p>No content.</p></div>'; return; }
+    document.getElementById('dlTableWrap').innerHTML = renderContentTable(items);
+    renderPagination('dlPagination', page, d.total || items.length, 50, 'loadDigitalList');
+  } catch (e) { document.getElementById('dlTableWrap').innerHTML='<div class="sa-empty"><p>Failed.</p></div>'; }
+}
+
+async function loadCommunityList(page=1) {
+  document.getElementById('commTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const search = document.getElementById('communitySearch')?.value || '';
+  const params = new URLSearchParams({ scope: 'community', search, page, limit: 50 });
+  try {
+    const d = await (await fetch('/super-admin/digital-content-list?' + params)).json();
+    const items = d.content || [];
+    if (!items.length) { document.getElementById('commTableWrap').innerHTML='<div class="sa-empty"><p>No community uploads yet.</p></div>'; return; }
+    document.getElementById('commTableWrap').innerHTML = renderContentTable(items);
+    renderPagination('commPagination', page, d.total || items.length, 50, 'loadCommunityList');
+  } catch (e) {}
+}
+
+async function loadGlobalList(page=1) {
+  document.getElementById('globTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const search = document.getElementById('globalSearch')?.value || '';
+  const params = new URLSearchParams({ scope: 'global', search, page, limit: 50 });
+  try {
+    const d = await (await fetch('/super-admin/digital-content-list?' + params)).json();
+    const items = d.content || [];
+    if (!items.length) { document.getElementById('globTableWrap').innerHTML='<div class="sa-empty"><p>No global content yet.</p></div>'; return; }
+    document.getElementById('globTableWrap').innerHTML = renderContentTable(items);
+    renderPagination('globPagination', page, d.total || items.length, 50, 'loadGlobalList');
+  } catch (e) {}
+}
+
+async function createGlobalContent() {
+  const title = document.getElementById('aglTitle').value.trim();
+  if (!title) return showToast('Title is required', 'error');
+  const body = {
+    title,
+    url: document.getElementById('aglUrl').value.trim(),
+    type: document.getElementById('aglType').value,
+    description: document.getElementById('aglDesc').value.trim(),
+  };
+  const d = await apiPost('/super-admin/global-content/add', body);
+  if (d.success) {
+    closeModal('addGlobalModal');
+    document.getElementById('aglTitle').value=''; document.getElementById('aglUrl').value=''; document.getElementById('aglDesc').value='';
+    showToast('Global content added', 'success');
+    loadGlobalList(1);
+  } else showToast(d.error || 'Failed', 'error');
+}
+
+function renderContentTable(items) {
+  return `<div class="sa-table-wrap"><table class="sa-table">
+    <thead><tr><th>ID</th><th>Title</th><th>Uploader</th><th>School</th><th>Category</th><th>Status</th><th>Views</th><th>Actions</th></tr></thead>
+    <tbody>${items.map(c => `
+      <tr>
+        <td style="color:#334155;font-size:.75rem">#${c.id}</td>
+        <td style="color:#e2e8f0;font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis">${c.title || '—'}</td>
+        <td>${c.uploader_name || '—'}</td>
+        <td><span class="badge badge-gray" style="font-size:.62rem">${c.school_code || (c.school_code === 'GLOBAL' ? '🌍 Global' : '—')}</span></td>
+        <td style="font-size:.78rem">${c.category || '—'}</td>
+        <td><span class="badge ${c.status==='approved'?'badge-green':c.status==='rejected'?'badge-red':'badge-yellow'}">${c.status||'pending'}</span></td>
+        <td>${c.views || 0}</td>
+        <td><div class="sa-table-actions">
+          ${c.status !== 'approved' ? `<button class="sa-btn sa-btn-success sa-btn-xs" onclick="approveContent(${c.id})">✓</button>` : ''}
+          ${c.status !== 'rejected' ? `<button class="sa-btn sa-btn-warning sa-btn-xs" onclick="openRejectModal(${c.id})">✕</button>` : ''}
+          <button class="sa-btn sa-btn-info sa-btn-xs" onclick="featureContent(${c.id})">⭐</button>
+          <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteContent(${c.id})">🗑</button>
+        </div></td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
+}
+async function featureContent(id) {
+  const d = await apiPost('/super-admin/digital-content/' + id + '/feature', {});
+  if (d.success) { showToast('Toggled featured', 'success'); refreshCurrentTab(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function loadCategories() {
+  try {
+    const d = await (await fetch('/super-admin/categories')).json();
+    const renderList = (list, entity) => {
+      const rows = list && list.length
+        ? `<table class="sa-table"><thead><tr><th>Name</th><th>Count</th><th>Actions</th></tr></thead><tbody>${list.map(c => `<tr><td>${c.name}</td><td>${c.count}</td><td><div class="sa-table-actions"><button class="sa-btn sa-btn-ghost sa-btn-xs" onclick="renameCategory('${entity}','${(c.name||'').replace(/'/g,"\\'")}')">✏️ Rename</button><button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteCategory('${entity}','${(c.name||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('')}</tbody></table>`
+        : '<p style="color:#475569;font-size:.86rem">None yet.</p>';
+      return `${rows}
+        <div style="display:flex;gap:.5rem;margin-top:.6rem;align-items:center">
+          <input class="sa-input" style="max-width:220px;font-size:.8rem" id="newCat-${entity}" placeholder="New ${entity === 'subject' ? 'subject' : 'category'} name">
+          <button class="sa-btn sa-btn-primary sa-btn-xs" onclick="createCategory('${entity}')">+ Add</button>
+        </div>`;
+    };
+    document.getElementById('catWrap').innerHTML = `
+      <div class="sa-card-body"><h4 style="color:#a5b4fc">Book Categories</h4>${renderList(d.book_categories, 'category')}</div>
+      <div class="sa-card-body"><h4 style="color:#a5b4fc">Digital Content Categories</h4>${renderList(d.digital_categories, 'digital')}</div>
+      <div class="sa-card-body"><h4 style="color:#a5b4fc">Subjects (Books)</h4>${renderList(d.subjects, 'subject')}</div>`;
+  } catch (e) { document.getElementById('catWrap').innerHTML = '<p style="color:#f87171">Failed</p>'; }
+}
+
+async function createCategory(entity) {
+  const name = (document.getElementById('newCat-' + entity).value || '').trim();
+  if (!name) return showToast('Enter a name', 'error');
+  const d = await apiPost('/super-admin/categories/create', { entity, name });
+  if (d.success) { showToast(d.message || 'Added', 'success'); loadCategories(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function renameCategory(entity, oldName) {
+  const newName = prompt(`Rename "${oldName}" to:`, oldName);
+  if (!newName || newName === oldName) return;
+  const d = await apiPost('/super-admin/categories/rename', { entity, from: oldName, to: newName.trim() });
+  if (d.success) { showToast(`Renamed ${d.updated} row(s)`, 'success'); loadCategories(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function deleteCategory(entity, name) {
+  if (!confirm(`Delete "${name}"? It will be cleared from all records.`)) return;
+  const d = await apiPost('/super-admin/categories/delete', { entity, name });
+  if (d.success) { showToast(`Cleared from ${d.cleared} record(s)`, 'success'); loadCategories(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function loadGoals() {
+  try {
+    const d = await (await fetch('/super-admin/reading-goals')).json();
+    const goals = d.goals || [];
+    if (!goals.length) { document.getElementById('goalsTableWrap').innerHTML='<div class="sa-empty"><p>No reading goals set.</p></div>'; return; }
+    document.getElementById('goalsTableWrap').innerHTML = `
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>ID</th><th>Role</th><th>Period</th><th>Target</th><th>Description</th><th>Actions</th></tr></thead>
+        <tbody>${goals.map(g => `
+          <tr>
+            <td>#${g.id}</td>
+            <td><span class="badge badge-indigo">${g.role || 'all'}</span></td>
+            <td>${g.period || 'monthly'}</td>
+            <td><strong style="color:#34d399">${g.target}</strong></td>
+            <td style="max-width:200px;font-size:.78rem">${g.description || '—'}</td>
+            <td><div class="sa-table-actions"><button class="sa-btn sa-btn-info sa-btn-xs" onclick='openGoalModal(${JSON.stringify(g).replace(/'/g,"&#39;")})'>✏️</button><button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteGoal(${g.id})">🗑</button></div></td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+  } catch (e) {}
+}
+async function createGoal() {
+  const target = document.getElementById('goalTarget').value;
+  const role = document.getElementById('goalRole').value;
+  const period = document.getElementById('goalPeriod').value;
+  const description = document.getElementById('goalDescription').value;
+  const d = await apiPost('/super-admin/reading-goals/create', { target, role, period, description });
+  if (d.success) { closeModal('newGoalModal'); showToast('Goal created', 'success'); loadGoals(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function deleteGoal(id) {
+  if (!confirm('Delete this goal?')) return;
+  const d = await apiPost('/super-admin/reading-goals/' + id + '/delete', {});
+  if (d.success) { showToast('Deleted', 'success'); loadGoals(); }
+}
+function openGoalModal(g) {
+  document.getElementById('egId').value = g.id;
+  document.getElementById('egTarget').value = g.target;
+  document.getElementById('egRole').value = g.role || 'student';
+  document.getElementById('egPeriod').value = g.period || 'monthly';
+  document.getElementById('egDescription').value = g.description || '';
+  openModal('editGoalModal');
+}
+async function saveGoal() {
+  const id = document.getElementById('egId').value;
+  const body = {
+    target: document.getElementById('egTarget').value,
+    role: document.getElementById('egRole').value,
+    period: document.getElementById('egPeriod').value,
+    description: document.getElementById('egDescription').value,
+  };
+  const d = await apiPost('/super-admin/reading-goals/' + id + '/edit', body);
+  if (d.success) { closeModal('editGoalModal'); showToast('Goal updated', 'success'); loadGoals(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function loadBookRequests(page=1) {
+  _reqPage = page;
+  document.getElementById('reqTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const status = document.getElementById('reqStatusFilter')?.value || '';
+  const params = new URLSearchParams({ page, limit: 50 });
+  if (status) params.set('status', status);
+  try {
+    const d = await (await fetch('/super-admin/book-requests?' + params)).json();
+    const reqs = d.requests || [];
+    if (!reqs.length) { document.getElementById('reqTableWrap').innerHTML='<div class="sa-empty"><div class="sa-empty-icon">📬</div><p>No requests.</p></div>'; return; }
+    document.getElementById('reqTableWrap').innerHTML = `
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>#</th><th>User</th><th>Book</th><th>School</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${reqs.map(r => `
+          <tr>
+            <td style="color:#334155;font-size:.75rem">#${r.id}</td>
+            <td>${r.user_name || '—'}<br><span style="font-size:.72rem;color:#475569">${r.user_phone || ''}</span></td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${r.book_title || '—'}</td>
+            <td><span class="badge badge-gray" style="font-size:.62rem">${r.school_code||'—'}</span></td>
+            <td><select class="sa-select" id="reqStatus${r.id}" style="font-size:.78rem"><option ${r.status==='Pending'?'selected':''}>Pending</option><option ${r.status==='Approved'?'selected':''}>Approved</option><option ${r.status==='Rejected'?'selected':''}>Rejected</option></select></td>
+            <td><button class="sa-btn sa-btn-primary sa-btn-xs" onclick="updateBookRequest(${r.id})">💾</button> <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteBookRequest(${r.id})">🗑</button></td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+    renderPagination('reqPagination', page, d.total || reqs.length, 50, 'loadBookRequests');
+  } catch (e) {}
+}
+async function updateBookRequest(id) {
+  const status = document.getElementById('reqStatus' + id).value;
+  const d = await apiPost('/super-admin/book-requests/' + id + '/edit', { status });
+  if (d.success) { showToast('Updated', 'success'); loadBookRequests(_reqPage); }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function deleteBookRequest(id) {
+  if (!confirm('Delete this request?')) return;
+  const d = await apiPost('/super-admin/book-requests/' + id + '/delete', {});
+  if (d.success) { showToast('Deleted', 'success'); loadBookRequests(_reqPage); }
+}
+
+let _reqPage = 1, _issuedPage = 1, _rfidPage = 1, _dlPage = 1, _commPage = 1, _globPage = 1, _lhPage = 1;
+
+async function loadIssuedBooks(page=1) {
+  _issuedPage = page;
+  document.getElementById('issuedTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const status = document.getElementById('issuedStatusFilter')?.value || '';
+  const params = new URLSearchParams({ page, limit: 50 });
+  if (status) params.set('status', status);
+  try {
+    const d = await (await fetch('/super-admin/issued-books?' + params)).json();
+    const txs = d.transactions || [];
+    if (!txs.length) { document.getElementById('issuedTableWrap').innerHTML='<div class="sa-empty"><p>No issued books.</p></div>'; return; }
+    document.getElementById('issuedTableWrap').innerHTML = `
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>#</th><th>User</th><th>Book</th><th>Status</th><th>Fine</th><th>Actions</th></tr></thead>
+        <tbody>${txs.map(t => `
+          <tr>
+            <td>#${t.id}</td>
+            <td>${t.user_name || '—'}</td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${t.book_title || '—'}</td>
+            <td><span class="badge ${t.status==='returned'?'badge-green':t.status==='issued'?'badge-blue':'badge-gray'}">${t.status||'—'}</span></td>
+            <td>${t.fine>0?'<span style="color:#f87171">₹'+t.fine+'</span>':'—'}</td>
+            <td><div class="sa-table-actions">
+              ${t.status!=='returned'?`<button class="sa-btn sa-btn-success sa-btn-xs" onclick="processReturn(${t.id})">↩ Return</button>`:''}
+              <button class="sa-btn sa-btn-info sa-btn-xs" onclick='openIssuedModal(${JSON.stringify(t).replace(/'/g,"&#39;")})'>✏️</button>
+              <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteIssued(${t.id})">🗑</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+    renderPagination('issuedPagination', page, d.total || txs.length, 50, 'loadIssuedBooks');
+  } catch (e) {}
+}
+function openIssuedModal(t) {
+  document.getElementById('iTxId').value = t.id;
+  document.getElementById('iTxStatus').value = t.status || 'issued';
+  document.getElementById('iTxDue').value = t.due_date ? String(t.due_date).substr(0,10) : '';
+  document.getElementById('iTxReturn').value = t.return_date ? String(t.return_date).substr(0,10) : '';
+  document.getElementById('iTxFine').value = t.fine || 0;
+  openModal('editIssuedModal');
+}
+async function saveIssued() {
+  const id = document.getElementById('iTxId').value;
+  const body = {
+    status: document.getElementById('iTxStatus').value,
+    due_date: document.getElementById('iTxDue').value || null,
+    return_date: document.getElementById('iTxReturn').value || null,
+    fine: document.getElementById('iTxFine').value || 0,
+  };
+  const d = await apiPost('/super-admin/issued-books/' + id + '/edit', body);
+  if (d.success) { closeModal('editIssuedModal'); showToast('Updated', 'success'); loadIssuedBooks(_issuedPage); }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function processReturn(id) {
+  if (!confirm('Mark this book as returned today? You can add a fine afterwards.')) return;
+  const today = new Date().toISOString().substr(0,10);
+  const d = await apiPost('/super-admin/issued-books/' + id + '/edit', { status: 'returned', return_date: today });
+  if (d.success) { showToast('Book returned', 'success'); loadIssuedBooks(_issuedPage); }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function deleteIssued(id) {
+  if (!confirm('Delete this transaction?')) return;
+  const d = await apiPost('/super-admin/issued-books/' + id + '/delete', {});
+  if (d.success) { showToast('Deleted', 'success'); loadIssuedBooks(_issuedPage); }
+}
+
+async function loadRfid(page=1) {
+  _rfidPage = page;
+  document.getElementById('rfidTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const search = document.getElementById('rfidSearch')?.value || '';
+  const params = new URLSearchParams({ page, limit: 50 });
+  if (search) params.set('search', search);
+  try {
+    const d = await (await fetch('/super-admin/rfid?' + params)).json();
+    const recs = d.records || [];
+    if (!recs.length) { document.getElementById('rfidTableWrap').innerHTML='<div class="sa-empty"><p>No RFID records.</p></div>'; return; }
+    document.getElementById('rfidTableWrap').innerHTML = `
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>Tag</th><th>Book</th><th>Accession</th><th>Status</th><th>Scans</th><th>Actions</th></tr></thead>
+        <tbody>${recs.map(r => `
+          <tr>
+            <td><code style="font-size:.78rem">${r.rfid_tag}</code></td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${r.book_title || '—'}</td>
+            <td>${r.accession_number || '—'}</td>
+            <td><span class="badge ${r.status==='active'?'badge-green':'badge-gray'}">${r.status}</span></td>
+            <td>${r.scan_count || 0}</td>
+            <td><div class="sa-table-actions"><button class="sa-btn sa-btn-info sa-btn-xs" onclick='openRfidModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>✏️</button><button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteRfid(${r.id})">🗑</button></div></td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+    renderPagination('rfidPagination', page, d.total || recs.length, 50, 'loadRfid');
+  } catch (e) {}
+}
+async function createRfid() {
+  const body = {
+    rfid_tag: document.getElementById('rfidTag').value,
+    book_id: parseInt(document.getElementById('rfidBookId').value) || null,
+    barcode_id: document.getElementById('rfidBarcode').value || null,
+    accession_number: document.getElementById('rfidAccession').value || null,
+    shelf_location: document.getElementById('rfidShelf').value || null,
+  };
+  if (!body.rfid_tag) return showToast('RFID tag required', 'error');
+  const d = await apiPost('/super-admin/rfid/create', body);
+  if (d.success) { closeModal('newRfidModal'); showToast('Created', 'success'); loadRfid(1); }
+  else showToast(d.error || 'Failed', 'error');
+}
+function openRfidModal(r) {
+  document.getElementById('erfidId').value = r.id;
+  document.getElementById('erfidTag').value = r.rfid_tag || '';
+  document.getElementById('erfidBookId').value = r.book_id || '';
+  document.getElementById('erfidBarcode').value = r.barcode_id || '';
+  document.getElementById('erfidAccession').value = r.accession_number || '';
+  document.getElementById('erfidShelf').value = r.shelf_location || '';
+  document.getElementById('erfidStatus').value = r.status || 'active';
+  openModal('editRfidModal');
+}
+async function saveRfid() {
+  const id = document.getElementById('erfidId').value;
+  const body = {
+    rfid_tag: document.getElementById('erfidTag').value,
+    book_id: parseInt(document.getElementById('erfidBookId').value) || null,
+    barcode_id: document.getElementById('erfidBarcode').value || null,
+    accession_number: document.getElementById('erfidAccession').value || null,
+    shelf_location: document.getElementById('erfidShelf').value || null,
+    status: document.getElementById('erfidStatus').value,
+  };
+  const d = await apiPost('/super-admin/rfid/' + id + '/edit', body);
+  if (d.success) { closeModal('editRfidModal'); showToast('Updated', 'success'); loadRfid(_rfidPage); }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function deleteRfid(id) {
+  if (!confirm('Delete this RFID record?')) return;
+  const d = await apiPost('/super-admin/rfid/' + id + '/delete', {});
+  if (d.success) { showToast('Deleted', 'success'); loadRfid(_rfidPage); }
+}
+
+async function loadScheduled() {
+  try {
+    const d = await (await fetch('/super-admin/notifications/scheduled')).json();
+    const sched = d.scheduled || [];
+    if (!sched.length) { document.getElementById('schedTableWrap').innerHTML='<div class="sa-empty"><p>No scheduled notifications.</p></div>'; return; }
+    document.getElementById('schedTableWrap').innerHTML = `
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>#</th><th>Message</th><th>Scope</th><th>Run At</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${sched.map(s => `
+          <tr>
+            <td>#${s.id}</td>
+            <td style="max-width:240px;font-size:.82rem">${(s.message||'').slice(0,80)}</td>
+            <td><span class="badge badge-indigo">${s.scope}</span></td>
+            <td style="font-size:.78rem">${s.run_at?.substr(0,16) || '—'}</td>
+            <td><span class="badge ${s.status==='sent'?'badge-green':s.status==='cancelled'?'badge-gray':s.status==='failed'?'badge-red':'badge-yellow'}">${s.status}</span></td>
+            <td>${s.status==='pending'?`<button class="sa-btn sa-btn-warning sa-btn-xs" onclick="cancelScheduled(${s.id})">Cancel</button>`:''} <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteScheduled(${s.id})">🗑</button></td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+  } catch (e) {}
+}
+async function createScheduled() {
+  const body = {
+    message: document.getElementById('schedMessage').value,
+    scope: document.getElementById('schedScope').value,
+    run_at: document.getElementById('schedRunAt').value,
+    type: 'info',
+  };
+  if (!body.message || !body.run_at) return showToast('Message and Run At required', 'error');
+  const d = await apiPost('/super-admin/notifications/schedule', body);
+  if (d.success) { closeModal('newScheduledModal'); showToast('Scheduled', 'success'); loadScheduled(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function cancelScheduled(id) {
+  const d = await apiPost('/super-admin/notifications/scheduled/' + id + '/cancel', {});
+  if (d.success) { showToast('Cancelled', 'success'); loadScheduled(); }
+}
+async function deleteScheduled(id) {
+  if (!confirm('Delete this scheduled notification?')) return;
+  const d = await apiPost('/super-admin/notifications/scheduled/' + id + '/delete', {});
+  if (d.success) { showToast('Deleted', 'success'); loadScheduled(); }
+}
+
+async function loadAiConfig() {
+  try {
+    const d = await (await fetch('/super-admin/settings/grouped')).json();
+    const groups = d.groups || {};
+    const settings = d.settings || {};
+    document.getElementById('aiConfigWrap').innerHTML = Object.entries(groups).map(([key, g]) => `
+      <div class="sa-card-body" data-group="${key}" style="border-bottom:1px solid rgba(255,255,255,.05)">
+        <h4 style="color:#a5b4fc;margin-bottom:.7rem">${g.label || key}</h4>
+        <div class="sa-form-row-3">
+          ${g.keys.map(k => `<div class="sa-form-group"><label>${k}</label><input class="sa-input" data-setting-key="${k}" value="${(settings[k] || '').replace(/"/g,'&quot;')}" placeholder="${g.placeholders?.[k] || ''}"></div>`).join('')}
+        </div>
+        <button class="sa-btn sa-btn-primary sa-btn-sm" style="margin-top:.5rem" onclick="saveGroupedSettings('${key}')">💾 Save ${g.label || key}</button>
+      </div>`).join('');
+  } catch (e) { document.getElementById('aiConfigWrap').innerHTML = '<p style="color:#f87171">Failed.</p>'; }
+}
+
+async function saveGroupedSettings(groupKey) {
+  const inputs = document.querySelectorAll(`#aiConfigWrap [data-group="${groupKey}"] [data-setting-key]`);
+  const settings = {};
+  inputs.forEach(i => { settings[i.dataset.settingKey] = i.value; });
+  const d = await apiPost('/super-admin/settings/grouped', { settings });
+  if (d.success) showToast('Saved', 'success');
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function runBackup(type) {
+  if (!confirm(`Run ${type} backup now?`)) return;
+  document.getElementById('maintOutput').innerHTML = '<p>Running backup...</p>';
+  const d = await apiPost('/super-admin/maintenance/backup', { type });
+  if (d.success) { showToast('Backup complete', 'success'); document.getElementById('maintOutput').innerHTML = `<pre style="background:rgba(0,0,0,.3);padding:1rem;border-radius:8px;color:#34d399">Saved to: ${d.path}</pre>`; loadBackups(); }
+  else { showToast(d.error || 'Failed', 'error'); document.getElementById('maintOutput').innerHTML = `<p style="color:#f87171">Failed: ${d.error}</p>`; }
+}
+async function clearCache() {
+  const d = await apiPost('/super-admin/maintenance/cache/clear', {});
+  if (d.success) showToast(`Cleared ${d.removed_sessions || 0} expired session(s)`, 'success');
+  else showToast(d.error || 'Failed', 'error');
+}
+async function runDiagnostics() {
+  document.getElementById('maintOutput').innerHTML = '<p>Running...</p>';
+  try {
+    const d = await (await fetch('/super-admin/maintenance/diagnostics')).json();
+    document.getElementById('maintOutput').innerHTML = `
+      <div class="sa-health-grid">
+        <div class="sa-health-item"><div class="sa-health-val">${d.db_latency_ms}ms</div><div class="sa-health-label">DB Latency</div></div>
+        <div class="sa-health-item"><div class="sa-health-val">${Math.round(d.uptime_seconds/60)}m</div><div class="sa-health-label">Uptime</div></div>
+        <div class="sa-health-item"><div class="sa-health-val">${d.memory_mb}MB</div><div class="sa-health-label">Memory</div></div>
+        <div class="sa-health-item"><div class="sa-health-val">${d.node_version}</div><div class="sa-health-label">Node.js</div></div>
+        <div class="sa-health-item"><div class="sa-health-val">${(d.disk_uploads_bytes/1024/1024).toFixed(1)}MB</div><div class="sa-health-label">Uploads</div></div>
+      </div>
+      <h4 style="margin-top:1rem;color:#a5b4fc">Top Tables</h4>
+      <table class="sa-table"><thead><tr><th>Table</th><th>Size</th></tr></thead>
+        <tbody>${(d.table_sizes||[]).slice(0,10).map(t => `<tr><td>${t.name}</td><td>${(t.bytes/1024).toFixed(1)}KB</td></tr>`).join('')}</tbody>
+      </table>`;
+  } catch (e) { document.getElementById('maintOutput').innerHTML = '<p>Failed.</p>'; }
+}
+async function runStorageScan() {
+  document.getElementById('maintOutput').innerHTML = '<p>Scanning...</p>';
+  const d = await apiPost('/super-admin/maintenance/storage/cleanup', {});
+  if (d.success) {
+    document.getElementById('maintOutput').innerHTML = `
+      <p style="color:#34d399">Found <strong>${d.total_orphans}</strong> orphaned file(s).</p>
+      ${d.orphaned.length ? `<details><summary>Show first ${d.orphaned.length}</summary><pre style="font-size:.72rem;background:rgba(0,0,0,.3);padding:.7rem;border-radius:8px;max-height:280px;overflow:auto">${d.orphaned.map(o => o.path).join('\n')}</pre></details>` : ''}`;
+  }
+}
+async function loadBackups() {
+  try {
+    const d = await (await fetch('/super-admin/maintenance/backups')).json();
+    const list = d.backups || [];
+    const html = list.length
+      ? `<table class="sa-table"><thead><tr><th>File</th><th>Size</th><th>Modified</th></tr></thead><tbody>${list.map(b => `<tr><td><code>${b.name}</code></td><td>${(b.size/1024).toFixed(1)}KB</td><td style="font-size:.78rem">${new Date(b.mtime).toLocaleString()}</td></tr>`).join('')}</tbody></table>`
+      : '<p style="color:#475569">No backups yet. Click "Backup Database Now" above.</p>';
+    document.getElementById('backupsList').innerHTML = html;
+  } catch (e) {}
+}
+async function loadBackupSchedules() {
+  try {
+    const d = await (await fetch('/super-admin/backup-schedules')).json();
+    const scheds = d.schedules || [];
+    document.getElementById('backupSchedWrap').innerHTML = scheds.length
+      ? `<table class="sa-table"><thead><tr><th>Name</th><th>Cron</th><th>Target</th><th>Enabled</th><th>Actions</th></tr></thead><tbody>${scheds.map(s => `<tr><td>${s.name}</td><td><code>${s.cron}</code></td><td>${s.target}</td><td>${s.enabled?'✓':'✗'}</td><td><button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteBackupSched(${s.id})">🗑</button></td></tr>`).join('')}</tbody></table>`
+      : '<p style="color:#475569">No backup schedules configured.</p>';
+  } catch (e) {}
+}
+async function createBackupSchedule() {
+  const body = {
+    name: document.getElementById('bsName').value,
+    cron: document.getElementById('bsCron').value,
+    target: document.getElementById('bsTarget').value,
+    retention_days: parseInt(document.getElementById('bsRetention').value) || 30,
+  };
+  if (!body.name || !body.cron) return showToast('Name and Cron required', 'error');
+  const d = await apiPost('/super-admin/backup-schedules/create', body);
+  if (d.success) { closeModal('newBackupSchedModal'); showToast('Schedule created', 'success'); loadBackupSchedules(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function deleteBackupSched(id) {
+  if (!confirm('Delete schedule?')) return;
+  const d = await apiPost('/super-admin/backup-schedules/' + id + '/delete', {});
+  if (d.success) { showToast('Deleted', 'success'); loadBackupSchedules(); }
+}
+
+async function loadLoginHistory(page=1) {
+  _lhPage = page;
+  document.getElementById('lhTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const params = new URLSearchParams({ page, limit: 50 });
+  const from = document.getElementById('lhDateFrom')?.value;
+  const to = document.getElementById('lhDateTo')?.value;
+  const success = document.getElementById('lhSuccessFilter')?.value;
+  if (from) params.set('date_from', from);
+  if (to) params.set('date_to', to);
+  if (success) params.set('success', success);
+  try {
+    const d = await (await fetch('/super-admin/login-history?' + params)).json();
+    const h = d.history || [];
+    if (!h.length) { document.getElementById('lhTableWrap').innerHTML='<div class="sa-empty"><p>No login history.</p></div>'; return; }
+    document.getElementById('lhTableWrap').innerHTML = `
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>When</th><th>User</th><th>Phone/Email</th><th>IP</th><th>Success</th><th>Reason</th></tr></thead>
+        <tbody>${h.map(r => `
+          <tr>
+            <td style="font-size:.78rem">${r.created_at?.substr(0,16) || '—'}</td>
+            <td>${r.user_name || 'Unknown'}</td>
+            <td style="font-size:.78rem">${r.phone || r.email || '—'}</td>
+            <td><code style="font-size:.78rem">${r.ip_address||'—'}</code></td>
+            <td><span class="badge ${r.success?'badge-green':'badge-red'}">${r.success?'✓':'✗'}</span></td>
+            <td style="font-size:.78rem;color:#f87171">${r.failure_reason||''}</td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+    renderPagination('lhPagination', page, d.total || h.length, 50, 'loadLoginHistory');
+  } catch (e) {}
+}
+
+async function loadDevices() {
+  document.getElementById('devicesWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  try {
+    const d = await (await fetch('/super-admin/devices')).json();
+    const devices = d.devices || [];
+    if (!devices.length) { document.getElementById('devicesWrap').innerHTML='<div class="sa-empty"><p>No active sessions.</p></div>'; return; }
+    document.getElementById('devicesWrap').innerHTML = `
+      <table class="sa-table"><thead><tr><th>SID</th><th>User</th><th>Role</th><th>IP</th><th>Expires</th><th>Actions</th></tr></thead>
+      <tbody>${devices.map(s => `
+        <tr>
+          <td><code style="font-size:.72rem">${(s.sid||'').slice(0,16)}…</code></td>
+          <td>${s.user_name || 'Unknown'}</td>
+          <td><span class="badge badge-indigo">${s.role || '—'}</span></td>
+          <td><code style="font-size:.78rem">${s.ip || '—'}</code></td>
+          <td style="font-size:.78rem">${s.expire ? new Date(s.expire).toLocaleString() : '—'}</td>
+          <td><button class="sa-btn sa-btn-danger sa-btn-xs" onclick="revokeDevice('${s.sid}')">Revoke</button></td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  } catch (e) {}
+}
+async function revokeDevice(sid) {
+  if (!confirm('Revoke this session? The user will be logged out.')) return;
+  const d = await apiPost('/super-admin/devices/' + encodeURIComponent(sid) + '/revoke', {});
+  if (d.success) { showToast('Revoked', 'success'); loadDevices(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function loadTwoFactor() {
+  try {
+    const d = await (await fetch('/super-admin/users?limit=500')).json();
+    const users = d.users || [];
+    document.getElementById('twofaWrap').innerHTML = `
+      <p style="color:#94a3b8;font-size:.86rem">Users with <code>two_factor_enabled=1</code> (table-level filter). Use the Users tab "Edit" → "2FA" action to disable for any user.</p>
+      <div style="display:flex;gap:.5rem;align-items:center;margin-top:.7rem">
+        <input class="sa-search" id="twofaUserId" type="number" placeholder="User ID">
+        <button class="sa-btn sa-btn-warning sa-btn-sm" onclick="disableUser2fa()">Disable 2FA</button>
+      </div>`;
+  } catch (e) {}
+}
+async function disableUser2fa() {
+  const id = document.getElementById('twofaUserId').value;
+  if (!id) return showToast('Enter user ID', 'error');
+  if (!confirm(`Disable 2FA for user ${id}?`)) return;
+  const d = await apiPost('/super-admin/users/' + id + '/2fa/disable', {});
+  if (d.success) { showToast('2FA disabled', 'success'); loadTwoFactor(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+async function loadIpAllowlist() {
+  try {
+    const d = await (await fetch('/super-admin/ip-allowlist')).json();
+    const rules = d.rules || [];
+    document.getElementById('ipTableWrap').innerHTML = rules.length
+      ? `<table class="sa-table"><thead><tr><th>CIDR/IP</th><th>Label</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rules.map(r => `<tr><td><code>${r.cidr}</code></td><td>${r.label||'—'}</td><td><span class="badge ${r.enabled?'badge-green':'badge-gray'}">${r.enabled?'Enabled':'Disabled'}</span></td><td><button class="sa-btn sa-btn-warning sa-btn-xs" onclick="toggleIpRule(${r.id})">Toggle</button> <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteIpRule(${r.id})">🗑</button></td></tr>`).join('')}</tbody></table>`
+      : '<p style="color:#475569">No rules yet.</p>';
+  } catch (e) {}
+}
+async function createIpRule() {
+  const body = {
+    cidr: document.getElementById('ipCidr').value,
+    label: document.getElementById('ipLabel').value,
+    enabled: true,
+  };
+  if (!body.cidr) return showToast('CIDR required', 'error');
+  const d = await apiPost('/super-admin/ip-allowlist/create', body);
+  if (d.success) { closeModal('newIpRuleModal'); showToast('Created', 'success'); loadIpAllowlist(); }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function toggleIpRule(id) {
+  const d = await apiPost('/super-admin/ip-allowlist/' + id + '/toggle', {});
+  if (d.success) { showToast('Toggled', 'success'); loadIpAllowlist(); }
+}
+async function deleteIpRule(id) {
+  if (!confirm('Delete this rule?')) return;
+  const d = await apiPost('/super-admin/ip-allowlist/' + id + '/delete', {});
+  if (d.success) { showToast('Deleted', 'success'); loadIpAllowlist(); }
+}
+
+async function impersonateUser(id) {
+  if (!confirm(`Impersonate user #${id}? You will be logged in as them.`)) return;
+  const d = await apiPost('/super-admin/users/' + id + '/impersonate', {});
+  if (d.success) { showToast('Impersonating', 'success'); window.location.href = d.redirect || '/'; }
+  else showToast(d.error || 'Failed', 'error');
+}
+async function exitImpersonation() {
+  const d = await apiPost('/super-admin/impersonate/exit', {});
+  if (d.success) { showToast('Exited impersonation', 'success'); window.location.href = d.redirect || '/super-admin'; }
+  else showToast(d.error || 'Failed', 'error');
+}
+
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadSchools(); // Pre-load schools for filter dropdowns
+});
+
+// Nav group collapsible
+function toggleNavGroup(grpId) {
+  const grp = document.getElementById(grpId);
+  const arr = document.getElementById('arr-' + grpId);
+  if (!grp) return;
+  grp.classList.toggle('collapsed');
+  if (arr) arr.textContent = grp.classList.contains('collapsed') ? '▸' : '▾';
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('saSidebar');
+  const dim = document.getElementById('saDim');
+  if (!sb) return;
+  sb.classList.toggle('open');
+  if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
+}
+
+function closeSidebar() {
+  const sb = document.getElementById('saSidebar');
+  const dim = document.getElementById('saDim');
+  if (sb) sb.classList.remove('open');
+  if (dim) dim.classList.remove('active');
+}
+
+// Mobile swipe gesture to close sidebar
+let touchStartX = 0;
+document.addEventListener('DOMContentLoaded', () => {
+  const sb = document.getElementById('saSidebar');
+  if (sb) {
+    sb.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+    sb.addEventListener('touchend', e => {
+      if (touchStartX - e.changedTouches[0].screenX > 50) { closeSidebar(); }
+    }, {passive: true});
+  }
+});
+
+</script>

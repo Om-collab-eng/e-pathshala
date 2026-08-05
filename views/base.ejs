@@ -52,6 +52,7 @@
     </script>
     <title><%= title || 'librika.in' %></title>
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/landing.css">
     <style>
         .global-nav-container {
             position: fixed;
@@ -172,15 +173,71 @@
             flex-direction: column !important;
         }
 
-        body.force-mobile-view .bottom-nav {
+        .bottom-nav, body.force-mobile-view .bottom-nav {
             display: flex !important;
-            position: absolute !important;
+            justify-content: space-evenly !important;
+            align-items: center !important;
+            position: fixed !important;
             bottom: 0 !important;
             left: 0 !important;
             right: 0 !important;
             width: 100% !important;
-            max-width: 100% !important;
+            max-width: 480px !important;
+            margin: 0 auto !important;
+            height: 60px !important;
+            min-height: 60px !important;
+            max-height: 60px !important;
+            background: #ffffff !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border-top: 1px solid #e2e8f0 !important;
+            padding: 0 2px calc(env(safe-area-inset-bottom, 0px)) 2px !important;
+            box-sizing: border-box !important;
+            z-index: 99999 !important;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06) !important;
             transform: none !important;
+            overflow-x: hidden !important;
+            overflow-y: hidden !important;
+        }
+
+        .bottom-nav-item, body.force-mobile-view .bottom-nav-item {
+            flex: 1 1 25% !important;
+            min-width: 0 !important;
+            max-width: 25% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 2px !important;
+            color: #64748b !important;
+            text-decoration: none !important;
+            font-size: 0.60rem !important;
+            font-weight: 700 !important;
+            padding: 4px 1px !important;
+            height: 100% !important;
+            box-sizing: border-box !important;
+            text-align: center !important;
+            line-height: 1.1 !important;
+        }
+
+        .bottom-nav-icon, body.force-mobile-view .bottom-nav-icon {
+            font-size: 1.15rem !important;
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .bottom-nav-item span:last-child {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 100% !important;
+            font-size: 0.60rem !important;
+        }
+
+        .bottom-nav-item.active {
+            color: #5c3cf3 !important;
         }
 
         body.force-mobile-view .my-pub-header {
@@ -248,7 +305,7 @@
         <button class="btn-alt" onclick="window.history.back()" title="Go Back" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: var(--shadow-premium); background: var(--bg-card); backdrop-filter: var(--glass-blur);">
             ⬅️
         </button>
-        <button class="btn-alt" onclick="window.location.href='/'" title="Go Home" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: var(--shadow-premium); background: var(--bg-card); backdrop-filter: var(--glass-blur);">
+        <button class="btn-alt" onclick="saGoHome()" title="Go Home" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: var(--shadow-premium); background: var(--bg-card); backdrop-filter: var(--glass-blur);">
             🏠
         </button>
         <div class="theme-toggle" id="themeToggle" title="Switch Appearance" style="margin: 0; box-shadow: var(--shadow-premium);">
@@ -291,6 +348,12 @@
             updateAllThemeIcons(newTheme);
         }
 
+        // ── saGoHome — server-rendered home URL, works for any role ────────
+        // res.locals.homeUrl is injected by middleware/roleHome.js and is
+        // role-aware (and impersonation-aware). Fallback to '/' if absent.
+        window.SA_HOME_URL = '<%= typeof homeUrl !== "undefined" && homeUrl ? homeUrl : "/" %>';
+        window.saGoHome = function() { window.location.href = window.SA_HOME_URL; };
+
         function updateGlobalNavVisibility() {
             const isVisible = localStorage.getItem('globalNavVisible') !== 'false';
             const nav = document.querySelector('.global-nav-container');
@@ -318,28 +381,31 @@
                 if (menu && !menu.querySelector('.embedded-nav-controls')) {
                     const container = document.createElement('div');
                     container.className = 'embedded-nav-controls';
-                    container.style.display = 'flex';
-                    container.style.flexDirection = 'column';
-                    container.style.gap = '6px';
-                    container.style.marginBottom = '1rem';
+                    container.style.cssText = 'display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; padding: 0 10px;';
                     const backBtn = document.createElement('button');
-                    backBtn.className = 'sidebar-link';
-                    backBtn.innerHTML = '<span class="link-icon">⬅️</span><span>Go Back</span>';
-                    backBtn.onclick = () => window.history.back();
+                    backBtn.className = 'sidebar-link sidebar-link-back';
                     backBtn.type = 'button';
+                    backBtn.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: rgba(92, 60, 243, 0.08); color: #5c3cf3; font-weight: 700; font-size: 0.88rem; border: 1px solid rgba(92, 60, 243, 0.15); cursor: pointer; text-decoration: none; width: 100%; text-align: left; transition: all 0.2s;';
+                    backBtn.innerHTML = '<span class="link-icon" style="font-size: 1rem;">⬅️</span><span style="font-weight: 800;">Go Back</span>';
+                    backBtn.onclick = () => window.history.back();
+                    
                     const homeBtn = document.createElement('button');
                     homeBtn.className = 'sidebar-link';
-                    homeBtn.innerHTML = '<span class="link-icon">🏠</span><span>Go Home</span>';
-                    homeBtn.onclick = () => window.location.href = '/';
                     homeBtn.type = 'button';
+                    homeBtn.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: transparent; color: var(--sp-text-dark, #0f172a); font-weight: 700; font-size: 0.88rem; border: 1px solid #e2e8f0; cursor: pointer; text-decoration: none; width: 100%; text-align: left; transition: all 0.2s;';
+                    homeBtn.innerHTML = '<span class="link-icon" style="font-size: 1rem;">🏠</span><span>Go Home</span>';
+                    homeBtn.onclick = () => { window.location.href = window.SA_HOME_URL; };
+
                     const themeBtn = document.createElement('button');
                     themeBtn.className = 'sidebar-link';
                     themeBtn.id = 'embeddedThemeToggle';
                     themeBtn.type = 'button';
+                    themeBtn.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: transparent; color: var(--sp-text-dark, #0f172a); font-weight: 700; font-size: 0.88rem; border: 1px solid #e2e8f0; cursor: pointer; text-decoration: none; width: 100%; text-align: left; transition: all 0.2s;';
                     const currentTheme = html.getAttribute('data-theme') || 'dark';
                     const themeIconSymbol = currentTheme === 'dark' ? '🌙' : '☀️';
-                    themeBtn.innerHTML = `<span class="link-icon" id="embeddedThemeIcon">${themeIconSymbol}</span><span>Appearance</span>`;
+                    themeBtn.innerHTML = `<span class="link-icon" id="embeddedThemeIcon" style="font-size: 1rem;">${themeIconSymbol}</span><span>Appearance</span>`;
                     themeBtn.onclick = toggleTheme;
+
                     container.appendChild(backBtn);
                     container.appendChild(homeBtn);
                     container.appendChild(themeBtn);
@@ -355,27 +421,31 @@
                 if (menu && !menu.querySelector('.embedded-nav-controls')) {
                     const container = document.createElement('div');
                     container.className = 'embedded-nav-controls';
-                    container.style.display = 'flex';
-                    container.style.flexDirection = 'column';
-                    container.style.gap = '6px';
-                    container.style.padding = '1rem 1.5rem';
+                    container.style.cssText = 'display: flex; flex-direction: column; gap: 8px; padding: 1rem 1.25rem 0.5rem 1.25rem;';
+                    
                     const backBtn = document.createElement('a');
-                    backBtn.className = 'sidebar-link';
+                    backBtn.className = 'sidebar-link sidebar-link-back';
                     backBtn.href = '#';
-                    backBtn.innerHTML = '<span class="link-icon">⬅️</span><span>Go Back</span>';
+                    backBtn.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: rgba(92, 60, 243, 0.08); color: #5c3cf3; font-weight: 700; font-size: 0.88rem; border: 1px solid rgba(92, 60, 243, 0.15); text-decoration: none; transition: all 0.2s;';
+                    backBtn.innerHTML = '<span class="link-icon" style="font-size: 1rem;">⬅️</span><span style="font-weight: 800;">Go Back</span>';
                     backBtn.onclick = (e) => { e.preventDefault(); window.history.back(); };
+                    
                     const homeBtn = document.createElement('a');
                     homeBtn.className = 'sidebar-link';
-                    homeBtn.href = '/';
-                    homeBtn.innerHTML = '<span class="link-icon">🏠</span><span>Go Home</span>';
+                    homeBtn.href = window.SA_HOME_URL;
+                    homeBtn.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: #f8fafc; color: #0f172a; font-weight: 700; font-size: 0.88rem; border: 1px solid #e2e8f0; text-decoration: none; transition: all 0.2s;';
+                    homeBtn.innerHTML = '<span class="link-icon" style="font-size: 1rem;">🏠</span><span>Go Home</span>';
+                    
                     const themeBtn = document.createElement('a');
                     themeBtn.className = 'sidebar-link';
                     themeBtn.href = '#';
                     themeBtn.id = 'mobEmbeddedThemeToggle';
+                    themeBtn.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: #f8fafc; color: #0f172a; font-weight: 700; font-size: 0.88rem; border: 1px solid #e2e8f0; text-decoration: none; transition: all 0.2s;';
                     const currentTheme = html.getAttribute('data-theme') || 'dark';
                     const themeIconSymbol = currentTheme === 'dark' ? '🌙' : '☀️';
-                    themeBtn.innerHTML = `<span class="link-icon" id="mobEmbeddedThemeIcon">${themeIconSymbol}</span><span>Appearance</span>`;
+                    themeBtn.innerHTML = `<span class="link-icon" id="mobEmbeddedThemeIcon" style="font-size: 1rem;">${themeIconSymbol}</span><span>Appearance</span>`;
                     themeBtn.onclick = (e) => { e.preventDefault(); toggleTheme(); };
+
                     container.appendChild(backBtn);
                     container.appendChild(homeBtn);
                     container.appendChild(themeBtn);
@@ -384,7 +454,7 @@
                         brand.parentNode.insertBefore(container, brand.nextSibling);
                         const divider = document.createElement('hr');
                         divider.className = 'sidebar-divider';
-                        divider.style.margin = '0 1.5rem';
+                        divider.style.margin = '0.5rem 1.25rem';
                         brand.parentNode.insertBefore(divider, container.nextSibling);
                     } else {
                         menu.insertBefore(container, menu.firstChild);
@@ -398,33 +468,32 @@
                 if (nav && !nav.querySelector('.embedded-nav-controls')) {
                     const container = document.createElement('div');
                     container.className = 'embedded-nav-controls';
-                    container.style.display = 'flex';
-                    container.style.flexDirection = 'column';
-                    container.style.gap = '6px';
-                    container.style.marginTop = '1.5rem';
-                    container.style.paddingTop = '1.5rem';
-                    container.style.borderTop = '1px solid var(--border, #e2e8f0)';
+                    container.style.cssText = 'display: flex; flex-direction: column; gap: 8px; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border, #e2e8f0);';
+                    
                     const backBtn = document.createElement('button');
                     backBtn.className = 'ld-nav-link';
                     backBtn.type = 'button';
-                    backBtn.style.width = '100%';
-                    backBtn.innerHTML = '<div class="ld-nav-icon">⬅️</div>Go Back';
+                    backBtn.style.cssText = 'width: 100%; display: flex; align-items: center; gap: 10px; background: rgba(92, 60, 243, 0.08); color: #5c3cf3; border: 1px solid rgba(92, 60, 243, 0.15); border-radius: 12px; font-weight: 700; padding: 10px 14px;';
+                    backBtn.innerHTML = '<div class="ld-nav-icon">⬅️</div><span style="font-weight:800;">Go Back</span>';
                     backBtn.onclick = () => window.history.back();
+                    
                     const homeBtn = document.createElement('button');
                     homeBtn.className = 'ld-nav-link';
                     homeBtn.type = 'button';
-                    homeBtn.style.width = '100%';
+                    homeBtn.style.cssText = 'width: 100%; display: flex; align-items: center; gap: 10px; border-radius: 12px; font-weight: 700; padding: 10px 14px;';
                     homeBtn.innerHTML = '<div class="ld-nav-icon">🏠</div>Go Home';
-                    homeBtn.onclick = () => window.location.href = '/';
+                    homeBtn.onclick = () => { window.location.href = window.SA_HOME_URL; };
+
                     const themeBtn = document.createElement('button');
                     themeBtn.className = 'ld-nav-link';
                     themeBtn.id = 'embeddedThemeToggle';
                     themeBtn.type = 'button';
-                    themeBtn.style.width = '100%';
+                    themeBtn.style.cssText = 'width: 100%; display: flex; align-items: center; gap: 10px; border-radius: 12px; font-weight: 700; padding: 10px 14px;';
                     const currentTheme = html.getAttribute('data-theme') || 'dark';
                     const themeIconSymbol = currentTheme === 'dark' ? '🌙' : '☀️';
                     themeBtn.innerHTML = `<div class="ld-nav-icon" id="embeddedThemeIcon">${themeIconSymbol}</div>Appearance`;
                     themeBtn.onclick = toggleTheme;
+
                     container.appendChild(backBtn);
                     container.appendChild(homeBtn);
                     container.appendChild(themeBtn);
@@ -451,7 +520,7 @@
                     backBtn.onclick = (e) => { e.preventDefault(); window.history.back(); };
                     const homeBtn = document.createElement('a');
                     homeBtn.className = 'personal-nav-link';
-                    homeBtn.href = '/';
+                    homeBtn.href = window.SA_HOME_URL;
                     homeBtn.innerHTML = '<span>🏠</span> Go Home';
                     const themeBtn = document.createElement('a');
                     themeBtn.className = 'personal-nav-link';
@@ -501,7 +570,106 @@
             if (themeToggle) {
                 themeToggle.addEventListener('click', toggleTheme);
             }
+
+            // Auto-trigger cover fallback for any broken images or empty covers
+            document.querySelectorAll('img[data-fallback-title]').forEach(img => {
+                if (!img.src || img.src.includes('/static/placeholder') || img.complete && img.naturalWidth === 0) {
+                    generateBookCoverFallback(img, img.getAttribute('data-fallback-title'), img.getAttribute('data-fallback-author'), img.getAttribute('data-fallback-genre'));
+                }
+            });
         });
+
+        window.generateBookCoverFallback = function(imgElement, title, author, genre) {
+            if (!imgElement) return;
+            title = (title && title !== 'undefined' && title.trim()) ? title.trim() : 'Library Book';
+            author = (author && author !== 'undefined' && author.trim()) ? author.trim() : 'Author';
+            genre = (genre && genre !== 'undefined' && genre.trim()) ? genre.trim() : 'General';
+
+            const gradients = [
+                ['#4f46e5', '#7c3aed'],
+                ['#0284c7', '#2563eb'],
+                ['#059669', '#10b981'],
+                ['#d97706', '#ea580c'],
+                ['#e11d48', '#be123c'],
+                ['#7e22ce', '#c026d3'],
+                ['#0f172a', '#334155']
+            ];
+
+            let hash = 0;
+            const str = (genre + title);
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const colorPair = gradients[Math.abs(hash) % gradients.length];
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 300;
+            canvas.height = 440;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createLinearGradient(0, 0, 300, 440);
+            grad.addColorStop(0, colorPair[0]);
+            grad.addColorStop(1, colorPair[1]);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 300, 440);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.fillRect(0, 0, 16, 440);
+            ctx.fillRect(284, 0, 16, 440);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+            if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(30, 28, 240, 28, 14);
+                ctx.fill();
+            } else {
+                ctx.fillRect(30, 28, 240, 28);
+            }
+
+            ctx.font = 'bold 11px "Outfit", -apple-system, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText(genre.toUpperCase(), 150, 46);
+
+            ctx.font = 'bold 22px "Outfit", -apple-system, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+
+            const words = title.split(' ');
+            let line = '';
+            let lines = [];
+            for (let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = ctx.measureText(testLine);
+                if (metrics.width > 220 && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            let startY = 210 - (lines.length * 14);
+            lines.forEach((l, idx) => {
+                ctx.fillText(l.trim(), 150, startY + (idx * 28));
+            });
+
+            const lineY = startY + (lines.length * 28) + 8;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(110, lineY);
+            ctx.lineTo(190, lineY);
+            ctx.stroke();
+
+            ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillText(author, 150, 395);
+
+            imgElement.src = canvas.toDataURL('image/png');
+            imgElement.onerror = null;
+        };
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -554,36 +722,37 @@
             }
         }
 
-        const clickSound = new Audio("/click.wav");
-        const hoverSound = new Audio("/hover.wav");
-        clickSound.volume = 0.4;
-        hoverSound.volume = 0.2;
+        let clickSound, hoverSound;
+        try {
+            clickSound = new Audio("/click.wav");
+            hoverSound = new Audio("/hover.wav");
+            if (clickSound) clickSound.volume = 0.4;
+            if (hoverSound) hoverSound.volume = 0.2;
+        } catch (e) {}
 
         document.addEventListener('click', () => {
-            clickSound.currentTime = 0;
-            clickSound.play().catch(e => {});
+            try {
+                if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(() => {}); }
+            } catch (e) {}
         });
 
         document.addEventListener('mouseover', (e) => {
-            const target = e.target;
-            if(target.tagName === 'A' || target.tagName === 'BUTTON' || target.classList.contains('btn-alt') || target.classList.contains('btn-neon') || target.closest('a') || target.closest('button')) {
-                hoverSound.currentTime = 0;
-                hoverSound.play().catch(e => {});
-            }
+            try {
+                const target = e.target;
+                if(target && (target.tagName === 'A' || target.tagName === 'BUTTON' || target.classList?.contains('btn-alt') || target.classList?.contains('btn-neon') || target.closest('a') || target.closest('button'))) {
+                    if (hoverSound) { hoverSound.currentTime = 0; hoverSound.play().catch(() => {}); }
+                }
+            } catch (e) {}
         });
     </script>
     <script>
-        document.addEventListener('contextmenu', event => event.preventDefault());
+        // Keyboard shortcuts helper
         document.onkeydown = function(e) {
             if(e.keyCode == 123) return false;
-            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'i'.charCodeAt(0))) return false;
-            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'c'.charCodeAt(0))) return false;
-            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'j'.charCodeAt(0))) return false;
-            if(e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'u'.charCodeAt(0))) return false;
         };
     </script>
 
-    <% if (session && session.user_id && (session.role === 'super_admin' || (locals.school_perms && locals.school_perms.canUseAIChat))) { %>
+    <% if (session && session.user_id && (session.role === 'super_admin' || (locals.school_perms && locals.school_perms.canUseAIChat)) && (typeof title === 'undefined' || !title || !title.includes('Modern Library Management SaaS'))) { %>
     <div id="aiChatWidget" class="ai-chat-widget-container">
         <div id="aiChatWindow" style="display: none; width: 90vw; max-width: 350px; height: 70vh; max-height: 450px; background: var(--bg-card); border-radius: 12px; box-shadow: var(--shadow-premium); backdrop-filter: var(--glass-blur); flex-direction: column; overflow: hidden; border: 1px solid var(--border-light); margin-bottom: 10px;">
             <div style="background: var(--primary-color); padding: 10px 15px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
