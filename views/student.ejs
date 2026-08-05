@@ -287,6 +287,88 @@ html, body {
 .bottom-nav, .portal-bottom-nav, nav.bottom-nav {
     display: none !important;
 }
+
+/* ── CRITICAL FIXES FOR IMAGE LARGENING & ACTIONS GRID ── */
+.header-illustration {
+    position: absolute !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 140px !important;
+    max-width: 36vw !important;
+    max-height: 130px !important;
+    object-fit: contain !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+}
+
+/* Constrain all book images so they never enlarge */
+img {
+    max-width: 100% !important;
+}
+.reading-card-cover, .recommend-card img, .book-card img, .recommend-cover {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 160px !important;
+    max-height: 160px !important;
+    object-fit: cover !important;
+    border-radius: 12px !important;
+}
+
+/* Quick Actions Grid layout & cards */
+.actions-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 1.25rem !important;
+}
+@media (min-width: 600px) {
+    .actions-grid { grid-template-columns: repeat(4, 1fr) !important; }
+}
+
+.action-card {
+    background: var(--bg-card, #ffffff) !important;
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 16px !important;
+    padding: 14px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    color: var(--text-main, #0f172a) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    min-height: 90px !important;
+}
+.action-card:hover { transform: translateY(-2px) !important; }
+
+.action-icon-wrapper {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    background: rgba(99, 102, 241, 0.12) !important;
+    color: #6366f1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.2rem !important;
+    margin-bottom: 6px !important;
+    flex-shrink: 0 !important;
+}
+
+.action-label {
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    color: var(--text-main, #0f172a) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}
 </style>
 <% contentFor("head") %>
 <% contentFor("content") %>
