@@ -342,6 +342,38 @@ router.post('/mobile/reserve', authMiddleware, async (req, res) => {
   }
 });
 
+
+// Temporary table creation
+router.get('/v1/setup-tables', async (req, res) => {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS assignments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        school_code VARCHAR(50),
+        class VARCHAR(50),
+        title VARCHAR(255),
+        description TEXT,
+        due_date TIMESTAMP NULL DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await query(`
+      CREATE TABLE IF NOT EXISTS assignment_submissions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        assignment_id INT,
+        user_id INT,
+        submission_text TEXT,
+        file_url VARCHAR(255),
+        submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        grade VARCHAR(50)
+      )
+    `);
+    res.send('TABLES CREATED');
+  } catch (err) {
+    res.send('ERROR: ' + err.message);
+  }
+});
+
 module.exports = router;
 
 
