@@ -96,7 +96,7 @@ body {
   color: var(--sp-accent) !important;
 }
 .sp-sidebar-overlay {
-  background: rgba(15,23,42,0.4) !important;
+  background: rgba(15,23,42,0.3) !important;
 }
 .sp-sidebar-close {
   background: var(--sp-accent-soft) !important;
