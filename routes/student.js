@@ -813,24 +813,86 @@ function generateDefaultQuiz(title, author) {
 
 
 // ── Additional Student Tab Routes (Pristine Bug-Free Handlers) ──
+// ── Reading Goals Route ───────────────────────────────────────────────────
 router.get('/goals', studentOnly, async (req, res) => {
+  const userId = req.session.user_id;
   try {
-    const userId = req.session.user_id;
     const user = (await pool.query('SELECT * FROM users WHERE id = ', [userId])).rows[0] || {};
-    const totalRead = parseInt((await pool.query("SELECT COUNT(*) as c FROM transactions WHERE user_id =  AND return_date IS NOT NULL AND return_date != 'LOST'", [userId])).rows[0].c || 0, 10);
+    let personalGoals = [];
+    try {
+      personalGoals = (await pool.query("SELECT * FROM reading_goals WHERE role = 'student' AND created_by = ", [userId])).rows || [];
+    } catch (e) { personalGoals = []; }
+
+    let progressRows = [];
+    try {
+      progressRows = (await pool.query('SELECT total_pages, last_page, reading_time, updated_at, completed_at FROM reading_progress WHERE student_id = ', [userId])).rows || [];
+    } catch (e) { progressRows = []; }
+
+    let completed = 0;
+    try {
+      completed = parseInt((await pool.query("SELECT COUNT(*) as c FROM transactions WHERE user_id =  AND return_date IS NOT NULL AND return_date != 'LOST'", [userId])).rows[0].c || 0, 10);
+    } catch (e) { completed = 0; }
+
+    const pagesRead = progressRows.reduce((a, r) => a + (parseInt(r.last_page, 10) || 0), 0);
+    const minutesRead = progressRows.reduce((a, r) => a + (parseInt(r.reading_time, 10) || 0), 0);
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 19).replace('T', ' ');
+    const monthPages = progressRows.filter(r => String(r.updated_at || '') >= monthStart).reduce((a, r) => a + (parseInt(r.last_page, 10) || 0), 0);
+
+    const dayLog = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dStr = d.toISOString().slice(0, 10);
+      const dayRows = progressRows.filter(r => String(r.updated_at || '').slice(0, 10) === dStr);
+      dayLog.push({ date: dStr, label: d.toLocaleDateString('en', { weekday: 'short' }), pages: dayRows.reduce((a, r) => a + (parseInt(r.last_page, 10) || 0), 0) });
+    }
+
+    const today = now.toISOString().slice(0, 10);
+    const todayPages = progressRows.filter(r => String(r.updated_at || '').slice(0, 10) === today).reduce((a, r) => a + (parseInt(r.last_page, 10) || 0), 0);
+
     res.render('student_goals', {
       title: 'Reading Goals - librika.in',
+      active: 'goals',
+      notifCount: 0,
+      success: (req.flash && req.flash('success') && req.flash('success')[0]) ? req.flash('success')[0] : null,
+      error: (req.flash && req.flash('error') && req.flash('error')[0]) ? req.flash('error')[0] : null,
       user,
-      total_read: totalRead,
-      goal_pages: user.daily_page_goal || 20,
-      goal_books: user.yearly_book_goal || 12,
+      personalGoals,
+      streak: parseInt(user.reading_streak || 0, 10),
+      longestStreak: parseInt(user.longest_streak || 0, 10),
+      pagesRead,
+      minutesRead,
+      booksCompleted: completed,
+      monthPages,
+      todayPages,
+      dayLog,
       school_name: req.session.school_name || 'E-Pathshala Network'
     });
   } catch (err) {
     console.error('Goals route error:', err);
-    res.render('student_goals', { title: 'Reading Goals', user: {}, total_read: 0, goal_pages: 20, goal_books: 12, school_name: 'E-Pathshala Network' });
+    res.render('student_goals', {
+      title: 'Reading Goals - librika.in',
+      active: 'goals',
+      notifCount: 0,
+      success: null,
+      error: null,
+      user: {},
+      personalGoals: [],
+      streak: 0,
+      longestStreak: 0,
+      pagesRead: 0,
+      minutesRead: 0,
+      booksCompleted: 0,
+      monthPages: 0,
+      todayPages: 0,
+      dayLog: [],
+      school_name: 'E-Pathshala Network'
+    });
   }
 });
+
 
 router.get('/notifications', studentOnly, async (req, res) => {
   try {
