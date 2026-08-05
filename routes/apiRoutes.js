@@ -347,38 +347,52 @@ module.exports = router;
 
 
 // Real-time Notification Polling Endpoint
+// Real-time 1-Second Top-Down Notification Polling Endpoint
 router.get('/notifications/poll', async (req, res) => {
   try {
-    const userId = req.session ? req.session.user_id : null;
-    const sCode = req.session ? req.session.school_code : null;
-    if (!userId) return res.json({ status: 'success', unreadCount: 0, newNotifications: [] });
+    const userId = req.session ? (req.session.user_id || req.session.id) : null;
+    const sCode  = req.session ? req.session.school_code : null;
+    const uRole  = req.session ? req.session.role : null;
+    if (!userId && !sCode) return res.json({ status: 'success', unreadCount: 0, newNotifications: [], maxId: 0 });
 
     const sinceId = parseInt(req.query.since_id || '0', 10);
     const db = require('../db');
     
-    // Fetch unread count
+    // Fetch unread count for user / school / admin role
     const countRes = await db.query(
-      `SELECT COUNT(*) as c FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL') AND (is_read = false OR is_read = '0' OR is_read IS NULL)`,
-      [userId, sCode]
+      `SELECT COUNT(*) as c FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL' OR type = $3) AND (is_read = false OR is_read = '0' OR is_read IS NULL)`,
+      [userId || 0, sCode || 'GLOBAL', uRole || 'student']
     ).catch(() => ({ rows: [{ c: 0 }] }));
     const unreadCount = parseInt(countRes.rows[0].c, 10) || 0;
 
-    // Fetch new unread notifications since last check
     let newNotifs = [];
-    if (sinceId > 0) {
+    if (sinceId === 0) {
+      // First poll on page load: return latest unread notifications (up to 3)
+      const initRes = await db.query(
+        `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL' OR type = $3) AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 3`,
+        [userId || 0, sCode || 'GLOBAL', uRole || 'student']
+      ).catch(() => ({ rows: [] }));
+      newNotifs = initRes.rows || [];
+    } else {
+      // Subsequent polls: return any new notification created after sinceId
       const newRes = await db.query(
-        `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL') AND id > $3 ORDER BY id DESC LIMIT 5`,
-        [userId, sCode, sinceId]
+        `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL' OR type = $3) AND id > $4 ORDER BY id ASC LIMIT 5`,
+        [userId || 0, sCode || 'GLOBAL', uRole || 'student', sinceId]
       ).catch(() => ({ rows: [] }));
       newNotifs = newRes.rows || [];
     }
 
+    // Determine max ID
+    const maxRes = await db.query(`SELECT MAX(id) as m FROM notifications`).catch(() => ({ rows: [{ m: 0 }] }));
+    const maxId = parseInt(maxRes.rows[0].m, 10) || 0;
+
     res.json({
       status: 'success',
       unreadCount,
-      newNotifications: newNotifs
+      newNotifications: newNotifs,
+      maxId
     });
   } catch (err) {
-    res.json({ status: 'success', unreadCount: 0, newNotifications: [] });
+    res.json({ status: 'success', unreadCount: 0, newNotifications: [], maxId: 0 });
   }
 });

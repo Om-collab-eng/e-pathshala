@@ -995,47 +995,52 @@ For searching books: {"type": "search_book", "query": "..."}
     <%- defineContent('scripts') %>
 
     <script>
-        // Real-time Top-Down Notification Pop-Up Poller
+        // Real-time Top-Down Notification Pop-Up Poller (1-Second Fast Poll)
         let lastNotifId = 0;
-        let notifPollInterval = null;
+        let isPollingNotifs = false;
 
         async function pollNewNotifications() {
+            if (isPollingNotifs) return;
+            isPollingNotifs = true;
             try {
                 const res = await fetch('/api/notifications/poll?since_id=' + lastNotifId);
                 const data = await res.json();
                 if (data && data.status === 'success') {
-                    // Update badge counts in topbar
+                    // Update badge counts in topbar on admin & student side
                     if (typeof data.unreadCount === 'number') {
                         document.querySelectorAll('.sp-notif-count, .st-notif-badge, .sp-badge-dot, .ld-notif-badge').forEach(b => {
                             if (data.unreadCount > 0) {
                                 b.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
-                                b.style.display = 'flex';
+                                b.style.display = 'inline-flex';
                             } else {
                                 b.style.display = 'none';
                             }
                         });
                     }
 
-                    // Pop up new notifications from above
+                    // Handle first load vs live updates
                     if (data.newNotifications && data.newNotifications.length > 0) {
                         data.newNotifications.forEach(n => {
-                            if (n.id > lastNotifId) {
-                                lastNotifId = n.id;
-                                showToast(n.message, 'notif', '🔔 New Notification');
+                            if (n.id > lastNotifId || lastNotifId === 0) {
+                                showToast(n.message, n.type || 'notif', '🔔 Notification');
                             }
                         });
                     }
+                    if (data.maxId && data.maxId > lastNotifId) {
+                        lastNotifId = data.maxId;
+                    }
                 }
             } catch (e) {}
+            finally {
+                isPollingNotifs = false;
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            <% if (typeof session !== 'undefined' && session && (session.user_id || session.user)) { %>
             pollNewNotifications();
-            notifPollInterval = setInterval(pollNewNotifications, 10000);
-            <% } %>
+            setInterval(pollNewNotifications, 1500); // 1.5 Second Fast Interval
         });
-    </script>
+</script>
 
 </body>
 <%- block('scripts') %>
