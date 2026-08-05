@@ -1,0 +1,129 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'goals' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Reading Goals', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Reading Goals</h1>
+          <p class="sp-page-sub">Set targets, build streaks and watch your progress grow.</p>
+        </div>
+
+        <% if (success) { %><div class="sp-banner sp-banner-green"><span>✅</span><span><%= success %></span></div><% } %>
+        <% if (error) { %><div class="sp-banner sp-banner-red"><span>⚠️</span><span><%= error %></span></div><% } %>
+
+        <div class="sp-stats-grid">
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">🔥</div>
+            <div class="sp-stat-value"><%= streak %> days</div>
+            <div class="sp-stat-label">Current Streak</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">🏆</div>
+            <div class="sp-stat-value"><%= longestStreak %> days</div>
+            <div class="sp-stat-label">Best Streak</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">📖</div>
+            <div class="sp-stat-value"><%= booksCompleted %></div>
+            <div class="sp-stat-label">Books Finished</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">🔤</div>
+            <div class="sp-stat-value"><%= pagesRead %></div>
+            <div class="sp-stat-label">Pages Read</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">⏱️</div>
+            <div class="sp-stat-value"><%= Math.round(minutesRead / 60) %>h</div>
+            <div class="sp-stat-label">Reading Time</div>
+          </div>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Last 7 Days</h2>
+          <% var maxDay = Math.max.apply(null, dayLog.map(function (d) { return d.pages; })); %>
+          <div class="sp-chart">
+            <% dayLog.forEach(function (d) { %>
+            <% var h = maxDay > 0 ? Math.round((d.pages / maxDay) * 100) : 0; %>
+            <div class="sp-chart-col">
+              <div class="sp-chart-bar-wrap">
+                <div class="sp-chart-bar" style="height: <%= h %>%"><span class="sp-chart-val"><%= d.pages %></span></div>
+              </div>
+              <span class="sp-chart-label"><%= d.label %></span>
+            </div>
+            <% }); %>
+          </div>
+          <p class="sp-row-sub sp-mt-2">Today: <strong><%= todayPages %></strong> pages &bull; This month: <strong><%= monthPages %></strong> pages</p>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Set or Update a Goal</h2>
+          <form id="goalForm" class="sp-form">
+            <div class="sp-form-row">
+              <div class="sp-field">
+                <label class="sp-label">Period</label>
+                <select name="period" class="sp-input" id="goalPeriod">
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly" selected>Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+              <div class="sp-field">
+                <label class="sp-label">Target (books)</label>
+                <input type="number" name="target" min="1" required class="sp-input" id="goalTarget" placeholder="e.g. 12">
+              </div>
+            </div>
+            <div class="sp-form-actions">
+              <button type="submit" class="sp-btn sp-btn-primary">Save Goal</button>
+            </div>
+          </form>
+        </div>
+
+        <h2 class="sp-section-title sp-mt-3">Active Goals</h2>
+        <% if (personalGoals.length) { %>
+        <div class="sp-list">
+          <% personalGoals.forEach(function (g) { %>
+          <% var gv = g.period === 'daily' ? todayPages : (g.period === 'weekly' ? dayLog.reduce(function (a, d) { return a + d.pages; }, 0) : (g.period === 'monthly' ? monthPages : booksCompleted)); %>
+          <% var pct = Math.min(100, Math.round((gv / Math.max(g.target, 1)) * 100)); %>
+          <div class="sp-goal-card">
+            <div class="sp-goal-head">
+              <div>
+                <h3 class="sp-book-title" style="margin:0"><%= g.period.charAt(0).toUpperCase() + g.period.slice(1) %> Goal</h3>
+                <p class="sp-book-author" style="margin:0"><%= gv %> / <%= g.target %> books</p>
+              </div>
+              <span class="sp-chip <%= pct >= 100 ? 'sp-chip-green' : 'sp-chip-purple' %>"><%= pct %>%</span>
+            </div>
+            <div class="sp-progress-bar sp-progress-lg"><div class="sp-progress-fill" style="width: <%= pct %>%;"></div></div>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty">
+            <span class="sp-empty-icon">🎯</span>
+            <p class="sp-empty-title">No goals yet</p>
+            <p class="sp-empty-sub">Set your first reading goal above to start tracking.</p>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  document.getElementById('goalForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var period = document.getElementById('goalPeriod').value;
+    var target = document.getElementById('goalTarget').value;
+    var r = await fetch('/student/api/goal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ period: period, target: target })
+    });
+    if (r.ok) window.location.reload();
+  });
+</script>

@@ -1,6 +1,7 @@
 <%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
 
-<% contentFor("title") %>Quiz Results - librika.in<%%>
+<% contentFor("title") %>Quiz Results - librika.in
 
 <% contentFor("head") %>
 <style>
@@ -118,6 +119,12 @@
 <% contentFor("head") %>
 
 <% contentFor("content") %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'browse' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Quiz Results' }) %>
+      <main class="sp-content">
 <div class="res-container">
     <div class="res-card">
         <% if (passed) { %>
@@ -151,4 +158,9 @@
 
         <a href="/student" class="back-btn">Go to Dashboard</a>
     </div>
+</div>
+
+      </main>
+    </div>
+  </div>
 </div>

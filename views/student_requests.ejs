@@ -1,0 +1,80 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'requests' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Book Requests', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Book Requests</h1>
+          <p class="sp-page-sub">Ask the library to stock a book you cannot find.</p>
+        </div>
+
+        <% if (success) { %><div class="sp-banner sp-banner-green"><span>✅</span><span><%= success %></span></div><% } %>
+        <% if (error) { %><div class="sp-banner sp-banner-red"><span>⚠️</span><span><%= error %></span></div><% } %>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Request a Book</h2>
+          <form method="POST" action="/student/requests" class="sp-form">
+            <div class="sp-form-row">
+              <div class="sp-field">
+                <label class="sp-label">Book Title</label>
+                <input type="text" name="title" required class="sp-input" placeholder="e.g. The Silent Patient">
+              </div>
+              <div class="sp-field">
+                <label class="sp-label">Author</label>
+                <input type="text" name="author" class="sp-input" placeholder="e.g. Alex Michaelides">
+              </div>
+            </div>
+            <div class="sp-form-row">
+              <div class="sp-field">
+                <label class="sp-label">Request Type</label>
+                <select name="request_type" class="sp-input">
+                  <option value="book">Book</option>
+                  <option value="e-book">E-Book</option>
+                  <option value="journal">Journal</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="sp-field">
+                <label class="sp-label">Why do you need it?</label>
+                <input type="text" name="details" class="sp-input" placeholder="Course requirement, personal reading, project...">
+              </div>
+            </div>
+            <div class="sp-form-actions">
+              <button type="submit" class="sp-btn sp-btn-primary">Send Request</button>
+            </div>
+          </form>
+        </div>
+
+        <h2 class="sp-section-title sp-mt-3">Your Requests</h2>
+        <% if (requests.length) { %>
+        <div class="sp-list">
+          <% requests.forEach(function (r) { %>
+          <div class="sp-row">
+            <div class="sp-row-main">
+              <div class="sp-row-title"><%= r.title %></div>
+              <div class="sp-row-sub"><%= r.author %> &bull; Requested <%= String(r.created_at).slice(0, 10) %></div>
+              <% if (r.details) { %><div class="sp-row-sub sp-text-muted"><%= r.details %></div><% } %>
+            </div>
+            <div class="sp-row-actions">
+              <span class="sp-chip <%= r.status === 'approved' ? 'sp-chip-green' : (r.status === 'denied' || r.status === 'cancelled' ? 'sp-chip-red' : 'sp-chip-orange') %>"><%= r.status %></span>
+              <% if (r.status === 'pending') { %>
+              <form method="POST" action="/student/requests/<%= r.id %>/cancel" style="display:inline">
+                <button type="submit" class="sp-btn sp-btn-sm sp-btn-danger">Cancel</button>
+              </form>
+              <% } %>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty"><span class="sp-empty-icon">📨</span><p class="sp-empty-title">No requests yet</p><p class="sp-empty-sub">Requests you send will be tracked here.</p></div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>

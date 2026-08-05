@@ -1,12 +1,13 @@
 module.exports = {
   apps : [{
-    name: "library-system",
-    script: "python",
-    args: "server.py",
-    cwd: "c:/Users/ayush/Desktop/librARY",
-    interpreter: "none",
+    name: "librika",
+    script: "app.js",
+    interpreter: "node",
     autorestart: true,
     watch: false,
-    max_memory_restart: '1G'
+    max_memory_restart: '1G',
+    env: {
+      NODE_ENV: "production"
+    }
   }]
 }

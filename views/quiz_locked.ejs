@@ -1,6 +1,7 @@
 <%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
 
-<% contentFor("title") %>Quiz Locked - librika.in<%%>
+<% contentFor("title") %>Quiz Locked - librika.in
 
 <% contentFor("head") %>
 <style>
@@ -76,6 +77,12 @@
 <% contentFor("head") %>
 
 <% contentFor("content") %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'browse' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Quiz Locked' }) %>
+      <main class="sp-content">
 <div class="lk-container">
     <div class="lk-card">
         <div class="lk-icon">🔒</div>
@@ -83,4 +90,9 @@
         <p class="lk-message"><%= message %></p>
         <a href="/student" class="back-btn">Return to Dashboard</a>
     </div>
+</div>
+
+      </main>
+    </div>
+  </div>
 </div>

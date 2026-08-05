@@ -1,0 +1,120 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'calendar' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Calendar', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Calendar</h1>
+          <p class="sp-page-sub">Due dates, deadlines and library events in one place.</p>
+        </div>
+
+        <div class="sp-calendar-layout">
+          <div class="sp-card sp-calendar-card">
+            <div class="sp-calendar-head">
+              <button class="sp-icon-btn" onclick="shiftMonth(-1)">‹</button>
+              <h3 class="sp-calendar-month" id="calMonth"></h3>
+              <button class="sp-icon-btn" onclick="shiftMonth(1)">›</button>
+            </div>
+            <div class="sp-calendar-grid" id="calGrid"></div>
+          </div>
+
+          <div class="sp-events-list">
+            <h2 class="sp-section-title">Events</h2>
+            <% if (events.length) { %>
+            <div class="sp-list">
+              <% events.forEach(function (ev) { %>
+              <div class="sp-row">
+                <div class="sp-row-main">
+                  <div class="sp-row-title"><%= ev.title %></div>
+                  <div class="sp-row-sub"><%= String(ev.event_date).slice(0, 10) %> &bull; <%= ev.description || ev.category %></div>
+                </div>
+                <span class="sp-chip sp-chip-purple"><%= ev.category %></span>
+              </div>
+              <% }); %>
+            </div>
+            <% } else { %>
+            <div class="sp-empty"><span class="sp-empty-icon">🗓️</span><p class="sp-empty-title">No events this month</p><p class="sp-empty-sub">Library events will show here.</p></div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">This Month's Due Dates</h2>
+          <% if (dueBooks.length) { %>
+          <div class="sp-list">
+            <% dueBooks.forEach(function (b) { %>
+            <div class="sp-row">
+              <div class="sp-row-main">
+                <div class="sp-row-title"><%= b.title %></div>
+                <div class="sp-row-sub">Due <%= String(b.due_date).slice(0, 10) %></div>
+              </div>
+              <span class="sp-chip <%= new Date(b.due_date) < new Date() ? 'sp-chip-red' : 'sp-chip-orange' %>"><%= new Date(b.due_date) < new Date() ? 'Overdue' : 'Upcoming' %></span>
+            </div>
+            <% }); %>
+          </div>
+          <% } else { %>
+          <div class="sp-empty"><span class="sp-empty-icon">✅</span><p class="sp-empty-title">No due books</p><p class="sp-empty-sub">You are all caught up this month.</p></div>
+          <% } %>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Assignments</h2>
+          <% if (assignments.length) { %>
+          <div class="sp-list">
+            <% assignments.forEach(function (a) { %>
+            <div class="sp-row">
+              <div class="sp-row-main">
+                <div class="sp-row-title"><%= a.title %></div>
+                <div class="sp-row-sub"><%= a.subject || 'Class' %> &bull; Due <%= String(a.due_date).slice(0, 10) %></div>
+              </div>
+              <a href="/student/assignments/<%= a.id %>" class="sp-btn sp-btn-sm sp-btn-outline">Open</a>
+            </div>
+            <% }); %>
+          </div>
+          <% } else { %>
+          <div class="sp-empty"><span class="sp-empty-icon">📝</span><p class="sp-empty-title">No assignments due</p><p class="sp-empty-sub">Assignment deadlines will appear here.</p></div>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  var eventDates = <%- JSON.stringify(events.map(function (e) { return String(e.event_date).slice(0, 10); })) %>;
+  var dueDates = <%- JSON.stringify(dueBooks.map(function (b) { return String(b.due_date).slice(0, 10); })) %>;
+  var now = new Date();
+  var viewYear = now.getFullYear(), viewMonth = now.getMonth();
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  function renderCalendar() {
+    var grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    document.getElementById('calMonth').textContent = MONTHS[viewMonth] + ' ' + viewYear;
+    var first = new Date(viewYear, viewMonth, 1).getDay();
+    var days = new Date(viewYear, viewMonth + 1, 0).getDate();
+    for (var i = 0; i < first; i++) grid.appendChild(el('div', 'sp-cal-day sp-cal-pad', ''));
+    for (var d = 1; d <= days; d++) {
+      var key = viewYear + '-' + String(viewMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      var cls = 'sp-cal-day';
+      if (eventDates.indexOf(key) !== -1) cls += ' sp-cal-event';
+      if (dueDates.indexOf(key) !== -1) cls += ' sp-cal-due';
+      grid.appendChild(el('div', cls, String(d)));
+    }
+  }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text) n.textContent = text;
+    return n;
+  }
+  function shiftMonth(dir) {
+    viewMonth += dir;
+    if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    renderCalendar();
+  }
+  renderCalendar();
+</script>

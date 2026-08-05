@@ -1,8 +1,3 @@
-<%- layout("base") %>
-
-<% contentFor("title") %>Book Acquisition — librika.in</%>
-
-<% contentFor("content") %>
 <style>
     /* Styling variables && themes are inherited from base.html (style.css) */
     /* Adaptive styling utilizing Librika variables */
@@ -411,7 +406,7 @@
         <div class="acq-stat-card">
             <div class="acq-stat-icon">₹</div>
             <div>
-                <div class="acq-stat-value">₹<%= "%.2f"|format(stats.total_value) %></div>
+                <div class="acq-stat-value">₹<%= Number(stats.total_value || 0).toFixed(2) %></div>
                 <div class="acq-stat-label">Total Spend</div>
             </div>
         </div>
@@ -453,7 +448,7 @@
                          <td><%= a.vendor_name %></td>
                          <td><%= a.total_books %></td>
                          <td><%= a.total_copies %></td>
-                         <td>₹<%= "%.2f"|format(a.total_amount) %></td>
+                         <td>₹<%= Number(a.total_amount || 0).toFixed(2) %></td>
                          <td><%= a.user_name || 'System' %></td>
                          <td><span class="acq-badge acq-badge-completed"><%= a.status %></span></td>
                          <td>
@@ -1000,4 +995,12 @@
         }
     }
 </script>
-</%>
+<style>
+/* LIBRIKA LIGHT PREMIUM — presentation overrides (admin_acquisitions) */
+.acq-header h1 {
+  background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+</style>

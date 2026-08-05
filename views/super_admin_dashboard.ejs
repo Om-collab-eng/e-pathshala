@@ -3662,3 +3662,94 @@ async function loadBackupSchedules() {
 }
 
 </script>
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   LIBRIKA LIGHT PREMIUM — SaaS presentation overrides (Super Admin)
+   Visual only. No markup, IDs, routes or JS are modified.
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --lp: #2563eb; --lp-mid: #4f46e5;
+  --bg: #f8fafc; --white: #ffffff; --border: #e5e7eb;
+  --text: #111827; --mid: #475569; --muted: #94a3b8;
+  --glow: rgba(37, 99, 235, 0.08);
+}
+
+html, body {
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
+  color: #111827 !important;
+  color-scheme: light;
+}
+
+.sa-page-wrapper { background: #f8fafc !important; color: #111827 !important; }
+
+/* ── SIDEBAR — premium white ── */
+.sa-sidebar, .sa-sidebar-footer {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 1px 0 0 rgba(17, 24, 39, 0.02) !important;
+}
+.sa-brand-text, .sa-user-name { color: #111827 !important; }
+.sa-nav-link { color: #475569 !important; }
+.sa-nav-link:hover { background: rgba(37, 99, 235, 0.08) !important; color: #2563eb !important; }
+.sa-nav-link.active {
+  background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+  color: #ffffff !important;
+  border-left: none !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+}
+.sa-user-chip { background: #f8fafc !important; border-color: #e5e7eb !important; }
+.sa-user-role { color: #2563eb !important; }
+.sa-avatar { background: linear-gradient(135deg, #2563eb, #4f46e5) !important; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25) !important; }
+.sa-brand-icon { background: linear-gradient(135deg, #2563eb, #4f46e5) !important; }
+
+/* ── TOPBAR — white ── */
+.sa-topbar { background: rgba(255, 255, 255, 0.92) !important; border-bottom: 1px solid #e5e7eb !important; }
+.sa-topbar-title { color: #111827 !important; }
+.sa-mob-toggle { background: #f1f5f9 !important; border-color: #e5e7eb !important; color: #475569 !important; }
+
+/* ── CARDS — white ── */
+.sa-stat-card, .sa-card, .sa-modal, .sa-modal-header {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px rgba(17, 24, 39, 0.05) !important;
+}
+.sa-stat-card:hover { box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08) !important; }
+.sa-stat-value, .sa-card-title, .sa-modal-header h3 { color: #111827 !important; }
+.sa-card-header { border-bottom-color: #e5e7eb !important; }
+
+/* ── INPUTS ── */
+.sa-search, .sa-select, .sa-input {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  color: #111827 !important;
+}
+.sa-search input { color: #111827 !important; }
+.sa-search input::placeholder { color: #94a3b8 !important; }
+.sa-select option { background: #ffffff !important; color: #111827 !important; }
+
+/* ── BUTTONS ── */
+.sa-btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5) !important; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important; }
+.sa-btn-ghost { background: #f8fafc !important; color: #475569 !important; border: 1px solid #e5e7eb !important; }
+.sa-btn-ghost:hover { background: rgba(37, 99, 235, 0.08) !important; color: #2563eb !important; }
+.sa-btn-success { background: linear-gradient(135deg, #22c55e, #16a34a) !important; }
+.sa-btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706) !important; }
+
+/* ── TABLE ── */
+.sa-table th { color: #94a3b8 !important; background: #f8fafc !important; border-bottom-color: #e5e7eb !important; }
+.sa-table td { color: #475569 !important; border-bottom-color: #e5e7eb !important; }
+.sa-table td:first-child { color: #111827 !important; }
+.sa-table tr:hover td { background: #f8fafc !important; }
+
+/* ── PAGINATION / BULK / MODAL ── */
+.sa-page-btn { background: #f8fafc !important; border-color: #e5e7eb !important; color: #475569 !important; }
+.sa-page-btn:hover, .sa-page-btn.active { background: rgba(37, 99, 235, 0.08) !important; color: #2563eb !important; border-color: rgba(37, 99, 235, 0.3) !important; }
+.sa-bulk-bar { background: rgba(37, 99, 235, 0.06) !important; border-color: rgba(37, 99, 235, 0.2) !important; }
+.sa-modal-overlay { background: rgba(17, 24, 39, 0.5) !important; }
+.sa-modal { color: #111827 !important; }
+.sa-close-btn { color: #64748b !important; }
+.sa-close-btn:hover { color: #111827 !important; }
+.sa-skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f1f5f9 50%, #e5e7eb 75%) !important; }
+</style>
+

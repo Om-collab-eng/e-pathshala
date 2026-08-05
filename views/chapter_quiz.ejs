@@ -1,6 +1,13 @@
 <%- layout("base") %>
-<% contentFor("title") %>Quiz: <%= chapter.title %> - librika.in<%%>
-<div class="dashboard" style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<% contentFor("title") %>Quiz: <%= chapter.title %> - librika.in
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'browse' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Chapter Quiz' }) %>
+      <main class="sp-content">
+<div class="dashboard" style="max-width: 800px; margin: 0 auto; padding: 0 20px;">
     <header class="header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px;">
         <div>
             <span style="font-size: 0.85rem; color: var(--accent-primary); font-weight: bold; text-transform: uppercase;">Chapter Quiz</span>
@@ -48,4 +55,9 @@
             </div>
         </form>
     </div>
+</div>
+
+      </main>
+    </div>
+  </div>
 </div>

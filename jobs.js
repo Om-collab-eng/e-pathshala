@@ -1,12 +1,11 @@
 const cron = require('node-cron');
-const { Pool } = require('pg');
 const cloudinary = require('cloudinary').v2;
 const path = require('path');
 const fs = require('fs-extra');
 const https = require('https');
-require('dotenv').config();
+const db = require('./db');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = { query: (text, params) => db.query(text, params) };
 
 const hasCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
 if (hasCloudinary) {
@@ -44,10 +43,12 @@ async function markOverdueBooks() {
   try {
     const result = await pool.query(
       `UPDATE transactions SET status = 'overdue'
-       WHERE due_date < NOW() AND return_date IS NULL AND (status IS NULL OR status = 'issued')`
+       WHERE due_date < NOW() AND return_date IS NULL AND (status IS NULL OR status = 'issued' OR status = '')`
     );
-    if (result.rowCount > 0) {
+    if (result && result.rowCount > 0) {
       console.log(`[Jobs] Marked ${result.rowCount} transaction(s) as overdue`);
+    } else {
+      console.log('[Jobs] No overdue transactions found');
     }
   } catch (err) {
     console.error('[Jobs] Overdue books error:', err.message);
@@ -106,10 +107,9 @@ async function sendOverdueReminders() {
       `SELECT DISTINCT u.id, u.name, u.email, u.phone
        FROM transactions t
        JOIN users u ON t.user_id = u.id
-       WHERE t.due_date < NOW() AND t.return_date IS NULL
-         AND (t.status IS NULL OR t.status = 'issued' OR t.status = 'overdue')`
+       WHERE t.due_date < NOW() AND t.return_date IS NULL`
     );
-    if (result.rows.length === 0) {
+    if (!result || !result.rows || result.rows.length === 0) {
       console.log('[Jobs] No overdue reminders needed');
       return;
     }
@@ -127,9 +127,9 @@ async function cleanupExpiredReservations() {
   try {
     const result = await pool.query(
       `DELETE FROM reservations
-       WHERE status = 'Pending' AND created_at < NOW() - INTERVAL '7 days'`
+       WHERE (status = 'Pending' OR status = 'pending') AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)`
     );
-    if (result.rowCount > 0) {
+    if (result && result.rowCount > 0) {
       console.log(`[Jobs] Deleted ${result.rowCount} expired reservation(s)`);
     } else {
       console.log('[Jobs] No expired reservations to delete');

@@ -1,11 +1,13 @@
 {
-  "name": "library",
-  "version": "1.0.0",
-  "description": "",
-  "main": "ecosystem.config.js",
+  "name": "librika",
+  "version": "2.0.0",
+  "description": "Librika - EdTech & E-Library SaaS Platform",
+  "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "init-db": "node initDB.js",
+    "seed": "node initDB.js --seed",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -40,6 +42,7 @@
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
+    "mysql2": "^3.23.2",
     "ngrok": "^5.0.0-beta.2",
     "node-cron": "^4.6.0",
     "passport": "^0.7.0",
@@ -56,5 +59,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

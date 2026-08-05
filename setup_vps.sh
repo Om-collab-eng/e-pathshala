@@ -43,9 +43,9 @@ pip install -r requirements.txt
 echo "[5/8] Writing .env file..."
 cat > /var/www/librika/.env << 'ENVEOF'
 DATABASE_URL=postgresql://librika_user:VuqnILXFEbllUS8TwDnm5QeFMcWMssZm@dpg-d97murd7vvec73chvd2g-a.oregon-postgres.render.com/librika
-CLOUDINARY_CLOUD_NAME=dwnlpxe2v
-CLOUDINARY_API_KEY=943486337222384
-CLOUDINARY_API_SECRET=wwvKpb1qQs_fEbalCsCYa4bU-EY
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 FLASK_DEBUG=false
 PORT=8000
 ENVEOF

@@ -1,308 +1,375 @@
-<% block('head', function(){ %>
-<style>
-.tab-header {
-    display: flex;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--border);
-    gap: 10px;
-}
-.tab-btn {
-    flex: 1;
-    background: none;
-    border: none;
-    padding: 10px;
-    color: var(--text-mid);
-    font-weight: 700;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
-}
-.tab-btn.active {
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
-}
-.demo-profile-card {
-    flex: 1;
-    min-width: 280px;
-    max-width: 320px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 2rem;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-}
-.demo-card-glow {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease;
-    opacity: 0.5;
-}
-.demo-profile-card:hover {
-    transform: translateY(-8px);
-    background: rgba(255, 255, 255, 0.04);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-}
-.demo-profile-card.student-card:hover {
-    border-color: rgba(14, 165, 233, 0.4);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(14, 165, 233, 0.15);
-}
-.demo-profile-card.librarian-card:hover {
-    border-color: rgba(92, 60, 243, 0.4);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(92, 60, 243, 0.15);
-}
-.demo-avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    transition: transform 0.4s ease;
-}
-.demo-profile-card:hover .demo-avatar {
-    transform: scale(1.1) rotate(5deg);
-}
-.demo-profile-card h3 {
-    font-family: 'Outfit', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-high);
-    margin-bottom: 0.5rem;
-}
-.demo-profile-card .badge {
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 8px;
-    display: inline-block;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.demo-profile-card p {
-    color: var(--text-mid);
-    font-size: 0.85rem;
-    line-height: 1.6;
-    margin-bottom: 2rem;
-    text-align: left;
-}
-.demo-enter-btn {
-    width: 100%;
-    border: none;
-    color: white;
-    padding: 12px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-.demo-profile-card:hover .demo-enter-btn {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-}
-.exit-demo-link {
-    color: var(--text-low);
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-.exit-demo-link:hover {
-    color: var(--accent-error) !important;
-    transform: translateX(-4px);
-}
-</style>
-<% }) %>
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title><%= typeof title !== 'undefined' ? title : 'Login | Librika Platform' %></title>
 
-<div class="login-container">
-    <div class="auth-card" <% if (demo_mode) { %>style="max-width: 720px; padding: 3rem;"<% } %>>
-        <% if (demo_mode) { %>
-        <h1 style="font-family: 'Outfit', sans-serif; font-size: 2rem; margin-bottom: 0.5rem; text-align: center; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">Demo Sandbox</h1>
-        <p style="color: var(--text-mid); text-align: center; margin-bottom: 2.5rem; font-size: 0.95rem;">Select your profile below to enter the library system with all Professional features enabled.</p>
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet"/>
+
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#5a00c6",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2c303b",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e5e7f6",
+                        "on-tertiary-fixed-variant": "#802a00",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#25005a",
+                        "surface-container-low": "#f2f3ff",
+                        "secondary-fixed": "#eaddff",
+                        "primary": "#00288e",
+                        "on-tertiary-fixed": "#380d00",
+                        "background-surface": "#F9FAFB",
+                        "on-error": "#ffffff",
+                        "on-surface": "#171b26",
+                        "violet-glow": "#A855F7",
+                        "surface-container-highest": "#dfe2f1",
+                        "primary-fixed": "#dde1ff",
+                        "tertiary-container": "#872d00",
+                        "on-primary-fixed": "#001453",
+                        "tertiary-fixed-dim": "#ffb59a",
+                        "surface": "#faf8ff",
+                        "tertiary-fixed": "#ffdbce",
+                        "surface-tint": "#3755c3",
+                        "on-primary-container": "#a8b8ff",
+                        "surface-dim": "#171b26",
+                        "on-background": "#171b26",
+                        "on-primary-fixed-variant": "#173bab",
+                        "on-secondary-container": "#fffbff",
+                        "outline-variant": "#c4c5d5",
+                        "secondary-container": "#8a4cfc",
+                        "surface-variant": "#dfe2f1",
+                        "indigo-accent": "#6366F1",
+                        "surface-container-lowest": "#0a0c10",
+                        "secondary": "#712ae2",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#d2bbff",
+                        "primary-fixed-dim": "#b8c4ff",
+                        "on-tertiary-container": "#ffa583",
+                        "on-surface-variant": "#444653",
+                        "tertiary": "#611e00",
+                        "inverse-primary": "#b8c4ff",
+                        "inverse-on-surface": "#eef0ff",
+                        "surface-container": "#1c1f26",
+                        "primary-container": "#1e40af",
+                        "card-stroke": "#2c303b",
+                        "background": "#0a0c10",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#faf8ff",
+                        "outline": "#757684"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "gutter": "24px",
+                        "max-width": "1440px",
+                        "base": "8px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "headline-xl": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "label-caps": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0c10;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        .glass-card {
+            background: rgba(28, 31, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .input-glow:focus-within {
+            box-shadow: 0 0 0 2px rgba(138, 76, 252, 0.3);
+            border-color: #8a4cfc;
+        }
+
+        .purple-gradient-btn {
+            background: linear-gradient(135deg, #712ae2 0%, #8a4cfc 100%);
+            box-shadow: 0 4px 20px rgba(113, 42, 226, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .purple-gradient-btn:hover {
+            box-shadow: 0 8px 30px rgba(113, 42, 226, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .purple-gradient-btn:active {
+            transform: scale(0.98);
+        }
+
+        .workspace-toggle .active {
+            background: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.15;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-margin-mobile md:p-margin-desktop overflow-x-hidden overflow-y-auto py-8">
+<!-- Atmospheric Background Orbs -->
+<div class="orb w-96 h-96 bg-secondary top-[-10%] left-[-10%]"></div>
+<div class="orb w-80 h-80 bg-primary bottom-[-10%] right-[-10%]"></div>
+
+<main class="w-full max-w-[480px] z-10 my-6">
+    <!-- Secure Gateway Badge -->
+    <div class="flex justify-center mb-6">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary-fixed-dim">
+            <span class="material-symbols-outlined text-[18px]">lock</span>
+            <span class="font-label-bold text-label-bold tracking-wider">Secure Gateway</span>
+        </div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="glass-card rounded-2xl p-8 md:p-10 shadow-2xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="font-headline-xl text-headline-xl text-white mb-2">Librika Platform</h1>
+            <p class="font-body-md text-body-md text-outline">Select your workspace type and enter credentials</p>
+        </header>
+
+        <!-- Workspace Toggle -->
+        <div class="workspace-toggle flex p-1 bg-background rounded-xl border border-card-stroke mb-8">
+            <button type="button" class="active flex-1 flex items-center justify-center gap-2 py-3 rounded-lg transition-all duration-300" id="schoolTab" onclick="selectWorkspace('school')">
+                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">domain</span>
+                <span class="font-label-bold text-label-bold">School Library</span>
+            </button>
+            <button type="button" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-outline hover:text-white transition-all duration-300" id="personalTab" onclick="selectWorkspace('personal')">
+                <span class="material-symbols-outlined text-[20px]">menu_book</span>
+                <span class="font-label-bold text-label-bold">Personal Library</span>
+            </button>
+        </div>
 
         <% if (typeof error !== 'undefined' && error) { %>
-        <div style="background: rgba(244, 63, 94, 0.1); color: var(--accent-error); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem; text-align: center; border: 1px solid rgba(244, 63, 94, 0.2);">
+        <div class="mb-6 p-4 rounded-xl bg-error/15 border border-error/30 text-error-container text-sm font-medium text-center">
             <%= error %>
         </div>
         <% } %>
 
-        <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 2rem; justify-content: center;">
-            <div class="demo-profile-card student-card" onclick="loginDemoUser('555001', 'demo123', 'DEMO')">
-                <div class="demo-card-glow" style="background: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15), transparent 70%);"></div>
-                <div class="demo-card-content">
-                    <div class="demo-avatar" style="background: rgba(14, 165, 233, 0.1); color: var(--accent-secondary);">👨‍🎓</div>
-                    <h3>Student Demo</h3>
-                    <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: var(--accent-secondary);">Student Portal</span>
-                    <p>Browse & search the catalog, view digital books, write reviews, request reservations, track progress, && chat with AI Librarian.</p>
-                </div>
-                <button class="demo-enter-btn" style="background: var(--accent-secondary); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">Enter Student Portal &rarr;</button>
-            </div>
-
-            <div class="demo-profile-card librarian-card" onclick="loginDemoUser('123', 'admin123', 'DEMO')">
-                <div class="demo-card-glow" style="background: radial-gradient(circle at 50% 0%, rgba(92, 60, 243, 0.15), transparent 70%);"></div>
-                <div class="demo-card-content">
-                    <div class="demo-avatar" style="background: rgba(92, 60, 243, 0.1); color: #818cf8;">🔑</div>
-                    <h3>Librarian Demo</h3>
-                    <span class="badge" style="background: rgba(92, 60, 243, 0.15); color: #818cf8;">Librarian / Admin</span>
-                    <p>Full administration access. Issue & return books, manage inventory, auto-catalog books with AI scan, view rich analytics, && configure rules.</p>
-                </div>
-                <button class="demo-enter-btn" style="background: var(--accent-primary); box-shadow: 0 4px 12px rgba(92, 60, 243, 0.3);">Enter Librarian Panel &rarr;</button>
-            </div>
-        </div>
-
-        <div style="text-align: center;">
-            <a href="/exit-demo" class="exit-demo-link">
-                <span>&larr; Exit Demo Sandbox</span>
-            </a>
-        </div>
-
-        <form method="POST" id="loginForm" action="/login" style="display: none;">
-            <input type="hidden" name="login_type" value="school">
-            <input type="text" id="school_code" name="school_code" value="DEMO">
-            <input type="text" id="username" name="username">
-            <input type="password" id="password" name="password">
-            <button type="submit" id="loginBtn"></button>
-        </form>
-        <% } else { %>
-        <h1>Secure Portal</h1>
-        <p>Choose your portal type && enter credentials</p>
-
-        <div class="tab-header">
-            <button type="button" id="tabSchool" class="tab-btn active" onclick="switchTab('school')">🏫 School Library</button>
-            <button type="button" id="tabPersonal" class="tab-btn" onclick="switchTab('personal')">📚 Personal Library</button>
-        </div>
-
-        <form method="POST" id="loginForm" action="/login">
+        <!-- Form -->
+        <form method="POST" id="loginForm" action="/login" class="space-y-6">
             <input type="hidden" name="login_type" id="login_type" value="school">
 
-            <% if (typeof error !== 'undefined' && error) { %>
-            <div style="background: rgba(244, 63, 94, 0.1); color: var(--accent-error); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem; text-align: center; border: 1px solid rgba(244, 63, 94, 0.2);">
-                <%= error %>
-            </div>
-            <% } %>
-
-            <div class="input-group" id="schoolCodeGroup">
-                <label for="school_code">Library Code</label>
-                <input type="text" id="school_code" name="school_code" placeholder="Library Code (e.g. DEMO)" autocomplete="organization" required>
+            <!-- Library Code -->
+            <div class="space-y-2" id="schoolCodeGroup">
+                <label class="block font-label-bold text-label-bold text-outline uppercase tracking-wider ml-1">Library Code (Optional)</label>
+                <div class="relative flex items-center bg-background border border-card-stroke rounded-xl px-4 py-3.5 input-glow transition-all">
+                    <span class="material-symbols-outlined text-outline mr-3">apartment</span>
+                    <input class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-outline/50 font-body-md p-0" id="school_code" name="school_code" placeholder="e.g. DEMO or DPS123" type="text"/>
+                </div>
             </div>
 
-            <div class="input-group">
-                <label for="username" id="lblUsername">Phone Number</label>
-                <input type="text" id="username" name="username" placeholder="Phone No." autocomplete="username" required>
+            <!-- Account ID / Phone -->
+            <div class="space-y-2">
+                <label class="block font-label-bold text-label-bold text-outline uppercase tracking-wider ml-1" id="lblUsername">Phone Number / Account ID</label>
+                <div class="relative flex items-center bg-background border border-card-stroke rounded-xl px-4 py-3.5 input-glow transition-all">
+                    <span class="material-symbols-outlined text-outline mr-3">person</span>
+                    <input class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-outline/50 font-body-md p-0" id="username" name="username" placeholder="Enter phone or username" type="text" required/>
+                </div>
             </div>
 
-            <div class="input-group">
-                <label for="password">Security Password</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+            <!-- Password -->
+            <div class="space-y-2">
+                <label class="block font-label-bold text-label-bold text-outline uppercase tracking-wider ml-1">Password</label>
+                <div class="relative flex items-center bg-background border border-card-stroke rounded-xl px-4 py-3.5 input-glow transition-all">
+                    <span class="material-symbols-outlined text-outline mr-3">lock</span>
+                    <input class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-outline/50 font-body-md p-0" id="password" name="password" placeholder="••••••••" type="password" required/>
+                    <button class="text-outline hover:text-white transition-colors" type="button" onclick="togglePasswordVisibility()">
+                        <span class="material-symbols-outlined text-[20px]" id="eyeIcon">visibility_off</span>
+                    </button>
+                </div>
             </div>
 
-            <button type="submit" class="btn-neon" id="loginBtn">Authenticate & Enter</button>
-
-            <div style="margin-top: 1.5rem; text-align: center; display: flex; flex-direction: column; gap: 10px;">
-                <button type="button" class="btn-alt" id="demoModeBtn" onclick="window.location.href='/demo-mode'" style="width: 100%; border-color: var(--accent-warning); color: var(--accent-warning);">
-                    Enter Demo Sandbox
-                </button>
-
-                <button type="button" class="btn-alt" id="lnkRegisterSchool" onclick="window.location.href='/register?type=school'" style="width: 100%; border-color: var(--accent-primary); color: var(--accent-primary); font-family: inherit;">
-                    First time student? Click here
-                </button>
-
-                <button type="button" class="btn-alt" id="lnkRegisterPersonal" onclick="window.location.href='/register?type=personal'" style="width: 100%; border-color: var(--accent-primary); color: var(--accent-primary); font-family: inherit; display: none;">
-                    Create a Free Personal Library
-                </button>
-            </div>
-
-            <div style="text-align: center; margin-top: 1.5rem;" id="signUpLinks">
-                <a href="/" style="color: var(--text-mid); text-decoration: none; font-size: 0.9rem;">&larr; Return to Home Page</a>
-            </div>
+            <!-- Primary CTA -->
+            <button type="submit" class="w-full purple-gradient-btn py-4 rounded-xl flex items-center justify-center gap-2 group cursor-pointer" id="loginBtn">
+                <span class="font-label-bold text-label-bold text-[16px] text-white">Authenticate &amp; Enter</span>
+                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </button>
         </form>
-        <% } %>
+
+        <!-- Divider -->
+        <div class="flex items-center my-8">
+            <div class="flex-grow h-[1px] bg-card-stroke"></div>
+            <span class="px-4 font-label-caps text-label-caps text-outline">OR</span>
+            <div class="flex-grow h-[1px] bg-card-stroke"></div>
+        </div>
+
+        <!-- Secondary Actions -->
+        <div class="space-y-3">
+            <button type="button" class="w-full py-3.5 rounded-xl border border-card-stroke text-white font-label-bold text-label-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors cursor-pointer" id="demoModeBtn" onclick="window.location.href='/demo-mode'">
+                <span class="material-symbols-outlined text-secondary-fixed-dim" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                Explore Demo Sandbox Mode
+            </button>
+
+            <button type="button" class="w-full py-3.5 rounded-xl border border-card-stroke text-white font-label-bold text-label-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors cursor-pointer" id="lnkRegisterSchool" onclick="window.location.href='/register?type=school'">
+                <span class="material-symbols-outlined text-secondary-fixed-dim">school</span>
+                First time student? Register here
+            </button>
+
+            <button type="button" class="w-full py-3.5 rounded-xl border border-card-stroke text-white font-label-bold text-label-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors cursor-pointer" id="lnkRegisterPersonal" onclick="window.location.href='/register?type=personal'" style="display: none;">
+                <span class="material-symbols-outlined text-secondary-fixed-dim">auto_awesome</span>
+                Create a Free Personal Library
+            </button>
+        </div>
     </div>
-</div>
 
-<% block('scripts', function(){ %>
+    <!-- Footer Links (Subtle) -->
+    <footer class="mt-8 flex justify-center gap-6">
+        <a class="font-label-bold text-label-bold text-outline hover:text-white transition-colors" href="/">Home</a>
+        <a class="font-label-bold text-label-bold text-outline hover:text-white transition-colors" href="#">Privacy Policy</a>
+        <a class="font-label-bold text-label-bold text-outline hover:text-white transition-colors" href="#">Terms of Service</a>
+        <a class="font-label-bold text-label-bold text-outline hover:text-white transition-colors" href="#">Support</a>
+    </footer>
+</main>
+
 <script>
-    <% if (demo_mode) { %>
-    localStorage.setItem('demo_active', 'true');
-
-    function loginDemoUser(phone, password, schoolCode) {
-        const form = document.getElementById('loginForm');
-        document.getElementById('username').value = phone;
-        document.getElementById('password').value = password;
-        document.getElementById('school_code').value = schoolCode;
-        let raw = JSON.parse(localStorage.getItem('saved_accounts') || '[]');
-        let accounts = raw.filter(a => a.id !== phone);
-        accounts.push({
-            id: phone,
-            sc: schoolCode,
-            display: phone === '123' ? 'Admin Demo' : 'Student Demo',
-            p_data: btoa(password)
-        });
-        localStorage.setItem('saved_accounts', JSON.stringify(accounts));
-        form.submit();
-    }
-    <% } else { %>
-    function switchTab(type) {
-        const tabSchool = document.getElementById('tabSchool');
-        const tabPersonal = document.getElementById('tabPersonal');
+    function selectWorkspace(type) {
+        const schoolTab = document.getElementById('schoolTab');
+        const personalTab = document.getElementById('personalTab');
         const schoolCodeGroup = document.getElementById('schoolCodeGroup');
-        const schoolCodeInput = document.getElementById('school_code');
         const loginTypeInput = document.getElementById('login_type');
         const lnkRegisterSchool = document.getElementById('lnkRegisterSchool');
         const lnkRegisterPersonal = document.getElementById('lnkRegisterPersonal');
-        const demoModeBtn = document.getElementById('demoModeBtn');
-        loginTypeInput.value = type;
+
+        if (loginTypeInput) loginTypeInput.value = type;
+
         if (type === 'personal') {
-            tabPersonal.classList.add('active');
-            tabSchool.classList.remove('active');
-            schoolCodeGroup.style.display = 'none';
-            schoolCodeInput.required = false;
-            schoolCodeInput.value = '';
-            lnkRegisterSchool.style.display = 'none';
-            lnkRegisterPersonal.style.display = 'block';
-            if(demoModeBtn) demoModeBtn.style.display = 'none';
+            personalTab.classList.add('active');
+            personalTab.classList.remove('text-outline');
+            schoolTab.classList.remove('active');
+            schoolTab.classList.add('text-outline');
+            
+            personalTab.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 1";
+            schoolTab.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0";
+
+            if (schoolCodeGroup) schoolCodeGroup.style.display = 'none';
+            if (lnkRegisterSchool) lnkRegisterSchool.style.display = 'none';
+            if (lnkRegisterPersonal) lnkRegisterPersonal.style.display = 'flex';
         } else {
-            tabSchool.classList.add('active');
-            tabPersonal.classList.remove('active');
-            schoolCodeGroup.style.display = 'block';
-            schoolCodeInput.required = true;
-            lnkRegisterSchool.style.display = 'block';
-            lnkRegisterPersonal.style.display = 'none';
-            if(demoModeBtn) demoModeBtn.style.display = 'block';
+            schoolTab.classList.add('active');
+            schoolTab.classList.remove('text-outline');
+            personalTab.classList.remove('active');
+            personalTab.classList.add('text-outline');
+
+            schoolTab.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 1";
+            personalTab.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0";
+
+            if (schoolCodeGroup) schoolCodeGroup.style.display = 'block';
+            if (lnkRegisterSchool) lnkRegisterSchool.style.display = 'flex';
+            if (lnkRegisterPersonal) lnkRegisterPersonal.style.display = 'none';
         }
     }
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('portal') === 'personal') {
-        switchTab('personal');
+
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.textContent = 'visibility';
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.textContent = 'visibility_off';
+        }
     }
-    if (urlParams.has('clear_demo')) {
-        localStorage.removeItem('demo_active');
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    localStorage.removeItem('demo_active');
-    <% } %>
+
+    document.addEventListener('mousemove', (e) => {
+        const x = (e.clientX / window.innerWidth) * 20;
+        const y = (e.clientY / window.innerHeight) * 20;
+        const orbs = document.querySelectorAll('.orb');
+        if (orbs[0]) orbs[0].style.transform = `translate(${x}px, ${y}px)`;
+        if (orbs[1]) orbs[1].style.transform = `translate(${-x}px, ${-y}px)`;
+    });
 </script>
-<% }) %>
+<style>
+/* LIBRIKA LIGHT PREMIUM — presentation overrides (login) */
+body {
+    background-color: #f8fafc !important;
+    color: #111827 !important;
+}
+.glass-card {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 20px 40px rgba(17, 24, 39, 0.08) !important;
+    backdrop-filter: none !important;
+}
+.workspace-toggle { background: #f1f5f9 !important; border-color: #e5e7eb !important; }
+.workspace-toggle .active { background: #2563eb !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important; }
+.input-glow { background: #f8fafc !important; border-color: #e5e7eb !important; }
+.input-glow:focus-within { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important; border-color: #2563eb !important; }
+.input-glow input { color: #111827 !important; }
+.purple-gradient-btn {
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3) !important;
+}
+.purple-gradient-btn:hover { box-shadow: 0 8px 30px rgba(37, 99, 235, 0.45) !important; }
+.purple-gradient-btn .text-white, #loginBtn .text-white { color: #ffffff !important; }
+.text-outline { color: #475569 !important; }
+.text-outline:hover { color: #2563eb !important; }
+.text-white { color: #111827 !important; }
+.border-card-stroke { border-color: #e5e7eb !important; }
+.bg-card-stroke { background-color: #e5e7eb !important; }
+.hover\:bg-white\/5:hover { background-color: #f8fafc !important; }
+.text-secondary-fixed-dim { color: #2563eb !important; }
+.bg-error\/15 { background-color: rgba(239, 68, 68, 0.1) !important; }
+.orb { opacity: 0.08 !important; }
+</style>
+</body>
+</html>

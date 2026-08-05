@@ -1,5 +1,6 @@
 <%- layout("base") %>
-<% contentFor("title") %>Leaderboard - librika.in<%%>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<% contentFor("title") %>Leaderboard - librika.in
 <% contentFor("head") %>
 <style>
     :root {
@@ -65,8 +66,14 @@
         .ld-filters { flex-direction: column; align-items: stretch; }
         .ld-badges { display: none; }
     }
-</style>
-<%%>
+ </style>
+
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'community' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Leaderboard' }) %>
+      <main class="sp-content">
 <div class="ld-container">
     <div class="ld-header">
         <h1>🏆 Reading Champions</h1>
@@ -197,4 +204,9 @@
         if (sticky) sticky.style.display = 'flex';
     }
 </script>
-<%%>
+
+      </main>
+    </div>
+  </div>
+</div>
+

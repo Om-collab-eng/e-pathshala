@@ -1,0 +1,72 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'assignments' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Assignment', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title"><%= assignment.title %></h1>
+          <p class="sp-page-sub"><%= assignment.subject || assignment.class || 'Class' %></p>
+        </div>
+
+        <% if (success) { %><div class="sp-banner sp-banner-green"><span>✅</span><span><%= success %></span></div><% } %>
+        <% if (error) { %><div class="sp-banner sp-banner-red"><span>⚠️</span><span><%= error %></span></div><% } %>
+
+        <% var status = submission ? submission.status : (new Date(assignment.due_date) < new Date() ? 'overdue' : 'open'); %>
+        <% var chip = status === 'submitted' || status === 'resubmitted' ? 'sp-chip-green' : (status === 'graded' ? 'sp-chip-purple' : (status === 'overdue' ? 'sp-chip-red' : 'sp-chip-orange')); %>
+        <div class="sp-card">
+          <div class="sp-goal-head">
+            <div>
+              <h3 class="sp-book-title" style="margin:0">Due <%= String(assignment.due_date).slice(0, 10) %></h3>
+              <p class="sp-book-author" style="margin:0">Posted <%= String(assignment.created_at).slice(0, 10) %></p>
+            </div>
+            <span class="sp-chip <%= chip %>"><%= status %></span>
+          </div>
+          <% if (assignment.description) { %>
+          <p class="sp-card-text sp-mt-2"><%= assignment.description %></p>
+          <% } %>
+          <% if (assignment.file_url) { %>
+          <a href="<%= assignment.file_url %>" target="_blank" class="sp-btn sp-btn-sm sp-btn-outline sp-mt-2">View Attached Material</a>
+          <% } %>
+        </div>
+
+        <% if (submission) { %>
+        <div class="sp-card">
+          <h2 class="sp-section-title">Your Submission</h2>
+          <p class="sp-row-sub">Submitted <%= String(submission.submitted_at).slice(0, 16) %></p>
+          <% if (submission.notes) { %><p class="sp-card-text sp-mt-2"><%= submission.notes %></p><% } %>
+          <% if (submission.file_url) { %>
+          <a href="<%= submission.file_url %>" target="_blank" class="sp-btn sp-btn-sm sp-btn-outline sp-mt-2">View Attached File</a>
+          <% } %>
+          <% if (submission.grade) { %>
+          <div class="sp-grade sp-mt-3">
+            <span class="sp-stat-label">Grade</span>
+            <span class="sp-grade-value"><%= submission.grade %></span>
+          </div>
+          <% if (submission.feedback) { %><p class="sp-card-text sp-mt-2">Feedback: <%= submission.feedback %></p><% } %>
+          <% } %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <h2 class="sp-section-title">Submit Your Work</h2>
+          <form method="POST" action="/student/assignments/<%= assignment.id %>/submit" enctype="multipart/form-data" class="sp-form">
+            <div class="sp-field">
+              <label class="sp-label">Attach File</label>
+              <input type="file" name="file" class="sp-input" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx">
+            </div>
+            <div class="sp-field">
+              <label class="sp-label">Notes</label>
+              <textarea name="notes" class="sp-input sp-textarea" rows="6" placeholder="Type or paste your work..."></textarea>
+            </div>
+            <div class="sp-form-actions">
+              <button type="submit" class="sp-btn sp-btn-primary">Submit Assignment</button>
+            </div>
+          </form>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>

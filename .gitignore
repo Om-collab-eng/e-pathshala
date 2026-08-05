@@ -27,3 +27,15 @@ static/digital_content/
 *.egg-info/
 dist/
 build/static/Librika.apk
+
+# Heavy/local-only assets (not for VCS)
+ads/
+android/
+_legacy/
+static/Librika.apk
+*_cookie.txt
+*_cookies.txt
+std_test.txt
+test_sep.txt
+t_cookies.txt
+valid_cookies.txt

@@ -1,44 +1,55 @@
-<% block('head', function(){ %>
-<link rel="stylesheet" href="/landing.css">
 <style>
     :root {
-        --bg-main: #ffffff;
-        --bg-card: #f8fafc;
-        --bg-input: #f1f5f9;
-        --border: #e2e8f0;
-        --text-high: #0f172a;
+        --bg-main: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-input: #ffffff;
+        --border: #e5e7eb;
+        --text-high: #111827;
         --text-mid: #475569;
-        --text-low: #64748b;
-        --accent-primary: #4f46e5;
-    }
-    [data-theme="dark"] {
-        --bg-main: #0b0f19;
-        --bg-card: #111827;
-        --bg-input: #1f2937;
-        --border: #374151;
-        --text-high: #f9fafb;
-        --text-mid: #d1d5db;
-        --text-low: #9ca3af;
+        --text-low: #94a3b8;
+        --accent-primary: #2563eb;
     }
     body {
-        background-color: var(--bg-main);
+        background-color: #f8fafc !important;
         color: var(--text-high);
     }
-    @media (min-width: 769px) {
-        .saas-nav-links.desktop-only { display: flex !important; }
+    .global-nav-container {
+        display: none !important;
     }
     @media (max-width: 768px) {
-        .saas-nav-links.desktop-only { display: none !important; }
+        .saas-navbar {
+            padding: 1rem 1.25rem !important;
+        }
+        .desktop-only {
+            display: none !important;
+        }
+        .saas-hero h1 {
+            font-size: 2rem !important;
+            line-height: 1.25 !important;
+        }
+        .saas-hero .subtitle {
+            font-size: 1.05rem !important;
+        }
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 1rem !important;
+            margin-top: 2.5rem !important;
+        }
+        .stat-card {
+            padding: 1.25rem 1rem !important;
+        }
+        .stat-number {
+            font-size: 1.8rem !important;
+        }
     }
 </style>
-<% }) %>
 
 <nav class="saas-navbar">
     <div style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="window.scrollTo(0,0)">
         <img src="/logo.png" alt="librika.in Logo" style="height: 40px; border-radius: 8px;">
-        <span style="font-weight: 800; font-size: 1.4rem; letter-spacing: 1px;">librika.in</span>
+        <span style="font-weight: 800; font-size: 1.4rem; letter-spacing: 1px; color: #111827;">librika.in</span>
     </div>
-    <div class="saas-nav-links desktop-only" style="display: none;">
+    <div class="saas-nav-links desktop-only">
         <a href="#features">Features</a>
         <a href="#solutions">Solutions</a>
         <a href="#pricing">Pricing</a>
@@ -46,19 +57,19 @@
         <a href="#resources">Resources</a>
     </div>
     <div class="saas-nav-links" style="display: flex; gap: 1rem;">
-        <a href="/login" class="btn-neon" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">Sign Up</a>
+        <a href="/login" class="btn-neon" style="padding: 0.6rem 1.8rem; font-size: 0.95rem;">Sign Up</a>
     </div>
 </nav>
 
 <section class="saas-hero">
     <h1>The Ultimate Operating System<br>for Modern Digital Libraries</h1>
     <p class="subtitle" style="font-size: 1.3rem;">
-        Unify physical inventory, digital E-Books, reader engagement, && publisher royalties into a single, intelligent SaaS platform.
+        Unify physical inventory, digital E-Books, reader engagement, and publisher royalties into a single, intelligent SaaS platform.
     </p>
 
-    <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
-        <a href="/login" class="btn-neon" style="padding: 1rem 2.5rem; font-size: 1.1rem; color: white;">Sign Up</a>
-        <a href="/demo-mode" class="btn-alt" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-color: var(--text-mid); color: var(--text-high);">See a Demo</a>
+    <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+        <a href="/login" class="btn-neon" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Sign Up</a>
+        <a href="/demo-mode" class="btn-alt" style="padding: 1rem 2.5rem; font-size: 1.1rem;">See a Demo</a>
     </div>
 
     <div class="stats-grid" style="margin-top: 5rem; width: 100%; max-width: 1000px;">
@@ -83,7 +94,7 @@
 
 <section id="features" class="saas-section darker">
     <h2>Everything You Need. All In One Place.</h2>
-    <p class="subtitle">A comprehensive suite designed for Librarians, Students, && Admins.</p>
+    <p class="subtitle">A comprehensive suite designed for Librarians, Students, and Admins.</p>
 
     <div class="feature-bento">
         <div class="feature-card">
@@ -131,12 +142,12 @@
 
 <section id="publishers" class="saas-section">
     <h2>E-Publishing Marketplace</h2>
-    <p class="subtitle">Empowering authors && publishers to distribute digital content directly to millions of readers worldwide.</p>
+    <p class="subtitle">Empowering authors and publishers to distribute digital content directly to millions of readers worldwide.</p>
 
     <div style="display: flex; justify-content: center;">
         <div class="feature-card" style="border-color: #d946ef; max-width: 600px; width: 100%;">
             <h3 style="color: #d946ef;">🏢 For Publishers & Organizations</h3>
-            <p style="color: var(--text-mid); margin-bottom: 1.5rem; line-height: 1.6;">Verify your organization, bulk upload your entire catalog, && securely distribute educational materials directly to institutional networks.</p>
+            <p style="color: var(--text-mid); margin-bottom: 1.5rem; line-height: 1.6;">Verify your organization, bulk upload your entire catalog, and securely distribute educational materials directly to institutional networks.</p>
             <ul>
                 <li>Verified Publisher Badge</li>
                 <li>Bulk Book Uploads</li>
@@ -150,7 +161,7 @@
 
 <section class="saas-section darker">
     <h2>Powered by Next-Gen AI</h2>
-    <p class="subtitle">We use advanced machine learning to personalize education && secure the ecosystem.</p>
+    <p class="subtitle">We use advanced machine learning to personalize education and secure the ecosystem.</p>
 
     <div class="feature-bento">
         <div class="feature-card">
@@ -179,10 +190,10 @@
 <section id="solutions" class="saas-section">
     <h2>Why Libraries Choose librika.in</h2>
     <div class="logo-cloud">
-        <div style="font-size: 2rem; font-weight: 800; color: white;">Multi-Tenant</div>
-        <div style="font-size: 2rem; font-weight: 800; color: white;">Data Isolated</div>
-        <div style="font-size: 2rem; font-weight: 800; color: white;">100% Cloud</div>
-        <div style="font-size: 2rem; font-weight: 800; color: white;">Mobile First</div>
+        <div style="font-size: 2rem; font-weight: 800; color: var(--text-high);">Multi-Tenant</div>
+        <div style="font-size: 2rem; font-weight: 800; color: var(--text-high);">Data Isolated</div>
+        <div style="font-size: 2rem; font-weight: 800; color: var(--text-high);">100% Cloud</div>
+        <div style="font-size: 2rem; font-weight: 800; color: var(--text-high);">Mobile First</div>
     </div>
 </section>
 
@@ -204,11 +215,11 @@
                 <li>✗ E-Library Publishing</li>
                 <li>✗ API Access & Multi-Branch</li>
             </ul>
-            <a href="/login" class="btn-alt">Get Started</a>
+            <a href="/login" class="btn-alt" style="padding: 0.8rem 1.5rem;">Get Started</a>
         </div>
 
         <div class="pricing-card popular">
-            <div class="pricing-badge">MOST POPULAR</div>
+            <div class="popular-badge">MOST POPULAR</div>
             <h3>BASIC</h3>
             <div class="price">₹999<span style="font-size: 1rem; color: var(--text-mid);">/mo</span></div>
             <ul style="text-align: left; margin: 1.5rem 0;">
@@ -221,11 +232,11 @@
                 <li>✗ E-Library Publishing</li>
                 <li>✗ API Access & Multi-Branch</li>
             </ul>
-            <a href="/login" class="btn-neon" style="width: 100%; color: black !important;">Start Basic</a>
+            <a href="/login" class="btn-neon" style="width: 100%; padding: 0.8rem 1.5rem;">Start Basic</a>
         </div>
 
         <div class="pricing-card" style="border: 1px solid var(--accent-primary);">
-            <div class="pricing-badge" style="background: var(--accent-primary);">BEST VALUE</div>
+            <div class="popular-badge" style="background: var(--accent-primary);">BEST VALUE</div>
             <h3>PROFESSIONAL</h3>
             <div class="price">₹2,999<span style="font-size: 1rem; color: var(--text-mid);">/mo</span></div>
             <ul style="text-align: left; margin: 1.5rem 0;">
@@ -238,7 +249,7 @@
                 <li>✓ Multi-Branch Support</li>
                 <li>✓ Priority Support & Dedicated Manager</li>
             </ul>
-            <a href="/login" class="btn-alt" style="border-color: var(--accent-primary); color: var(--accent-primary);">Start Professional</a>
+            <a href="/login" class="btn-alt" style="border-color: var(--accent-primary); color: var(--accent-primary); padding: 0.8rem 1.5rem;">Start Professional</a>
         </div>
     </div>
 </section>
@@ -250,15 +261,15 @@
     <div class="testimonial-grid">
         <div class="testimonial-card">
             <p>"librika.in completely revolutionized how our library operates. The AI OCR scanning saved us hundreds of hours of manual entry."</p>
-            <div style="margin-top: 1rem; color: white; font-weight: bold; font-style: normal;">— Dr. S. Sharma, Principal</div>
+            <div style="margin-top: 1rem; color: var(--text-high); font-weight: bold; font-style: normal;">— Dr. S. Sharma, Principal</div>
         </div>
         <div class="testimonial-card">
             <p>"The digital marketplace allowed our students to access premium e-books instantly. The student engagement analytics are a game changer."</p>
-            <div style="margin-top: 1rem; color: white; font-weight: bold; font-style: normal;">— M. Patel, Head Librarian</div>
+            <div style="margin-top: 1rem; color: var(--text-high); font-weight: bold; font-style: normal;">— M. Patel, Head Librarian</div>
         </div>
         <div class="testimonial-card">
-            <p>"As an independent author, the royalty tracking is seamless. I published my physics notes && reached 50,000 students in a month."</p>
-            <div style="margin-top: 1rem; color: white; font-weight: bold; font-style: normal;">— R. Kumar, Verified Publisher</div>
+            <p>"As an independent author, the royalty tracking is seamless. I published my physics notes and reached 50,000 students in a month."</p>
+            <div style="margin-top: 1rem; color: var(--text-high); font-weight: bold; font-style: normal;">— R. Kumar, Verified Publisher</div>
         </div>
     </div>
 </section>
@@ -271,7 +282,7 @@
                 <span style="font-weight: 800; font-size: 1.2rem; color: var(--text-high);">librika.in</span>
             </div>
             <p style="color: var(--text-mid); font-size: 0.9rem; line-height: 1.6;">
-                The operating system for modern educational institutions. Bridging the gap between physical books && digital learning.
+                The operating system for modern educational institutions. Bridging the gap between physical books and digital learning.
             </p>
             <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-mid);">
                 📧 support@epathshala.in<br>
@@ -305,7 +316,7 @@
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-low); font-size: 0.85rem;">
+    <div style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; color: var(--text-low); font-size: 0.85rem;">
         &copy; 2026 librika.in Platform. All rights reserved. Built for global education.
     </div>
 </footer>
@@ -313,7 +324,7 @@
 <div id="orgModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
     <div style="background: var(--bg-card); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border); width: 90%; max-width: 500px; color: var(--text-high); position: relative; text-align: center;">
         <span onclick="document.getElementById('orgModal').style.display='none'" style="position: absolute; right: 20px; top: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-mid);">&times;</span>
-        <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem; background: linear-gradient(135deg, var(--text-high), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Apply for Organization</h2>
+        <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem; background: linear-gradient(135deg, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Apply for Organization</h2>
         <p style="color: var(--text-mid); margin-bottom: 2rem;">Fill out this form to register your digital library or publisher organization.</p>
 
         <form onsubmit="submitOrgRequest(event)">
@@ -333,7 +344,7 @@
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Phone Number</label>
                 <input type="tel" id="orgPhone" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
             </div>
-            <button type="submit" class="btn-neon" style="width: 100%; border-radius: 8px; padding: 1rem; font-size: 1rem; color: black !important;">Submit Request</button>
+            <button type="submit" class="btn-neon" style="width: 100%; border-radius: 8px; padding: 1rem; font-size: 1rem;">Submit Request</button>
         </form>
         <script>
         function submitOrgRequest(e) {
@@ -361,7 +372,7 @@
     </div>
 </div>
 
-<div id="helpDeskBtn" onclick="document.getElementById('helpDeskModal').style.display='flex'" style="position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(59,130,246,0.4); z-index: 9999; transition: transform 0.3s ease;">
+<div id="helpDeskBtn" onclick="document.getElementById('helpDeskModal').style.display='flex'" style="position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; background: linear-gradient(135deg, var(--accent-primary), #a855f7); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5); z-index: 9999; transition: transform 0.3s ease;">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
     </svg>
@@ -379,12 +390,12 @@
 
         <div id="helpDeskOtpFlow" style="display: none; text-align: left;">
             <p style="color: var(--text-mid); margin-bottom: 1rem; font-size: 0.9rem;">Enter your Phone Number (Login ID) to receive an OTP.</p>
-            <input type="text" id="resetPhone" placeholder="Phone Number" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: white; box-sizing: border-box;">
+            <input type="text" id="resetPhone" placeholder="Phone Number" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
             <button id="sendOtpBtn" onclick="sendOtp()" class="btn-neon" style="width: 100%; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;">Send OTP</button>
 
             <div id="otpStep2" style="display: none;">
-                <input type="text" id="resetOtp" placeholder="6-Digit OTP" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: white; box-sizing: border-box;">
-                <input type="password" id="resetNewPassword" placeholder="New Password" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: white; box-sizing: border-box;">
+                <input type="text" id="resetOtp" placeholder="6-Digit OTP" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
+                <input type="password" id="resetNewPassword" placeholder="New Password" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
                 <button onclick="verifyAndReset()" class="btn-alt" style="width: 100%; padding: 0.8rem; border-radius: 8px;">Reset Password</button>
             </div>
             <button onclick="document.getElementById('helpDeskOtpFlow').style.display='none'; document.getElementById('helpDeskMenu').style.display='block';" style="background: none; border: none; color: var(--text-mid); text-decoration: underline; cursor: pointer; width: 100%; margin-top: 1rem;">Back</button>

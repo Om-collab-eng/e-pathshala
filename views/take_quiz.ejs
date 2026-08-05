@@ -1,6 +1,7 @@
 <%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
 
-<% contentFor("title") %>Book Quiz: <%= book.title %> - librika.in<%%>
+<% contentFor("title") %>Book Quiz: <%= book.title %> - librika.in
 
 <% contentFor("head") %>
 <style>
@@ -163,6 +164,12 @@
 <% contentFor("head") %>
 
 <% contentFor("content") %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'browse' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Book Quiz' }) %>
+      <main class="sp-content">
 <div class="qz-container">
     <div class="qz-card">
         <div class="qz-header">
@@ -201,3 +208,8 @@
         label.classList.add('checked');
     }
 </script>
+
+      </main>
+    </div>
+  </div>
+</div>

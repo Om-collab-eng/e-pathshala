@@ -1,0 +1,211 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'library' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'My Library', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">My Library</h1>
+          <p class="sp-page-sub">Everything you are reading, saving and tracking.</p>
+        </div>
+
+        <div class="sp-stats-grid">
+          <a href="#borrowed" class="sp-stat-card">
+            <div class="sp-stat-icon">📖</div>
+            <div class="sp-stat-value"><%= borrowed.length %></div>
+            <div class="sp-stat-label">Active Books</div>
+          </a>
+          <a href="#reserved" class="sp-stat-card">
+            <div class="sp-stat-icon">🔖</div>
+            <div class="sp-stat-value"><%= reserved.length %></div>
+            <div class="sp-stat-label">Reserved</div>
+          </a>
+          <a href="/student/favorites" class="sp-stat-card">
+            <div class="sp-stat-icon">⭐</div>
+            <div class="sp-stat-value"><%= favorites.length %></div>
+            <div class="sp-stat-label">Favorites</div>
+          </a>
+          <a href="/student/wishlist" class="sp-stat-card">
+            <div class="sp-stat-icon">🎁</div>
+            <div class="sp-stat-value"><%= wishlist.length %></div>
+            <div class="sp-stat-label">Wishlist</div>
+          </a>
+          <a href="/student/history" class="sp-stat-card">
+            <div class="sp-stat-icon">📚</div>
+            <div class="sp-stat-value"><%= historyCount %></div>
+            <div class="sp-stat-label">Books Read</div>
+          </a>
+          <a href="/student/downloads" class="sp-stat-card">
+            <div class="sp-stat-icon">⬇️</div>
+            <div class="sp-stat-value"><%= downloads.length %></div>
+            <div class="sp-stat-label">Downloads</div>
+          </a>
+        </div>
+
+        <% if (announcements.length) { %>
+          <% announcements.forEach(function(ann) { %>
+          <div class="sp-banner">
+            <span>📢</span>
+            <span><strong><%= ann.title %></strong> — <%= ann.message %></span>
+          </div>
+          <% }); %>
+        <% } %>
+
+        <% if (continueReading.length) { %>
+        <div>
+          <div class="sp-section-header">
+            <h2 class="sp-section-title">Continue Reading</h2>
+            <a href="/student/browse" class="sp-section-link">Browse More</a>
+          </div>
+          <div class="sp-list">
+            <% continueReading.forEach(function(item) { %>
+            <% var cPercent = item.total_pages > 0 ? Math.round((item.last_page / item.total_pages) * 100) : 0; %>
+            <a href="/digital-library/read/<%= item.content_id %>" class="sp-reading-card" style="text-decoration: none;">
+              <img src="<%= item.cover_url || '/static/placeholder-cover.jpg' %>" class="sp-cover" alt="<%= item.title %>" onerror="generateBookCoverFallback(this, '<%= item.title %>', 'Digital', '<%= item.category || 'Literature' %>')" data-fallback-title="<%= item.title %>" data-fallback-author="E-Pathshala" data-fallback-genre="<%= item.category || 'Literature' %>">
+              <div class="sp-reading-info">
+                <h3 class="sp-book-title"><%= item.title %></h3>
+                <p class="sp-book-author"><%= item.category || item.subject || 'Digital Content' %></p>
+                <div class="sp-progress-text">
+                  <span>Page <%= item.last_page %> of <%= item.total_pages %></span>
+                  <span><%= cPercent %>%</span>
+                </div>
+                <div class="sp-progress-bar"><div class="sp-progress-fill" style="width: <%= cPercent %>%;"></div></div>
+              </div>
+            </a>
+            <% }); %>
+          </div>
+        </div>
+        <% } %>
+
+        <div id="borrowed">
+          <div class="sp-section-header">
+            <h2 class="sp-section-title">Currently Borrowed</h2>
+            <a href="/student/browse" class="sp-section-link">Browse Library</a>
+          </div>
+          <% if (borrowed.length) { %>
+          <div class="sp-list">
+            <% borrowed.forEach(function(tx) { %>
+            <% var due = new Date(tx.due_date); var days = Math.floor((due - new Date()) / 86400000); %>
+            <div class="sp-row">
+              <div class="sp-row-main">
+                <div class="sp-row-title"><%= tx.title %></div>
+                <div class="sp-row-sub"><%= tx.author %> &bull; Due <%= String(tx.due_date).slice(0, 10) %></div>
+              </div>
+              <div class="sp-row-actions">
+                <% if (days < 0) { %>
+                  <span class="sp-chip sp-chip-red">Overdue</span>
+                <% } else if (days <= 2) { %>
+                  <span class="sp-chip sp-chip-orange">Due <%= days === 0 ? 'Today' : days + 'd' %></span>
+                <% } else { %>
+                  <span class="sp-chip sp-chip-green">On Time</span>
+                <% } %>
+                <a href="/student/book/<%= tx.book_id %>" class="sp-btn sp-btn-sm sp-btn-outline">View</a>
+              </div>
+            </div>
+            <% }); %>
+          </div>
+          <% } else { %>
+          <div class="sp-card">
+            <div class="sp-empty">
+              <span class="sp-empty-icon">📭</span>
+              <p class="sp-empty-title">No books borrowed right now</p>
+              <p class="sp-empty-sub">Head to the library to borrow your next read.</p>
+              <a href="/student/browse" class="sp-btn sp-btn-primary sp-mt-2">Browse Library</a>
+            </div>
+          </div>
+          <% } %>
+        </div>
+
+        <div id="reserved">
+          <div class="sp-section-header">
+            <h2 class="sp-section-title">Reservations</h2>
+          </div>
+          <% if (reserved.length) { %>
+          <div class="sp-list">
+            <% reserved.forEach(function(r) { %>
+            <div class="sp-row">
+            <div class="sp-row-main">
+              <div class="sp-row-title"><%= d.title %></div>
+              <div class="sp-row-sub">Downloaded <%= String(d.created_at).slice(0, 10) %></div>
+            </div>
+              <span class="sp-chip <%= r.status === 'Approved' ? 'sp-chip-green' : 'sp-chip-orange' %>"><%= r.status %></span>
+            </div>
+            <% }); %>
+          </div>
+          <% } else { %>
+          <div class="sp-card"><div class="sp-empty"><span class="sp-empty-icon">🔖</span><p class="sp-empty-title">No reservations</p><p class="sp-empty-sub">Reserve a book from the catalog when it is out of stock.</p></div></div>
+          <% } %>
+        </div>
+
+        <div>
+          <div class="sp-section-header">
+            <h2 class="sp-section-title">Favorites</h2>
+            <a href="/student/favorites" class="sp-section-link">View All</a>
+          </div>
+          <% if (favorites.length) { %>
+          <div class="sp-scroller">
+            <% favorites.forEach(function(f) { %>
+            <% var isBook = f.item_type === 'book'; %>
+            <% var title = isBook ? f.book_title : f.dig_title; %>
+            <% var author = isBook ? f.book_author : f.dig_category; %>
+            <% var cover = isBook ? f.book_cover : f.dig_cover; %>
+            <% var link = isBook ? '/student/book/' + f.item_id : '/digital-library/content/' + f.item_id; %>
+            <a href="<%= link %>" class="sp-book-card sp-scroller-card" style="text-decoration: none;">
+              <img src="<%= cover || '/static/placeholder-cover.jpg' %>" class="sp-book-cover" alt="<%= title %>" onerror="generateBookCoverFallback(this, '<%= title %>', '<%= author %>', '<%= isBook ? 'Fiction' : 'Literature' %>')" data-fallback-title="<%= title %>" data-fallback-author="<%= author %>" data-fallback-genre="<%= isBook ? 'Fiction' : 'Literature' %>">
+              <h3 class="sp-book-card-title"><%= title %></h3>
+              <p class="sp-book-card-author"><%= author %></p>
+            </a>
+            <% }); %>
+          </div>
+          <% } else { %>
+          <div class="sp-card"><div class="sp-empty"><span class="sp-empty-icon">⭐</span><p class="sp-empty-title">No favorites yet</p><p class="sp-empty-sub">Tap the star on any book or resource to save it here.</p></div></div>
+          <% } %>
+        </div>
+
+        <div>
+          <div class="sp-section-header">
+            <h2 class="sp-section-title">Wishlist</h2>
+            <a href="/student/wishlist" class="sp-section-link">View All</a>
+          </div>
+          <% if (wishlist.length) { %>
+          <div class="sp-list">
+            <% wishlist.forEach(function(w) { %>
+            <div class="sp-row">
+              <div class="sp-row-main">
+                <div class="sp-row-title"><%= w.title %></div>
+                <div class="sp-row-sub"><%= w.author %><% if (parseInt(w.available_copies, 10) > 0) { %> &bull; <span class="sp-text-green">Available</span><% } else { %> &bull; <span class="sp-text-orange">Out of stock</span><% } %></div>
+              </div>
+              <a href="/student/book/<%= w.book_id %>" class="sp-btn sp-btn-sm sp-btn-outline">View</a>
+            </div>
+            <% }); %>
+          </div>
+          <% } else { %>
+          <div class="sp-card"><div class="sp-empty"><span class="sp-empty-icon">🎁</span><p class="sp-empty-title">Wishlist is empty</p><p class="sp-empty-sub">Add books you want to read later.</p></div></div>
+          <% } %>
+        </div>
+
+        <% if (events.length) { %>
+        <div>
+          <div class="sp-section-header">
+            <h2 class="sp-section-title">Upcoming</h2>
+            <a href="/student/calendar" class="sp-section-link">Open Calendar</a>
+          </div>
+          <div class="sp-list">
+            <% events.forEach(function(ev) { %>
+            <div class="sp-row">
+              <div class="sp-row-main">
+                <div class="sp-row-title"><%= ev.title %></div>
+                <div class="sp-row-sub"><%= String(ev.event_date).slice(0, 10) %> &bull; <%= ev.description || ev.category %></div>
+              </div>
+              <span class="sp-chip sp-chip-purple"><%= ev.category %></span>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>

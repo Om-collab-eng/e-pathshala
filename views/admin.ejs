@@ -12,9 +12,9 @@
 }
 
 html, body {
-    background: #060d1f !important;
-    background-color: #060d1f !important;
-    color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden !important;
@@ -36,19 +36,19 @@ html, body {
     --lr-light: rgba(239, 68, 68, 0.15);
     --lb: #60a5fa;
     --lb-light: rgba(59, 130, 246, 0.15);
-    --bg: #060d1f;
-    --card-bg: #0d1630;
-    --sidebar-bg: #080f22;
-    --border: rgba(99, 102, 241, 0.16);
-    --text: #f1f5f9;
-    --muted: #94a3b8;
+    --bg: #f1f5f9;
+    --card-bg: #ffffff;
+    --sidebar-bg: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
 }
 
 /* ── LAYOUT SHELL ── */
 .ld-shell {
     display: flex !important;
     min-height: 100vh !important;
-    background: #060d1f !important;
+    background: var(--bg) !important;
     width: 100vw !important;
     max-width: 100vw !important;
     position: relative !important;
@@ -64,7 +64,7 @@ html, body {
     width: calc(100vw - 280px) !important;
     max-width: 100vw !important;
     overflow-x: hidden !important;
-    background: #060d1f !important;
+    background: var(--bg) !important;
     padding-bottom: 30px !important;
 }
 @media (max-width: 900px) {
@@ -73,7 +73,7 @@ html, body {
 
 /* ── TOPBAR ── */
 .ld-topbar {
-    background: rgba(8, 15, 34, 0.92) !important;
+    background: #ffffff !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     border-bottom: 1px solid var(--border) !important;
@@ -88,9 +88,9 @@ html, body {
 }
 .ld-topbar-left { display: flex !important; align-items: center !important; gap: 12px !important; }
 .ld-menu-btn {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #f1f5f9 !important;
+    background: rgba(99, 102, 241, 0.06) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
     width: 38px !important; height: 38px !important; border-radius: 10px !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     font-size: 1.1rem !important; cursor: pointer !important;
@@ -101,14 +101,14 @@ html, body {
     font-family: 'Outfit', sans-serif !important;
     font-size: 1.1rem !important;
     font-weight: 800 !important;
-    color: #ffffff !important;
+    color: #0f172a !important;
 }
 
 .ld-topbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
 .ld-notif-btn {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #f1f5f9 !important;
+    background: rgba(99, 102, 241, 0.06) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
     width: 38px !important; height: 38px !important; border-radius: 50% !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     font-size: 1.1rem !important; cursor: pointer !important; position: relative !important;
@@ -132,11 +132,11 @@ html, body {
     height: 100vh !important; height: 100dvh !important;
     z-index: 9999 !important;
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 10px 0 40px rgba(15, 23, 42, 0.08) !important;
     transform: translateX(-105%) !important;
 }
 @media (max-width: 900px) {
-    .ld-sidebar.open { transform: translateX(0) !important; box-shadow: 20px 0 60px rgba(0, 0, 0, 0.8) !important; }
+    .ld-sidebar.open { transform: translateX(0) !important; box-shadow: 20px 0 60px rgba(15, 23, 42, 0.15) !important; }
 }
 @media (min-width: 901px) {
     .ld-sidebar { transform: translateX(0) !important; position: sticky !important; }
@@ -157,11 +157,11 @@ html, body {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
 }
 .ld-user-meta { min-width: 0 !important; flex: 1 !important; }
-.ld-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.ld-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #0f172a !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 .ld-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: var(--muted) !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
 .ld-sidebar-close {
-    background: rgba(255, 255, 255, 0.06) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(99, 102, 241, 0.08) !important; border: 1px solid #e2e8f0 !important;
     color: var(--muted) !important; width: 32px !important; height: 32px !important; border-radius: 50% !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     font-size: 0.95rem !important; cursor: pointer !important; flex-shrink: 0 !important;
@@ -180,8 +180,8 @@ html, body {
     width: 100% !important; cursor: pointer !important; transition: all 0.2s ease !important;
     box-sizing: border-box !important; white-space: nowrap !important;
 }
-.ld-nav-item:hover { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; }
-.ld-nav-item.active { background: rgba(99, 102, 241, 0.18) !important; color: #ffffff !important; border-left: 4px solid #818cf8 !important; font-weight: 700 !important; }
+.ld-nav-item:hover { background: rgba(99, 102, 241, 0.08) !important; color: #6366f1 !important; }
+.ld-nav-item.active { background: rgba(99, 102, 241, 0.1) !important; color: #4f46e5 !important; border-left: 4px solid #818cf8 !important; font-weight: 700 !important; }
 
 .ld-nav-icon { width: 24px !important; height: 24px !important; font-size: 1.15rem !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; margin-right: 12px !important; }
 .ld-nav-text { flex: 1 !important; text-align: left !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
@@ -196,11 +196,11 @@ html, body {
 .ld-footer-btn {
     display: flex !important; align-items: center !important; height: 44px !important; min-height: 44px !important;
     padding: 0 12px !important; border-radius: 10px !important; font-size: 0.85rem !important; font-weight: 700 !important;
-    color: var(--muted) !important; text-decoration: none !important; background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important; transition: all 0.2s ease !important; width: 100% !important;
+    color: var(--muted) !important; text-decoration: none !important; background: rgba(99, 102, 241, 0.06) !important;
+    border: 1px solid #e2e8f0 !important; transition: all 0.2s ease !important; width: 100% !important;
 }
-.ld-footer-btn:hover { background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; }
-.ld-footer-btn.danger { background: rgba(239, 68, 68, 0.12) !important; color: #f87171 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+.ld-footer-btn:hover { background: rgba(99, 102, 241, 0.12) !important; color: #6366f1 !important; }
+.ld-footer-btn.danger { background: rgba(239, 68, 68, 0.08) !important; color: #dc2626 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
 
 .ld-overlay-dim {
     position: fixed !important; inset: 0 !important; background: rgba(3, 7, 18, 0.8) !important;
@@ -210,33 +210,33 @@ html, body {
 .ld-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
 
 /* ── CONTENT AREA ── */
-.ld-content { padding: 1.25rem !important; display: flex !important; flex-direction: column !important; gap: 1.25rem !important; background: #060d1f !important; }
+.ld-content { padding: 1.25rem !important; display: flex !important; flex-direction: column !important; gap: 1.25rem !important; background: var(--bg) !important; }
 
 /* ── METRIC STAT CARDS GRID ── */
 .ld-stats-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; width: 100% !important; }
 @media (min-width: 901px) { .ld-stats-grid { grid-template-columns: repeat(4, 1fr) !important; } }
 
 .ld-stat-card {
-    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
     border: 1px solid var(--border) !important; border-radius: 18px !important;
     padding: 14px 12px !important; display: flex !important; flex-direction: column !important;
     align-items: center !important; text-align: center !important; justify-content: center !important; min-height: 105px !important;
 }
 .ld-stat-icon { font-size: 1.4rem !important; margin-bottom: 4px !important; }
-.ld-stat-val { font-family: 'Outfit', sans-serif !important; font-size: 1.4rem !important; font-weight: 900 !important; color: #ffffff !important; line-height: 1.1 !important; }
+.ld-stat-val { font-family: 'Outfit', sans-serif !important; font-size: 1.4rem !important; font-weight: 900 !important; color: #0f172a !important; line-height: 1.1 !important; }
 .ld-stat-lbl { font-size: 0.72rem !important; color: var(--muted) !important; font-weight: 700 !important; margin-top: 2px !important; }
 
 /* ── CARDS & TABLES ── */
 .ld-card {
-    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
     border: 1px solid var(--border) !important; border-radius: 20px !important;
-    padding: 1.25rem !important; color: #f1f5f9 !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important;
+    padding: 1.25rem !important; color: #0f172a !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important;
 }
 
 .ld-table-container { width: 100% !important; max-width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; margin-top: 10px !important; border-radius: 14px !important; }
 table.ld-table { width: 100% !important; border-collapse: collapse !important; text-align: left !important; font-size: 0.85rem !important; }
-table.ld-table th { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; font-weight: 800 !important; padding: 12px 14px !important; border-bottom: 1px solid var(--border) !important; white-space: nowrap !important; }
-table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba(99, 102, 241, 0.08) !important; color: #94a3b8 !important; vertical-align: middle !important; word-break: break-word !important; }
+table.ld-table th { background: rgba(99, 102, 241, 0.06) !important; color: #4f46e5 !important; font-weight: 800 !important; padding: 12px 14px !important; border-bottom: 1px solid var(--border) !important; white-space: nowrap !important; }
+table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid #eef2f7 !important; color: #475569 !important; vertical-align: middle !important; word-break: break-word !important; }
 
 /* ── BUTTONS ── */
 .ld-btn {
@@ -244,11 +244,11 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba
     gap: 8px !important; padding: 9px 16px !important; min-height: 40px !important; border-radius: 12px !important;
     font-size: 0.85rem !important; font-weight: 700 !important; cursor: pointer !important;
     transition: all 0.2s ease !important; text-decoration: none !important; border: none !important;
-    background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; box-sizing: border-box !important;
+    background: rgba(99, 102, 241, 0.08) !important; color: #4f46e5 !important; box-sizing: border-box !important;
 }
 .ld-btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important; }
-.ld-btn-danger { background: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; border: 1px solid rgba(239, 68, 68, 0.25) !important; }
-.ld-btn-success { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; border: 1px solid rgba(16, 185, 129, 0.25) !important; }
+.ld-btn-danger { background: rgba(239, 68, 68, 0.08) !important; color: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.25) !important; }
+.ld-btn-success { background: rgba(16, 185, 129, 0.08) !important; color: #059669 !important; border: 1px solid rgba(16, 185, 129, 0.25) !important; }
 .ld-btn-xs { padding: 4px 10px !important; min-height: 32px !important; font-size: 0.75rem !important; border-radius: 8px !important; }
 
 /* ── MODALS ── */
@@ -260,17 +260,20 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba
 }
 .ld-modal-overlay.active { display: flex !important; }
 .ld-modal-content {
-    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
-    border: 1px solid rgba(99, 102, 241, 0.25) !important; border-radius: 20px !important;
+    background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
+    border: 1px solid #e2e8f0 !important; border-radius: 20px !important;
     padding: 1.5rem !important; width: 100% !important; max-width: 500px !important;
     max-height: 90vh !important; overflow-y: auto !important; position: relative !important;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important; color: #f1f5f9 !important;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15) !important; color: #0f172a !important;
 }
-.ld-modal-close { position: absolute !important; top: 14px !important; right: 14px !important; background: rgba(255, 255, 255, 0.08) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; color: #f1f5f9 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; }
+.ld-modal-close { position: absolute !important; top: 14px !important; right: 14px !important; background: rgba(99, 102, 241, 0.08) !important; border: 1px solid #e2e8f0 !important; color: #475569 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; }
 
 .ld-form-group { display: flex !important; flex-direction: column !important; gap: 4px !important; width: 100% !important; margin-bottom: 12px !important; }
-.ld-form-group label { font-size: 0.78rem !important; font-weight: 700 !important; color: #a5b4fc !important; margin-bottom: 2px !important; }
-.ld-input, .ld-select, .ld-textarea { width: 100% !important; background: #080f22 !important; border: 1px solid rgba(99, 102, 241, 0.25) !important; color: #f1f5f9 !important; border-radius: 12px !important; padding: 10px 14px !important; font-size: 0.88rem !important; min-height: 44px !important; outline: none !important; }
+.ld-form-group label { font-size: 0.78rem !important; font-weight: 700 !important; color: #4f46e5 !important; margin-bottom: 2px !important; }
+.ld-input, .ld-select, .ld-textarea { width: 100% !important; background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; border-radius: 12px !important; padding: 10px 14px !important; font-size: 0.88rem !important; min-height: 44px !important; outline: none !important; }
+
+/* ── LIGHT THEME SWEEP: force inline dark-only white text to dark ── */
+[style*="color: #ffffff"] { color: #0f172a !important; }
 </style>
 
 <div class="ld-overlay-dim" id="adminDim" onclick="toggleAdminSidebar()"></div>
@@ -831,9 +834,9 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba
                 <div class="ld-card">
                     <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📅 Library Operations Calendar</h3>
                     <p style="color: var(--muted); font-size: 0.85rem;">Track book return due dates, upcoming library events, and operational schedules.</p>
-                    <div style="background: #080f22; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); margin-top: 1rem;">
+                    <div style="background: #f8fafc; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); margin-top: 1rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h4 style="margin: 0; color: #ffffff;">Today: <%= new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %></h4>
+                            <h4 style="margin: 0; color: #0f172a;">Today: <%= new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %></h4>
                             <span class="ld-btn ld-btn-xs ld-btn-primary">+ Add Event</span>
                         </div>
                         <p style="color: #34d399; font-size: 0.85rem; font-weight: 700;">✅ All return schedules synced with database.</p>
@@ -889,10 +892,10 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba
             <section id="tab-security" class="tab-content" style="display: none;">
                 <div class="ld-card">
                     <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">🔒 Security & Authentication</h3>
-                    <div style="background: #080f22; padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border);">
+                    <div style="background: #f8fafc; padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <div>
-                                <h4 style="margin: 0; color: #ffffff;">Account Password</h4>
+                                <h4 style="margin: 0; color: #0f172a;">Account Password</h4>
                                 <p style="margin: 2px 0 0; font-size: 0.8rem; color: var(--muted);">Change your account password securely.</p>
                             </div>
                             <button class="ld-btn ld-btn-primary ld-btn-xs">Change Password</button>
@@ -911,7 +914,7 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba
                     <p style="color: var(--muted); font-size: 0.85rem;">Contact Librika technical team or review automated support guides.</p>
                     <div style="background: rgba(99, 102, 241, 0.08); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); margin-top: 1rem;">
                         <h4 style="margin: 0 0 6px 0; color: #ffffff;">📞 Support Contact</h4>
-                        <p style="margin: 0; font-size: 0.85rem; color: #a5b4fc;">Email: support@librika.in | Helpline: +91 (800) LIBRIKA</p>
+                        <p style="margin: 0; font-size: 0.85rem; color: #4f46e5;">Email: support@librika.in | Helpline: +91 (800) LIBRIKA</p>
                     </div>
                 </div>
             </section>

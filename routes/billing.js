@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const Razorpay = require('razorpay');
 let stripe = null;
 if (process.env.STRIPE_SECRET_KEY) {
@@ -8,9 +7,9 @@ if (process.env.STRIPE_SECRET_KEY) {
 }
 const PDFDocument = require('pdfkit');
 const path = require('path');
-require('dotenv').config();
+const db = require('../db');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = { query: (text, params) => db.query(text, params) };
 
 const razorpay = (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET)
   ? new Razorpay({

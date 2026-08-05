@@ -1,0 +1,106 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'security' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Security', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Security</h1>
+          <p class="sp-page-sub">Protect your account and review your devices.</p>
+        </div>
+
+        <% if (success) { %><div class="sp-banner sp-banner-green"><span>✅</span><span><%= success %></span></div><% } %>
+        <% if (error) { %><div class="sp-banner sp-banner-red"><span>⚠️</span><span><%= error %></span></div><% } %>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Change Password</h2>
+          <form method="POST" action="/student/security/password" class="sp-form">
+            <div class="sp-field">
+              <label class="sp-label">Current Password</label>
+              <input type="password" name="current_password" required class="sp-input">
+            </div>
+            <div class="sp-form-row">
+              <div class="sp-field">
+                <label class="sp-label">New Password</label>
+                <input type="password" name="new_password" required minlength="6" class="sp-input">
+              </div>
+              <div class="sp-field">
+                <label class="sp-label">Confirm New Password</label>
+                <input type="password" name="confirm_password" required minlength="6" class="sp-input" oninput="this.setCustomValidity(this.value !== document.getElementsByName('new_password')[0].value ? 'Passwords do not match' : '')">
+              </div>
+            </div>
+            <div class="sp-form-actions">
+              <button type="submit" class="sp-btn sp-btn-primary">Update Password</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Two-Factor Authentication</h2>
+          <div class="sp-goal-head">
+            <div>
+              <h3 class="sp-book-title" style="margin:0">2FA Status</h3>
+              <p class="sp-book-author" style="margin:0"><%= user.two_factor_enabled ? 'Enabled — you are protected.' : 'Disabled — add a second layer of security.' %></p>
+            </div>
+            <form method="POST" action="/student/security/2fa" style="display:inline">
+              <button type="submit" class="sp-btn sp-btn-sm <%= user.two_factor_enabled ? 'sp-btn-danger' : 'sp-btn-primary' %>"><%= user.two_factor_enabled ? 'Disable' : 'Enable' %></button>
+            </form>
+          </div>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Active Sessions & Devices</h2>
+          <div class="sp-form-actions" style="justify-content:flex-end">
+            <form method="POST" action="/student/security/logout-all">
+              <button type="submit" class="sp-btn sp-btn-sm sp-btn-ghost">Sign out all other sessions</button>
+            </form>
+          </div>
+          <% if (devices.length) { %>
+          <div class="sp-list">
+            <% devices.forEach(function (d) { %>
+            <div class="sp-row">
+              <div class="sp-row-main">
+                <div class="sp-row-title">
+                  <%= d.device_name || d.device_type || 'Unknown Device' %>
+                  <span class="sp-chip <%= d.is_current ? 'sp-chip-green' : '' %> sp-chip-sm"><%= d.is_current ? 'This device' : 'Signed in' %></span>
+                </div>
+                <div class="sp-row-sub"><%= d.device_type || 'Browser' %> &bull; Last seen <%= String(d.last_active).slice(0, 16) %></div>
+              </div>
+              <% if (!d.is_current) { %>
+              <button class="sp-btn sp-btn-sm sp-btn-danger" onclick="revokeDevice(<%= d.id %>)">Revoke</button>
+              <% } %>
+            </div>
+            <% }); %>
+          </div>
+          <% } else { %>
+          <div class="sp-empty"><span class="sp-empty-icon">🖥️</span><p class="sp-empty-title">No device sessions found</p><p class="sp-empty-sub">Sessions will be listed here once you sign in from a device.</p></div>
+          <% } %>
+        </div>
+
+        <% if (loginHistory.length) { %>
+        <div class="sp-card">
+          <h2 class="sp-section-title">Recent Logins</h2>
+          <div class="sp-list">
+            <% loginHistory.forEach(function (l) { %>
+            <div class="sp-row">
+              <div class="sp-row-main">
+                <div class="sp-row-title"><%= l.ip_address || 'Login' %></div>
+                <div class="sp-row-sub"><%= String(l.created_at).slice(0, 16) %></div>
+              </div>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  async function revokeDevice(id) {
+    const r = await fetch('/student/api/devices/revoke/' + id, { method: 'POST' });
+    if (r.ok) window.location.reload();
+  }
+</script>

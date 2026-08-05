@@ -1,5 +1,12 @@
 <%- layout("base") %>
-<% contentFor("title") %><%= author.name %> - Author Profile<%%>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<% contentFor("title") %><%= author.name %> - Author Profile
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'community' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: author.name }) %>
+      <main class="sp-content">
 <div class="dashboard">
     <header class="header" style="justify-content: center; text-align: center; display: flex; flex-direction: column; padding-bottom: 3rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem;">
         <div style="width: 100px; height: 100px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: bold; margin: 0 auto 15px auto; box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);">
@@ -72,4 +79,9 @@
         </div>
         <% } %>
     </main>
+</div>
+
+      </main>
+    </div>
+  </div>
 </div>

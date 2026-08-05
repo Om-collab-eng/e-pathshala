@@ -149,8 +149,8 @@ if exist ".env.production" (
         echo DATABASE_URL=postgresql://postgres:%PG_PASS%@localhost:5432/librika
         echo.
         echo # Cloudinary Storage
-        echo CLOUDINARY_CLOUD_NAME=azwohkqu
-        echo CLOUDINARY_API_KEY=613621954564511
+        echo CLOUDINARY_CLOUD_NAME=
+        echo CLOUDINARY_API_KEY=
         echo CLOUDINARY_API_SECRET=
         echo.
         echo # Email

@@ -1,0 +1,64 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'notifications' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Notifications', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Notifications</h1>
+          <p class="sp-page-sub">Alerts about your books, due dates and library updates.</p>
+        </div>
+
+        <% if (notifications.length) { %>
+        <div class="sp-tabs">
+          <button class="sp-tab active" data-filter="all" onclick="filterNotifs('all', this)">All</button>
+          <button class="sp-tab" data-filter="due" onclick="filterNotifs('due', this)">Due Dates</button>
+          <button class="sp-tab" data-filter="info" onclick="filterNotifs('info', this)">Updates</button>
+          <button class="sp-tab" data-filter="assignment" onclick="filterNotifs('assignment', this)">Assignments</button>
+          <button class="sp-tab" data-filter="request" onclick="filterNotifs('request', this)">Requests</button>
+        </div>
+        <div class="sp-form-actions" style="justify-content:flex-end">
+          <form method="POST" action="/student/notifications/read-all">
+            <button type="submit" class="sp-btn sp-btn-sm sp-btn-ghost">Mark all as read</button>
+          </form>
+        </div>
+
+        <div class="sp-list">
+          <% notifications.forEach(function (n) { %>
+          <% var nt = (n.type || 'info').toLowerCase(); %>
+          <div class="sp-row sp-notif" data-type="<%= nt %>">
+            <div class="sp-row-main">
+              <div class="sp-row-title">
+                <span class="sp-notif-dot sp-dot-<%= nt === 'due' ? 'red' : (nt === 'assignment' || nt === 'request' ? 'purple' : 'green') %>"></span>
+                <%= n.message %>
+                <% if (!n.is_read) { %><span class="sp-chip sp-chip-purple sp-chip-sm">New</span><% } %>
+              </div>
+              <div class="sp-row-sub"><%= String(n.created_at).slice(0, 16) %></div>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty">
+            <span class="sp-empty-icon">🔔</span>
+            <p class="sp-empty-title">You're all caught up</p>
+            <p class="sp-empty-sub">New alerts about your library activity will show here.</p>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  function filterNotifs(type, btn) {
+    document.querySelectorAll('.sp-tab').forEach(function (t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('.sp-notif').forEach(function (r) {
+      r.style.display = (type === 'all' || r.dataset.type === type) ? '' : 'none';
+    });
+  }
+</script>

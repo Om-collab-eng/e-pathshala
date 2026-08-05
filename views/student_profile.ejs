@@ -1,6 +1,7 @@
 <%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
 
-<% contentFor("title") %>My Profile - librika.in<%%>
+<% contentFor("title") %>My Profile - librika.in
 
 <% contentFor("content") %>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -433,8 +434,20 @@
 
     /* Hide global floaters */
     .global-nav-container { display: none !important; }
+ </style>
+<style>
+/* sp- conversion overrides */
+.desktop-sidebar, .pp-topbar, .pp-bottom-nav { display: none !important; }
+.portal-wrapper { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; background: transparent !important; }
+.portal-main { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; overflow: visible !important; background: transparent !important; }
 </style>
 
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'profile' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'My Profile' }) %>
+      <main class="sp-content">
 <div class="portal-wrapper">
     <!-- ══ Desktop Sidebar ══ -->
     <aside class="desktop-sidebar">
@@ -872,3 +885,8 @@
         });
     });
 </script>
+
+      </main>
+    </div>
+  </div>
+</div>

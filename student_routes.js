@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const path = require('path');
 const multer = require('multer');
-require('dotenv').config();
+const db = require('./db');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
+const pool = { query: (text, params) => db.query(text, params) };
+const upload = multer({
+  dest: path.join(__dirname, '..', 'static', 'uploads'),
+  limits: { fileSize: 10 * 1024 * 1024 } // Strict 10MB upload limit for students
+});
 const DIGITAL_CONTENT_DIR = path.join(__dirname, '..', 'static', 'digital_content');
 
 function studentOnly(req, res, next) {

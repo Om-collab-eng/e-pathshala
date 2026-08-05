@@ -1,8 +1,3 @@
-<%- layout("base") %>
-
-<% contentFor("title") %>Register Asset - librika.in</%>
-
-<% contentFor("content") %>
 <div class="login-container">
     <div class="auth-card" style="max-width: 500px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -62,4 +57,11 @@
         </form>
     </div>
 </div>
-</%>
+<style>
+/* LIBRIKA LIGHT PREMIUM — presentation overrides (add_book) */
+.auth-card a[href="/logout"] {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+</style>

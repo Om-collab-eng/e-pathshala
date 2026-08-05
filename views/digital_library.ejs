@@ -12,9 +12,9 @@
 }
 
 html, body {
-    background: #060d1f !important;
-    background-color: #060d1f !important;
-    color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden !important;
@@ -31,19 +31,19 @@ html, body {
     --sp-green: #34d399;
     --sp-orange: #fb923c;
     --sp-red: #f87171;
-    --sp-bg: #060d1f;
-    --sp-card-bg: #0d1630;
-    --sp-sidebar-bg: #080f22;
-    --sp-border: rgba(99, 102, 241, 0.16);
-    --sp-text: #f1f5f9;
-    --sp-muted: #94a3b8;
+    --sp-bg: #f1f5f9;
+    --sp-card-bg: #ffffff;
+    --sp-sidebar-bg: #ffffff;
+    --sp-border: #e2e8f0;
+    --sp-text: #0f172a;
+    --sp-muted: #64748b;
 }
 
 /* ── LAYOUT SHELL ── */
 .st-shell {
     display: flex !important;
     min-height: 100vh !important;
-    background: #060d1f !important;
+    background: var(--sp-bg) !important;
     width: 100vw !important;
     max-width: 100vw !important;
     position: relative !important;
@@ -59,7 +59,7 @@ html, body {
     width: calc(100vw - 280px) !important;
     max-width: 100vw !important;
     overflow-x: hidden !important;
-    background: #060d1f !important;
+    background: var(--sp-bg) !important;
     padding-bottom: 30px !important;
 }
 @media (max-width: 900px) {
@@ -68,7 +68,7 @@ html, body {
 
 /* ── TOPBAR ── */
 .st-topbar {
-    background: rgba(8, 15, 34, 0.92) !important;
+    background: #ffffff !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     border-bottom: 1px solid var(--sp-border) !important;
@@ -83,9 +83,9 @@ html, body {
 }
 .st-topbar-left { display: flex !important; align-items: center !important; gap: 12px !important; }
 .st-menu-btn {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #f1f5f9 !important;
+    background: rgba(99, 102, 241, 0.06) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
     width: 38px !important; height: 38px !important; border-radius: 10px !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     font-size: 1.1rem !important; cursor: pointer !important;
@@ -96,7 +96,7 @@ html, body {
     font-family: 'Outfit', sans-serif !important;
     font-size: 1.1rem !important;
     font-weight: 800 !important;
-    color: #ffffff !important;
+    color: #0f172a !important;
 }
 
 .st-topbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
@@ -114,11 +114,11 @@ html, body {
     height: 100vh !important; height: 100dvh !important;
     z-index: 9999 !important;
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 10px 0 40px rgba(15, 23, 42, 0.08) !important;
     transform: translateX(-105%) !important;
 }
 @media (max-width: 900px) {
-    .st-sidebar.open { transform: translateX(0) !important; box-shadow: 20px 0 60px rgba(0, 0, 0, 0.8) !important; }
+    .st-sidebar.open { transform: translateX(0) !important; box-shadow: 20px 0 60px rgba(15, 23, 42, 0.15) !important; }
 }
 @media (min-width: 901px) {
     .st-sidebar { transform: translateX(0) !important; position: sticky !important; }
@@ -139,11 +139,11 @@ html, body {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
 }
 .st-user-meta { min-width: 0 !important; flex: 1 !important; }
-.st-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.st-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #0f172a !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 .st-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: var(--sp-muted) !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
 .st-sidebar-close {
-    background: rgba(255, 255, 255, 0.06) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(99, 102, 241, 0.08) !important; border: 1px solid #e2e8f0 !important;
     color: var(--sp-muted) !important; width: 32px !important; height: 32px !important; border-radius: 50% !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     font-size: 0.95rem !important; cursor: pointer !important; flex-shrink: 0 !important;
@@ -162,8 +162,8 @@ html, body {
     width: 100% !important; cursor: pointer !important; transition: all 0.2s ease !important;
     box-sizing: border-box !important; white-space: nowrap !important;
 }
-.st-nav-item:hover { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; }
-.st-nav-item.active { background: rgba(99, 102, 241, 0.18) !important; color: #ffffff !important; border-left: 4px solid #818cf8 !important; font-weight: 700 !important; }
+.st-nav-item:hover { background: rgba(99, 102, 241, 0.08) !important; color: #6366f1 !important; }
+.st-nav-item.active { background: rgba(99, 102, 241, 0.1) !important; color: #4f46e5 !important; border-left: 4px solid #818cf8 !important; font-weight: 700 !important; }
 
 .st-nav-icon { width: 24px !important; height: 24px !important; font-size: 1.15rem !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; margin-right: 12px !important; }
 .st-nav-text { flex: 1 !important; text-align: left !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
@@ -175,11 +175,11 @@ html, body {
 .st-footer-btn {
     display: flex !important; align-items: center !important; height: 44px !important; min-height: 44px !important;
     padding: 0 12px !important; border-radius: 10px !important; font-size: 0.85rem !important; font-weight: 700 !important;
-    color: var(--sp-muted) !important; text-decoration: none !important; background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important; transition: all 0.2s ease !important; width: 100% !important; cursor: pointer !important;
+    color: var(--sp-muted) !important; text-decoration: none !important; background: rgba(99, 102, 241, 0.06) !important;
+    border: 1px solid #e2e8f0 !important; transition: all 0.2s ease !important; width: 100% !important; cursor: pointer !important;
 }
-.st-footer-btn:hover { background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; }
-.st-footer-btn.danger { background: rgba(239, 68, 68, 0.12) !important; color: #f87171 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+.st-footer-btn:hover { background: rgba(99, 102, 241, 0.12) !important; color: #6366f1 !important; }
+.st-footer-btn.danger { background: rgba(239, 68, 68, 0.08) !important; color: #dc2626 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
 
 .st-overlay-dim {
     position: fixed !important; inset: 0 !important; background: rgba(3, 7, 18, 0.8) !important;
@@ -189,15 +189,15 @@ html, body {
 .st-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
 
 /* ── CONTENT AREA ── */
-.st-content { padding: 1.25rem !important; display: flex !important; flex-direction: column !important; gap: 1.25rem !important; background: #060d1f !important; }
+.st-content { padding: 1.25rem !important; display: flex !important; flex-direction: column !important; gap: 1.25rem !important; background: var(--sp-bg) !important; }
 
 .browse-hero-card {
-    background: linear-gradient(135deg, #1e1b4b, #312e81) !important;
-    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff) !important;
+    border: 1px solid rgba(99, 102, 241, 0.25) !important;
     border-radius: 20px !important;
     padding: 1.5rem !important;
-    color: #ffffff !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+    color: #312e81 !important;
+    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15) !important;
 }
 
 .browse-books-grid {
@@ -211,7 +211,7 @@ html, body {
 @media (min-width: 900px) { .browse-books-grid { grid-template-columns: repeat(5, 1fr) !important; } }
 
 .browse-book-card {
-    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
     border: 1px solid var(--sp-border) !important;
     border-radius: 16px !important;
     padding: 10px !important;
@@ -225,12 +225,12 @@ html, body {
     height: 170px !important;
     object-fit: cover !important;
     border-radius: 10px !important;
-    background: #080f22 !important;
+    background: #f1f5f9 !important;
 }
 .browse-book-title {
     font-size: 0.85rem !important;
     font-weight: 800 !important;
-    color: #ffffff !important;
+    color: #0f172a !important;
     margin: 8px 0 2px 0 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -249,13 +249,16 @@ html, body {
     gap: 8px !important; padding: 9px 16px !important; min-height: 40px !important; border-radius: 12px !important;
     font-size: 0.85rem !important; font-weight: 700 !important; cursor: pointer !important;
     transition: all 0.2s ease !important; text-decoration: none !important; border: none !important;
-    background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; box-sizing: border-box !important;
+    background: rgba(99, 102, 241, 0.08) !important; color: #4f46e5 !important; box-sizing: border-box !important;
 }
 .st-btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important; }
 .st-btn-xs { padding: 4px 10px !important; min-height: 32px !important; font-size: 0.75rem !important; border-radius: 8px !important; }
 
 /* REMOVE ALL BOTTOM NAVS */
 .bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav { display: none !important; height: 0 !important; visibility: hidden !important; }
+
+/* ── LIGHT THEME SWEEP: force inline dark-only white text to dark ── */
+[style*="color: #ffffff"] { color: #0f172a !important; }
 </style>
 
 <div class="st-overlay-dim" id="studentDim" onclick="toggleStudentSidebar()"></div>
@@ -361,7 +364,7 @@ html, body {
             <!-- Hero Featured Banner -->
             <div class="browse-hero-card">
                 <h2 style="font-family: 'Outfit'; font-size: 1.3rem; color: #ffffff; margin: 0 0 4px 0;">🌐 Global Community Digital Collection</h2>
-                <p style="margin: 0; color: #a5b4fc; font-size: 0.85rem;">Read books published across the global student and librarian community network!</p>
+                <p style="margin: 0; color: #4f46e5; font-size: 0.85rem;">Read books published across the global student and librarian community network!</p>
             </div>
 
             <!-- Books Grid -->

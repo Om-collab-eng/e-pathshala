@@ -1,0 +1,54 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'favorites' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Favorites', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Favorites</h1>
+          <p class="sp-page-sub">Books and resources you have starred.</p>
+        </div>
+
+        <% if (favorites.length) { %>
+        <div class="sp-books-grid">
+          <% favorites.forEach(function(f) { %>
+          <% var isBook = f.item_type === 'book'; %>
+          <% var title = isBook ? f.book_title : f.dig_title; %>
+          <% var author = isBook ? f.book_author : f.dig_category; %>
+          <% var cover = isBook ? f.book_cover : f.dig_cover; %>
+          <% var link = isBook ? '/student/book/' + f.item_id : '/digital-library/content/' + f.item_id; %>
+          <div class="sp-book-card">
+            <a href="<%= link %>" style="text-decoration: none; color: inherit;">
+              <img src="<%= cover || '/static/placeholder-cover.jpg' %>" class="sp-book-cover" alt="<%= title %>" onerror="generateBookCoverFallback(this, '<%= title %>', '<%= author %>', '<%= isBook ? 'Fiction' : 'Literature' %>')" data-fallback-title="<%= title %>" data-fallback-author="<%= author %>" data-fallback-genre="<%= isBook ? 'Fiction' : 'Literature' %>">
+              <h3 class="sp-book-card-title"><%= title %></h3>
+              <p class="sp-book-card-author"><%= author %></p>
+            </a>
+            <div class="sp-book-card-meta">
+              <span class="sp-chip <%= isBook ? 'sp-chip-purple' : 'sp-chip-green' %>"><%= isBook ? 'Book' : 'Digital' %></span>
+              <button class="sp-btn sp-btn-sm sp-btn-outline" onclick="unfav('<%= f.item_type %>', <%= f.item_id %>)">Remove</button>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty">
+            <span class="sp-empty-icon">⭐</span>
+            <p class="sp-empty-title">No favorites yet</p>
+            <p class="sp-empty-sub">Tap the star on any book or resource in the library to save it here.</p>
+            <a href="/student/browse" class="sp-btn sp-btn-primary sp-mt-2">Browse Library</a>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  async function unfav(type, id) {
+    const r = await fetch('/student/api/favorite/' + type + '/' + id, { method: 'POST' });
+    if (r.ok) window.location.reload();
+  }
+</script>

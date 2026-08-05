@@ -1,6 +1,7 @@
 <%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
 
-<% contentFor("title") %>Write Book Review - librika.in<%%>
+<% contentFor("title") %>Write Book Review - librika.in
 
 <% contentFor("head") %>
 <style>
@@ -117,6 +118,12 @@
 <% contentFor("head") %>
 
 <% contentFor("content") %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'browse' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Write Book Review' }) %>
+      <main class="sp-content">
 <div class="rv-container">
     <div class="rv-card">
         <div class="rv-header">
@@ -144,4 +151,9 @@
             <button type="submit" class="submit-btn">Submit Review</button>
         </form>
     </div>
+</div>
+
+      </main>
+    </div>
+  </div>
 </div>

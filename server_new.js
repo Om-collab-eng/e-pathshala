@@ -10,14 +10,21 @@ const bcrypt = require('bcrypt');
 const ejsMate = require('ejs-mate');
 const flash = require('connect-flash');
 const expressLayouts = require('express-ejs-layouts');
+const db = require('./db');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5001;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
-});
+const usePostgres = !!process.env.DATABASE_URL && process.env.USE_SQLITE !== '1';
+
+let pool;
+if (usePostgres) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  });
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -35,19 +42,102 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(expressLayouts);
 
-app.use(session({
-  store: new pgSession({ pool, tableName: 'sessions' }),
+let MySQLStore;
+try {
+  MySQLStore = require('express-mysql-session')(session);
+} catch (e) {}
+
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'librika_session_secret',
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
-}));
+};
+
+if (db.mysqlPool && MySQLStore) {
+  try {
+    sessionConfig.store = new MySQLStore({
+      clearExpired: true,
+      checkExpirationInterval: 900000,
+      expiration: 86400000,
+      createDatabaseTable: true,
+      schema: {
+        tableName: 'sessions',
+        columnNames: { session_id: 'session_id', expires: 'expires', data: 'data' }
+      }
+    }, db.mysqlPool);
+  } catch (storeErr) {
+    console.error('MySQL session store error:', storeErr);
+  }
+} else if (usePostgres && pool) {
+  sessionConfig.store = new pgSession({ pool, tableName: 'sessions' });
+}
+
+app.use(session(sessionConfig));
 
 app.use(flash());
 
-app.use((req, res, next) => {
+// Inject res.locals.homeUrl so every EJS can render <a href="<%= homeUrl %>">
+// without per-view hardcoding. Impersonation-aware.
+const { homeUrlMiddleware, superAdminIsolation } = require('./middleware/roleHome');
+app.use(homeUrlMiddleware);
+
+// Super-admin isolation: if a super_admin session tries to hit a
+// role-specific dashboard, bounce them back to /super-admin.
+app.use(superAdminIsolation);
+
+app.use(async (req, res, next) => {
+  if (req.session && req.session.user_id) {
+    try {
+      const uRes = await db.query('SELECT id, name, role, school_code FROM users WHERE id = $1', [req.session.user_id]);
+      if (uRes && uRes.rows && uRes.rows.length > 0) {
+        const u = uRes.rows[0];
+        req.session.role = u.role || req.session.role;
+        req.session.name = u.name || req.session.name;
+        req.session.user_name = u.name || req.session.user_name;
+      }
+    } catch (e) {}
+  }
+
   res.locals.session = req.session || {};
-  try { res.locals.messages = req.flash(); } catch (e) { res.locals.messages = {}; }
+
+  // Convert connect-flash messages into template locals:
+  //   messages  → array of [type, text] for base.ejs toasts
+  //   success / error → first message of that type (for inline banners)
+  const flashMsgs = (req.flash && typeof req.flash === 'function') ? req.flash() : [];
+  res.locals.messages = flashMsgs;
+  res.locals.success = null;
+  res.locals.error = null;
+  if (Array.isArray(flashMsgs)) {
+    for (const msg of flashMsgs) {
+      if (msg && msg[0] === 'success' && !res.locals.success) res.locals.success = msg[1];
+      if (msg && msg[0] === 'error' && !res.locals.error) res.locals.error = msg[1];
+    }
+  }
+
+  // Compatibility helpers for EJS layouts (express-ejs-layouts & ejs-mate)
+  res.locals.defineContent = res.locals.defineContent || function(name) { return ''; };
+  res.locals.contentFor = res.locals.contentFor || function(name) { return ''; };
+
+  // Global view defaults
+  res.locals.school_name = (req.session && req.session.school_name) || 'Librika Digital Library';
+  res.locals.school_code = (req.session && req.session.school_code) || 'DEMO01';
+  res.locals.school_plan = (req.session && req.session.school_plan) || 'PRO';
+  res.locals.user_name = (req.session && req.session.name) || 'User';
+  res.locals.school_perms = (req.session && req.session.school_perms) || {
+    canImportCSV: true,
+    canExportCSV: true,
+    canUseAIScanner: true,
+    canUseBarcodeScanner: true,
+    canUseAdvancedAnalytics: true,
+    canUsePublishing: true
+  };
+  res.locals.school_limits = (req.session && req.session.school_limits) || {
+    studentLimit: 999999,
+    bookLimit: 999999,
+    staffLimit: 999999
+  };
+
   next();
 });
 
@@ -56,68 +146,13 @@ const upload = multer({ dest: 'static/uploads/' });
 // --- AUTH ROUTES ---
 
 app.get('/', (req, res) => {
-  if (req.session && req.session.user_id) {
-    if (req.session.role === 'super_admin' || req.session.role === 'admin') return res.redirect('/admin');
-    if (req.session.role === 'student') return res.redirect('/student');
-    if (req.session.role === 'personal') return res.redirect('/personal');
-  }
   res.render('index', { title: 'librika.in - EdTech & E-Library SaaS Platform' });
 });
 
-app.get('/login', (req, res) => {
-  if (req.session && req.session.user_id) {
-    if (req.session.role === 'super_admin' || req.session.role === 'admin') return res.redirect('/admin');
-    if (req.session.role === 'student') return res.redirect('/student');
-    if (req.session.role === 'personal') return res.redirect('/personal');
-  }
-  const error = req.flash('error')[0] || req.query.error || null;
-  res.render('login', {
-    title: 'Secure Access - librika.in',
-    demo_mode: req.session.demo_mode || false,
-    error,
-  });
-});
+const authController = require('./controllers/authController');
 
-app.post('/login', async (req, res) => {
-  const { login_type, school_code, username, password } = req.body;
-  try {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE username = $1 OR phone = $1 OR email = $1',
-      [username]
-    );
-    if (result.rows.length === 0) {
-      req.flash('error', 'Invalid credentials');
-      return res.redirect('/login');
-    }
-    const user = result.rows[0];
-    if (user.banned) {
-      req.flash('error', 'Your account has been banned. Contact support.');
-      return res.redirect('/login');
-    }
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      req.flash('error', 'Invalid credentials');
-      return res.redirect('/login');
-    }
-    req.session.user_id = user.id;
-    req.session.username = user.username || user.phone;
-    req.session.name = user.name;
-    req.session.role = user.role;
-    req.session.school_code = user.school_code || school_code || null;
-    req.session.demo_mode = false;
-    if (!user.profile_complete && (user.role === 'student' || user.role === 'personal')) {
-      return res.redirect('/complete-profile');
-    }
-    if (user.role === 'super_admin' || user.role === 'admin') return res.redirect('/admin');
-    if (user.role === 'student') return res.redirect('/student');
-    if (user.role === 'personal') return res.redirect('/personal');
-    res.redirect('/');
-  } catch (err) {
-    console.error('Login error:', err);
-    req.flash('error', 'An error occurred during login');
-    res.redirect('/login');
-  }
-});
+app.get('/login', authController.getLogin);
+app.post('/login', authController.postLogin);
 
 app.get('/register', (req, res) => {
   res.render('register', { title: 'Join - librika.in' });
@@ -130,7 +165,7 @@ app.post('/register', upload.single('profile_photo'), async (req, res) => {
     return res.redirect('/register');
   }
   try {
-    const existing = await pool.query(
+    const existing = await db.query(
       'SELECT id FROM users WHERE phone = $1 OR email = $1',
       [phone]
     );
@@ -141,22 +176,25 @@ app.post('/register', upload.single('profile_photo'), async (req, res) => {
     let role = account_type === 'personal' ? 'personal' : 'student';
     const code = account_type === 'personal' ? null : (school_code || null);
     if (account_type === 'school' && code) {
-      const schoolCheck = await pool.query('SELECT id FROM schools WHERE school_code = $1', [code]);
+      const schoolCheck = await db.query('SELECT id FROM schools WHERE school_code = $1', [code]);
       if (schoolCheck.rows.length === 0) {
-        await pool.query(
-          'INSERT INTO schools (school_code, name) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [code, name + '\'s School']
+        await db.query(
+          'INSERT INTO schools (school_code, name) VALUES ($1, $2)',
+          [code, name + "'s School"]
         );
       }
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      `INSERT INTO users (username, name, email, phone, password, role, school_code, profile_complete)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, false)
-       RETURNING id`,
-      [phone, name, email || null, phone, hashedPassword, role, code]
+    const result = await db.query(
+      `INSERT INTO users (name, email, phone, password, role, school_code, profile_complete)
+       VALUES ($1, $2, $3, $4, $5, $6, false)`,
+      [name, email || null, phone, hashedPassword, role, code]
     );
-    const userId = result.rows[0].id;
+    
+    // Fetch inserted user
+    const newUserRes = await db.query('SELECT id FROM users WHERE phone = $1', [phone]);
+    const userId = newUserRes.rows[0] ? newUserRes.rows[0].id : (result.lastId || result.insertId);
+    
     req.session.user_id = userId;
     req.session.username = phone;
     req.session.name = name;
@@ -189,7 +227,7 @@ app.post('/complete-profile', async (req, res) => {
     if (updates.length > 0) {
       updates.push(`profile_complete = true`);
       values.push(req.session.user_id);
-      await pool.query(
+      await db.query(
         `UPDATE users SET ${updates.join(', ')} WHERE id = $${idx}`,
         values
       );
@@ -207,8 +245,12 @@ app.post('/complete-profile', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
+  res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '-1');
   req.session.destroy((err) => {
     if (err) console.error('Logout error:', err);
+    res.clearCookie('connect.sid');
     res.redirect('/login');
   });
 });
@@ -224,6 +266,8 @@ app.get('/exit-demo', (req, res) => {
 });
 
 // ── Route Mounting ─────────────────────────────────────────────────
+const maintenanceMiddleware = require('./middleware/maintenanceMiddleware');
+app.use(maintenanceMiddleware);
 
 // Auth routes
 app.use('/', require('./routes/authRoutes'));
@@ -231,11 +275,17 @@ app.use('/', require('./routes/authRoutes'));
 // Admin routes
 app.use('/admin', require('./routes/admin'));
 
+// Data Hub routes (Import / Export)
+app.use('/data', require('./routes/dataRoutes'));
+
 // Student routes
 app.use('/student', require('./routes/student'));
 
+// Student Portal routes (goals, analytics, assignments, security, AI, etc.)
+app.use('/student', require('./routes/student_portal'));
+
 // Super-admin routes
-app.use('/super-admin', require('./routes/admin'));
+app.use('/super-admin', require('./routes/superAdmin'));
 
 // Digital library routes
 const digitalRoutes = require('./routes/digital');
@@ -243,9 +293,43 @@ app.use('/digital-library', digitalRoutes);
 app.use('/author', digitalRoutes);
 app.use('/leaderboard', digitalRoutes);
 
-// API routes
-app.use('/api', require('./routes/apiRoutes'));
-app.use('/api', digitalRoutes);
+// Public Advertisement API Endpoints
+app.get('/api/ads', async (req, res) => {
+  const section = req.query.section || 'all';
+  try {
+    const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const queryStr = `
+      SELECT * FROM advertisements 
+      WHERE status = 'active'
+      AND (start_time IS NULL OR start_time <= $1)
+      AND (end_time IS NULL OR end_time >= $1)
+      AND (target_section = 'all' OR target_section = $2)
+      ORDER BY priority DESC, created_at DESC
+    `;
+    const result = await db.query(queryStr, [nowStr, section]);
+    const ads = result.rows;
+
+    if (ads.length > 0) {
+      const ids = ads.map(a => a.id);
+      db.query(`UPDATE advertisements SET impressions = impressions + 1 WHERE id IN (${ids.join(',')})`).catch(() => {});
+    }
+
+    res.json({ status: 'success', advertisements: ads });
+  } catch (err) {
+    console.error('Fetch Ads Error:', err);
+    res.json({ status: 'error', advertisements: [] });
+  }
+});
+
+app.post('/api/ads/:id/click', async (req, res) => {
+  const adId = parseInt(req.params.id);
+  try {
+    await db.query('UPDATE advertisements SET clicks = clicks + 1 WHERE id = $1', [adId]);
+    res.json({ status: 'success' });
+  } catch (err) {
+    res.status(500).json({ status: 'error' });
+  }
+});
 
 // Personal library routes
 const personalRoutes = require('./routes/personal');
@@ -256,7 +340,7 @@ app.use('/personal', async (req, res, next) => {
   res.locals.personal_active_library = null;
   if (req.session && req.session.user_id && req.session.role === 'personal') {
     try {
-      const myLibs = await pool.query(
+      const myLibs = await db.query(
         `SELECT pl.*, COUNT(pb.id) as book_count FROM personal_libraries pl
          LEFT JOIN personal_books pb ON pl.id = pb.library_id
          WHERE pl.owner_id = $1 GROUP BY pl.id ORDER BY pl.id ASC`,
@@ -264,7 +348,7 @@ app.use('/personal', async (req, res, next) => {
       );
       res.locals.personal_my_libraries = myLibs.rows;
 
-      const sharedLibs = await pool.query(
+      const sharedLibs = await db.query(
         `SELECT pl.*, COUNT(pb.id) as book_count, u.name as owner_name FROM personal_libraries pl
          JOIN personal_library_shares pls ON pl.id = pls.library_id
          JOIN users u ON pl.owner_id = u.id
@@ -275,7 +359,7 @@ app.use('/personal', async (req, res, next) => {
       res.locals.personal_shared_libraries = sharedLibs.rows;
 
       if (req.session.active_library_id) {
-        const active = await pool.query('SELECT * FROM personal_libraries WHERE id = $1', [req.session.active_library_id]);
+        const active = await db.query('SELECT * FROM personal_libraries WHERE id = $1', [req.session.active_library_id]);
         if (active.rows.length > 0) {
           res.locals.personal_active_library = active.rows[0];
         }
@@ -301,7 +385,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.message || err);
+  console.error('Unhandled error stack trace:', err.stack || err);
   if (res.headersSent) return next(err);
   const accepts = req.accepts(['html', 'json']);
   if (accepts === 'json') {
@@ -316,3 +400,5 @@ app.listen(PORT, () => {
   console.log(`Librika server running on http://localhost:${PORT}`);
   startJobs();
 });
+
+module.exports = app;

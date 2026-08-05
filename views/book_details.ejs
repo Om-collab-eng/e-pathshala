@@ -1,6 +1,13 @@
 <%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
 
 <% contentFor("content") %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'browse' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Book Details' }) %>
+      <main class="sp-content">
 <style>
     .nav-pills-container {
         display: flex;
@@ -115,4 +122,9 @@
             </div>
         </div>
     </div>
+</div>
+
+      </main>
+    </div>
+  </div>
 </div>

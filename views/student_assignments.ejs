@@ -1,0 +1,46 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'assignments' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Assignments', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Assignments</h1>
+          <p class="sp-page-sub">Track your classwork and submit your work online.</p>
+        </div>
+
+        <% if (assignments.length) { %>
+        <div class="sp-list">
+          <% assignments.forEach(function (a) { %>
+          <% var sub = submissions.find(function (s) { return s.assignment_id === a.id; }); %>
+          <% var status = sub ? sub.status : (new Date(a.due_date) < new Date() ? 'overdue' : 'open'); %>
+          <% var chip = status === 'submitted' || status === 'resubmitted' ? 'sp-chip-green' : (status === 'graded' ? 'sp-chip-purple' : (status === 'overdue' ? 'sp-chip-red' : 'sp-chip-orange')); %>
+          <a href="/student/assignments/<%= a.id %>" class="sp-assignment-card" style="text-decoration: none;">
+            <div class="sp-goal-head">
+              <div>
+                <h3 class="sp-book-title" style="margin:0"><%= a.title %></h3>
+                <p class="sp-book-author" style="margin:0">
+                  <%= a.subject || a.class || 'Class' %> &bull; Due <%= String(a.due_date).slice(0, 10) %>
+                </p>
+              </div>
+              <span class="sp-chip <%= chip %>"><%= status %></span>
+            </div>
+            <% if (a.description) { %><p class="sp-card-text sp-mt-1"><%= a.description %></p><% } %>
+          </a>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty">
+            <span class="sp-empty-icon">📝</span>
+            <p class="sp-empty-title">No assignments</p>
+            <p class="sp-empty-sub">When teachers post assignments, they will appear here.</p>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>

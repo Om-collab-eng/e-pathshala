@@ -1,0 +1,55 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'wishlist' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Wishlist', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Wishlist</h1>
+          <p class="sp-page-sub">Books you want to read when they are available.</p>
+        </div>
+
+        <% if (wishlist.length) { %>
+        <div class="sp-list">
+          <% wishlist.forEach(function(w) { %>
+          <div class="sp-row">
+            <div class="sp-row-main">
+              <div class="sp-row-title"><%= w.title %></div>
+              <div class="sp-row-sub">
+                <%= w.author %> &bull; <%= w.genre || 'General' %> &bull;
+                <% if (parseInt(w.available_copies, 10) > 0) { %>
+                  <span class="sp-text-green">Available now</span>
+                <% } else { %>
+                  <span class="sp-text-orange">Out of stock</span>
+                <% } %>
+              </div>
+            </div>
+            <div class="sp-row-actions">
+              <a href="/student/book/<%= w.book_id %>" class="sp-btn sp-btn-sm sp-btn-outline">View</a>
+              <button class="sp-btn sp-btn-sm sp-btn-danger" onclick="removeWish(<%= w.book_id %>)">Remove</button>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty">
+            <span class="sp-empty-icon">🎁</span>
+            <p class="sp-empty-title">Wishlist is empty</p>
+            <p class="sp-empty-sub">Add books you would like to borrow later from the catalog.</p>
+            <a href="/student/browse" class="sp-btn sp-btn-primary sp-mt-2">Browse Library</a>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  async function removeWish(id) {
+    const r = await fetch('/student/api/wishlist/' + id, { method: 'POST' });
+    if (r.ok) window.location.reload();
+  }
+</script>

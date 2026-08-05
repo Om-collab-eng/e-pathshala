@@ -1,0 +1,80 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'analytics' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Analytics', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Analytics</h1>
+          <p class="sp-page-sub">Your reading habits at a glance.</p>
+        </div>
+
+        <div class="sp-stats-grid">
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">⏱️</div>
+            <div class="sp-stat-value"><%= hoursRead %>h</div>
+            <div class="sp-stat-label">Total Reading</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">📖</div>
+            <div class="sp-stat-value"><%= booksCompleted %></div>
+            <div class="sp-stat-label">Books Finished</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">🔤</div>
+            <div class="sp-stat-value"><%= pagesRead %></div>
+            <div class="sp-stat-label">Pages Read</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">🤖</div>
+            <div class="sp-stat-value"><%= aiUses %></div>
+            <div class="sp-stat-label">AI Assistants</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">⬇️</div>
+            <div class="sp-stat-value"><%= downloads %></div>
+            <div class="sp-stat-label">Downloads</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">✏️</div>
+            <div class="sp-stat-value"><%= contributions %></div>
+            <div class="sp-stat-label">Contributions</div>
+          </div>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Reading Activity</h2>
+          <% var maxM = Math.max.apply(null, months.map(function (m) { return m.value; })); %>
+          <div class="sp-chart">
+            <% months.forEach(function (m) { %>
+            <% var h = maxM > 0 ? Math.round((m.value / maxM) * 100) : 0; %>
+            <div class="sp-chart-col">
+              <div class="sp-chart-bar-wrap">
+                <div class="sp-chart-bar" style="height: <%= h %>%"><span class="sp-chart-val"><%= m.value %></span></div>
+              </div>
+              <span class="sp-chart-label"><%= m.label %></span>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Genres You Explore</h2>
+          <% if (genres.length) { %>
+          <% genres.forEach(function (g) { %>
+          <div class="sp-genre-row">
+            <span class="sp-genre-name"><%= g.genre %></span>
+            <div class="sp-progress-bar"><div class="sp-progress-fill sp-fill-accent" style="width: <%= Math.min(g.c * 20, 100) %>%"></div></div>
+            <span class="sp-genre-count"><%= g.c %></span>
+          </div>
+          <% }); %>
+          <% } else { %>
+          <div class="sp-empty"><span class="sp-empty-icon">📊</span><p class="sp-empty-title">No data yet</p><p class="sp-empty-sub">Your genre breakdown will appear as you read.</p></div>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>

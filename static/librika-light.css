@@ -1,0 +1,386 @@
+/* ═══════════════════════════════════════════════════════════════
+   LIBRIKA — Premium Light Theme  (default for all roles)
+   Loaded globally via base.ejs
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ── Root tokens ──────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --sp-bg:              #f1f5f9;
+  --sp-sidebar-bg:      #ffffff;
+  --sp-card-bg:         #ffffff;
+  --sp-card-hover:      #f8fafc;
+  --sp-input-bg:        #f8fafc;
+  --sp-topbar-bg:       #ffffff;
+
+  /* Text */
+  --sp-text-dark:       #0f172a;
+  --sp-text-mid:        #475569;
+  --sp-muted:           #94a3b8;
+  --sp-text-white:      #ffffff;
+
+  /* Brand */
+  --sp-accent:          #6366f1;
+  --sp-accent-2:        #a855f7;
+  --sp-accent-hover:    #4f46e5;
+  --sp-accent-soft:     rgba(99,102,241,0.1);
+  --sp-accent-soft2:    rgba(99,102,241,0.06);
+
+  /* Borders & Shadows */
+  --sp-border:          #e2e8f0;
+  --sp-border-mid:      #cbd5e1;
+  --sp-shadow:          0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --sp-shadow-lg:       0 4px 24px rgba(0,0,0,0.08);
+  --sp-shadow-card:     0 2px 8px rgba(99,102,241,0.08);
+
+  /* Status */
+  --sp-green:           #10b981;
+  --sp-green-soft:      rgba(16,185,129,0.1);
+  --sp-red:             #ef4444;
+  --sp-red-soft:        rgba(239,68,68,0.1);
+  --sp-orange:          #f59e0b;
+  --sp-orange-soft:     rgba(245,158,11,0.1);
+  --sp-purple:          #8b5cf6;
+  --sp-purple-soft:     rgba(139,92,246,0.1);
+
+  /* Global overrides */
+  --bg-main:            #f1f5f9;
+  --bg-card:            #ffffff;
+  --bg-lighter:         #f8fafc;
+  --text-high:          #0f172a;
+  --text-mid:           #475569;
+  --text-low:           #94a3b8;
+  --border:             #e2e8f0;
+  --border-light:       #f1f5f9;
+  --primary-color:      #6366f1;
+  --shadow-premium:     0 4px 24px rgba(0,0,0,0.08);
+  --glass-blur:         none;
+}
+
+/* ── Force light on html/body ─────────────────────────────────── */
+html, html[data-theme="dark"], html[data-theme="light"] {
+  color-scheme: light !important;
+}
+body {
+  background: var(--sp-bg) !important;
+  color: var(--sp-text-dark) !important;
+  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   STUDENT PORTAL — sp-* shell
+   ══════════════════════════════════════════════════════ */
+
+.sp-page  { background: var(--sp-bg) !important; min-height: 100vh; }
+.sp-layout { display: flex; min-height: 100vh; background: var(--sp-bg) !important; }
+.sp-main  { flex: 1; min-width: 0; background: var(--sp-bg) !important; }
+
+/* ── Sidebar ──────────────────────────────────────────── */
+.sp-sidebar,
+.st-sidebar {
+  background: var(--sp-sidebar-bg) !important;
+  border-right: 1px solid var(--sp-border) !important;
+  box-shadow: var(--sp-shadow) !important;
+  color: var(--sp-text-dark) !important;
+}
+.sp-sidebar-brand,
+.st-sidebar-brand {
+  background: var(--sp-sidebar-bg) !important;
+  border-bottom: 1px solid var(--sp-border) !important;
+}
+.sp-sidebar-brand span,
+.st-sidebar-brand span,
+.sp-sidebar-brand h2 {
+  color: var(--sp-accent) !important;
+}
+.sp-sidebar-overlay {
+  background: rgba(15,23,42,0.4) !important;
+}
+.sp-sidebar-close {
+  background: var(--sp-accent-soft) !important;
+  color: var(--sp-accent) !important;
+}
+
+/* Nav items */
+.sp-nav-item,
+.st-nav-item {
+  color: var(--sp-text-mid) !important;
+  background: transparent !important;
+  border-left: 3px solid transparent !important;
+}
+.sp-nav-item:hover,
+.st-nav-item:hover {
+  background: var(--sp-accent-soft2) !important;
+  color: var(--sp-accent) !important;
+}
+.sp-nav-item.active,
+.st-nav-item.active {
+  background: var(--sp-accent-soft) !important;
+  color: var(--sp-accent) !important;
+  border-left: 3px solid var(--sp-accent) !important;
+  font-weight: 700 !important;
+}
+.sp-nav-icon,
+.st-nav-icon { color: inherit !important; }
+
+/* Sidebar footer */
+.sp-sidebar-footer,
+.st-footer {
+  background: var(--sp-sidebar-bg) !important;
+  border-top: 1px solid var(--sp-border) !important;
+}
+.st-footer-btn {
+  color: var(--sp-text-mid) !important;
+  background: transparent !important;
+}
+.st-footer-btn:hover { background: var(--sp-accent-soft2) !important; color: var(--sp-accent) !important; }
+
+/* ── Topbar ───────────────────────────────────────────── */
+.sp-topbar,
+.st-topbar {
+  background: var(--sp-topbar-bg) !important;
+  border-bottom: 1px solid var(--sp-border) !important;
+  box-shadow: var(--sp-shadow) !important;
+  color: var(--sp-text-dark) !important;
+}
+.sp-topbar-title,
+.st-topbar-title { color: var(--sp-text-dark) !important; }
+.sp-topbar-sub   { color: var(--sp-text-mid) !important; }
+.sp-hamburger    { color: var(--sp-text-dark) !important; background: var(--sp-input-bg) !important; border: 1px solid var(--sp-border) !important; }
+.sp-notif-btn    { color: var(--sp-text-mid) !important; background: var(--sp-input-bg) !important; border: 1px solid var(--sp-border) !important; }
+.sp-notif-btn:hover { color: var(--sp-accent) !important; border-color: var(--sp-accent) !important; }
+.sp-avatar       { background: linear-gradient(135deg, var(--sp-accent), var(--sp-accent-2)) !important; }
+.sp-user-name    { color: var(--sp-text-dark) !important; }
+.sp-user-role    { color: var(--sp-text-mid) !important; }
+
+/* ── Content area ─────────────────────────────────────── */
+.sp-content      { background: var(--sp-bg) !important; }
+.sp-page-title   { color: var(--sp-text-dark) !important; }
+.sp-page-sub     { color: var(--sp-text-mid) !important; }
+.sp-section-title{ color: var(--sp-text-dark) !important; }
+
+/* Page header banners — replace dark navy with light indigo */
+.sp-page-header {
+  background: linear-gradient(135deg, #eef2ff, #f5f3ff) !important;
+  border-bottom: 1px solid var(--sp-border) !important;
+  border-radius: 12px !important;
+  margin-bottom: 1.5rem !important;
+  padding: 1.5rem 2rem !important;
+}
+.sp-page-header .sp-page-title { color: #3730a3 !important; }
+.sp-page-header .sp-page-sub   { color: #6366f1 !important; }
+
+/* ── Cards ────────────────────────────────────────────── */
+.sp-card {
+  background: var(--sp-card-bg) !important;
+  border: 1px solid var(--sp-border) !important;
+  box-shadow: var(--sp-shadow-card) !important;
+  border-radius: 16px !important;
+  color: var(--sp-text-dark) !important;
+}
+.sp-card:hover { box-shadow: var(--sp-shadow-lg) !important; }
+
+/* ── Stats / KPI ──────────────────────────────────────── */
+.sp-stat-card {
+  background: var(--sp-card-bg) !important;
+  border: 1px solid var(--sp-border) !important;
+  box-shadow: var(--sp-shadow-card) !important;
+  border-radius: 14px !important;
+}
+.sp-stat-value { color: var(--sp-text-dark) !important; }
+.sp-stat-label { color: var(--sp-text-mid) !important; }
+.sp-stat-icon  { background: var(--sp-accent-soft) !important; color: var(--sp-accent) !important; }
+
+/* ── Buttons ──────────────────────────────────────────── */
+.sp-btn {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  transition: all 0.18s !important;
+}
+.sp-btn-primary {
+  background: linear-gradient(135deg, var(--sp-accent), var(--sp-accent-2)) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 2px 12px rgba(99,102,241,0.3) !important;
+}
+.sp-btn-primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4) !important;
+}
+.sp-btn-ghost {
+  background: transparent !important;
+  border: 1.5px solid var(--sp-border) !important;
+  color: var(--sp-text-mid) !important;
+}
+.sp-btn-ghost:hover { border-color: var(--sp-accent) !important; color: var(--sp-accent) !important; background: var(--sp-accent-soft) !important; }
+.sp-btn-danger { background: var(--sp-red-soft) !important; color: var(--sp-red) !important; border: 1.5px solid var(--sp-red) !important; }
+.sp-btn-sm { padding: 6px 14px !important; font-size: 0.8rem !important; }
+.sp-icon-btn { background: var(--sp-input-bg) !important; border: 1px solid var(--sp-border) !important; color: var(--sp-text-mid) !important; border-radius: 8px !important; }
+.sp-icon-btn:hover { color: var(--sp-accent) !important; border-color: var(--sp-accent) !important; }
+
+/* ── Forms ────────────────────────────────────────────── */
+.sp-input, .sp-form input, .sp-form select, .sp-form textarea {
+  background: var(--sp-input-bg) !important;
+  border: 1.5px solid var(--sp-border) !important;
+  color: var(--sp-text-dark) !important;
+  border-radius: 10px !important;
+}
+.sp-input:focus, .sp-form input:focus, .sp-form select:focus, .sp-form textarea:focus {
+  border-color: var(--sp-accent) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
+  outline: none !important;
+}
+.sp-label { color: var(--sp-text-mid) !important; font-weight: 600 !important; }
+
+/* ── Chips / Badges ───────────────────────────────────── */
+.sp-chip           { border-radius: 999px !important; font-weight: 600 !important; font-size: 0.72rem !important; }
+.sp-chip-purple    { background: var(--sp-purple-soft) !important; color: var(--sp-purple) !important; }
+.sp-chip-green     { background: var(--sp-green-soft) !important; color: var(--sp-green) !important; }
+.sp-chip-red       { background: var(--sp-red-soft) !important; color: var(--sp-red) !important; }
+.sp-chip-orange    { background: var(--sp-orange-soft) !important; color: var(--sp-orange) !important; }
+.sp-chip-blue      { background: rgba(59,130,246,0.1) !important; color: #3b82f6 !important; }
+.sp-chip-sm        { padding: 2px 8px !important; font-size: 0.68rem !important; }
+
+/* ── Lists / Rows ─────────────────────────────────────── */
+.sp-list { display: flex; flex-direction: column; gap: 8px; }
+.sp-row {
+  background: var(--sp-card-bg) !important;
+  border: 1px solid var(--sp-border) !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  transition: all 0.18s !important;
+  color: var(--sp-text-dark) !important;
+}
+.sp-row:hover { border-color: var(--sp-accent) !important; box-shadow: var(--sp-shadow-card) !important; }
+.sp-row-title { color: var(--sp-text-dark) !important; font-weight: 600 !important; }
+.sp-row-sub   { color: var(--sp-text-mid) !important; font-size: 0.82rem !important; }
+
+/* ── Tabs ─────────────────────────────────────────────── */
+.sp-tabs { border-bottom: 2px solid var(--sp-border) !important; }
+.sp-tab  { color: var(--sp-text-mid) !important; background: transparent !important; border: none !important; border-bottom: 2px solid transparent !important; font-weight: 600 !important; }
+.sp-tab.active { color: var(--sp-accent) !important; border-bottom: 2px solid var(--sp-accent) !important; }
+.sp-tab:hover  { color: var(--sp-accent) !important; }
+
+/* ── Banners ──────────────────────────────────────────── */
+.sp-banner        { border-radius: 10px !important; padding: 12px 16px !important; font-weight: 600 !important; }
+.sp-banner-green  { background: var(--sp-green-soft) !important; color: #065f46 !important; border: 1px solid #6ee7b7 !important; }
+.sp-banner-red    { background: var(--sp-red-soft) !important; color: #991b1b !important; border: 1px solid #fca5a5 !important; }
+
+/* ── Empty states ─────────────────────────────────────── */
+.sp-empty       { text-align: center; padding: 3rem 1rem !important; }
+.sp-empty-icon  { font-size: 3rem; display: block; margin-bottom: 1rem; }
+.sp-empty-title { color: var(--sp-text-dark) !important; font-weight: 700 !important; font-size: 1.1rem !important; margin-bottom: 0.4rem !important; }
+.sp-empty-sub   { color: var(--sp-text-mid) !important; font-size: 0.9rem !important; }
+
+/* ── Book grid cards ──────────────────────────────────── */
+.sp-book-card {
+  background: var(--sp-card-bg) !important;
+  border: 1px solid var(--sp-border) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--sp-shadow) !important;
+  transition: all 0.2s !important;
+  overflow: hidden !important;
+  color: var(--sp-text-dark) !important;
+}
+.sp-book-card:hover { transform: translateY(-3px) !important; box-shadow: var(--sp-shadow-lg) !important; border-color: var(--sp-accent) !important; }
+.sp-book-title  { color: var(--sp-text-dark) !important; font-weight: 700 !important; }
+.sp-book-author { color: var(--sp-text-mid) !important; }
+.sp-book-meta   { color: var(--sp-muted) !important; }
+
+/* ── Search bar ───────────────────────────────────────── */
+.sp-search-bar {
+  background: var(--sp-card-bg) !important;
+  border: 1.5px solid var(--sp-border) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--sp-shadow) !important;
+}
+.sp-search-bar input {
+  background: transparent !important;
+  color: var(--sp-text-dark) !important;
+}
+.sp-search-bar input::placeholder { color: var(--sp-muted) !important; }
+
+/* ── Category pills ───────────────────────────────────── */
+.sp-pill {
+  background: var(--sp-card-bg) !important;
+  border: 1.5px solid var(--sp-border) !important;
+  color: var(--sp-text-mid) !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  transition: all 0.18s !important;
+}
+.sp-pill:hover, .sp-pill.active {
+  background: var(--sp-accent) !important;
+  border-color: var(--sp-accent) !important;
+  color: #fff !important;
+}
+
+/* ── Progress bars ────────────────────────────────────── */
+.sp-progress-track { background: #e2e8f0 !important; border-radius: 999px !important; }
+.sp-progress-fill  { background: linear-gradient(90deg, var(--sp-accent), var(--sp-accent-2)) !important; border-radius: 999px !important; }
+
+/* ── Hero / gradient banners (dark to light) ──────────── */
+.st-hero, .sp-hero,
+[style*="linear-gradient(135deg, #1e1b4b"],
+[style*="linear-gradient(135deg, #060d"],
+[style*="background: #060d1f"],
+[style*="background:#060d1f"] {
+  background: linear-gradient(135deg, #eef2ff, #f5f3ff) !important;
+  color: #3730a3 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   ADMIN / LIBRARIAN DASHBOARD
+   ══════════════════════════════════════════════════════ */
+.portal-wrapper,
+.admin-layout,
+.admin-shell {
+  background: var(--sp-bg) !important;
+}
+.portal-sidebar,
+.admin-sidebar {
+  background: var(--sp-sidebar-bg) !important;
+  border-right: 1px solid var(--sp-border) !important;
+  box-shadow: var(--sp-shadow) !important;
+}
+.portal-main,
+.admin-main { background: var(--sp-bg) !important; }
+
+.sidebar-nav a, .sidebar-nav .nav-item {
+  color: var(--sp-text-mid) !important;
+}
+.sidebar-nav a:hover, .sidebar-nav .nav-item:hover,
+.sidebar-nav a.active, .sidebar-nav .nav-item.active {
+  background: var(--sp-accent-soft) !important;
+  color: var(--sp-accent) !important;
+}
+
+/* Admin cards */
+.stat-card, .info-card, .admin-card, .dashboard-card {
+  background: var(--sp-card-bg) !important;
+  border: 1px solid var(--sp-border) !important;
+  box-shadow: var(--sp-shadow-card) !important;
+  color: var(--sp-text-dark) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   SUPER ADMIN DASHBOARD
+   ══════════════════════════════════════════════════════ */
+.sa-shell, .sa-layout  { background: var(--sp-bg) !important; }
+.sa-sidebar            { background: var(--sp-sidebar-bg) !important; border-right: 1px solid var(--sp-border) !important; }
+.sa-main               { background: var(--sp-bg) !important; }
+.sa-card               { background: var(--sp-card-bg) !important; border: 1px solid var(--sp-border) !important; color: var(--sp-text-dark) !important; box-shadow: var(--sp-shadow-card) !important; }
+.sa-topbar             { background: var(--sp-topbar-bg) !important; border-bottom: 1px solid var(--sp-border) !important; }
+.sa-nav-item           { color: var(--sp-text-mid) !important; }
+.sa-nav-item:hover, .sa-nav-item.active { background: var(--sp-accent-soft) !important; color: var(--sp-accent) !important; }
+
+/* ══════════════════════════════════════════════════════
+   DARK-THEME OVERRIDE — block dark mode from loading
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] body      { background: var(--sp-bg) !important; color: var(--sp-text-dark) !important; }
+[data-theme="dark"] .sp-page  { background: var(--sp-bg) !important; }
+[data-theme="dark"] .sp-sidebar { background: var(--sp-sidebar-bg) !important; }
+[data-theme="dark"] .sp-card  { background: var(--sp-card-bg) !important; border-color: var(--sp-border) !important; }

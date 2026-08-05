@@ -1,0 +1,64 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'history' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Reading History', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Reading History</h1>
+          <p class="sp-page-sub">Books and resources you have finished reading.</p>
+        </div>
+
+        <div class="sp-tabs">
+          <button class="sp-tab active" data-filter="all" onclick="showHistory('all', this)">All</button>
+          <button class="sp-tab" data-filter="book" onclick="showHistory('book', this)">Physical Books</button>
+          <button class="sp-tab" data-filter="digital" onclick="showHistory('digital', this)">Digital</button>
+        </div>
+
+        <% var totalItems = physical.length + digital.length; %>
+        <% if (totalItems) { %>
+        <div class="sp-list">
+          <% physical.forEach(function(h) { %>
+          <div class="sp-row" data-kind="book">
+            <div class="sp-row-main">
+              <div class="sp-row-title"><%= h.title %></div>
+              <div class="sp-row-sub"><%= h.author %> &bull; Returned <%= String(h.return_date).slice(0, 10) %></div>
+            </div>
+            <span class="sp-chip sp-chip-purple">Book</span>
+          </div>
+          <% }); %>
+          <% digital.forEach(function(h) { %>
+          <div class="sp-row" data-kind="digital">
+            <div class="sp-row-main">
+              <div class="sp-row-title"><%= h.title %></div>
+              <div class="sp-row-sub"><%= h.category || h.subject || 'Digital' %> &bull; Finished <%= String(h.completed_at).slice(0, 10) %></div>
+            </div>
+            <span class="sp-chip sp-chip-green">Digital</span>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty">
+            <span class="sp-empty-icon">📚</span>
+            <p class="sp-empty-title">Nothing finished yet</p>
+            <p class="sp-empty-sub">Returned books and completed digital reads will appear here.</p>
+            <a href="/student/browse" class="sp-btn sp-btn-primary sp-mt-2">Browse Library</a>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  function showHistory(kind, btn) {
+    document.querySelectorAll('.sp-tab').forEach(function (t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('.sp-row[data-kind]').forEach(function (r) {
+      r.style.display = (kind === 'all' || r.dataset.kind === kind) ? '' : 'none';
+    });
+  }
+</script>

@@ -1,0 +1,62 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'achievements' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Achievements', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Achievements</h1>
+          <p class="sp-page-sub">Badges, points and milestones earned along the way.</p>
+        </div>
+
+        <div class="sp-stats-grid">
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">🏅</div>
+            <div class="sp-stat-value"><%= badgesDef.filter(function (b) { return b.value >= b.target; }).length %> / <%= badgesDef.length %></div>
+            <div class="sp-stat-label">Badges Earned</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">💎</div>
+            <div class="sp-stat-value"><%= score %></div>
+            <div class="sp-stat-label">Reader Score</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">🔥</div>
+            <div class="sp-stat-value"><%= streak %> days</div>
+            <div class="sp-stat-label">Current Streak</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">📖</div>
+            <div class="sp-stat-value"><%= totalDone %></div>
+            <div class="sp-stat-label">Books Done</div>
+          </div>
+        </div>
+
+        <% if (badgesDef.length) { %>
+        <div class="sp-badges-grid">
+          <% badgesDef.forEach(function (b) { %>
+          <% var earned = b.value >= b.target; %>
+          <div class="sp-badge-card <%= earned ? '' : 'sp-badge-locked' %>">
+            <span class="sp-badge-icon"><%= earned ? b.icon : '🔒' %></span>
+            <h3 class="sp-badge-name"><%= b.key %></h3>
+            <p class="sp-badge-desc"><%= b.desc %></p>
+            <p class="sp-badge-progress"><%= Math.min(b.value, b.target) %> / <%= b.target %></p>
+            <span class="sp-chip <%= earned ? 'sp-chip-green' : '' %>"><%= earned ? 'Earned' : 'Locked' %></span>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty">
+            <span class="sp-empty-icon">🏅</span>
+            <p class="sp-empty-title">No badges available yet</p>
+            <p class="sp-empty-sub">Keep reading to unlock achievements.</p>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>

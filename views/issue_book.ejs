@@ -1,8 +1,3 @@
-<%- layout("base") %>
-
-<% contentFor("title") %>Issue Terminal - librika.in</%>
-
-<% contentFor("content") %>
 <style>
     /* Premium layout rules */
     select option {
@@ -439,7 +434,13 @@
         };
     }
 
-    // Initialize on load
     document.addEventListener('DOMContentLoaded', initCamera);
 </script>
-</%>
+<style>
+/* LIBRIKA LIGHT PREMIUM — presentation overrides (issue_book) */
+.auth-card a[href="/logout"] {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+</style>

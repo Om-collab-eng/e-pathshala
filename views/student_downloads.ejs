@@ -1,0 +1,63 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'downloads' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Downloads', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Downloads</h1>
+          <p class="sp-page-sub">Resources you have downloaded for offline reading.</p>
+        </div>
+
+        <div class="sp-stats-grid">
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">📁</div>
+            <div class="sp-stat-value"><%= downloads.length %></div>
+            <div class="sp-stat-label">Files Saved</div>
+          </div>
+          <div class="sp-stat-card">
+            <div class="sp-stat-icon">💾</div>
+            <div class="sp-stat-value"><%= (storageUsed / (1024 * 1024)).toFixed(1) %> MB</div>
+            <div class="sp-stat-label">Storage Used</div>
+          </div>
+        </div>
+
+        <% if (downloads.length) { %>
+        <div class="sp-list">
+          <% downloads.forEach(function (d) { %>
+          <div class="sp-row">
+            <div class="sp-row-main">
+              <div class="sp-row-title"><%= d.title || d.content_title %></div>
+              <div class="sp-row-sub"><%= d.category || 'Digital Resource' %> &bull; Downloaded <%= String(d.created_at).slice(0, 10) %> &bull; <%= ((d.file_size || 0) / 1024).toFixed(0) %> KB</div>
+            </div>
+            <div class="sp-row-actions">
+              <% if (d.file_url) { %>
+              <a href="<%= d.file_url %>" target="_blank" class="sp-btn sp-btn-sm sp-btn-outline">Open</a>
+              <% } %>
+              <button class="sp-btn sp-btn-sm sp-btn-danger" onclick="removeDownload(<%= d.id %>)">Remove</button>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty">
+            <span class="sp-empty-icon">⬇️</span>
+            <p class="sp-empty-title">No downloads yet</p>
+            <p class="sp-empty-sub">Download digital resources from the Digital Library to read offline.</p>
+            <a href="/digital-library" class="sp-btn sp-btn-primary sp-mt-2">Go to Digital Library</a>
+          </div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  async function removeDownload(id) {
+    const r = await fetch('/student/api/downloads/remove/' + id, { method: 'POST' });
+    if (r.ok) window.location.reload();
+  }
+</script>

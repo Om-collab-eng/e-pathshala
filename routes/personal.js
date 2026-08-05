@@ -1,19 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const path = require('path');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { Parser } = require('json2csv');
 const csv = require('csv-parser');
 const fs = require('fs-extra');
-require('dotenv').config();
+const db = require('../db');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = { query: (text, params) => db.query(text, params) };
 const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
 
 function ownerOnly(req, res, next) {
-  if (req.session && req.session.user_id && req.session.role === 'personal') return next();
+  if (req.session && req.session.user_id && (req.session.role === 'personal' || req.session.role === 'owner')) return next();
   req.flash('error', 'Unauthorized. Personal Owner login required.');
   return res.redirect('/login');
 }
@@ -35,13 +34,15 @@ function renderDt(d) {
 
 async function ensureActiveLibrary(req) {
   if (!req.session.active_library_id) {
-    const result = await pool.query('SELECT id FROM personal_libraries WHERE owner_id = $1 ORDER BY id ASC LIMIT 1', [req.session.user_id]);
-    if (result.rows.length > 0) {
+    const result = await pool.query('SELECT id FROM personal_libraries WHERE owner_id = $1 AND id IS NOT NULL ORDER BY CAST(id AS UNSIGNED) ASC LIMIT 1', [req.session.user_id]);
+    if (result.rows.length > 0 && result.rows[0].id) {
       req.session.active_library_id = result.rows[0].id;
     } else {
-      const ins = await pool.query("INSERT INTO personal_libraries (owner_id, library_name, plan_name, created_at) VALUES ($1, 'My Private Library', 'FREE', $2) RETURNING id",
-        [req.session.user_id, nowStr()]);
-      req.session.active_library_id = ins.rows[0].id;
+      const maxIdRes = await pool.query('SELECT MAX(CAST(id AS UNSIGNED)) as max_id FROM personal_libraries');
+      const nextId = (parseInt(maxIdRes.rows[0]?.max_id) || 0) + 1;
+      const ins = await pool.query("INSERT INTO personal_libraries (id, owner_id, library_name, plan_name, created_at) VALUES ($1, $2, 'My Private Library', 'FREE', $3)",
+        [nextId, req.session.user_id, nowStr()]);
+      req.session.active_library_id = (ins.rows && ins.rows.length > 0) ? ins.rows[0].id : (ins.lastId || nextId);
     }
   }
 }
@@ -179,7 +180,7 @@ router.get('/books', ownerOnly, async (req, res) => {
     }
 
     const booksRes = await pool.query(
-      `SELECT pb.*, (SELECT 1 FROM personal_favorites pf WHERE pf.owner_id = $1 AND pf.item_type = 'book' AND pf.item_value = CAST(pb.id AS TEXT)) as is_fav
+      `SELECT pb.*, (SELECT 1 FROM personal_favorites pf WHERE pf.owner_id = $1 AND pf.item_type = 'book' AND pf.item_value = CAST(pb.id AS CHAR)) as is_fav
        FROM personal_books pb WHERE pb.library_id = $2 ORDER BY pb.id DESC`,
       [ownerId, activeId]);
 
@@ -633,7 +634,7 @@ router.get('/favorites', ownerOnly, async (req, res) => {
 
     const favBooks = (await pool.query(
       `SELECT pf.id as fav_id, pb.title, pb.author FROM personal_favorites pf
-       JOIN personal_books pb ON pf.item_value = CAST(pb.id AS TEXT)
+       JOIN personal_books pb ON pf.item_value = CAST(pb.id AS CHAR)
        WHERE pf.owner_id = $1 AND pf.item_type = 'book' ORDER BY pf.id DESC`,
       [ownerId])).rows;
 

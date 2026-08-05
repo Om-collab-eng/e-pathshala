@@ -5,17 +5,39 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
+const aiService = require('../services/aiService');
 require('dotenv').config();
 
 const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
 
+// Strict Router-Level RBAC Guard: Super Admin must NEVER load Librarian views
+router.use(async (req, res, next) => {
+  if (req.session && req.session.user_id) {
+    try {
+      const uRes = await db.query('SELECT role FROM users WHERE id = $1', [req.session.user_id]);
+      if (uRes && uRes.rows && uRes.rows.length > 0) {
+        const dbRole = uRes.rows[0].role;
+        req.session.role = dbRole;
+        if (dbRole === 'super_admin' || dbRole === 'superadmin') {
+          return res.redirect('/super-admin');
+        }
+      }
+    } catch(e) {}
+  }
+  if (req.session && (req.session.role === 'super_admin' || req.session.role === 'superadmin')) {
+    return res.redirect('/super-admin');
+  }
+  next();
+});
+
 function adminOnly(req, res, next) {
-  if (req.session && (req.session.role === 'admin' || req.session.role === 'super_admin')) return next();
+  if (req.session && (req.session.role === 'admin' || req.session.role === 'super_admin' || req.session.role === 'superadmin')) return next();
   req.flash('error', 'Access denied. Admin login required.');
   return res.redirect('/login');
 }
 
 function hasPerm(req, perm) {
+  if (req.session && (req.session.role === 'admin' || req.session.role === 'super_admin' || req.session.role === 'superadmin')) return true;
   const perms = req.session.permissions || [];
   return perms.includes(perm);
 }
@@ -37,6 +59,9 @@ function dueDate(days) {
 
 // ── Dashboard ────────────────────────────────────────────────────────
 router.get('/', adminOnly, async (req, res) => {
+  if (req.session && (req.session.role === 'super_admin' || req.session.role === 'superadmin')) {
+    return res.redirect('/super-admin');
+  }
   const sCode = req.session.school_code;
   const classFilter = req.query.class;
   try {
@@ -95,7 +120,7 @@ router.get('/', adminOnly, async (req, res) => {
     const overdueCount = transactions.filter(t => t.is_overdue).length;
 
     res.render('admin', {
-      title: 'Admin Dashboard - librika.in',
+      title: (req.session && (req.session.role === 'super_admin' || req.session.role === 'superadmin')) ? 'Super Admin Dashboard - librika.in' : 'Admin Dashboard - librika.in',
       transactions,
       classFilter,
       available_books: availableBooks,
@@ -232,18 +257,35 @@ router.post('/api/reservation/:resId/reject', adminOnly, async (req, res) => {
 // ── Student Management ──────────────────────────────────────────
 router.post('/student/add', adminOnly, async (req, res) => {
   if (!hasPerm(req, 'manage_students')) return res.redirect('/admin');
-  const sCode = req.session.school_code;
+  const sCode = req.session.school_code || '00000';
   const { name, admission_no, phone, class: cls, password, reqEmail, role, school_code } = req.body;
-  const sc = (school_code || sCode).toUpperCase();
+  const sc = (school_code || sCode || '00000').toUpperCase();
   try {
     const dup = (await db.query('SELECT id FROM users WHERE phone = $1', [phone])).rows[0];
     if (dup) { req.flash('error', 'Phone number already in use'); return res.redirect('/admin?section=members'); }
+    
+    // Generate next unique user ID for MySQL & SQLite
+    let nextId = Date.now();
+    try {
+      const maxRes = await db.query('SELECT MAX(CAST(id AS UNSIGNED)) as max_id FROM users');
+      if (maxRes && maxRes.rows && maxRes.rows[0]) {
+        const mVal = parseInt(maxRes.rows[0].max_id || maxRes.rows[0].MAX_ID || 0, 10);
+        if (!isNaN(mVal) && mVal > 0) nextId = mVal + 1;
+      }
+    } catch (e) {
+      console.log('User max id query error:', e.message);
+    }
+
     await db.query(
-      'INSERT INTO users (name, admission_no, phone, class, role, password, school_code, email, is_banned) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,0)',
-      [name, admission_no || null, phone, cls || null, role || 'student', password, sc, reqEmail || null]);
+      'INSERT INTO users (id, name, admission_no, phone, class, role, password, school_code, email, is_banned) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,0)',
+      [nextId, name, admission_no || null, phone, cls || null, role || 'student', password, sc, reqEmail || null]);
     req.flash('success', 'Member successfully registered!');
     res.redirect('/admin?section=members');
-  } catch (err) { console.error(err); req.flash('error', 'Failed to add member'); res.redirect('/admin?section=members'); }
+  } catch (err) {
+    console.error('Error adding member:', err);
+    req.flash('error', 'Failed to add member: ' + (err.message || 'Error'));
+    res.redirect('/admin?section=members');
+  }
 });
 
 router.post('/student/:id/toggle-ban', adminOnly, async (req, res) => {
@@ -325,9 +367,17 @@ router.post('/add_book', adminOnly, async (req, res) => {
         resolve();
       });
     });
-    await db.query(
-      'INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+    const insertRes = await db.query(
+      'INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id',
       [title, author, genre || 'General', barcodeId, parseInt(copies) || 1, parseInt(copies) || 1, sCode, description || null, isbn || null]);
+    
+    const bookId = (insertRes.rows && insertRes.rows.length > 0) ? insertRes.rows[0].id : (insertRes.lastId || null);
+    if (!description) {
+      aiService.generateBookDescription(title, author, isbn).then(desc => {
+        db.query('UPDATE books SET description = $1 WHERE id = $2', [desc, bookId]).catch(console.error);
+      }).catch(console.error);
+    }
+    
     req.flash('success', 'Book added successfully!');
     res.redirect('/admin');
   } catch (err) { console.error(err); req.flash('error', 'Failed to add book'); res.redirect('/admin/add_book'); }
@@ -446,16 +496,37 @@ router.get('/acquisitions', adminOnly, async (req, res) => {
 });
 
 router.post('/acquisitions/ocr', adminOnly, upload.single('invoice_file'), async (req, res) => {
-  // Mock OCR - return test data
-  const mockData = {
-    success: true,
-    bill_number: 'INV-' + Date.now().toString().slice(-6),
-    bill_date: renderDate(new Date()),
-    vendor_name: 'Mock Vendor',
-    total_amount: 0,
-    items: [{ isbn: '', title: 'Sample Book', author: 'Author', quantity: 1, unit_price: 0, shelf: 'A1', rack: '1' }]
-  };
-  res.json(mockData);
+  try {
+    if (!req.file) {
+      return res.json({ success: false, error: 'No file uploaded' });
+    }
+    const fs = require('fs');
+    const imgBuf = fs.readFileSync(req.file.path);
+    const base64Str = 'data:image/jpeg;base64,' + imgBuf.toString('base64');
+    
+    const extractedText = await aiService.extractTextOCR(base64Str);
+    
+    res.json({
+      success: true,
+      extracted_text: extractedText,
+      bill_number: 'INV-' + Date.now().toString().slice(-6),
+      bill_date: renderDate(new Date()),
+      vendor_name: 'OCR Extracted',
+      total_amount: 0,
+      items: [{ isbn: '', title: 'See extracted text', author: 'Unknown', quantity: 1, unit_price: 0, shelf: '', rack: '' }]
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: err.message });
+  }
+});
+
+router.post('/sync-cloudinary', adminOnly, async (req, res) => {
+  try {
+    res.json({ success: true, message: 'Cloudinary sync triggered' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 router.get('/acquisitions/isbn-lookup', async (req, res) => {
@@ -515,7 +586,7 @@ router.post('/acquisitions/complete', adminOnly, async (req, res) => {
       } else {
         const vRes = await db.query('INSERT INTO vendors (school_code, name, created_at) VALUES ($1,$2,$3) RETURNING id',
           [sCode, vendor_name, nowStr()]);
-        vId = vRes.rows[0].id;
+        vId = (vRes.rows && vRes.rows.length > 0) ? vRes.rows[0].id : (vRes.lastId || null);
       }
     }
     let acqId = acquisition_id;
@@ -533,7 +604,7 @@ router.post('/acquisitions/complete', adminOnly, async (req, res) => {
       const acqRes = await db.query(
         'INSERT INTO acquisitions (school_code, bill_number, bill_date, vendor_id, total_books, total_copies, total_amount, status, created_by, created_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id',
         [sCode, bill_number, bill_date, vId, items.length, items.reduce((a,i) => a + parseInt(i.quantity || 1), 0), total_amount || 0, 'Completed', userId, nowStr()]);
-      acqId = acqRes.rows[0].id;
+      acqId = (acqRes.rows && acqRes.rows.length > 0) ? acqRes.rows[0].id : (acqRes.lastId || null);
       if (invoice_image) {
         await db.query('UPDATE acquisitions SET invoice_image = $1 WHERE id = $2', [invoice_image, acqId]);
       }
@@ -552,7 +623,7 @@ router.post('/acquisitions/complete', adminOnly, async (req, res) => {
           const bRes = await db.query(
             'INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, isbn) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
             [item.title, item.author || 'Unknown', item.category || 'General', 'ACC-' + Date.now() + Math.random().toString(36).slice(2,6), parseInt(item.quantity) || 1, parseInt(item.quantity) || 1, sCode, item.isbn || null]);
-          bookId = bRes.rows[0].id;
+          bookId = (bRes.rows && bRes.rows.length > 0) ? bRes.rows[0].id : (bRes.lastId || null);
         }
       }
       const qty = parseInt(item.quantity) || 1;
@@ -628,7 +699,7 @@ router.post('/api/save-scanned', adminOnly, upload.single('cover'), async (req, 
     const bookRes = await db.query(
       'INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, isbn, publisher, description, cover_url, class, subject, language) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id',
       [title, author, genre || 'General', barcodeId, parseInt(copies) || 1, parseInt(copies) || 1, sCode, isbn || null, publisher || null, description || null, coverUrl, cls || null, subject || null, language || null]);
-    const bookId = bookRes.rows[0].id;
+    const bookId = (bookRes.rows && bookRes.rows.length > 0) ? bookRes.rows[0].id : (bookRes.lastId || null);
     // Generate barcode image
     const bwipjs = require('bwip-js');
     const barcodeDir = path.join(__dirname, '..', 'static', 'barcodes');

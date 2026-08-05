@@ -2235,18 +2235,10 @@ router.get('/backups/export', async (req, res) => {
     const users = await db.query('SELECT id, name, phone, email, role, school_code FROM users');
     const schools = await db.query('SELECT * FROM schools');
     const books = await db.query('SELECT id, title, author, isbn, school_code FROM books');
-    let csv = '# LIBRIKA SYSTEM DATABASE EXPORT
-';
-    csv += '# SCHOOLS
-' + buildCSV(['id','school_code','name','status'], schools.rows || []) + '
-
-';
-    csv += '# USERS
-' + buildCSV(['id','name','phone','email','role','school_code'], users.rows || []) + '
-
-';
-    csv += '# BOOKS
-' + buildCSV(['id','title','author','isbn','school_code'], books.rows || []);
+    let csv = '# LIBRIKA SYSTEM DATABASE EXPORT\n';
+    csv += '# SCHOOLS\n' + buildCSV(['id','school_code','name','status'], schools.rows || []) + '\n\n';
+    csv += '# USERS\n' + buildCSV(['id','name','phone','email','role','school_code'], users.rows || []) + '\n\n';
+    csv += '# BOOKS\n' + buildCSV(['id','title','author','isbn','school_code'], books.rows || []);
     
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=librika_full_backup.csv');
