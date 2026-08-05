@@ -189,10 +189,10 @@ html, body {
         --sp-orange: #ff8800;
         --sp-green-light: #ebfbf2;
         --sp-green: #00b050;
-        --sp-text-dark: #0f172a;
+        --sp-text-dark: #ffffff;
         --sp-text-muted: #64748b;
-        --sp-bg-light: #f8fafc;
-        --sp-white: #ffffff;
+        --sp-bg-light: #060d1f;
+        --sp-white: #0d1630;
     }
 
     /* Wrap page in a centered phone frame mockup on mobile/tablet, and expand to full dashboard on desktop */
@@ -1010,6 +1010,103 @@ html, body {
             background: #94a3b8;
         }
     }
+
+/* ── QUICK ACTIONS & DARK CARDS CONTRAST FIX ── */
+.action-card, .qa-card, .quick-action-btn {
+    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    border: 1px solid rgba(99, 102, 241, 0.18) !important;
+    border-radius: 16px !important;
+    padding: 12px 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+.action-icon, .qa-icon, .action-card-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    background: rgba(99, 102, 241, 0.2) !important;
+    color: #a5b4fc !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.25rem !important;
+    margin-bottom: 8px !important;
+}
+.action-card span, .action-card-title, .action-title, .qa-title {
+    color: #ffffff !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+}
+
+/* Remove bottom nav bar & expand layout to viewport bottom */
+.portal-bottom-nav, .bottom-nav-bar {
+    display: none !important;
+}
+.portal-content, .st-content {
+    background: #060d1f !important;
+    padding-bottom: 24px !important;
+}
+.section-title, h3.section-header, h2, h3, h4 {
+    color: #ffffff !important;
+}
+
+/* ── STUDENT PORTAL FINAL CONTRAST & BOTTOM NAV REMOVAL FIX ── */
+.bottom-nav, .portal-bottom-nav, nav.bottom-nav {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+}
+.portal-content, .st-content {
+    padding-bottom: 24px !important;
+    background: #060d1f !important;
+}
+
+/* Fix light section title headings rendering on white backgrounds */
+.portal-content h2, .portal-content h3, .portal-content h4, .section-title, .section-header, .portal-grid h3 {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    margin-bottom: 0.75rem !important;
+}
+
+/* Fix quick action buttons contrast */
+.action-card, .qa-card, .quick-action-btn, a:has(> .action-icon) {
+    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    border: 1px solid rgba(99, 102, 241, 0.18) !important;
+    border-radius: 16px !important;
+    padding: 12px 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+}
+
+.action-icon, .qa-icon, .action-card-icon, div:has(> svg):has(+ span) {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    background: rgba(99, 102, 241, 0.2) !important;
+    color: #818cf8 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.25rem !important;
+    margin-bottom: 6px !important;
+}
+
+.action-card span, .action-title, .qa-title {
+    color: #ffffff !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+}
 </style>
 <% contentFor("head") %>
 <% contentFor("content") %>
@@ -1399,25 +1496,7 @@ html, body {
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar (Mobile only) -->
-    <nav class="bottom-nav">
-        <a href="/student" class="bottom-nav-item active">
-            <span class="bottom-nav-icon">🏠</span>
-            <span>Home</span>
-        </a>
-        <a href="/student/browse" class="bottom-nav-item">
-            <span class="bottom-nav-icon">📚</span>
-            <span>Digital Library</span>
-        </a>
-        <a href="/digital-library" class="bottom-nav-item">
-            <span class="bottom-nav-icon">🌐</span>
-            <span>Community</span>
-        </a>
-        <a href="/student/publish" class="bottom-nav-item">
-            <span class="bottom-nav-icon">✏️</span>
-            <span>Creator Hub</span>
-        </a>
-    </nav>
+    
 </div>
 
 <!-- Simple Mobile Sidebar Drawer -->
