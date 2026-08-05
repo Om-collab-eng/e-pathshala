@@ -858,13 +858,49 @@ router.get('/settings', studentOnly, async (req, res) => {
 
 router.get(['/help', '/support'], studentOnly, async (req, res) => {
   try {
+    const userId = req.session.user_id;
+    let tickets = [];
+    try {
+      tickets = (await pool.query('SELECT * FROM support_tickets WHERE user_id =  ORDER BY created_at DESC', [userId])).rows || [];
+    } catch (e) { tickets = []; }
+    
     res.render('student_support', {
       title: 'Help & Support - librika.in',
+      notifCount: 0,
+      success: (req.flash && req.flash('success') && req.flash('success')[0]) || null,
+      error: (req.flash && req.flash('error') && req.flash('error')[0]) || null,
+      tickets: tickets,
       school_name: req.session.school_name || 'E-Pathshala Network'
     });
   } catch (err) {
     console.error('Help route error:', err);
-    res.render('student_support', { title: 'Help & Support', school_name: 'E-Pathshala Network' });
+    res.render('student_support', {
+      title: 'Help & Support',
+      notifCount: 0,
+      success: null,
+      error: null,
+      tickets: [],
+      school_name: 'E-Pathshala Network'
+    });
+  }
+});
+
+router.post('/support/ticket', studentOnly, async (req, res) => {
+  try {
+    const userId = req.session.user_id;
+    const { category, subject, message } = req.body;
+    try {
+      await pool.query(
+        'INSERT INTO support_tickets (user_id, category, subject, message, status, created_at) VALUES (, , , , , )',
+        [userId, category || 'question', subject || 'Support Ticket', message || '', 'open', new Date().toISOString()]
+      );
+    } catch (e) {}
+    if (req.flash) req.flash('success', 'Support ticket submitted successfully!');
+    res.redirect('/student/support');
+  } catch (err) {
+    console.error('Ticket submit error:', err);
+    if (req.flash) req.flash('error', 'Failed to submit ticket.');
+    res.redirect('/student/support');
   }
 });
 

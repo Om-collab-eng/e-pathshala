@@ -1,0 +1,68 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'support' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Support', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Support</h1>
+          <p class="sp-page-sub">We're here to help. Describe your issue and we'll get back to you.</p>
+        </div>
+
+        <% if (success) { %><div class="sp-banner sp-banner-green"><span>✅</span><span><%= success %></span></div><% } %>
+        <% if (error) { %><div class="sp-banner sp-banner-red"><span>⚠️</span><span><%= error %></span></div><% } %>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Raise a Ticket</h2>
+          <form method="POST" action="/student/support/ticket" class="sp-form">
+            <div class="sp-field">
+              <label class="sp-label">Category</label>
+              <select name="category" class="sp-input">
+                <option value="question">Question</option>
+                <option value="technical">Technical Issue</option>
+                <option value="borrowing">Borrowing / Returns</option>
+                <option value="account">Account & Login</option>
+                <option value="content">Missing Content</option>
+                <option value="bug">Bug Report</option>
+                <option value="feature">Feature Request</option>
+              </select>
+            </div>
+            <div class="sp-field">
+              <label class="sp-label">Subject</label>
+              <input type="text" name="subject" class="sp-input" placeholder="Brief summary of your issue">
+            </div>
+            <div class="sp-field">
+              <label class="sp-label">Message</label>
+              <textarea name="message" required class="sp-input sp-textarea" rows="5" placeholder="What happened? What did you expect?"></textarea>
+            </div>
+            <div class="sp-form-actions">
+              <button type="submit" class="sp-btn sp-btn-primary">Submit Ticket</button>
+            </div>
+          </form>
+        </div>
+
+        <h2 class="sp-section-title sp-mt-3">Your Tickets</h2>
+        <% if (tickets.length) { %>
+        <div class="sp-list">
+          <% tickets.forEach(function (t) { %>
+          <div class="sp-row">
+            <div class="sp-row-main">
+              <div class="sp-row-title"><%= t.subject || t.category %></div>
+              <div class="sp-row-sub"><%= t.category %> &bull; <%= String(t.created_at).slice(0, 16) %></div>
+              <% if (t.reply) { %><div class="sp-row-sub sp-text-muted">Reply: <%= t.reply %></div><% } %>
+            </div>
+            <span class="sp-chip <%= t.status === 'open' ? 'sp-chip-orange' : (t.status === 'resolved' ? 'sp-chip-green' : 'sp-chip-purple') %>"><%= t.status %></span>
+          </div>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="sp-card">
+          <div class="sp-empty"><span class="sp-empty-icon">🎧</span><p class="sp-empty-title">No tickets yet</p><p class="sp-empty-sub">Your support requests will be tracked here.</p></div>
+        </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</div>
