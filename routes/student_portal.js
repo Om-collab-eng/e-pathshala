@@ -862,32 +862,31 @@ module.exports = router;
 
 // Notification Poll Endpoint
 // Notification Poll Endpoint (1-Second Realtime)
+// Notification Poll Endpoint
 router.get('/api/notifications/poll', async (req, res) => {
   try {
-    const userId = req.session ? (req.session.user_id || req.session.id) : null;
-    const sCode  = req.session ? req.session.school_code : null;
-    const uRole  = req.session ? req.session.role : null;
-    if (!userId && !sCode) return res.json({ status: 'success', unreadCount: 0, newNotifications: [], maxId: 0 });
-
-    const sinceId = parseInt(req.query.since_id || '0', 10);
+    const userId = req.session ? (req.session.user_id || req.session.id || 0) : 0;
+    const sCode  = req.session ? (req.session.school_code || 'GLOBAL') : 'GLOBAL';
     
     const countRes = await pool.query(
-      `SELECT COUNT(*) as c FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL' OR type = $3) AND (is_read = false OR is_read = '0' OR is_read IS NULL)`,
-      [userId || 0, sCode || 'GLOBAL', uRole || 'student']
+      `SELECT COUNT(*) as c FROM notifications WHERE (school_code = $1 OR user_id = $2 OR school_code = 'GLOBAL') AND (is_read = false OR is_read = '0' OR is_read IS NULL)`,
+      [sCode, userId]
     ).catch(() => ({ rows: [{ c: 0 }] }));
     const unreadCount = parseInt(countRes.rows[0].c, 10) || 0;
 
+    const sinceId = parseInt(req.query.since_id || '0', 10);
     let newNotifs = [];
+
     if (sinceId === 0) {
       const initRes = await pool.query(
-        `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL' OR type = $3) AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 3`,
-        [userId || 0, sCode || 'GLOBAL', uRole || 'student']
+        `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR user_id = $2 OR school_code = 'GLOBAL') AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 5`,
+        [sCode, userId]
       ).catch(() => ({ rows: [] }));
       newNotifs = initRes.rows || [];
     } else {
       const newRes = await pool.query(
-        `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL' OR type = $3) AND id > $4 ORDER BY id ASC LIMIT 5`,
-        [userId || 0, sCode || 'GLOBAL', uRole || 'student', sinceId]
+        `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR user_id = $2 OR school_code = 'GLOBAL') AND id > $3 ORDER BY id ASC LIMIT 5`,
+        [sCode, userId, sinceId]
       ).catch(() => ({ rows: [] }));
       newNotifs = newRes.rows || [];
     }

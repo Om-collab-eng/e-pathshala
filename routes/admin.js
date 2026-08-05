@@ -117,6 +117,21 @@ router.get('/', adminOnly, async (req, res) => {
        WHERE r.status = 'pending' AND r.school_code = $1`, [sCode]);
     const pendingReviews = revRes.rows;
 
+        // Digital items
+    const digRes = await db.query(
+      `SELECT * FROM digital_content WHERE school_code = $1 OR school_code = 'GLOBAL' ORDER BY id DESC LIMIT 50`,
+      [sCode]
+    ).catch(() => ({ rows: [] }));
+    const digitalItems = digRes.rows || [];
+
+    // Notifications list
+    const userId = req.session ? req.session.user_id : 0;
+    const notifRes = await db.query(
+      `SELECT * FROM notifications WHERE school_code = $1 OR user_id = $2 OR school_code = 'GLOBAL' ORDER BY id DESC LIMIT 50`,
+      [sCode, userId]
+    ).catch(() => ({ rows: [] }));
+    const notificationsList = notifRes.rows || [];
+
     const overdueCount = transactions.filter(t => t.is_overdue).length;
 
     res.render('admin', {
@@ -132,6 +147,8 @@ router.get('/', adminOnly, async (req, res) => {
       total_returned: totalReturned,
       reservations,
       pending_reviews: pendingReviews,
+          digital_items: digitalItems,
+      notifications_list: notificationsList,
     });
   } catch (err) {
     console.error('Admin dashboard error:', err);

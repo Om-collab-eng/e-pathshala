@@ -378,10 +378,15 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                 <span class="ld-nav-icon">❓</span>
                 <span class="ld-nav-text">Help & Support</span>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('books', this); autoCloseAdminSidebar();">
+            <button class="ld-nav-item tab-btn" onclick="switchTab('notifications', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">🔔</span>
+                <span class="ld-nav-text">Notifications Center</span>
+                <span class="ld-nav-badge red ld-notif-badge" style="display: none;">0</span>
+            </button>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('digital', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">🌐</span>
-                <span class="ld-nav-text">Digital Library / Catalog</span>
-                <span class="ld-nav-badge orange"><%= books ? books.length : 0 %></span>
+                <span class="ld-nav-text">Digital Library (PDFs/E-Books)</span>
+                <span class="ld-nav-badge orange"><%= (typeof digital_items !== 'undefined' && digital_items) ? digital_items.length : 0 %></span>
             </button>
         </nav>
 
@@ -410,7 +415,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                 <button class="ld-btn ld-btn-xs" onclick="toggleAiChat()" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.2); font-weight: 700;">🤖 AI Chat</button>
                 <button class="ld-btn ld-btn-primary ld-btn-xs" onclick="openModal('addBookModal')">+ Add Book</button>
                 <button class="ld-btn ld-btn-success ld-btn-xs" onclick="openModal('addUserModal')">+ Add Member</button>
-                <button class="ld-notif-btn" onclick="switchTab('overdue', this)">
+                <button class="ld-notif-btn" onclick="switchTab('notifications', this)" title="Notifications Center">
                     🔔
                     <% if (overdue_count > 0) { %><span class="ld-notif-badge"><%= overdue_count %></span><% } %>
                 </button>
@@ -948,7 +953,107 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             </section>
 
 </div>
-    </main>
+    
+            <!-- ── TAB: NOTIFICATIONS CENTER ── -->
+            <section id="tab-notifications" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="font-family: 'Outfit'; font-size: 1.15rem; color: #0f172a; margin: 0;">🔔 Notifications & Activity Center</h3>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0;">Real-time system alerts, book requests, returns, and student activity logs.</p>
+                        </div>
+                        <button class="ld-btn ld-btn-primary ld-btn-xs" onclick="showToast('All notifications marked as read', 'success', '✅ System');">Mark All as Read</button>
+                    </div>
+
+                    <div class="ld-table-container">
+                        <table class="ld-table">
+                            <thead>
+                                <tr>
+                                    <th>Notification / Alert</th>
+                                    <th>Category</th>
+                                    <th>Timestamp</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (typeof notifications_list !== 'undefined' && notifications_list && notifications_list.length > 0) { %>
+                                    <% notifications_list.forEach(n => { %>
+                                        <tr>
+                                            <td style="font-weight: 600; color: #0f172a;">
+                                                <span style="margin-right: 8px;">🔔</span> <%= n.message %>
+                                            </td>
+                                            <td>
+                                                <span style="background: rgba(99, 102, 241, 0.08); color: #6366f1; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;"><%= n.type || 'SYSTEM' %></span>
+                                            </td>
+                                            <td style="font-size: 0.8rem; color: #64748b;"><%= n.created_at ? new Date(n.created_at).toLocaleString() : 'Just now' %></td>
+                                            <td>
+                                                <% if (n.is_read) { %>
+                                                    <span style="color: #64748b; font-weight: 600; font-size: 0.78rem;">Read</span>
+                                                <% } else { %>
+                                                    <span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px;">NEW</span>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; color: #64748b; padding: 2rem;">No recent notifications recorded.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: DIGITAL LIBRARY (PDFs, E-BOOKS, DIGITAL ASSETS) ── -->
+            <section id="tab-digital" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="font-family: 'Outfit'; font-size: 1.15rem; color: #0f172a; margin: 0;">🌐 Digital Library & E-Resources</h3>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0;">Manage digital books, PDFs, study modules, and online reading content.</p>
+                        </div>
+                        <a href="/digital-library" target="_blank" class="ld-btn ld-btn-primary ld-btn-xs">🌐 Open Reader View</a>
+                    </div>
+
+                    <div class="ld-table-container">
+                        <table class="ld-table">
+                            <thead>
+                                <tr>
+                                    <th>Digital Title</th>
+                                    <th>Author / Creator</th>
+                                    <th>Subject / Category</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (typeof digital_items !== 'undefined' && digital_items && digital_items.length > 0) { %>
+                                    <% digital_items.forEach(item => { %>
+                                        <tr>
+                                            <td style="font-weight: 700; color: #0f172a;"><%= item.title %></td>
+                                            <td><%= item.author || item.student_name || 'System' %></td>
+                                            <td><%= item.subject || item.category || 'General' %></td>
+                                            <td>
+                                                <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 700; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px;"><%= item.status || 'Published' %></span>
+                                            </td>
+                                            <td>
+                                                <a href="/digital-library/content/<%= item.id %>" class="ld-btn ld-btn-xs" style="background: rgba(99, 102, 241, 0.08); color: #6366f1;">Read PDF</a>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">No digital items or PDFs uploaded yet. Use Digital Content Manager to publish e-books.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+</main>
 </div>
 
 <!-- ══ MODALS ══ -->
