@@ -284,6 +284,11 @@ router.get('/browse', studentOnly, async (req, res) => {
 
     const globalSections = (await pool.query('SELECT * FROM global_sections ORDER BY name ASC')).rows;
 
+    if (!books || books.length === 0) {
+      const allBooks = (await pool.query("SELECT * FROM books WHERE (is_banned IS NULL OR (is_banned != 1 AND is_banned != '1')) ORDER BY id DESC LIMIT 50")).rows || [];
+      books.push(...allBooks.map(b => ({ ...b, book_type: 'physical' })));
+    }
+
     res.render('student_browse', {
       title: 'Digital Library Catalog - ' + (req.session.school_name || 'E-Pathshala Network'),
       books,
