@@ -866,46 +866,33 @@ module.exports = router;
 // Notification Poll Endpoint (1-Second Realtime)
 // Notification Poll Endpoint
 // Notification Poll Endpoint (Role Aware Admin/Student)
+// Notification Poll Endpoint (Guaranteed Admin & Student Coverage)
 router.get('/api/notifications/poll', async (req, res) => {
   try {
     const userId = req.session ? (req.session.user_id || req.session.id || 0) : 0;
     const sCode  = req.session ? (req.session.school_code || 'GLOBAL') : 'GLOBAL';
-    const uRole  = req.session ? (req.session.role || 'student') : 'student';
-    const isAdmin = (uRole === 'admin' || uRole === 'super_admin' || uRole === 'superadmin' || uRole === 'librarian');
-
     const sinceId = parseInt(req.query.since_id || '0', 10);
 
-    let countSql, listSql, countParams, listParams;
-
-    if (isAdmin) {
-      countSql = `SELECT COUNT(*) as c FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0) AND (is_read = false OR is_read = '0' OR is_read IS NULL)`;
-      countParams = [sCode, userId];
-
-      if (sinceId === 0) {
-        listSql = `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0) AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 5`;
-        listParams = [sCode, userId];
-      } else {
-        listSql = `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0) AND id > $3 ORDER BY id ASC LIMIT 5`;
-        listParams = [sCode, userId, sinceId];
-      }
-    } else {
-      countSql = `SELECT COUNT(*) as c FROM notifications WHERE (user_id = $1 OR (school_code = $2 AND (user_id IS NULL OR user_id = 0))) AND (is_read = false OR is_read = '0' OR is_read IS NULL)`;
-      countParams = [userId, sCode];
-
-      if (sinceId === 0) {
-        listSql = `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR (school_code = $2 AND (user_id IS NULL OR user_id = 0))) AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 5`;
-        listParams = [userId, sCode];
-      } else {
-        listSql = `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR (school_code = $2 AND (user_id IS NULL OR user_id = 0))) AND id > $3 ORDER BY id ASC LIMIT 5`;
-        listParams = [userId, sCode, sinceId];
-      }
-    }
-
-    const countRes = await pool.query(countSql, countParams).catch(() => ({ rows: [{ c: 0 }] }));
+    const countRes = await pool.query(
+      `SELECT COUNT(*) as c FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0 OR user_id IS NULL) AND (is_read = false OR is_read = '0' OR is_read IS NULL)`,
+      [sCode, userId]
+    ).catch(() => ({ rows: [{ c: 0 }] }));
     const unreadCount = parseInt(countRes.rows[0].c, 10) || 0;
 
-    const listRes = await pool.query(listSql, listParams).catch(() => ({ rows: [] }));
-    const newNotifs = listRes.rows || [];
+    let newNotifs = [];
+    if (sinceId === 0) {
+      const initRes = await pool.query(
+        `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0 OR user_id IS NULL) AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 5`,
+        [sCode, userId]
+      ).catch(() => ({ rows: [] }));
+      newNotifs = initRes.rows || [];
+    } else {
+      const newRes = await pool.query(
+        `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0 OR user_id IS NULL) AND id > $3 ORDER BY id ASC LIMIT 5`,
+        [sCode, userId, sinceId]
+      ).catch(() => ({ rows: [] }));
+      newNotifs = newRes.rows || [];
+    }
 
     const maxRes = await pool.query(`SELECT MAX(id) as m FROM notifications`).catch(() => ({ rows: [{ m: 0 }] }));
     const maxId = parseInt(maxRes.rows[0].m, 10) || 0;

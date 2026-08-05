@@ -49,12 +49,12 @@ html, body {
     display: flex !important;
     flex-direction: column !important;
     min-height: 100vh !important;
-    margin-left: 280px !important;
-    width: calc(100vw - 280px) !important;
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
     background: #f8fafc !important;
     padding-bottom: 30px !important;
 }
-@media (max-width: 768px) {
+@media (max-width: 599px) {
     .st-main { margin-left: 0 !important; width: 100vw !important; }
 }
 
@@ -81,7 +81,7 @@ html, body {
     display: flex !important; align-items: center !important; justify-content: center !important;
     font-size: 1.1rem !important; cursor: pointer !important;
 }
-@media (min-width: 769px) { .st-menu-btn { display: none !important; } }
+@media (min-width: 600px) { .st-menu-btn { display: none !important; } }
 
 .st-brand-title {
     font-family: 'Outfit', sans-serif !important;
@@ -107,7 +107,7 @@ html, body {
 
 /* ── SIDEBAR DRAWER ── */
 .st-sidebar {
-    width: 280px !important;
+    width: 240px !important;
     max-width: 82vw !important;
     background: #ffffff !important;
     border-right: 1px solid #e2e8f0 !important;
@@ -121,10 +121,10 @@ html, body {
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05) !important;
     transform: translateX(-105%) !important;
 }
-@media (max-width: 768px) {
+@media (max-width: 599px) {
     .st-sidebar.open { transform: translateX(0) !important; box-shadow: 8px 0 30px rgba(0, 0, 0, 0.12) !important; }
 }
-@media (min-width: 769px) {
+@media (min-width: 600px) {
     .st-sidebar { transform: translateX(0) !important; position: sticky !important; }
 }
 
@@ -193,7 +193,7 @@ html, body {
 }
 .st-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
 
-@media (min-width: 769px) {
+@media (min-width: 600px) {
     .st-overlay-dim, .st-overlay-dim.active { display: none !important; opacity: 0 !important; pointer-events: none !important; visibility: hidden !important; }
 }
 
@@ -203,7 +203,7 @@ html, body {
 
 /* ── STATS GRID ── */
 .st-stats-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; width: 100% !important; }
-@media (min-width: 769px) { .st-stats-grid { grid-template-columns: repeat(4, 1fr) !important; } }
+@media (min-width: 600px) { .st-stats-grid { grid-template-columns: repeat(4, 1fr) !important; } }
 
 .st-stat-card {
     background: #ffffff !important;

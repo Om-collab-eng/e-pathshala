@@ -107,7 +107,7 @@ html[data-theme="light"] .sp-page {
   box-shadow: 16px 0 48px rgba(0, 0, 0, 0.45);
 }
 
-@media (min-width: 901px) {
+@media (min-width: 600px) {
   .sp-sidebar {
     transform: translateX(0);
     position: sticky;
@@ -186,7 +186,7 @@ html[data-theme="light"] .sp-page {
   color: var(--sp-red);
 }
 
-@media (min-width: 901px) {
+@media (min-width: 600px) {
   .sp-sidebar-close {
     display: none;
   }
@@ -361,7 +361,7 @@ html[data-theme="light"] .sp-page {
   filter: brightness(1.1);
 }
 
-@media (min-width: 901px) {
+@media (min-width: 600px) {
   .sp-hamburger {
     display: none;
   }
@@ -1154,7 +1154,7 @@ html[data-theme="light"] .sp-page {
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
 }
 
-@media (min-width: 901px) {
+@media (min-width: 600px) {
   .sp-bottom-nav {
     display: none;
   }
@@ -1563,10 +1563,10 @@ html[data-theme="light"] .sp-page {
   display: none !important;
 }
 
-@media (min-width: 901px) {
+@media (min-width: 600px) {
   .sp-mobile-only { display: none !important; }
 }
-@media (max-width: 900px) {
+@media (max-width: 599px) {
   .sp-desktop-only { display: none !important; }
 }
 
@@ -1668,7 +1668,7 @@ html[data-theme="light"] .sp-page {
 .sp-chat-input input { flex: 1; min-width: 0; }
 .sp-chat-hint { margin: 0; padding: 0 14px 12px; font-size: 0.68rem; color: var(--sp-text-faint); }
 
-@media (max-width: 900px) {
+@media (max-width: 599px) {
   .sp-calendar-layout { grid-template-columns: 1fr; }
   .sp-chart { height: 150px; }
   .sp-chart-bar-wrap { height: 120px; }
