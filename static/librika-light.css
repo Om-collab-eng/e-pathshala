@@ -384,3 +384,25 @@ body {
 [data-theme="dark"] .sp-page  { background: var(--sp-bg) !important; }
 [data-theme="dark"] .sp-sidebar { background: var(--sp-sidebar-bg) !important; }
 [data-theme="dark"] .sp-card  { background: var(--sp-card-bg) !important; border-color: var(--sp-border) !important; }
+
+/* ── Global Drawer Overlay Safety (No trap, higher sidebar z-index) ── */
+.sp-sidebar, .st-sidebar, .ld-sidebar, .sa-sidebar {
+    z-index: 100001 !important;
+}
+.sp-overlay, .st-overlay-dim, .ld-overlay-dim, .sa-overlay-dim {
+    z-index: 100000 !important;
+    background: rgba(15, 23, 42, 0.25) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+@media (min-width: 901px) {
+    .sp-overlay, .sp-overlay.active,
+    .st-overlay-dim, .st-overlay-dim.active,
+    .ld-overlay-dim, .ld-overlay-dim.active,
+    .sa-overlay-dim, .sa-overlay-dim.active {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+}
