@@ -47,7 +47,7 @@
     height: 100vh;
     box-sizing: border-box;
     z-index: 100;
-    backdrop-filter: blur(20px);
+    /* blur removed */
     box-shadow: 4px 0 20px rgba(148, 163, 184, 0.03);
 }
 
@@ -140,7 +140,7 @@
 .personal-card {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(12px);
+    /* blur removed */
     border-radius: 20px;
     padding: 2rem;
     box-shadow: var(--card-shadow);

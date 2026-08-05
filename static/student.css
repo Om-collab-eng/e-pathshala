@@ -312,8 +312,8 @@ html[data-theme="light"] .sp-page {
   position: fixed;
   inset: 0;
   background: rgba(6, 13, 31, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* blur removed */
+  /* blur removed */
   z-index: 9998;
   opacity: 0;
   pointer-events: none;
@@ -328,8 +328,8 @@ html[data-theme="light"] .sp-page {
 /* ── TOPBAR ── */
 .sp-topbar {
   background: var(--sp-topbar-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* blur removed */
+  /* blur removed */
   border-bottom: 1px solid var(--sp-border);
   padding: 0.75rem 1rem;
   display: flex;
