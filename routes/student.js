@@ -820,12 +820,12 @@ router.get('/goals', studentOnly, async (req, res) => {
     const user = (await pool.query('SELECT * FROM users WHERE id = $1', [userId])).rows[0] || {};
     let personalGoals = [];
     try {
-      personalGoals = (await pool.query("SELECT * FROM reading_goals WHERE role = 'student' AND created_by = ", [userId])).rows || [];
+      personalGoals = (await pool.query("SELECT * FROM reading_goals WHERE role = 'student' AND created_by = $1", [userId])).rows || [];
     } catch (e) { personalGoals = []; }
 
     let progressRows = [];
     try {
-      progressRows = (await pool.query('SELECT total_pages, last_page, reading_time, updated_at, completed_at FROM reading_progress WHERE student_id = ', [userId])).rows || [];
+      progressRows = (await pool.query('SELECT total_pages, last_page, reading_time, updated_at, completed_at FROM reading_progress WHERE student_id = $1', [userId])).rows || [];
     } catch (e) { progressRows = []; }
 
     let completed = 0;
