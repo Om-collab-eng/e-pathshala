@@ -2,8 +2,8 @@
 
 <style>
 /* ═══════════════════════════════════════════════
-   LIBRIKA LIBRARIAN DASHBOARD — COMPLETE DESIGN SYSTEM
-   Zero Whitespace, Mobile Responsive & Isolated Theme
+   LIBRIKA LIBRARIAN DASHBOARD — PRISTINE DESIGN SYSTEM
+   Zero Bottom Nav, Mobile Drawer & Isolated Theme
 ═══════════════════════════════════════════════ */
 * {
     box-sizing: border-box !important;
@@ -218,12 +218,12 @@ html, body {
     font-size: 1rem !important;
 }
 
-/* ── FLEXBOX SIDEBAR DRAWER ── */
+/* ── REDESIGNED FLEXBOX SIDEBAR DRAWER ── */
 .ld-sidebar {
     width: 280px !important;
     max-width: 82vw !important;
     background: #080f22 !important;
-    border-right: 1px solid rgba(99, 102, 241, 0.14) !important;
+    border-right: 1px solid rgba(99, 102, 241, 0.16) !important;
     display: flex !important;
     flex-direction: column !important;
     padding: 0 !important;
@@ -247,14 +247,55 @@ html, body {
 }
 
 .ld-sidebar-header {
-    padding: 1.25rem 1rem !important;
+    padding: 1.1rem 1rem !important;
     border-bottom: 1px solid rgba(99, 102, 241, 0.14) !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: space-between !important;
     gap: 10px !important;
     flex-shrink: 0 !important;
     background: #080f22 !important;
 }
+.ld-sidebar-user {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+}
+.ld-avatar-lg {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 1.05rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+}
+.ld-user-meta { min-width: 0 !important; flex: 1 !important; }
+.ld-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.ld-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: #94a3b8 !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+.ld-sidebar-close {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #94a3b8 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+}
+
 .ld-sidebar-nav {
     flex: 1 !important;
     overflow-y: auto !important;
@@ -263,44 +304,94 @@ html, body {
     flex-direction: column !important;
     gap: 4px !important;
 }
-.ld-sidebar-footer {
-    padding: 1rem !important;
-    border-top: 1px solid rgba(99, 102, 241, 0.14) !important;
-    flex-shrink: 0 !important;
-    background: #080f22 !important;
-}
 
 .ld-nav-item {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
-    padding: 10px 12px !important;
-    min-height: 44px !important;
-    border-radius: 10px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    padding: 0 12px !important;
+    border-radius: 12px !important;
     color: #94a3b8 !important;
-    font-size: 0.85rem !important;
+    font-size: 0.88rem !important;
     font-weight: 600 !important;
     text-decoration: none !important;
     background: transparent !important;
-    border: 1px solid transparent !important;
-    width: 100 !important;
+    border: none !important;
+    border-left: 3.5px solid transparent !important;
+    width: 100% !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     box-sizing: border-box !important;
     white-space: nowrap !important;
 }
 .ld-nav-item:hover { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; }
-.ld-nav-item.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.24), rgba(168, 85, 247, 0.14)) !important; color: #a5b4fc !important; border-left: 3.5px solid #818cf8 !important; font-weight: 700 !important; }
-.ld-nav-icon { font-size: 1.1rem !important; width: 24px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; }
-.ld-nav-text { flex: 1 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.ld-nav-badge { margin-left: auto !important; font-size: 0.62rem !important; font-weight: 800 !important; padding: 2px 7px !important; border-radius: 20px !important; color: white !important; }
+.ld-nav-item.active { background: rgba(99, 102, 241, 0.18) !important; color: #ffffff !important; border-left: 4px solid #818cf8 !important; font-weight: 700 !important; }
+
+.ld-nav-icon {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 1.15rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    margin-right: 12px !important;
+}
+.ld-nav-text {
+    flex: 1 !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.ld-nav-badge {
+    margin-left: auto !important;
+    font-size: 0.64rem !important;
+    font-weight: 800 !important;
+    padding: 2px 7px !important;
+    border-radius: 20px !important;
+    color: white !important;
+    flex-shrink: 0 !important;
+}
 .ld-nav-badge.red { background: #f87171 !important; }
 .ld-nav-badge.orange { background: #fb923c !important; }
+
+/* ── STICKY FOOTER ACTIONS ── */
+.ld-sidebar-footer {
+    padding: 0.85rem 0.75rem !important;
+    border-top: 1px solid rgba(99, 102, 241, 0.14) !important;
+    flex-shrink: 0 !important;
+    background: #080f22 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+.ld-footer-btn {
+    display: flex !important;
+    align-items: center !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 12px !important;
+    border-radius: 10px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    color: #94a3b8 !important;
+    text-decoration: none !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    transition: all 0.2s ease !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+.ld-footer-btn:hover { background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; }
+.ld-footer-btn.danger { background: rgba(239, 68, 68, 0.12) !important; color: #f87171 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+.ld-footer-btn.danger:hover { background: rgba(239, 68, 68, 0.25) !important; }
 
 .ld-overlay-dim {
     position: fixed !important;
     inset: 0 !important;
-    background: rgba(3, 7, 18, 0.75) !important;
+    background: rgba(3, 7, 18, 0.8) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
     z-index: 9998 !important;
@@ -376,29 +467,6 @@ html, body {
 .ld-scan-action-btn {
     height: 44px !important; min-height: 44px !important; white-space: nowrap !important;
 }
-
-/* ── BOTTOM NAV BAR (MOBILE) ── */
-.ld-bottom-nav {
-    position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
-    width: 100% !important; max-width: 100vw !important; height: 60px !important;
-    background: rgba(8, 15, 34, 0.96) !important; backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important; border-top: 1px solid rgba(99, 102, 241, 0.16) !important;
-    display: flex !important; align-items: center !important; justify-content: space-around !important;
-    padding: 0 4px !important; box-sizing: border-box !important; z-index: 9000 !important; margin: 0 !important;
-}
-@media (min-width: 901px) { .ld-bottom-nav { display: none !important; } }
-
-.ld-bnav-item {
-    flex: 1 !important; display: flex !important; flex-direction: column !important;
-    align-items: center !important; justify-content: center !important; gap: 2px !important;
-    color: #94a3b8 !important; background: transparent !important; border: none !important;
-    font-size: 0.68rem !important; font-weight: 700 !important; cursor: pointer !important;
-    padding: 4px 2px !important; text-decoration: none !important; min-height: 48px !important;
-    width: 25% !important; max-width: 25% !important; box-sizing: border-box !important; text-align: center !important;
-}
-.ld-bnav-item.active { color: #818cf8 !important; }
-.ld-bnav-icon { font-size: 1.1rem !important; line-height: 1 !important; }
-.ld-bnav-label { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 100% !important; }
 
 /* ── OVERVIEW & QUICK ACTIONS STYLING ── */
 .ld-overview {
@@ -476,7 +544,7 @@ html, body {
 
 /* ── SHELL & MAIN ── */
 .ld-shell { display: flex; min-height: 100vh; background: #060d1f; position: relative; overflow-x: hidden; width: 100vw; max-width: 100vw; }
-.ld-main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow-y: auto; padding-bottom: 70px; background: #060d1f; width: 100%; max-width: 100vw; }
+.ld-main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow-y: auto; padding-bottom: 20px; background: #060d1f; width: 100%; max-width: 100vw; }
 .ld-content { padding: 1.2rem; display: flex; flex-direction: column; gap: 1.2rem; background: #060d1f; width: 100%; max-width: 100%; box-sizing: border-box; }
 
 /* Table containment */
@@ -494,82 +562,79 @@ html, body {
     <aside class="ld-sidebar" id="adminSidebar">
         <!-- Fixed Header -->
         <div class="ld-sidebar-header">
-            <% const adminInitial = ((typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name).trim()[0] : 'L').toUpperCase(); %>
-            <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">
-                <%= adminInitial %>
+            <div class="ld-sidebar-user">
+                <% const adminInitial = ((typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name).trim()[0] : 'L').toUpperCase(); %>
+                <div class="ld-avatar-lg">
+                    <%= adminInitial %>
+                </div>
+                <div class="ld-user-meta">
+                    <h4 class="ld-user-name"><%= (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Librarian' %></h4>
+                    <p class="ld-user-school"><%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'Library System' %></p>
+                </div>
             </div>
-            <div style="flex: 1; min-width: 0;">
-                <h4 style="font-family: 'Outfit', sans-serif; font-size: 0.92rem; font-weight: 800; color: #ffffff; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    <%= (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Librarian' %>
-                </h4>
-                <p style="font-size: 0.72rem; color: #94a3b8; margin: 2px 0 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    <%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'Library System' %>
-                </p>
-            </div>
-            <button onclick="toggleAdminSidebar()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #94a3b8; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; flex-shrink: 0;">✕</button>
+            <button class="ld-sidebar-close" onclick="toggleAdminSidebar()" aria-label="Close sidebar">✕</button>
         </div>
 
         <!-- Scrollable Navigation Items -->
         <nav class="ld-sidebar-nav">
-            <button class="ld-nav-item tab-btn active" onclick="switchTab('dashboard', this)">
+            <button class="ld-nav-item tab-btn active" onclick="switchTab('dashboard', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">📊</span>
                 <span class="ld-nav-text">Dashboard</span>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('books', this)">
+            <button class="ld-nav-item tab-btn" onclick="switchTab('books', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">📚</span>
                 <span class="ld-nav-text">Books Catalog</span>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('members', this)">
+            <button class="ld-nav-item tab-btn" onclick="switchTab('members', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">👥</span>
                 <span class="ld-nav-text">Members</span>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('transactions', this)">
+            <button class="ld-nav-item tab-btn" onclick="switchTab('transactions', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">🔄</span>
                 <span class="ld-nav-text">Transactions</span>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('overdue', this)">
+            <button class="ld-nav-item tab-btn" onclick="switchTab('overdue', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">⏰</span>
                 <span class="ld-nav-text">Overdue</span>
                 <% if (overdue_count > 0) { %><span class="ld-nav-badge red"><%= overdue_count %></span><% } %>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('reservations', this)">
-                <span class="ld-nav-icon">📋</span>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('reservations', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">📖</span>
                 <span class="ld-nav-text">Book Requests</span>
                 <% if (reservations) { %><span class="ld-nav-badge orange"><%= reservations.length %></span><% } %>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('reviews', this)">
-                <span class="ld-nav-icon">✍️</span>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('reviews', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">⭐</span>
                 <span class="ld-nav-text">Reviews</span>
                 <% if (pending_reviews) { %><span class="ld-nav-badge orange"><%= pending_reviews.length %></span><% } %>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('moderation', this)">
-                <span class="ld-nav-icon">🔍</span>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('moderation', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">🛡</span>
                 <span class="ld-nav-text">Content Review</span>
             </button>
-
             <a href="/digital-library" class="ld-nav-item">
                 <span class="ld-nav-icon">🌐</span>
                 <span class="ld-nav-text">Digital Library</span>
             </a>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('reports', this)">
+            <button class="ld-nav-item tab-btn" onclick="switchTab('reports', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">📈</span>
-                <span class="ld-nav-text">Reports & Hub</span>
+                <span class="ld-nav-text">Reports & Analytics</span>
             </button>
-            <a href="/billing" class="ld-nav-item">
-                <span class="ld-nav-icon">💳</span>
-                <span class="ld-nav-text">Billing & Plan</span>
-            </a>
             <a href="/admin/settings" class="ld-nav-item">
-                <span class="ld-nav-icon">⚙️</span>
+                <span class="ld-nav-icon">⚙</span>
                 <span class="ld-nav-text">Settings</span>
             </a>
         </nav>
 
-        <!-- Fixed Footer -->
+        <!-- Sticky Footer Actions -->
         <div class="ld-sidebar-footer">
-            <a href="/logout" class="ld-nav-item" style="color: #f87171; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.2);">
+            <a href="/student" class="ld-footer-btn">
+                <span class="ld-nav-icon">🏠</span>
+                <span>Go Home</span>
+            </a>
+            <a href="/logout" class="ld-footer-btn danger">
                 <span class="ld-nav-icon">🚪</span>
-                <span class="ld-nav-text">Disconnect</span>
+                <span>Logout</span>
             </a>
         </div>
     </aside>
@@ -2249,12 +2314,42 @@ html, body {
         switchTab(section);
     });
 
+
 function toggleAdminSidebar() {
-    const sb = document.querySelector('.ld-sidebar');
+    const sb = document.getElementById('adminSidebar') || document.querySelector('.ld-sidebar');
     const dim = document.getElementById('adminDim');
     if (!sb) return;
     sb.classList.toggle('open');
     if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
 }
+
+function autoCloseAdminSidebar() {
+    if (window.innerWidth <= 900) {
+        const sb = document.getElementById('adminSidebar') || document.querySelector('.ld-sidebar');
+        const dim = document.getElementById('adminDim');
+        if (sb) sb.classList.remove('open');
+        if (dim) dim.classList.remove('active');
+    }
+}
+
+// Close sidebar on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') autoCloseAdminSidebar();
+});
+
+// Touch swipe left listener to close sidebar on mobile
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    if (touchStartX - touchEndX > 60) {
+        // Swiped left
+        autoCloseAdminSidebar();
+    }
+}, { passive: true });
+
 
 </script>
