@@ -390,10 +390,11 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid #f1f
                 <span class="ld-nav-icon">❓</span>
                 <span class="ld-nav-text">Help & Support</span>
             </button>
-            <a href="/digital-library" class="ld-nav-item">
+            <button class="ld-nav-item tab-btn" onclick="switchTab('books', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">🌐</span>
-                <span class="ld-nav-text">Digital Library</span>
-            </a>
+                <span class="ld-nav-text">Digital Library / Catalog</span>
+                <span class="ld-nav-badge orange"><%= books ? books.length : 0 %></span>
+            </button>
         </nav>
 
         <!-- Sticky Footer -->
@@ -1064,6 +1065,16 @@ function toggleAdminSidebar() {
 document.addEventListener('DOMContentLoaded', function() {
     autoCloseAdminSidebar();
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab) {
+        const btn = document.querySelector(`.tab-btn[onclick*="'${tab}'"]`);
+        switchTab(tab, btn);
+    }
+});
+
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') autoCloseAdminSidebar();
 });

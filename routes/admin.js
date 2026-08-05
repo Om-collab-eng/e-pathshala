@@ -968,3 +968,9 @@ router.get(['/ai', '/ai-chat'], adminOnly, (req, res) => {
     res.redirect('/admin');
   }
 });
+
+
+// ── Admin Digital Library Redirect ──────────────────────────────────────────
+router.get(['/digital', '/digital-library'], adminOnly, (req, res) => {
+  res.redirect('/admin?tab=books');
+});
