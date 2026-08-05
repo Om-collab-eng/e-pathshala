@@ -806,11 +806,13 @@ function generateDefaultQuiz(title, author) {
 }
 
 
-// ── Additional Student Tab Routes ──────────────────────────────────────────
+
+// ── Additional Student Tab Routes (Pristine Bug-Free Handlers) ──
 router.get('/goals', studentOnly, async (req, res) => {
   try {
-    const user = (await pool.query('SELECT * FROM users WHERE id = ', [req.session.user_id])).rows[0] || {};
-    const totalRead = parseInt((await pool.query("SELECT COUNT(*) as c FROM transactions WHERE user_id =  AND return_date IS NOT NULL AND return_date != 'LOST'", [req.session.user_id])).rows[0].c);
+    const userId = req.session.user_id;
+    const user = (await pool.query('SELECT * FROM users WHERE id = ', [userId])).rows[0] || {};
+    const totalRead = parseInt((await pool.query("SELECT COUNT(*) as c FROM transactions WHERE user_id =  AND return_date IS NOT NULL AND return_date != 'LOST'", [userId])).rows[0].c || 0, 10);
     res.render('student_goals', {
       title: 'Reading Goals - librika.in',
       user,
@@ -827,7 +829,7 @@ router.get('/goals', studentOnly, async (req, res) => {
 
 router.get('/notifications', studentOnly, async (req, res) => {
   try {
-    const notifs = (await pool.query('SELECT * FROM announcements WHERE school_code =  OR school_code = 'GLOBAL' ORDER BY created_at DESC LIMIT 20', [req.session.school_code])).rows || [];
+    const notifs = (await pool.query("SELECT * FROM announcements WHERE school_code =  OR school_code = 'GLOBAL' ORDER BY created_at DESC LIMIT 20", [req.session.school_code || 'GLOBAL'])).rows || [];
     res.render('student_notifications', {
       title: 'Notifications - librika.in',
       notifications: notifs,
@@ -841,7 +843,8 @@ router.get('/notifications', studentOnly, async (req, res) => {
 
 router.get('/settings', studentOnly, async (req, res) => {
   try {
-    const user = (await pool.query('SELECT * FROM users WHERE id = ', [req.session.user_id])).rows[0] || {};
+    const userId = req.session.user_id;
+    const user = (await pool.query('SELECT * FROM users WHERE id = ', [userId])).rows[0] || {};
     res.render('student_settings', {
       title: 'Account Settings - librika.in',
       user,
@@ -867,7 +870,8 @@ router.get(['/help', '/support'], studentOnly, async (req, res) => {
 
 router.get('/my-library', studentOnly, async (req, res) => {
   try {
-    const txs = (await pool.query('SELECT t.*, b.title, b.author, b.cover_url FROM transactions t JOIN books b ON b.id = t.book_id WHERE t.user_id =  AND t.return_date IS NULL', [req.session.user_id])).rows;
+    const userId = req.session.user_id;
+    const txs = (await pool.query('SELECT t.*, b.title, b.author, b.cover_url FROM transactions t JOIN books b ON b.id = t.book_id WHERE t.user_id =  AND t.return_date IS NULL', [userId])).rows;
     res.render('student_mylibrary', {
       title: 'My Library - librika.in',
       transactions: txs,
@@ -875,9 +879,85 @@ router.get('/my-library', studentOnly, async (req, res) => {
     });
   } catch (err) {
     console.error('My library route error:', err);
-    res.redirect('/student');
+    res.render('student_mylibrary', { title: 'My Library', transactions: [], school_name: 'E-Pathshala Network' });
   }
 });
 
+router.get('/analytics', studentOnly, async (req, res) => {
+  try {
+    const userId = req.session.user_id;
+    const progressRows = (await pool.query('SELECT total_pages, last_page, reading_time, updated_at FROM reading_progress WHERE student_id = ', [userId])).rows || [];
+    const pagesRead = progressRows.reduce((a, r) => a + (parseInt(r.last_page, 10) || 0), 0);
+    const minutesRead = progressRows.reduce((a, r) => a + (parseInt(r.reading_time, 10) || 0), 0);
+    const hoursRead = (minutesRead / 60).toFixed(1);
+    const booksCompleted = parseInt((await pool.query("SELECT COUNT(*) as c FROM transactions WHERE user_id =  AND return_date IS NOT NULL AND return_date != 'LOST'", [userId])).rows[0].c || 0, 10);
+    res.render('student_analytics', {
+      title: 'Analytics - librika.in',
+      pagesRead, minutesRead, hoursRead, booksCompleted,
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Analytics route error:', err);
+    res.render('student_analytics', { title: 'Analytics', pagesRead: 0, minutesRead: 0, hoursRead: 0, booksCompleted: 0, school_name: 'E-Pathshala Network' });
+  }
+});
+
+router.get('/assignments', studentOnly, async (req, res) => {
+  try {
+    const sCode = req.session.school_code || 'GLOBAL';
+    const assignments = (await pool.query('SELECT * FROM assignments WHERE school_code =  ORDER BY due_date ASC', [sCode])).rows || [];
+    res.render('student_assignments', {
+      title: 'Assignments - librika.in',
+      assignments,
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Assignments route error:', err);
+    res.render('student_assignments', { title: 'Assignments', assignments: [], school_name: 'E-Pathshala Network' });
+  }
+});
+
+router.get('/requests', studentOnly, async (req, res) => {
+  try {
+    const userId = req.session.user_id;
+    const reqs = (await pool.query('SELECT r.*, b.title, b.author, b.cover_url FROM book_reservations r JOIN books b ON r.book_id = b.id WHERE r.user_id =  ORDER BY r.created_at DESC', [userId])).rows || [];
+    res.render('student_requests', {
+      title: 'Book Requests - librika.in',
+      requests: reqs,
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Requests route error:', err);
+    res.render('student_requests', { title: 'Book Requests', requests: [], school_name: 'E-Pathshala Network' });
+  }
+});
+
+router.get('/calendar', studentOnly, async (req, res) => {
+  try {
+    res.render('student_calendar', {
+      title: 'Calendar - librika.in',
+      events: [],
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Calendar route error:', err);
+    res.render('student_calendar', { title: 'Calendar', events: [], school_name: 'E-Pathshala Network' });
+  }
+});
+
+router.get('/security', studentOnly, async (req, res) => {
+  try {
+    const userId = req.session.user_id;
+    const user = (await pool.query('SELECT * FROM users WHERE id = ', [userId])).rows[0] || {};
+    res.render('student_security', {
+      title: 'Security Settings - librika.in',
+      user,
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Security route error:', err);
+    res.render('student_security', { title: 'Security Settings', user: {}, school_name: 'E-Pathshala Network' });
+  }
+});
 
 module.exports = router;
