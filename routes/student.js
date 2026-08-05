@@ -13,9 +13,15 @@ const upload = multer({
 const digitalContentDir = path.join(__dirname, '..', 'static', 'digital_content');
 
 function studentOnly(req, res, next) {
-  if (req.session && req.session.user_id && (req.session.role === 'student' || req.session.role === 'user' || req.session.role === 'super_admin' || req.session.role === 'superadmin' || req.session.role === 'admin')) return next();
-  req.flash('error', 'Access denied. Student login required.');
-  return res.redirect('/login');
+  if (!req.session || !req.session.user_id) {
+    req.flash('error', 'Access denied. Please log in.');
+    return res.redirect('/login');
+  }
+  // Role isolation: Librarians & Admins belong in /admin, not /student
+  if (req.session.role === 'admin' || req.session.role === 'librarian') {
+    return res.redirect('/admin');
+  }
+  return next();
 }
 
 function renderDate(d) {
