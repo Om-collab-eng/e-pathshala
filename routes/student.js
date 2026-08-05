@@ -861,6 +861,22 @@ router.get('/settings', studentOnly, async (req, res) => {
   }
 });
 
+
+// ── AI Chat Assistant Route ────────────────────────────────────────────────
+router.get(['/ai', '/ai-chat'], studentOnly, async (req, res) => {
+  try {
+    res.render('student_ai', {
+      title: 'AI Chat Assistant - librika.in',
+      active: 'ai',
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('AI route error:', err);
+    res.redirect('/student');
+  }
+});
+
+// ── Help & Support Routes ──────────────────────────────────────────────────
 router.get(['/help', '/support'], studentOnly, async (req, res) => {
   try {
     const userId = req.session.user_id;

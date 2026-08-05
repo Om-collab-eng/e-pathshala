@@ -1,0 +1,104 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'ai' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'AI Assistant', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">AI Assistant</h1>
+          <p class="sp-page-sub">Your study buddy — ask questions, summarize, quiz yourself and more.</p>
+        </div>
+
+        <div class="sp-chat-card">
+          <div class="sp-chat-tools" id="spChatTools">
+            <button class="sp-chip-tool active" data-tool="chat" onclick="setTool('chat', this)">💬 Chat</button>
+            <button class="sp-chip-tool" data-tool="summarize" onclick="setTool('summarize', this)">📝 Summarize</button>
+            <button class="sp-chip-tool" data-tool="quiz" onclick="setTool('quiz', this)">🧠 Quiz Me</button>
+            <button class="sp-chip-tool" data-tool="flashcards" onclick="setTool('flashcards', this)">🗂️ Flashcards</button>
+            <button class="sp-chip-tool" data-tool="explain" onclick="setTool('explain', this)">🔎 Explain</button>
+            <button class="sp-chip-tool" data-tool="vocabulary" onclick="setTool('vocabulary', this)">📖 Vocabulary</button>
+            <button class="sp-chip-tool" data-tool="translate" onclick="setTool('translate', this)">🌐 Translate</button>
+          </div>
+
+          <div class="sp-chat-body" id="spChatBody">
+            <div class="sp-chat-msg sp-chat-ai">
+              <p>Hi! I'm your librika.in study assistant. Choose a tool above or just ask me anything about your books, homework or topics. 📚</p>
+            </div>
+          </div>
+
+          <form class="sp-chat-input" id="spChatForm">
+            <input type="text" id="spChatText" class="sp-input" placeholder="Ask me anything..." autocomplete="off">
+            <button type="submit" class="sp-btn sp-btn-primary" id="spChatSend">Send</button>
+          </form>
+          <p class="sp-chat-hint">AI can make mistakes. Double-check important answers.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  var activeTool = 'chat';
+  var busy = false;
+
+  function setTool(tool, btn) {
+    activeTool = tool;
+    document.querySelectorAll('.sp-chip-tool').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    var hints = {
+      summarize: 'Paste a paragraph or passage and I will summarize it.',
+      quiz: 'Give me a topic and I will create a 5-question quiz.',
+      flashcards: 'Give me a topic and I will make flashcards.',
+      explain: 'Tell me a concept and I will explain it simply.',
+      vocabulary: 'Give me a topic and I will list key vocabulary.',
+      translate: 'Paste text to translate.',
+      chat: 'Ask me anything about your studies.'
+    };
+    addMsg('ai', hints[activeTool] || hints.chat);
+  }
+
+  function addMsg(role, text) {
+    var body = document.getElementById('spChatBody');
+    var div = document.createElement('div');
+    div.className = 'sp-chat-msg sp-chat-' + role;
+    var p = document.createElement('p');
+    p.textContent = text;
+    div.appendChild(p);
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+    return div;
+  }
+
+  document.getElementById('spChatForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (busy) return;
+    var input = document.getElementById('spChatText');
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    addMsg('user', text);
+    busy = true;
+    var sendBtn = document.getElementById('spChatSend');
+    sendBtn.disabled = true;
+    sendBtn.textContent = '…';
+    try {
+      var r = await fetch('/student/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, tool: activeTool })
+      });
+      var data = await r.json();
+      if (data.status === 'success') {
+        addMsg('ai', data.reply);
+      } else {
+        addMsg('ai', '⚠️ ' + (data.message || 'Something went wrong. Please try again.'));
+      }
+    } catch (err) {
+      addMsg('ai', '⚠️ Could not reach the AI service. Please try again.');
+    }
+    busy = false;
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Send';
+  });
+</script>
