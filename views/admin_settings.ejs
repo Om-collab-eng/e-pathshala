@@ -1,7 +1,3 @@
-<%- layout("base") %>
-<% contentFor("title") %>Settings - librika.in</%>
-
-<% contentFor("content") %>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <style>
@@ -237,6 +233,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     .ld-content { padding: 2rem 2.5rem; gap: 2rem; }
     .ld-welcome h1 { font-size: 2rem; }
 }
+
+/* ── REMOVE ALL BOTTOM NAV BARS ── */
+.bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
 </style>
 
 <div class="ld-shell">
@@ -402,28 +406,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
         </div><!-- end ld-content -->
 
         <!-- Mobile Bottom Nav -->
-        <nav class="ld-bottom-nav">
-            <a href="/admin?section=dashboard" class="ld-bnav-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                <span>Dashboard</span>
-            </a>
-            <a href="/admin?section=books" class="ld-bnav-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                <span>Books</span>
-            </a>
-            <a href="/admin?section=members" class="ld-bnav-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span>Members</span>
-            </a>
-            <a href="/admin?section=transactions" class="ld-bnav-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                <span>Transactions</span>
-            </a>
-            <a href="/admin?section=reports" class="ld-bnav-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                <span>Reports</span>
-            </a>
-        </nav>
+        
 
     </div><!-- end ld-main -->
 </div><!-- end ld-shell -->
@@ -472,3 +455,11 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
     }
 </script>
 </%>
+<style>
+/* LIBRIKA LIGHT PREMIUM — accent realignment (admin_settings) */
+:root {
+  --lp: #2563eb !important;
+  --lp-mid: #4f46e5 !important;
+  --accent-primary: #2563eb !important;
+}
+</style>

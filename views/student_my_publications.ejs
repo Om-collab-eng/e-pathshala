@@ -1,5 +1,6 @@
 <%- layout("base") %>
-<% contentFor("title") %>My Publications - librika.in<%%>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<% contentFor("title") %>My Publications - librika.in
 <% contentFor("content") %>
 <!-- Load Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -531,8 +532,27 @@
             display: none !important;
         }
     }
-</style>
 
+/* ── REMOVE ALL BOTTOM NAV BARS ── */
+.bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+</style>
+<style>
+/* sp- conversion overrides */
+.desktop-sidebar, .bottom-nav, .my-pub-header, #sidebarBackdrop { display: none !important; }
+.portal-wrapper { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; background: transparent !important; }
+.portal-main { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; overflow: visible !important; background: transparent !important; }
+</style>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'publications' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'My Publications' }) %>
+      <main class="sp-content">
 <div class="portal-wrapper">
     <!-- Desktop Sidebar Navigation -->
     <aside class="desktop-sidebar">
@@ -777,28 +797,7 @@
         </section>
 
         <!-- Mobile Bottom Nav -->
-        <nav class="bottom-nav">
-            <a href="/student" class="bottom-nav-item">
-                <span class="bottom-nav-icon">🏠</span>
-                <span class="bottom-nav-label">Home</span>
-            </a>
-            <a href="/student/browse" class="bottom-nav-item">
-                <span class="bottom-nav-icon">📚</span>
-                <span class="bottom-nav-label">Library</span>
-            </a>
-            <a href="/digital-library" class="bottom-nav-item">
-                <span class="bottom-nav-icon">🌐</span>
-                <span class="bottom-nav-label">Community</span>
-            </a>
-            <a href="/student/publish" class="bottom-nav-item active">
-                <span class="bottom-nav-icon">✏️</span>
-                <span class="bottom-nav-label">Creator Hub</span>
-            </a>
-            <a href="/student/profile" class="bottom-nav-item">
-                <span class="bottom-nav-icon">👤</span>
-                <span class="bottom-nav-label">Profile</span>
-            </a>
-        </nav>
+        
     </div>
 </div>
 
@@ -829,4 +828,8 @@
         showToast('Options for publication #' + pubId + ' coming soon!', 'info');
     }
 </script>
-<%%>
+
+      </main>
+    </div>
+  </div>
+</div>

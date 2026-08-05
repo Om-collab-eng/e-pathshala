@@ -1,6 +1,3 @@
-<%- layout("base") %>
-<% contentFor("title") %>Book Catalog - E-Pathshala Network<%%>
-<% contentFor("head") %>
 <style>
     /* Fonts import */
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -354,25 +351,28 @@
     .featured-carousel-wrapper {
         position: relative;
         width: 100%;
-        margin-bottom: 2rem;
+        margin-bottom: 0.75rem;
+        overflow: hidden;
+        border-radius: 24px;
+        touch-action: pan-y;
+        user-select: none;
+        cursor: grab;
     }
+    .featured-carousel-wrapper:active { cursor: grabbing; }
     .featured-carousel {
         display: flex;
-        gap: 15px;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-        scroll-behavior: smooth;
-    }
-    .featured-carousel::-webkit-scrollbar {
-        display: none;
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        width: 100%;
     }
     .featured-carousel .featured-banner {
         flex: 0 0 100%;
-        scroll-snap-align: start;
-        margin-bottom: 0;
+        width: 100%;
         box-sizing: border-box;
+        border-radius: 24px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        min-height: 160px;
     }
     .featured-banner {
         background: linear-gradient(135deg, #f5f3ff 0%, #edd8ff 100%);
@@ -665,45 +665,68 @@
         bottom: 0;
         left: 0;
         right: 0;
-        height: 70px;
-        background: rgba(255,255,255,0.92);
-        backdrop-filter: blur(12px);
-        border-top: 1px solid #e2e8f0;
-        display: flex;
-        justify-content: space-around;
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        height: 68px;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(226, 232, 240, 0.9);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
         align-items: center;
+        padding: 0 4px;
+        box-sizing: border-box;
         z-index: 1000;
-        padding-bottom: env(safe-area-inset-bottom);
-        box-sizing: content-box;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
     }
 
     .bottom-nav-item {
+        background: none;
+        border: none;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 4px;
+        justify-content: center;
+        gap: 3px;
+        color: #64748b;
+        cursor: pointer;
         text-decoration: none;
-        color: var(--sp-text-muted);
-        font-size: 0.65rem;
+        font-size: 0.68rem;
         font-weight: 700;
-        width: 68px;
+        transition: all 0.2s ease;
+        padding: 6px 2px;
+        width: 100%;
+        box-sizing: border-box;
         text-align: center;
         line-height: 1.1;
-        transition: color 0.2s;
-        cursor: pointer;
     }
 
     .bottom-nav-icon {
-        font-size: 1.35rem;
-        transition: transform 0.2s;
+        font-size: 1.25rem;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
+    .bottom-nav-item span:last-child {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        letter-spacing: -0.2px;
+    }
+
+    .bottom-nav-item:hover,
     .bottom-nav-item.active {
         color: var(--sp-purple);
     }
 
     .bottom-nav-item.active .bottom-nav-icon {
-        transform: translateY(-2px);
+        transform: translateY(-2px) scale(1.12);
     }
 
     /* Chat Float Action Button */
@@ -950,9 +973,30 @@
             grid-template-columns: repeat(5, 1fr);
         }
     }
+ 
+/* ── REMOVE ALL BOTTOM NAV BARS ── */
+.bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+</style>
+<style>
+/* sp- conversion overrides */
+.desktop-sidebar, .bottom-nav, #sidebarBackdrop, nav.bottom-nav { display: none !important; }
+.portal-wrapper { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; }
+.portal-main { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; overflow: visible !important; }
+.portal-header-top { display: none !important; }
 </style>
 <% contentFor("head") %>
 <% contentFor("content") %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'browse' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Digital Library' }) %>
+      <main class="sp-content">
 <div class="portal-wrapper">
     <!-- Desktop Sidebar Navigation -->
     <aside class="desktop-sidebar">
@@ -1015,14 +1059,28 @@
         <!-- Header -->
         <header class="portal-header">
             <div class="portal-header-top">
-                <!-- Hamburger button (visible on mobile only) -->
-                <button class="header-btn" onclick="toggleSidebarMenu()" title="Main Menu">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
+                <!-- Hamburger button and User Profile (top-left) -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="header-btn" onclick="toggleSidebarMenu()" title="Main Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.href='/student/profile'">
+                        <% const userBrowseName = (session && (session.user_name || session.name) ? (session.user_name || session.name) : 'Student'); %>
+                        <% const userBrowseInitial = userBrowseName.trim()[0].toUpperCase(); %>
+                        <div class="header-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.15)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
+                            <% if (session && session.profile_photo) { %>
+                                <img src="<%= session.profile_photo %>" style="width: 100%; height: 100%; object-fit: cover;" alt="<%= userBrowseName %>">
+                            <% } else { %>
+                                <%= userBrowseInitial %>
+                            <% } %>
+                        </div>
+                        <span style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;"><%= userBrowseName %></span>
+                    </div>
+                </div>
                 <div class="portal-header-actions">
                     <button class="header-btn" onclick="window.location.href='/student/bookmarks'" title="Notifications" style="position: relative;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1031,16 +1089,13 @@
                         </svg>
                         <span class="header-badge" style="background: var(--sp-purple); border-color: #3b2bc4;">3</span>
                     </button>
-                    <div class="header-avatar" onclick="window.location.href='/student/profile'">
-                        <%= session.user_name ? session.user_name[0] : 'S' %>
-                    </div>
                 </div>
             </div>
             <div class="portal-welcome">
                 <h2 style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 1.6rem; line-height: 1;">🌐</span> Digital Library</h2>
                 <p>Explore, learn and grow every day.</p>
             </div>
-            <img src="/static/student_books_illustration.png" class="header-illustration" alt="Digital Library">
+            <img src="/student_books_illustration.png" class="header-illustration" alt="Digital Library" onerror="this.style.display='none';">
         </header>
 
         <!-- Content overlapping -->
@@ -1164,9 +1219,7 @@
                     <% var card_url = (book.book_type === 'digital') ? '/digital-library/content/' + book.id : '/student/book/' + book.id; %>
                     <a href="<%= card_url %>" class="book-card">
                         <div class="book-cover-placeholder" data-title="<%= book.title %>" style="position: relative;">
-                            <% if (book.cover_url) { %>
-                            <img src="<%= book.cover_url %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;">
-                            <% } %>
+                            <img src="<%= book.cover_url || '/static/placeholder-cover.jpg' %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;" alt="<%= book.title %>" onerror="generateBookCoverFallback(this, '<%= book.title %>', '<%= book.author %>', '<%= book.genre || book.category || 'Library' %>')" data-fallback-title="<%= book.title %>" data-fallback-author="<%= book.author %>" data-fallback-genre="<%= book.genre || book.category || 'Library' %>">
                             <span class="cover-tag" style="z-index: 2;"><%= book.genre || 'Trending' %></span>
                             <h4 class="cover-title" style="z-index: 2; margin-top: auto;"><%= book.title %></h4>
                         </div>
@@ -1208,9 +1261,7 @@
                     <% var card_url = (book.book_type === 'digital') ? '/digital-library/content/' + book.id : '/student/book/' + book.id; %>
                     <a href="<%= card_url %>" class="book-card">
                         <div class="book-cover-placeholder" data-title="<%= book.title %>" style="position: relative;">
-                            <% if (book.cover_url) { %>
-                            <img src="<%= book.cover_url %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;">
-                            <% } %>
+                            <img src="<%= book.cover_url || '/static/placeholder-cover.jpg' %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;" alt="<%= book.title %>" onerror="generateBookCoverFallback(this, '<%= book.title %>', '<%= book.author %>', '<%= book.genre || book.category || 'Library' %>')" data-fallback-title="<%= book.title %>" data-fallback-author="<%= book.author %>" data-fallback-genre="<%= book.genre || book.category || 'Library' %>">
                             <span class="cover-tag" style="z-index: 2;">NEW</span>
                             <h4 class="cover-title" style="z-index: 2; margin-top: auto;"><%= book.title %></h4>
                         </div>
@@ -1256,9 +1307,7 @@
                     <% var card_url = (book.book_type === 'digital') ? '/digital-library/content/' + book.id : '/student/book/' + book.id; %>
                     <a href="<%= card_url %>" class="book-card" style="width: auto;">
                         <div class="book-cover-placeholder" data-title="<%= book.title %>" style="position: relative;">
-                            <% if (book.cover_url) { %>
-                            <img src="<%= book.cover_url %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;">
-                            <% } %>
+                            <img src="<%= book.cover_url || '/static/placeholder-cover.jpg' %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: 0; border-radius: 14px;" alt="<%= book.title %>" onerror="generateBookCoverFallback(this, '<%= book.title %>', '<%= book.author %>', '<%= book.genre || book.category || 'Library' %>')" data-fallback-title="<%= book.title %>" data-fallback-author="<%= book.author %>" data-fallback-genre="<%= book.genre || book.category || 'Library' %>">
                             <% if (book.ai_score) { %>
                             <div class="ai-badge" style="z-index: 2;">🤖 <%= book.ai_score %>% Match</div>
                             <% } %>
@@ -1300,28 +1349,7 @@
 </div>
 
 <!-- Mobile Bottom Navigation Tab Bar -->
-<nav class="bottom-nav">
-    <a href="/student" class="bottom-nav-item">
-        <span class="bottom-nav-icon">🏠</span>
-        <span>Home</span>
-    </a>
-    <a href="/student/browse" class="bottom-nav-item active">
-        <span class="bottom-nav-icon">📚</span>
-        <span>Digital Library</span>
-    </a>
-    <a href="/digital-library" class="bottom-nav-item">
-        <span class="bottom-nav-icon">🌐</span>
-        <span>Community</span>
-    </a>
-    <a href="/student/publish" class="bottom-nav-item">
-        <span class="bottom-nav-icon">✏️</span>
-        <span>Creator Hub</span>
-    </a>
-    <a href="/student/profile" class="bottom-nav-item">
-        <span class="bottom-nav-icon">👤</span>
-        <span>Profile</span>
-    </a>
-</nav>
+
 
 <!-- Mobile Sidebar Drawer Menu -->
 <div id="portalSidebar" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; z-index: 11000; box-shadow: 10px 0 30px rgba(0,0,0,0.15); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden;">
@@ -1403,33 +1431,116 @@
         });
 
         // Initialize Carousel Scroll Logic
-        const carousel = document.querySelector('.featured-carousel');
-        const dots = document.querySelectorAll('.carousel-dot');
-        if (carousel && dots.length > 0) {
-            carousel.addEventListener('scroll', () => {
-                const width = carousel.getBoundingClientRect().width || carousel.offsetWidth;
-                if (width > 0) {
-                    const index = Math.round(carousel.scrollLeft / width);
-                    dots.forEach((dot, i) => {
-                        if (i === index) {
-                            dot.classList.add('active');
-                        } else {
-                            dot.classList.remove('active');
-                        }
-                    });
-                }
-            });
+        // Featured Carousel & Ad Manager Controller
+        (function() {
+            let currentSlide = 0;
+            let autoPlayTimer = null;
+            const wrapper = document.querySelector('.featured-carousel-wrapper');
+            const track = document.querySelector('.featured-carousel');
+            const dotsContainer = document.querySelector('.carousel-dots');
+            if (!track || !wrapper || !dotsContainer) return;
 
-            dots.forEach((dot, index) => {
-                dot.addEventListener('click', () => {
-                    const width = carousel.getBoundingClientRect().width || carousel.offsetWidth;
-                    carousel.scrollTo({
-                        left: index * width,
-                        behavior: 'smooth'
-                    });
+            // Fetch dynamic ads from server
+            fetch('/api/ads?section=digital_library')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success' && data.advertisements && data.advertisements.length > 0) {
+                        const adSlides = data.advertisements.map(ad => `
+                            <div class="featured-banner ad-banner-slide" data-ad-id="${ad.id}" style="background: ${ad.bg_gradient || 'linear-gradient(135deg, #f5f3ff 0%, #edd8ff 100%)'};">
+                                <div class="featured-info">
+                                    <div class="featured-label" style="color: rgba(255,255,255,0.9);">📢 PROMOTIONAL FEATURE</div>
+                                    <h4 class="featured-title" style="color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">${escapeHtml(ad.title)}</h4>
+                                    <p class="featured-subtitle" style="color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.3);">${escapeHtml(ad.subtitle || ad.description || '')}</p>
+                                    <a href="${ad.target_url}" onclick="trackAdClick(${ad.id})" class="featured-btn" style="background: rgba(255,255,255,0.25); backdrop-filter: blur(8px); color: white; border: 1px solid rgba(255,255,255,0.4);">${escapeHtml(ad.cta_text || 'Learn More')}</a>
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        track.insertAdjacentHTML('afterbegin', adSlides);
+                        rebuildDots();
+                    }
+                    initCarouselController();
+                })
+                .catch(() => initCarouselController());
+
+            function escapeHtml(str) {
+                return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            window.trackAdClick = function(adId) {
+                fetch('/api/ads/' + adId + '/click', { method: 'POST' }).catch(() => {});
+            };
+
+            function rebuildDots() {
+                const slides = track.querySelectorAll('.featured-banner');
+                dotsContainer.innerHTML = Array.from(slides).map((_, i) => `<div class="carousel-dot ${i===0?'active':''}" data-index="${i}"></div>`).join('');
+                bindDotClicks();
+            }
+
+            function bindDotClicks() {
+                const dots = dotsContainer.querySelectorAll('.carousel-dot');
+                dots.forEach((dot, idx) => {
+                    dot.onclick = () => {
+                        currentSlide = idx;
+                        updateSlide();
+                        startAutoPlay();
+                    };
                 });
-            });
-        }
+            }
+
+            function updateSlide() {
+                const slides = track.querySelectorAll('.featured-banner');
+                if (slides.length === 0) return;
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+                const dots = dotsContainer.querySelectorAll('.carousel-dot');
+                dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentSlide));
+            }
+
+            function nextSlide() {
+                const slides = track.querySelectorAll('.featured-banner');
+                if (slides.length === 0) return;
+                currentSlide = (currentSlide + 1) % slides.length;
+                updateSlide();
+            }
+
+            function startAutoPlay() {
+                if (autoPlayTimer) clearInterval(autoPlayTimer);
+                autoPlayTimer = setInterval(nextSlide, 6000);
+            }
+
+            function initCarouselController() {
+                bindDotClicks();
+                let touchStartX = 0;
+                let touchEndX = 0;
+
+                wrapper.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                    if (autoPlayTimer) clearInterval(autoPlayTimer);
+                }, { passive: true });
+
+                wrapper.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    const diff = touchStartX - touchEndX;
+                    const slides = track.querySelectorAll('.featured-banner');
+                    if (Math.abs(diff) > 40 && slides.length > 0) {
+                        if (diff > 0) currentSlide = (currentSlide + 1) % slides.length;
+                        else currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                        updateSlide();
+                    }
+                    startAutoPlay();
+                }, { passive: true });
+
+                wrapper.addEventListener('mouseenter', () => {
+                    if (autoPlayTimer) clearInterval(autoPlayTimer);
+                });
+
+                wrapper.addEventListener('mouseleave', () => {
+                    startAutoPlay();
+                });
+
+                startAutoPlay();
+            }
+        })();
     });
 
     // Mobile Sidebar Drawer Toggle
@@ -1468,3 +1579,8 @@
         }, 300);
     }
 </script>
+
+      </main>
+    </div>
+  </div>
+</div>

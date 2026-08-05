@@ -1,0 +1,1463 @@
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --lp: #5c3cf3;
+    --lp-mid: #7c5cf6;
+    --lp-light: #f0eeff;
+    --lg: #22c55e;
+    --lg-light: #dcfce7;
+    --lo: #f97316;
+    --lo-light: #fff7ed;
+    --lr: #ef4444;
+    --lr-light: #fef2f2;
+    --lb: #3b82f6;
+    --lb-light: #eff6ff;
+    --lt: #06b6d4;
+    --lt-light: #ecfeff;
+    --lam: #f59e0b;
+    --lam-light: #fefce8;
+    --bg: #f8fafc;
+    --white: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --mid: #475569;
+    --muted: #94a3b8;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 10px 30px rgba(92, 60, 243, 0.08);
+    --radius: 18px;
+}
+/* Toggle Switch styling */
+.sa-toggle-switch input:checked + .sa-toggle-slider {
+    background-color: var(--lp);
+}
+.sa-toggle-switch .sa-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+.sa-toggle-switch input:checked + .sa-toggle-slider:before {
+    transform: translateX(22px);
+}
+
+[data-theme="dark"] {
+    --bg: #0f172a; --white: #1e293b; --border: #334155;
+    --text: #f1f5f9; --mid: #94a3b8; --muted: #64748b;
+    --lp-light: rgba(92, 60, 243, 0.15);
+    --lg-light: rgba(34, 197, 94, 0.12);
+    --lo-light: rgba(249, 115, 22, 0.12);
+    --lr-light: rgba(239, 68, 68, 0.12);
+    --lb-light: rgba(59, 130, 246, 0.12);
+    --lt-light: rgba(6, 182, 212, 0.12);
+    --lam-light: rgba(245, 158, 11, 0.12);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    --shadow-hover: 0 10px 30px rgba(92, 60, 243, 0.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+/* ── SHELL ── */
+.ld-shell { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.ld-sidebar {
+    width: 260px; background: var(--white); border-right: 1px solid var(--border);
+    display: none; flex-direction: column; padding: 1.5rem 1.25rem;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; flex-shrink: 0; z-index: 200;
+}
+.ld-sidebar-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+.ld-brand-icon {
+    width: 40px; height: 40px; background: var(--lp-light);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+}
+.ld-brand-text h4 { font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 800; color: var(--text); }
+.ld-brand-text p  { font-size: 0.68rem; color: var(--muted); font-weight: 500; }
+
+.ld-nav { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.ld-nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 12px;
+    text-decoration: none; color: var(--mid);
+    font-size: 0.83rem; font-weight: 600; transition: all 0.18s;
+    cursor: pointer; border: none; background: transparent; text-align: left;
+    width: 100%;
+}
+.ld-nav-link:hover { background: var(--lp-light); color: var(--lp); }
+.ld-nav-link.active { background: var(--lp-light); color: var(--lp); font-weight: 700; }
+.ld-nav-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: transparent; flex-shrink: 0; }
+.ld-nav-link.active .ld-nav-icon { background: var(--lp); }
+.ld-nav-link:hover .ld-nav-icon { background: var(--lp); }
+.ld-nav-icon svg { transition: stroke 0.18s; }
+.ld-nav-link.active .ld-nav-icon svg,
+.ld-nav-link:hover .ld-nav-icon svg { stroke: white; }
+
+.ld-nav-divider { border: none; border-top: 1px solid var(--border); margin: 0.6rem 0; }
+.ld-nav-link.logout:hover { background: rgba(239,68,68,0.08); color: var(--lr); }
+
+.ld-sidebar-profile {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.75rem; background: var(--lp-light); border-radius: 14px; margin-top: auto;
+    cursor: pointer; transition: all 0.2s;
+}
+.ld-sidebar-profile:hover { transform: translateY(-2px); }
+.ld-sidebar-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--lp); color: white; font-weight: 800; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ld-sidebar-profile h5 { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.ld-sidebar-profile p  { font-size: 0.67rem; color: var(--muted); font-weight: 500; }
+
+/* ── MAIN ── */
+.ld-main {
+    flex: 1; display: flex; flex-direction: column;
+    min-height: 100vh; overflow-y: auto; padding-bottom: 90px;
+}
+
+/* ── TOPBAR (mobile) ── */
+.ld-topbar {
+    background: var(--white); padding: 0.9rem 1.25rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+}
+.ld-topbar-left { display: flex; align-items: center; gap: 10px; }
+.ld-menu-btn {
+    width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--white); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--mid);
+}
+.ld-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.ld-logo-icon { width: 34px; height: 34px; background: var(--lp-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+.ld-logo h4 { font-family: 'Outfit', sans-serif; font-size: 0.88rem; font-weight: 800; color: var(--text); }
+.ld-logo p  { font-size: 0.62rem; color: var(--muted); font-weight: 500; }
+
+.ld-topbar-right { display: flex; align-items: center; gap: 8px; }
+.ld-avatar-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--lp); color: white; font-size: 0.9rem; font-weight: 800;
+    border: 2px solid var(--lp-light); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* ── PAGE CONTENT ── */
+.ld-content { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* Welcome */
+.ld-welcome { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.ld-welcome h1 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.ld-welcome p  { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+.ld-date-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px;
+    font-size: 0.75rem; font-weight: 600; color: var(--mid);
+    white-space: nowrap; box-shadow: var(--shadow); flex-shrink: 0;
+}
+
+/* Panels */
+.ld-panel {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.5rem;
+}
+.ld-panel-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+}
+.ld-panel-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text); }
+
+/* Buttons */
+.ld-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--lp); color: white; border: none; border-radius: 12px;
+    padding: 10px 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s; text-decoration: none;
+}
+.ld-btn:hover:not(:disabled) { background: var(--lp-mid); transform: translateY(-1px); box-shadow: var(--shadow-hover); }
+.ld-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ld-btn-alt {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--lp-light); color: var(--lp); border: 1px solid rgba(92,60,243,0.1); border-radius: 12px;
+    padding: 10px 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s; text-decoration: none;
+}
+.ld-btn-alt:hover { background: var(--lp); color: white; }
+
+/* Forms & Inputs */
+.ld-form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 0.85rem; }
+.ld-form-group label { font-size: 0.78rem; font-weight: 700; color: var(--mid); }
+.ld-input {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 12px;
+    background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem; outline: none; transition: border-color 0.2s;
+}
+.ld-input:focus { border-color: var(--lp); }
+.ld-textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 12px;
+    background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem; outline: none; transition: border-color 0.2s; resize: vertical;
+}
+.ld-textarea:focus { border-color: var(--lp); }
+
+/* Badges */
+.ld-badge {
+    display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px;
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+}
+.ld-badge-success { background: var(--lg-light); color: var(--lg); }
+.ld-badge-warning { background: var(--lam-light); color: var(--lam); }
+.ld-badge-danger { background: var(--lr-light); color: var(--lr); }
+
+/* Upload Zone */
+.ld-upload-zone {
+    border: 2px dashed rgba(92,60,243,0.3); background: var(--bg);
+    border-radius: 16px; height: 260px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer;
+    position: relative; overflow: hidden; transition: all 0.2s;
+}
+.ld-upload-zone:hover { border-color: var(--lp); background: var(--lp-light); }
+.ld-upload-icon { font-size: 2.8rem; margin-bottom: 0.75rem; transition: transform 0.2s; }
+.ld-upload-zone:hover .ld-upload-icon { transform: scale(1.08); }
+.ld-upload-text { font-size: 0.83rem; font-weight: 700; color: var(--text); }
+.ld-upload-subtext { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+/* Grid columns layout */
+.ld-grid-fields { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 576px) {
+    .ld-grid-fields { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Spinner */
+.ld-spinner {
+    margin: 0 auto 1rem auto; width: 40px; height: 40px;
+    border: 4px solid var(--lp-light); border-left-color: var(--lp);
+    border-radius: 50%; animation: spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* Low confidence score warning style */
+.low-confidence {
+    border: 1.5px solid var(--lam) !important;
+    background: var(--lam-light) !important;
+}
+
+/* ── BOTTOM NAV ── */
+.ld-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 72px;
+    background: var(--white); border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.04);
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 0 0.5rem; z-index: 1000;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.ld-bnav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    text-decoration: none; color: var(--muted);
+    font-size: 0.6rem; font-weight: 700; padding: 8px 12px; border-radius: 12px;
+    transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.ld-bnav-item.active { color: var(--lp); background: var(--lp-light); }
+
+/* Hide global floaters */
+.global-nav-container { display: none !important; }
+
+/* ── MODALS ── */
+.ld-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    z-index: 2000; display: none; align-items: center; justify-content: center;
+    padding: 1rem;
+}
+.ld-modal-content {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.75rem; width: 100%; max-width: 480px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12); position: relative;
+    max-height: 90vh; overflow-y: auto;
+}
+.ld-modal-close {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer;
+    line-height: 1; transition: color 0.2s;
+}
+.ld-modal-close:hover { color: var(--lr); }
+.ld-modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; color: var(--text); }
+
+/* ── DESKTOP ── */
+@media (min-width: 768px) {
+    .ld-sidebar    { display: flex !important; }
+    .ld-topbar     { display: none !important; }
+    .ld-bottom-nav { display: none !important; }
+    .ld-main       { padding-bottom: 2rem; }
+    .ld-content { padding: 2rem 2.5rem; gap: 2rem; }
+    .ld-welcome h1 { font-size: 2rem; }
+}
+
+/* ── REMOVE ALL BOTTOM NAV BARS ── */
+.bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+</style>
+
+<div class="ld-shell">
+
+    <!-- ══ SIDEBAR (Desktop) ══ -->
+    <aside class="ld-sidebar">
+        <div class="ld-sidebar-brand">
+            <div class="ld-brand-icon" style="background: #ffffff; padding: 2px;">
+                <img src="/static/logo.png" style="width: 100%; height: 100%; object-fit: contain; border-radius: inherit;">
+            </div>
+            <div class="ld-brand-text">
+                <h4>Librika</h4>
+                <p>Librarian Panel</p>
+            </div>
+        </div>
+
+        <nav class="ld-nav">
+            <a href="/admin?section=dashboard" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </div>
+                Dashboard
+            </a>
+            <a href="/admin?section=books" class="ld-nav-link active">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                Books
+            </a>
+            <a href="/admin?section=members" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                Members
+            </a>
+            <a href="/admin?section=transactions" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                </div>
+                Transactions
+            </a>
+            <a href="/admin?section=overdue" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                Overdue
+            </a>
+            {% if school_perms.canUsePublishing %}
+            <a href="/admin?section=moderation" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                Moderation
+            </a>
+            {% endif %}
+            <a href="/admin?section=reports" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                Reports & Hub
+            </a>
+            <a href="/admin/settings" class="ld-nav-link">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                </div>
+                Settings
+            </a>
+            <hr class="ld-nav-divider">
+            <a href="/logout" class="ld-nav-link logout">
+                <div class="ld-nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </div>
+                Disconnect
+            </a>
+        </nav>
+
+        <div class="ld-sidebar-profile" onclick="openModal('viewSchoolModal')">
+            <div class="ld-sidebar-avatar"><%= (typeof session !== 'undefined' && session && session.user_name ? session.user_name : 'L')[0].toUpperCase() %></div>
+            <div style="min-width: 0;">
+                <h5 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= (typeof session !== 'undefined' && session && session.user_name ? session.user_name : 'Librarian') %></h5>
+                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= (typeof session !== 'undefined' && session && session.school_name ? session.school_name : 'Library') %></p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ══ MAIN ══ -->
+    <div class="ld-main">
+
+        <!-- Mobile Top Bar -->
+        <div class="ld-topbar">
+            <div class="ld-topbar-left">
+                <a href="/admin" class="ld-logo">
+                    <div class="ld-logo-icon" style="background: #ffffff; padding: 2px;">
+                        <img src="/static/logo.png" style="width: 100%; height: 100%; object-fit: contain; border-radius: inherit;">
+                    </div>
+                    <div>
+                        <h4>Librika</h4>
+                        <p>Librarian Panel</p>
+                    </div>
+                </a>
+            </div>
+            <div class="ld-topbar-right">
+                <div class="ld-avatar-btn" onclick="openModal('viewSchoolModal')"><%= (typeof session !== 'undefined' && session && session.user_name ? session.user_name : 'L')[0].toUpperCase() %></div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="ld-content">
+
+            <!-- Title Welcome -->
+            <div class="ld-welcome" style="margin-bottom: 0.5rem;">
+                <div>
+                    <h1 style="display:flex; align-items:center; gap:8px;">🤖 Smart Asset Scanner</h1>
+                    <p>AI-Powered OCR & Classification Module</p>
+                </div>
+                <div class="ld-date-chip">
+                    <a href="/admin" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:4px; font-weight:700;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- =================== STEP 1: SCAN MODE PICKER =================== -->
+            <div id="uploadSection" class="ld-panel" style="max-width: 620px; margin: 0 auto; width: 100%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h3 class="ld-panel-title" style="font-size: 1.35rem; margin-bottom: 0.25rem;">Scan Book Cover</h3>
+                    <p style="font-size: 0.8rem; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.4;">
+                        AI-powered scanner — pick your mode below.
+                    </p>
+                </div>
+
+                <!-- Hidden bulk toggle (controlled by JS) -->
+                <input type="checkbox" id="bulkModeToggle" style="display:none;">
+
+                <!-- Mode picker cards: Camera · Bulk Scan · Upload -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; max-width: 500px; margin: 0 auto 1.5rem auto;">
+
+                    <!-- Single Camera -->
+                    <button id="pickCameraBtn" onclick="startSingleCamera()" style="
+                        background: var(--white); border: 2px solid var(--border); border-radius: 16px;
+                        padding: 1.5rem 0.75rem; cursor: pointer; transition: all 0.2s;
+                        display: flex; flex-direction: column; align-items: center; gap: 10px;
+                        color: var(--text);
+                    " onmouseover="this.style.borderColor='var(--lp)';this.style.background='var(--lp-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
+                        <div style="width:52px;height:52px;border-radius:14px;background:var(--lp-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">📷</div>
+                        <div>
+                            <div style="font-weight:800;font-size:0.9rem;font-family:'Outfit';">Camera</div>
+                            <div style="font-size:0.68rem;color:var(--muted);margin-top:2px;">Single scan</div>
+                        </div>
+                    </button>
+
+                    <!-- Bulk Scan -->
+                    <button id="pickBulkBtn" onclick="startBulkCamera()" style="
+                        background: var(--white); border: 2px solid var(--border); border-radius: 16px;
+                        padding: 1.5rem 0.75rem; cursor: pointer; transition: all 0.2s;
+                        display: flex; flex-direction: column; align-items: center; gap: 10px;
+                        color: var(--text); position:relative;
+                    " onmouseover="this.style.borderColor='var(--lg)';this.style.background='var(--lg-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
+                        <div style="width:52px;height:52px;border-radius:14px;background:var(--lg-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">📸</div>
+                        <div>
+                            <div style="font-weight:800;font-size:0.9rem;font-family:'Outfit';">Bulk Scan</div>
+                            <div style="font-size:0.68rem;color:var(--muted);margin-top:2px;">Multiple books</div>
+                        </div>
+                        <span style="position:absolute;top:8px;right:8px;background:var(--lg);color:white;font-size:0.58rem;font-weight:800;padding:2px 6px;border-radius:6px;">NEW</span>
+                    </button>
+
+                    <!-- Upload -->
+                    <button id="pickUploadBtn" onclick="document.getElementById('frontInput').click()" style="
+                        background: var(--white); border: 2px solid var(--border); border-radius: 16px;
+                        padding: 1.5rem 0.75rem; cursor: pointer; transition: all 0.2s;
+                        display: flex; flex-direction: column; align-items: center; gap: 10px;
+                        color: var(--text);
+                    " onmouseover="this.style.borderColor='var(--lb)';this.style.background='var(--lb-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">
+                        <div style="width:52px;height:52px;border-radius:14px;background:var(--lb-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">📁</div>
+                        <div>
+                            <div style="font-weight:800;font-size:0.9rem;font-family:'Outfit';">Upload</div>
+                            <div style="font-size:0.68rem;color:var(--muted);margin-top:2px;">From device</div>
+                        </div>
+                    </button>
+
+                </div>
+
+                <!-- Hidden file inputs for upload mode -->
+                <input type="file" id="frontInput" accept="image/*" style="display:none;">
+                <input type="file" id="backInput" accept="image/*" style="display:none;">
+
+                <!-- Preview after images are selected -->
+                <div id="previewArea" style="display:none; max-width:600px; margin:0 auto; text-align:center;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:1rem;">
+                        <div>
+                            <div style="font-weight:700; font-size:0.85rem; margin-bottom:6px; color:var(--text); font-family:'Outfit';">Front Cover</div>
+                            <img id="frontPreview" style="width:100%; max-height:250px; object-fit:contain; border-radius:12px; border:1px solid var(--border);">
+                        </div>
+                        <div>
+                            <div style="font-weight:700; font-size:0.85rem; margin-bottom:6px; color:var(--text); font-family:'Outfit';">Back Cover</div>
+                            <img id="backPreview" style="width:100%; max-height:250px; object-fit:contain; border-radius:12px; border:1px solid var(--border);">
+                        </div>
+                    </div>
+                    <div style="margin-top:0.5rem; font-size:0.8rem; color:var(--muted);">
+                        <button onclick="resetScanMode()" style="background:none;border:none;color:var(--lp);cursor:pointer;font-weight:700;font-size:0.82rem;">← Rescan</button>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button id="processBtn" class="ld-btn" style="padding: 12px 32px; font-size: 0.95rem; width: 100%; max-width: 300px;" disabled>Process With AI ✨</button>
+                </div>
+
+                <!-- Loader state -->
+                <div id="loadingState" style="display: none; text-align: center; margin-top: 1rem; padding: 1rem 0;">
+                    <div class="ld-spinner"></div>
+                    <h4 id="loadingText" style="color:var(--lp); font-family:'Outfit'; font-weight:800; font-size:1.15rem; margin-bottom:4px;">Analyzing cover...</h4>
+                    <p style="color: var(--muted); font-size: 0.78rem;">Extracting texts, inferring Dewey Decimal, and generating summaries...</p>
+                </div>
+            </div>
+
+            </script>
+
+            <!-- =================== CAMERA MODAL =================== -->
+            <div id="cameraModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:99999; flex-direction:column; align-items:center; justify-content:center;">
+                <div style="width:100%; max-width:500px; padding:1.5rem; display:flex; flex-direction:column; align-items:center; gap:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <span style="color:white; font-family:'Outfit'; font-weight:800; font-size:1.1rem;" id="cameraModalTitle">📷 Camera</span>
+                        <!-- X = force close, go back to picker -->
+                        <button onclick="closeCameraModal(true)" title="Cancel and go back" style="background:rgba(255,255,255,0.15); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; transition: background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.7)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">✕</button>
+                    </div>
+                    
+                    <div id="bulkStatusIndicator" style="display: none; color: white; background: var(--lp); padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; width: 100%; text-align: center; margin-top: -5px; box-shadow: 0 4px 12px rgba(92,60,243,0.25);">
+                        Captured: <span id="bulkCapturedCount">0</span> | Active Processes: <span id="bulkActiveCount">0</span>
+                    </div>
+
+                    <!-- Video stream -->
+                    <div style="width:100%; border-radius:16px; overflow:hidden; background:#000; position:relative;">
+                        <video id="cameraStream" autoplay playsinline style="width:100%; display:block; border-radius:16px; max-height:55vh; object-fit:cover;"></video>
+                        <!-- Viewfinder overlay -->
+                        <div style="position:absolute; inset:0; border:2px solid rgba(92,60,243,0.5); border-radius:16px; pointer-events:none;"></div>
+                        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:60%; height:60%; border:2px dashed rgba(255,255,255,0.3); border-radius:8px; pointer-events:none;"></div>
+                    </div>
+
+                    <!-- Permission denied state -->
+                    <div id="cameraPermDenied" style="display:none; text-align:center; padding:2rem; color:white;">
+                        <div style="font-size:3rem; margin-bottom:1rem;">🚫</div>
+                        <h3 style="margin-bottom:0.5rem;">Camera Access Denied</h3>
+                        <p style="color:rgba(255,255,255,0.6); font-size:0.88rem; margin-bottom:1.5rem; max-width:320px;">
+                            Please allow camera access in your browser settings, then try again.
+                            You can still use the <strong>Upload</strong> option instead.
+                        </p>
+                        <button onclick="closeCameraModal(); document.getElementById('frontInput').click()" style="background:var(--lp); color:white; border:none; border-radius:10px; padding:10px 20px; cursor:pointer; font-weight:700;">📁 Upload Instead</button>
+                    </div>
+
+                    <!-- Shutter button & bulk finish controls -->
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem; width:100%;">
+                        <button id="shutterBtn" onclick="captureFrame()" style="
+                            width:70px; height:70px; border-radius:50%;
+                            background:white; border:5px solid rgba(255,255,255,0.3);
+                            cursor:pointer; display:flex; align-items:center; justify-content:center;
+                            transition:transform 0.1s; flex-shrink:0;
+                        " onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                            <div style="width:48px; height:48px; background:var(--lp); border-radius:50%;"></div>
+                        </button>
+                        <p id="shutterHint" style="color:rgba(255,255,255,0.5); font-size:0.78rem; margin-top:-0.2rem; margin-bottom: 0.25rem;">Tap the button to capture</p>
+                        
+                        <button id="bulkFinishBtn" onclick="closeCameraModal(false)" style="
+                            display:none; background:var(--lg); color:white;
+                            border:none; border-radius:12px; padding:12px 28px;
+                            cursor:pointer; font-weight:800; font-family:'Outfit';
+                            font-size:0.9rem; box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+                            transition: all 0.2s;
+                        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            ✓ Done Scanning
+                        </button>
+                    </div>
+                </div>
+                <!-- Hidden canvas for capturing -->
+                <canvas id="captureCanvas" style="display:none;"></canvas>
+            </div>
+
+
+            <!-- =================== STEP 2: REVIEW & EDIT =================== -->
+            <div id="reviewSection" style="display: none;">
+                <div class="ld-panel-header" style="margin-bottom: 1.25rem;">
+                    <div>
+                        <h2 class="ld-panel-title" style="font-size: 1.4rem;">Review AI Extracted Catalog Data</h2>
+                        <p style="font-size: 0.78rem; color: var(--muted);">AI processing succeeded. Verify the fields and make updates before saving.</p>
+                    </div>
+                    <span class="ld-badge ld-badge-success" style="font-size: 0.75rem; padding: 6px 14px;">Scan Succeeded</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: start;" id="reviewLayout">
+                    <!-- Thumbnail & Raw OCR (Left) -->
+                    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div class="ld-panel" style="text-align: center; margin-bottom: 0;">
+                            <h4 style="font-size: 0.8rem; font-weight: 700; color: var(--mid); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Book Cover Preview</h4>
+                            <img id="reviewThumbnail" src="" style="width: 100%; max-height: 320px; object-fit: contain; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--border); padding: 5px;">
+                        </div>
+                        <div class="ld-panel" style="margin-bottom: 0;">
+                            <h4 style="font-size: 0.8rem; font-weight: 700; color: var(--mid); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Raw Extracted OCR Text</h4>
+                            <textarea id="rawOcr" class="ld-textarea" style="height: 180px; font-family: monospace; font-size: 0.78rem; background: var(--bg);" readonly></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Metadata Forms (Right) -->
+                    <form id="saveBookForm" class="ld-panel" style="margin-bottom: 0;">
+                        <!-- Warning Confidence -->
+                        <div style="background: var(--lam-light); border: 1px solid rgba(245, 158, 11, 0.25); padding: 12px 16px; border-radius: 12px; font-size: 0.8rem; color: var(--lam); display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.1rem;">⚠️</span>
+                            <span>Yellow borders indicate AI confidence below 70%. Please check manually.</span>
+                        </div>
+
+                        <div class="ld-grid-fields">
+                            <div class="ld-form-group" style="grid-column: span 2;">
+                                <label style="color: var(--lp); font-weight: 800;">Link to Purchase Acquisition (Optional)</label>
+                                <select id="f_acquisition" class="ld-input" style="border-color: var(--lp-mid);">
+                                    <option value="">-- Direct Cataloging (Non-Acquisition Book) --</option>
+                                    <% (locals.acquisitions || []).forEach(function(a) { %>
+                                    <option value="<%= a.id %>">Bill #<%= a.bill_number %> — <%= a.vendor_name %> (<%= a.bill_date %>)</option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <div class="ld-form-group" style="grid-column: span 2;">
+                                <label>Book Title</label>
+                                <input type="text" id="f_title" class="ld-input" required>
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Subtitle</label>
+                                <input type="text" id="f_subtitle" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Author(s)</label>
+                                <input type="text" id="f_author" class="ld-input" required>
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Publisher</label>
+                                <input type="text" id="f_publisher" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Publication Year</label>
+                                <input type="text" id="f_year" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>ISBN-13 Barcode ID</label>
+                                <input type="text" id="f_isbn13" class="ld-input" required>
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Language</label>
+                                <input type="text" id="f_language" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Primary Genre / Category</label>
+                                <input type="text" id="f_category" class="ld-input" required>
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Class / Grade (e.g. VIII, 9)</label>
+                                <input type="text" id="f_class" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Subject</label>
+                                <input type="text" id="f_subject" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Dewey Decimal Classification</label>
+                                <input type="text" id="f_dewey" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Target Audience</label>
+                                <input type="text" id="f_audience" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Difficulty / Reading Level</label>
+                                <input type="text" id="f_difficulty" class="ld-input">
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Quantity Available (Copies)</label>
+                                <input type="number" id="f_quantity" class="ld-input" value="1" min="1" required>
+                            </div>
+                        </div>
+
+                        <!-- Summaries -->
+                        <div class="ld-form-group">
+                            <label>50-Word Summary</label>
+                            <textarea id="f_summary" class="ld-textarea" style="height: 60px;"></textarea>
+                        </div>
+                        <div class="ld-form-group">
+                            <label>Detailed Catalog Description</label>
+                            <textarea id="f_description" class="ld-textarea" style="height: 120px;"></textarea>
+                        </div>
+                        <div class="ld-form-group">
+                            <label>Search Tags (Comma separated)</label>
+                            <input type="text" id="f_tags" class="ld-input" placeholder="e.g. self-help, success, psychology">
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 1rem; justify-content: flex-end; flex-wrap: wrap;">
+                            <button type="button" class="ld-btn-alt" onclick="window.location.reload()">Cancel</button>
+                            <button type="button" class="ld-btn" onclick="saveScannedBook()">Save to Catalog</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div><!-- end ld-content -->
+
+        <!-- Mobile Bottom Nav -->
+        
+
+    </div><!-- end ld-main -->
+</div><!-- end ld-shell -->
+
+<!-- ══ MODALS ══ -->
+<div id="viewSchoolModal" class="ld-modal-overlay">
+    <div class="ld-modal-content" style="max-width: 480px;">
+        <button class="ld-modal-close" onclick="closeModal('viewSchoolModal')">✕</button>
+        <h3 class="ld-modal-title">🏫 School Profile & Subscriptions</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr; gap: 14px; font-size: 0.88rem;">
+            <div>
+                <span style="color:var(--muted); font-weight:700; display:block; margin-bottom:2px;">LIBRARY NAME</span>
+                <span style="font-weight:800; font-size:1rem; color:var(--text);"><%= (typeof session !== 'undefined' && session && session.school_name ? session.school_name : 'librika.in') %></span>
+            </div>
+            <div>
+                <span style="color:var(--muted); font-weight:700; display:block; margin-bottom:2px;">LIBRARY UNIQUE CODE</span>
+                <code style="background:var(--bg); border:1px solid var(--border); padding:4px 8px; border-radius:6px; font-weight:800; font-family:monospace; color:var(--lp); font-size:0.85rem;"><%= (typeof session !== 'undefined' && session && session.school_code ? session.school_code : 'GLOBAL') %></code>
+            </div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:4px 0;">
+            <h4 style="font-family:'Outfit'; font-weight:800; color:var(--lp);">Plan Allowances & Quota</h4>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700; color:var(--mid);">Active Plan</span>
+                <span class="ld-badge ld-badge-warning" style="font-size:0.75rem; padding:4px 12px; background:var(--lp-light); color:var(--lp);"><%= (typeof school_plan !== 'undefined' ? school_plan : 'PRO') %></span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 1.5rem; width: 100%;">
+            <a href="/logout" class="ld-btn ld-btn-danger" style="flex: 1; text-decoration: none; justify-content: center;">🚪 Log Out</a>
+            <button class="ld-btn" onclick="closeModal('viewSchoolModal')" style="flex: 1; justify-content: center; background: var(--bg); color: var(--text); border: 1px solid var(--border);">Close Details</button>
+        </div>
+    </div>
+</div>
+
+<!-- Duplicate Book Action Modal -->
+<div id="bookExistsModal" class="ld-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 12000;">
+    <div class="ld-modal-content" style="max-width: 440px; width: 90%; text-align: center; background: var(--white); box-shadow: 0 15px 40px rgba(0,0,0,0.2);">
+        <button class="ld-modal-close" onclick="closeModal('bookExistsModal')">✕</button>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+        <h3 id="existsBookTitle" class="ld-modal-title" style="margin-bottom: 0.5rem; font-family: 'Outfit'; font-weight: 800; color: var(--text);">Book Already Exists</h3>
+        <p id="existsBookMeta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.5;">This book is already cataloged in your library database.</p>
+        
+        <!-- Dynamic Acquisition Status Alert / Link Picker -->
+        <div id="existsAcqAlert" style="margin-bottom: 1.8rem; padding: 12px; border-radius: 12px; font-size: 0.8rem; text-align: left; line-height: 1.4;">
+        </div>
+        
+        <!-- Safe JSON payload container for active acquisitions -->
+        <script type="application/json" id="acqsData">
+            <%- JSON.stringify((locals.acquisitions || []).map(a => ({ id: a.id, bill_number: a.bill_number, bill_date: a.bill_date }))) %>
+        </script>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+            <button onclick="handleExistsIssue()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--lb); color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">📖 Issue Book</button>
+            <button onclick="handleExistsAddCopy()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--lg); color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">➕ Add a Copy</button>
+            <button id="existsDeleteBtn" onclick="handleExistsDeleteClick()" class="ld-btn ld-btn-danger" style="width: 100%; justify-content: center; padding: 12px 16px; border-radius: 12px; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">🗑️ Delete Book</button>
+            <button id="existsSkipBtn" onclick="handleExistsSkip()" class="ld-btn" style="width: 100%; justify-content: center; background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">⏭️ Skip Book</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Modal Helpers
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+    }
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    window.onclick = function(event) {
+        if (event.target.classList.contains('ld-modal-overlay')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let frontFile = null;
+    let backFile = null;
+    let cameraScanStep = 'front';
+    let cameraStream = null;
+    let duplicateQueue = [];
+    let capturedCount = 0;
+    let activeUploads = 0;
+
+    // Adjust grids responsiveness dynamically for review layout
+    function adjustResponsiveLayout() {
+        const reviewLayout = document.getElementById('reviewLayout');
+        if (window.innerWidth >= 992) {
+            reviewLayout.style.gridTemplateColumns = '320px 1fr';
+        } else {
+            reviewLayout.style.gridTemplateColumns = '1fr';
+        }
+    }
+    window.addEventListener('resize', adjustResponsiveLayout);
+    document.addEventListener('DOMContentLoaded', adjustResponsiveLayout);
+
+    // ── Camera Modal ──
+    async function openCameraModal() {
+        const modal = document.getElementById('cameraModal');
+        const video = document.getElementById('cameraStream');
+        const denied = document.getElementById('cameraPermDenied');
+        const shutterBtn = document.getElementById('shutterBtn');
+        modal.style.display = 'flex';
+        denied.style.display = 'none';
+        video.style.display = 'block';
+        shutterBtn.style.display = 'flex';
+
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        const statusInd = document.getElementById('bulkStatusIndicator');
+        if (isBulk) {
+            statusInd.style.display = 'block';
+            capturedCount = 0;
+            activeUploads = 0;
+            duplicateQueue = [];
+            document.getElementById('bulkCapturedCount').innerText = '0';
+            document.getElementById('bulkActiveCount').innerText = '0';
+        } else {
+            statusInd.style.display = 'none';
+        }
+
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            video.srcObject = cameraStream;
+        } catch (err) {
+            console.warn('Camera error:', err);
+            video.style.display = 'none';
+            shutterBtn.style.display = 'none';
+            denied.style.display = 'block';
+        }
+    }
+
+    // ── Camera mode helpers ──────────────────────────────────────────────────
+    function startSingleCamera() {
+        document.getElementById('bulkModeToggle').checked = false;
+        cameraScanStep = 'front';
+        document.getElementById('cameraModalTitle').textContent = '📷 Camera — Scan Front Cover';
+        document.getElementById('bulkFinishBtn').style.display = 'none';
+        openCameraModal();
+    }
+    function startBulkCamera() {
+        document.getElementById('bulkModeToggle').checked = true;
+        document.getElementById('cameraModalTitle').textContent = '📸 Bulk Scan — Keep scanning!';
+        document.getElementById('bulkFinishBtn').style.display = 'block';
+        openCameraModal();
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    function closeCameraModal(force) {
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+
+        // FORCE CLOSE: immediately stop everything and go back to picker
+        if (force) {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraStream').srcObject = null;
+            document.getElementById('cameraModal').style.display = 'none';
+
+            // Reset all bulk state
+            duplicateQueue = [];
+            capturedCount = 0;
+            activeUploads = 0;
+            const statusInd = document.getElementById('bulkStatusIndicator');
+            statusInd.style.display = 'none';
+            statusInd.style.background = '';
+            statusInd.innerHTML = 'Captured: <span id="bulkCapturedCount">0</span> | Active Processes: <span id="bulkActiveCount">0</span>';
+
+            // Go back to picker
+            document.getElementById('uploadSection').style.display = 'block';
+            showToast('Scan cancelled. Pick a mode to start again.', 'info');
+            return;
+        }
+
+        // NORMAL CLOSE (bulk mode waiting for background uploads to finish)
+        if (isBulk && activeUploads > 0) {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraStream').srcObject = null;
+            document.getElementById('shutterBtn').style.display = 'none';
+            
+            const statusInd = document.getElementById('bulkStatusIndicator');
+            statusInd.innerText = `Finalizing background processes... ${activeUploads} remaining`;
+            statusInd.style.background = '#eab308';
+            
+            setTimeout(closeCameraModal, 500);
+            return;
+        }
+
+        const modal = document.getElementById('cameraModal');
+        modal.style.display = 'none';
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+        }
+        document.getElementById('cameraStream').srcObject = null;
+
+        const statusInd = document.getElementById('bulkStatusIndicator');
+        statusInd.style.background = '';
+        statusInd.innerHTML = 'Captured: <span id="bulkCapturedCount">0</span> | Active Processes: <span id="bulkActiveCount">0</span>';
+
+        if (isBulk) {
+            processNextDuplicate();
+        }
+    }
+
+    function playShutterFlash() {
+        const video = document.getElementById('cameraStream');
+        video.style.transition = 'none';
+        video.style.opacity = '0.3';
+        setTimeout(() => {
+            video.style.transition = 'opacity 0.25s ease';
+            video.style.opacity = '1';
+        }, 50);
+    }
+
+    function captureFrame() {
+        const video = document.getElementById('cameraStream');
+        const canvas = document.getElementById('captureCanvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        
+        canvas.toBlob(blob => {
+            if (isBulk) {
+                playShutterFlash();
+                capturedCount++;
+                document.getElementById('bulkCapturedCount').innerText = capturedCount;
+                
+                activeUploads++;
+                const activeEl = document.getElementById('bulkActiveCount');
+                if (activeEl) activeEl.innerText = activeUploads;
+                
+                processBulkFile(blob);
+            } else {
+                playShutterFlash();
+                if (cameraScanStep === 'front') {
+                    // Handle front capture
+                    const file = new File([blob], 'front_capture.jpg', { type: 'image/jpeg' });
+                    frontFile = file;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('frontPreview').src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Transition to back scan
+                    cameraScanStep = 'back';
+                    document.getElementById('cameraModalTitle').textContent = '📷 Camera — Scan Back Cover';
+                    showToast("Front Cover Captured! Now scan the Back Cover.", "info");
+                } else {
+                    // Handle back capture
+                    const file = new File([blob], 'back_capture.jpg', { type: 'image/jpeg' });
+                    backFile = file;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('backPreview').src = e.target.result;
+                        document.getElementById('previewArea').style.display = 'block';
+                        document.getElementById('processBtn').disabled = false;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    closeCameraModal();
+                    showToast("Back Cover Captured!", "success");
+                }
+            }
+        }, 'image/jpeg', 0.92);
+    }
+
+    async function processBulkFile(blob) {
+        const formData = new FormData();
+        formData.append('front', blob, `bulk_scan_${Date.now()}.jpg`);
+        
+        try {
+            const uploadRes = await fetch('/admin/api/upload-cover', {
+                method: 'POST',
+                body: formData
+            });
+            // Safely parse JSON — server may return plain-text 403 for plan restrictions
+            let uploadData;
+            try { uploadData = await uploadRes.json(); } catch(_) {
+                throw new Error('⬆️ Plan upgrade required to use the AI Scanner. Visit /billing to upgrade.');
+            }
+            if (!uploadRes.ok || uploadData.status !== 'success') {
+                const msg = uploadData.message || uploadData.error || 'Upload failed';
+                if (uploadRes.status === 403) throw new Error('⬆️ ' + msg);
+                throw new Error(msg);
+            }
+            
+            // disk URL → used for AI vision (reads from server disk)
+            const coverUrlDisk = uploadData.cover_url;
+            // base64 data: URL → persistent, stored in DB
+            const coverUrlDb   = uploadData.cover_url_db || coverUrlDisk;
+            
+            const scanRes = await fetch('/api/scan-vision', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ cover_url: coverUrlDisk })
+            });
+            if (!scanRes.ok) {
+                const errData = await scanRes.json();
+                throw new Error(errData.error || "Failed to scan book with AI");
+            }
+            
+            const scanData = await scanRes.json();
+            const meta = scanData.metadata || {};
+            
+            if (scanData.existing_book) {
+                try {
+                    const acqId = scanData.acquisition ? scanData.acquisition.acq_id : null;
+                    const addCopyRes = await fetch(`/admin/api/add-copy/${scanData.existing_book.id}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ acquisition_id: acqId })
+                    });
+                    const addCopyData = await addCopyRes.json();
+                    if (addCopyData.status === 'success') {
+                        showToast(`Existing Book: Added copy of "${scanData.existing_book.title}" to stock`, "success");
+                    } else {
+                        showToast(`Error adding copy of "${scanData.existing_book.title}": ${addCopyData.message}`, "error");
+                    }
+                } catch(e) {
+                    showToast(`Failed to add copy of "${scanData.existing_book.title}"`, "error");
+                }
+            } else {
+                const savePayload = {
+                    title: meta.title || "Untitled Book",
+                    author: meta.author || "Unknown Author",
+                    isbn: meta.isbn || "",
+                    publisher: meta.publisher || "",
+                    genre: meta.category || "",
+                    class: meta.class || "",
+                    subject: meta.subject || "",
+                    description: meta.description || "",
+                    total_copies: 1,
+                    cover_url: coverUrlDb,   // ← persistent base64 stored in DB
+                    language: meta.language || "English",
+                    publication_year: meta.publicationYear || "",
+                    tags: meta.tags ? (Array.isArray(meta.tags) ? meta.tags.join(', ') : meta.tags) : ""
+                };
+                
+                const saveRes = await fetch('/admin/api/save-scanned', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(savePayload)
+                });
+                const saveData = await saveRes.json();
+                if (saveData.status === 'success') {
+                    showToast(`Saved: "${savePayload.title}"`, "success");
+                } else {
+                    console.error("Auto-save failed:", saveData.message);
+                    showToast(`Error saving "${savePayload.title}": ${saveData.message}`, "error");
+                }
+            }
+        } catch (err) {
+            console.error("Background scan error:", err);
+            showToast(`Scan failed: ${err.message}`, "error");
+        } finally {
+            activeUploads = Math.max(0, activeUploads - 1);
+            const activeEl = document.getElementById('bulkActiveCount');
+            if (activeEl) {
+                activeEl.innerText = activeUploads;
+            }
+        }
+    }
+
+    // ── Upload file input ──
+    document.getElementById('frontInput').addEventListener('change', (e) => {
+        if (e.target.files.length) handleSelectedFile(e.target.files[0]);
+    });
+
+    document.getElementById('backInput').addEventListener('change', (e) => {
+        if (e.target.files.length) handleSelectedBackFile(e.target.files[0]);
+    });
+
+    function handleSelectedFile(fileOrBlob, name) {
+        const file = fileOrBlob instanceof File ? fileOrBlob : new File([fileOrBlob], name || 'capture.jpg', { type: 'image/jpeg' });
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file.', 'error');
+            return;
+        }
+        frontFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('frontPreview').src = e.target.result;
+            document.getElementById('previewArea').style.display = 'block';
+            // Enable process button once front cover is selected — back is optional
+            document.getElementById('processBtn').disabled = false;
+            showToast("Front Cover selected! You can now scan or optionally add Back Cover too.", "info");
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function handleSelectedBackFile(file) {
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file.', 'error');
+            return;
+        }
+        backFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('backPreview').src = e.target.result;
+            document.getElementById('previewArea').style.display = 'block';
+            showToast("Back Cover added!", "success");
+            // Button already enabled from front cover — no change needed
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetScanMode() {
+        frontFile = null;
+        backFile = null;
+        document.getElementById('frontPreview').src = '';
+        document.getElementById('backPreview').src = '';
+        document.getElementById('previewArea').style.display = 'none';
+        document.getElementById('processBtn').disabled = true;
+        document.getElementById('frontInput').value = '';
+        document.getElementById('backInput').value = '';
+    }
+
+    document.getElementById('processBtn').addEventListener('click', async () => {
+        if (!frontFile) {
+            showToast("Please upload the Front Cover first!", "error");
+            return;
+        }
+
+        document.getElementById('processBtn').style.display = 'none';
+        document.getElementById('loadingState').style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('front', frontFile);
+        if (backFile) formData.append('back', backFile);
+
+
+        try {
+            // 1. Upload Covers to Server
+            document.getElementById('loadingText').innerText = "Uploading cover images...";
+            const res = await fetch('/admin/api/upload-cover', {
+                method: 'POST',
+                body: formData
+            });
+            // Safely parse JSON — server may return plain-text 403 for plan restrictions
+            let data;
+            try { data = await res.json(); } catch(_) {
+                throw new Error('⬆️ Plan upgrade required to use the AI Scanner. Visit /billing to upgrade.');
+            }
+            if (!res.ok || data.status !== 'success') {
+                const msg = data.message || data.error || 'Upload failed';
+                if (res.status === 403) throw new Error('⬆️ ' + msg);
+                throw new Error('Upload failed: ' + msg);
+            }
+
+            // 2. Call backend endpoint to identify book details with NVIDIA Vision AI
+            document.getElementById('loadingText').innerText = "AI is identifying book details...";
+            
+            const scanRes = await fetch('/api/scan-vision', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    cover_url: data.cover_url, // Front disk path
+                    back_url: data.back_url   // Back disk path
+                })
+            });
+            
+            if (!scanRes.ok) {
+                const errData = await scanRes.json();
+                throw new Error(errData.error || "Failed to parse book details.");
+            }
+            
+            const scanData = await scanRes.json();
+            const meta = scanData.metadata || {};
+            
+            // Use persistent base64 URL for DB; fall back to disk URL if unavailable
+            const persistentCoverUrl = data.cover_url_db || data.cover_url;
+            
+            if (scanData.existing_book) {
+                showExistingBookPopup(scanData.existing_book, scanData.acquisition);
+            } else {
+                populateReviewScreen(meta, persistentCoverUrl, scanData.acquisition);
+            }
+
+        } catch (err) {
+            console.error(err);
+            showToast("Scan Error: " + err.message, "error");
+            document.getElementById('processBtn').style.display = 'inline-block';
+            document.getElementById('loadingState').style.display = 'none';
+        }
+    });
+
+    let coverImageUrl = "";
+
+    function populateReviewScreen(json, coverUrl, acquisition = null) {
+        coverImageUrl = coverUrl;
+        document.getElementById('uploadSection').style.display = 'none';
+        document.getElementById('reviewSection').style.display = 'block';
+        adjustResponsiveLayout();
+
+        document.getElementById('reviewThumbnail').src = coverUrl;
+        document.getElementById('rawOcr').value = json.description || "AI analyzed";
+
+        // Map fields
+        const map = {
+            'f_title': 'title', 'f_subtitle': 'subtitle', 'f_author': 'author',
+            'f_publisher': 'publisher', 'f_year': 'publicationYear',
+            'f_isbn13': 'isbn', 'f_language': 'language', 'f_category': 'category',
+            'f_class': 'class', 'f_subject': 'subject',
+            'f_dewey': 'deweyDecimal', 'f_difficulty': 'difficultyLevel',
+            'f_summary': 'summary50Words', 'f_description': 'description'
+        };
+
+        const scores = json.confidenceScores || {};
+
+        for (const [id, key] of Object.entries(map)) {
+            const el = document.getElementById(id);
+            if (!el) continue;
+            el.value = json[key] || "";
+            if (scores[key] !== undefined && scores[key] < 70) {
+                el.classList.add('low-confidence');
+            }
+        }
+
+        // Special handling for arrays
+        if (json.targetAudience) {
+            document.getElementById('f_audience').value = Array.isArray(json.targetAudience) ? json.targetAudience.join(', ') : json.targetAudience;
+        }
+        if (json.tags) {
+            document.getElementById('f_tags').value = Array.isArray(json.tags) ? json.tags.join(', ') : json.tags;
+        }
+
+        // Auto-select acquisition if AI detected one — user can still change it
+        const acqSelect = document.getElementById('f_acquisition');
+        if (acqSelect && acquisition && acquisition.acq_id) {
+            acqSelect.value = acquisition.acq_id;
+            if (acqSelect.value) {
+                // Highlight to show it was auto-detected
+                acqSelect.style.borderColor = '#22c55e';
+                acqSelect.title = `Auto-detected from Bill #${acquisition.bill_number} — ${acquisition.vendor_name || ''}`;
+                showToast(`🟢 Linked to acquisition: Bill #${acquisition.bill_number}`, "success");
+            } else {
+                // acq_id not found in dropdown options — reset
+                acqSelect.value = '';
+            }
+        }
+    }
+
+    async function saveScannedBook() {
+        const payload = {
+            title: document.getElementById('f_title').value,
+            author: document.getElementById('f_author').value,
+            isbn: document.getElementById('f_isbn13').value,
+            publisher: document.getElementById('f_publisher').value,
+            genre: document.getElementById('f_category').value,
+            class: document.getElementById('f_class').value,
+            subject: document.getElementById('f_subject').value,
+            description: document.getElementById('f_description').value,
+            total_copies: document.getElementById('f_quantity').value,
+            cover_url: coverImageUrl,
+            language: document.getElementById('f_language').value,
+            publication_year: document.getElementById('f_year').value,
+            tags: document.getElementById('f_tags').value,
+            acquisition_id: document.getElementById('f_acquisition').value || null
+        };
+
+        try {
+            const res = await fetch('/admin/api/save-scanned', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast(`Book successfully saved with ID: ${data.book_id}!`, "success");
+                setTimeout(() => window.location.href = '/admin?section=books', 1500);
+            } else {
+                showToast("Error saving: " + data.message, "error");
+            }
+        } catch (e) {
+            showToast("Network connection error.", "error");
+        }
+    }
+
+    let currentExistsBook = null;
+    let deleteConfirmCount = 0;
+
+    function showExistingBookPopup(book, acquisition = null) {
+        currentExistsBook = book;
+        deleteConfirmCount = 0;
+        
+        document.getElementById('existsBookTitle').innerText = book.title;
+        document.getElementById('existsBookMeta').innerHTML = `Author: <strong>${book.author}</strong><br>In Stock: <strong>${book.total_copies}</strong> (Available: ${book.available_copies})`;
+        
+        // Populate Acquisition Status
+        const acqAlert = document.getElementById('existsAcqAlert');
+        if (acquisition) {
+            acqAlert.style.background = 'var(--lg-light, rgba(34, 197, 94, 0.12))';
+            acqAlert.style.border = '1px solid rgba(34, 197, 94, 0.25)';
+            acqAlert.style.color = 'var(--lg, #22c55e)';
+            acqAlert.innerHTML = `
+                🟢 <strong>Acquisition Found:</strong><br>
+                This book belongs to acquisition invoice <strong>Bill #${acquisition.bill_number}</strong> (${acquisition.bill_date}) from <strong>${acquisition.vendor_name || 'Vendor'}</strong>.
+                <input type="hidden" id="existsAcqSelect" value="${acquisition.acq_id}">
+            `;
+        } else {
+            acqAlert.style.background = 'var(--lam-light, rgba(245, 158, 11, 0.12))';
+            acqAlert.style.border = '1px solid rgba(245, 158, 11, 0.25)';
+            acqAlert.style.color = 'var(--lam, #f59e0b)';
+            
+            // Build the selector options using the acquisitions list
+            let optionsHtml = '<option value="">-- Direct Cataloging (Non-Acquisition Copy) --</option>';
+            const acqsEl = document.getElementById('acqsData');
+            const acqs = JSON.parse(acqsEl ? acqsEl.textContent.trim() : '[]');
+            acqs.forEach(a => {
+                optionsHtml += `<option value="${a.id}">${a.bill_number} (${a.bill_date})</option>`;
+            });
+            
+            acqAlert.innerHTML = `
+                ⚠️ <strong>Book is not in any Acquisition:</strong><br>
+                This book was not found in any active purchase acquisitions.<br>
+                <div style="margin-top: 8px;">
+                    <label style="font-weight: bold; font-size: 0.72rem; display: block; margin-bottom: 4px; color: var(--text);">Choose Acquisition to link:</label>
+                    <select id="existsAcqSelect" style="width: 100%; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border); font-family: inherit; font-size: 0.8rem; background: var(--white); color: var(--text);">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            `;
+        }
+
+        // Reset delete button state
+        const delBtn = document.getElementById('existsDeleteBtn');
+        delBtn.innerText = "🗑️ Delete Book";
+        delBtn.style.background = "";
+        delBtn.style.color = "";
+        
+        openModal('bookExistsModal');
+        // Stop loading spinner
+        document.getElementById('processBtn').style.display = 'inline-block';
+        document.getElementById('loadingState').style.display = 'none';
+    }
+
+    function processNextDuplicate() {
+        if (duplicateQueue.length === 0) {
+            showToast("Bulk scan processing completed!", "success");
+            setTimeout(() => {
+                window.location.href = '/admin?section=books';
+            }, 1500);
+            return;
+        }
+        const nextItem = duplicateQueue.shift();
+        showExistingBookPopup(nextItem.existing_book);
+    }
+
+    function handleExistsIssue() {
+        if (!currentExistsBook) return;
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        if (isBulk) {
+            window.open(`/admin/issue?book_id=${currentExistsBook.id}`, '_blank');
+            closeModal('bookExistsModal');
+            processNextDuplicate();
+        } else {
+            window.location.href = `/admin/issue?book_id=${currentExistsBook.id}`;
+        }
+    }
+
+    async function handleExistsAddCopy() {
+        if (!currentExistsBook) return;
+        const acqSelect = document.getElementById('existsAcqSelect');
+        const acqId = acqSelect ? acqSelect.value : '';
+        
+        try {
+            const res = await fetch(`/admin/api/add-copy/${currentExistsBook.id}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ acquisition_id: acqId || null })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast(`Added a copy successfully! Stock increased.`, "success");
+                closeModal('bookExistsModal');
+                const isBulk = document.getElementById('bulkModeToggle').checked;
+                if (isBulk) {
+                    processNextDuplicate();
+                } else {
+                    resetScanMode();
+                }
+            } else {
+                showToast("Error adding copy: " + data.message, "error");
+            }
+        } catch (e) {
+            showToast("Network error.", "error");
+        }
+    }
+
+    async function handleExistsDeleteClick() {
+        if (!currentExistsBook) return;
+        const delBtn = document.getElementById('existsDeleteBtn');
+        
+        if (deleteConfirmCount === 0) {
+            deleteConfirmCount = 1;
+            delBtn.innerText = "⚠️ Click again to confirm delete";
+            delBtn.style.background = "#ef4444";
+            delBtn.style.color = "white";
+            return;
+        }
+        
+        try {
+            const res = await fetch(`/admin/api/delete-scanned-book/${currentExistsBook.id}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast("Book deleted successfully.", "success");
+                closeModal('bookExistsModal');
+                const isBulk = document.getElementById('bulkModeToggle').checked;
+                if (isBulk) {
+                    processNextDuplicate();
+                } else {
+                    resetScanMode();
+                }
+            } else {
+                showToast("Error deleting: " + data.message, "error");
+            }
+        } catch (e) {
+            showToast("Network error.", "error");
+        }
+    }
+
+    function handleExistsSkip() {
+        closeModal('bookExistsModal');
+        const isBulk = document.getElementById('bulkModeToggle').checked;
+        if (isBulk) {
+            processNextDuplicate();
+        } else {
+            resetScanMode();
+        }
+    }
+</script>
+<style>
+/* LIBRIKA LIGHT PREMIUM — accent realignment (scanner_v2) */
+:root {
+  --lp: #2563eb !important;
+  --lp-mid: #4f46e5 !important;
+  --accent-primary: #2563eb !important;
+}
+</style>
