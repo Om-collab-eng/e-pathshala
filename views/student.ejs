@@ -370,8 +370,26 @@ img {
     max-width: 100% !important;
 }
 </style>
+<style>
+/* sp- conversion overrides */
+.desktop-sidebar, .st-sidebar, .st-overlay-dim, #sidebarBackdrop, .portal-bottom-nav { display: none !important; }
+.portal-wrapper { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; background: transparent !important; }
+.portal-main { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; background: transparent !important; min-height: 0 !important; overflow: visible !important; }
+.portal-header-top { display: none !important; }
+.portal-header { display: block !important; }
+.portal-content { padding: 0 !important; }
+.portal-grid { display: grid !important; grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+@media (min-width: 900px) { .portal-grid { grid-template-columns: 2fr 1fr !important; } }
+</style>
 <% contentFor("head") %>
 <% contentFor("content") %>
+<% var spNotif = (typeof stats !== 'undefined' && stats) ? ((stats.due_soon_count || 0) + (stats.overdue_count || 0)) : 0; %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'dashboard' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Student Dashboard', notifCount: spNotif }) %>
+      <main class="sp-content">
 <div class="portal-wrapper">
     <!-- Desktop Sidebar Navigation -->
     <aside class="desktop-sidebar">
@@ -886,3 +904,8 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') autoCloseStudentSidebar();
 });
 </script>
+
+      </main>
+    </div>
+  </div>
+</div>

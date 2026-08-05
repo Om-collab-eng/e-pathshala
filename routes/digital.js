@@ -1,13 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const authMiddleware = require('../middleware/authMiddleware');
+const db = require('../db');
+const aiService = require('../services/aiService');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const multer = require('multer');
+
+const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
+
+const pool = { query: (text, params) => db.query(text, params) };
 
 function loggedIn(req, res, next) {
   if (req.session && req.session.user_id) return next();
-  return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+  return res.redirect('/login');
 }
 
 function notFound(req, res) {
@@ -152,15 +160,15 @@ async function getRankings(schoolCode, typeFilter, timeframe, dateLimit, classFi
 
 // ── Browse Digital Library ──────────────────────────────────────────────
 router.get('/', loggedIn, async (req, res) => {
-  const sCode = req.session.school_code;
+  res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate');
   const userId = req.session.user_id;
   const searchQuery = (req.query.q || '').trim();
   const aiSearch = req.query.ai === 'true';
 
   try {
-    let queryStr = `SELECT d.*, u.name as student_name, u.class as student_class, (SELECT 1 FROM reading_progress rp WHERE rp.student_id = $1 AND rp.content_id = d.id) as is_bookmarked FROM digital_content d LEFT JOIN users u ON d.student_id = u.id WHERE (d.school_code = $2 OR d.school_code = 'GLOBAL') AND d.status = 'Published'`;
-    const params = [userId, sCode];
-    let paramIdx = 3;
+    let queryStr = `SELECT d.*, u.name as student_name, u.class as student_class, (SELECT 1 FROM reading_progress rp WHERE rp.student_id = $1 AND rp.content_id = d.id) as is_bookmarked FROM digital_content d LEFT JOIN users u ON d.student_id = u.id WHERE d.school_code = 'GLOBAL' AND d.status = 'Published'`;
+    const params = [userId];
+    let paramIdx = 2;
 
     if (searchQuery && !aiSearch) {
       queryStr += ` AND (d.title ILIKE $${paramIdx} OR d.description ILIKE $${paramIdx} OR d.subject ILIKE $${paramIdx} OR d.category ILIKE $${paramIdx})`;
@@ -173,10 +181,8 @@ router.get('/', loggedIn, async (req, res) => {
     let contentList = result.rows;
 
     contentList.forEach(item => {
-      if (item.school_code === 'GLOBAL' || item.student_id === -1) {
-        item.student_name = 'Manager';
-        item.student_class = 'System';
-      }
+      item.student_name = item.student_name || 'Manager';
+      item.student_class = item.student_class || 'System';
     });
 
     if (aiSearch && searchQuery) {
@@ -188,11 +194,11 @@ router.get('/', loggedIn, async (req, res) => {
       }
     }
 
-    const contributors = (await pool.query('SELECT COUNT(DISTINCT student_id) as c FROM digital_content WHERE school_code = $1 AND status = $2', [sCode, 'Published'])).rows[0].c;
+    const contributors = (await pool.query("SELECT COUNT(DISTINCT student_id) as c FROM digital_content WHERE school_code = 'GLOBAL' AND status = 'Published'")).rows[0].c;
     const totalResources = contentList.length;
 
     res.render('digital_library', {
-      title: 'Community Library - librika.in',
+      title: 'Global Community Library - librika.in',
       content_list: contentList,
       contributors_count: contributors,
       total_resources: totalResources,
@@ -363,6 +369,13 @@ router.get('/chapter/:chapterId/quiz', loggedIn, async (req, res) => {
     let questions = [];
     try { questions = JSON.parse(chapter.quiz || '[]'); } catch(e) { questions = []; }
 
+    if (questions.length === 0 && chapter.content) {
+      questions = await aiService.generateQuizFromText(chapter.content);
+      if (questions.length > 0) {
+        await pool.query('UPDATE digital_chapters SET quiz = $1 WHERE id = $2', [JSON.stringify(questions), chapterId]);
+      }
+    }
+
     // Check if already attempted
     const attempt = (await pool.query(
       'SELECT * FROM chapter_quiz_attempts WHERE user_id = $1 AND chapter_id = $2 ORDER BY attempted_at DESC LIMIT 1',
@@ -434,6 +447,13 @@ router.post('/chapter/:chapterId/quiz', loggedIn, async (req, res) => {
 
     let questions = [];
     try { questions = JSON.parse(chapter.quiz || '[]'); } catch(e) { questions = []; }
+
+    if (questions.length === 0 && chapter.content) {
+      questions = await aiService.generateQuizFromText(chapter.content);
+      if (questions.length > 0) {
+        await pool.query('UPDATE digital_chapters SET quiz = $1 WHERE id = $2', [JSON.stringify(questions), chapterId]);
+      }
+    }
 
     // Check if already attempted
     const existing = (await pool.query(
@@ -618,6 +638,42 @@ router.post('/api/chapter/save-progress', loggedIn, async (req, res) => {
     console.error('Chapter save progress error:', err);
     res.status(500).json({ status: 'error', message: err.message });
   }
+});
+
+// ── PDF Proxy ───────────────────────────────────────────────────────────
+// PDF Proxy - serves PDFs avoiding CORS issues for PDF.js viewer
+router.get('/pdf-proxy/:contentId', loggedIn, async (req, res) => {
+    try {
+        const { contentId } = req.params;
+        const result = await db.query(
+            'SELECT file_url, title, content_type FROM digital_content WHERE id = $1',
+            [contentId]
+        );
+        if (result.rows.length === 0) return res.status(404).send('Content not found');
+        
+        const content = result.rows[0];
+        const filePath = path.join(__dirname, '..', content.file_url);
+        
+        // Check if file exists locally
+        if (fs.existsSync(filePath)) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="${content.title}.pdf"`);
+            return fs.createReadStream(filePath).pipe(res);
+        }
+        
+        // If not local, try proxying from Cloudinary URL
+        if (content.file_url && content.file_url.startsWith('http')) {
+            const response = await axios.get(content.file_url, { responseType: 'stream' });
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="${content.title}.pdf"`);
+            return response.data.pipe(res);
+        }
+        
+        res.status(404).send('PDF file not found');
+    } catch (err) {
+        console.error('PDF proxy error:', err);
+        res.status(500).send('Error loading PDF');
+    }
 });
 
 // ── API: Track Download ─────────────────────────────────────────────────
@@ -827,13 +883,71 @@ async function performAISemanticSearch(query, contentList) {
 
 // ── AI Short Answer Grader (stub/placeholder) ──────────────────────────
 async function aiGradeShortAnswer(question, suggestedAnswer, studentAnswer) {
-  const sa = (studentAnswer || '').trim().toLowerCase();
-  const sug = (suggestedAnswer || '').trim().toLowerCase();
-  if (!sa || !sug) return false;
-  const saWords = sa.split(/\s+/).filter(w => w.length > 2);
-  const sugWords = sug.split(/\s+/).filter(w => w.length > 2);
-  const matches = sugWords.filter(w => saWords.some(sw => sw.includes(w) || w.includes(sw)));
-  return matches.length / sugWords.length >= 0.4;
+  const result = await aiService.gradeShortAnswer(question, suggestedAnswer, studentAnswer);
+  return result.score >= 70;
 }
+
+router.post('/upload-zip/:bookId', loggedIn, upload.single('zip_file'), async (req, res) => {
+  const { bookId } = req.params;
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  
+  let AdmZip;
+  try {
+    AdmZip = require('adm-zip');
+  } catch (e) {
+    return res.status(500).json({ error: 'ZIP processing requires adm-zip package. Please run npm install adm-zip.' });
+  }
+
+  try {
+    const zip = new AdmZip(req.file.path);
+
+    const zipEntries = zip.getEntries();
+    
+    let chapters = [];
+    zipEntries.forEach(entry => {
+      const name = entry.entryName;
+      if (name.includes('__MACOSX') || name.includes('.DS_Store') || entry.isDirectory || name.startsWith('.')) return;
+      
+      const chapterMatch = name.match(/(?:chapter|ch|unit|lesson)[^0-9]*([0-9]+)/i);
+      const fallbackMatch = name.match(/([0-9]+)/);
+      let chapterNum = null;
+      
+      if (chapterMatch) chapterNum = parseInt(chapterMatch[1], 10);
+      else if (fallbackMatch) chapterNum = parseInt(fallbackMatch[1], 10);
+      
+      if (chapterNum !== null) {
+        const contentText = entry.getData().toString('utf8');
+        const title = name.split('/').pop().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+        chapters.push({ chapter_num: chapterNum, title: title, content: contentText });
+      }
+    });
+    
+    if (chapters.length === 0) return res.status(400).json({ error: 'No valid chapters found in ZIP' });
+    chapters.sort((a, b) => a.chapter_num - b.chapter_num);
+    
+    await pool.query('DELETE FROM digital_chapters WHERE book_id = $1', [bookId]);
+    
+    for (const ch of chapters) {
+      const cleanedText = ch.content.trim();
+      const aiData = await aiService.processChapter(cleanedText, ch.title);
+      
+      const summary = aiData.summary || '';
+      const notesJson = JSON.stringify(aiData.notes || []);
+      const vocabJson = JSON.stringify(aiData.vocabulary || []);
+      const qnaJson = JSON.stringify(aiData.qna || []);
+      const quizJson = JSON.stringify(aiData.quiz || []);
+      
+      await pool.query(
+        'INSERT INTO digital_chapters (book_id, chapter_num, title, content, summary, notes, vocabulary, qna, quiz, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [bookId, ch.chapter_num, ch.title, cleanedText, summary, notesJson, vocabJson, qnaJson, quizJson, nowStr()]
+      );
+    }
+    
+    res.json({ status: 'success', message: `Processed ${chapters.length} chapters` });
+  } catch (error) {
+    console.error('ZIP process error:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
 
 module.exports = router;

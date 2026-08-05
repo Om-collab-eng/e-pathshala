@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
-require('dotenv').config();
+const db = require('../db');
+const pool = { query: (text, params) => db.query(text, params) };
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
+const upload = multer({
+  dest: path.join(__dirname, '..', 'static', 'uploads'),
+  limits: { fileSize: 10 * 1024 * 1024 } // Strict 10MB upload limit for students
+});
 const digitalContentDir = path.join(__dirname, '..', 'static', 'digital_content');
 
 function studentOnly(req, res, next) {
-  if (req.session && req.session.user_id && req.session.role === 'student') return next();
+  if (req.session && req.session.user_id && (req.session.role === 'student' || req.session.role === 'user' || req.session.role === 'super_admin' || req.session.role === 'superadmin' || req.session.role === 'admin')) return next();
   req.flash('error', 'Access denied. Student login required.');
   return res.redirect('/login');
 }
@@ -239,12 +240,13 @@ router.get('/', studentOnly, async (req, res) => {
 
 // ── Browse Books ─────────────────────────────────────────────────────────
 router.get('/browse', studentOnly, async (req, res) => {
+  res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate');
   const sCode = req.session.school_code;
   const genreFilter = req.query.genre;
   const searchQuery = (req.query.q || '').trim();
   const aiSearch = req.query.ai === 'true';
   try {
-    let query = "SELECT * FROM books WHERE (is_banned IS NULL OR (is_banned != 1 AND is_banned != '1')) AND (school_code = $1 OR school_code = 'GLOBAL')";
+    let query = "SELECT * FROM books WHERE (is_banned IS NULL OR (is_banned != 1 AND is_banned != '1')) AND school_code = $1";
     const params = [sCode];
     if (genreFilter) {
       params.push(genreFilter);
@@ -258,25 +260,11 @@ router.get('/browse', studentOnly, async (req, res) => {
     const booksRows = (await pool.query(query, params)).rows;
     const books = booksRows.map(b => ({ ...b, book_type: 'physical' }));
 
-    let digitalQuery = `SELECT id, title, 'Manager' as author, category as genre, cover_url, 'GLOBAL' as school_code, 'digital' as book_type FROM digital_content WHERE school_code = 'GLOBAL' AND status = 'Published'`;
-    const digitalParams = [];
-    if (genreFilter) {
-      digitalParams.push(genreFilter);
-      digitalQuery += ` AND category = $1`;
-    }
-    if (searchQuery && !aiSearch) {
-      digitalParams.push(`%${searchQuery}%`, `%${searchQuery}%`, `%${searchQuery}%`);
-      digitalQuery += ` AND (title ILIKE $${digitalParams.length-2} OR description ILIKE $${digitalParams.length-1} OR subject ILIKE $${digitalParams.length})`;
-    }
-    digitalQuery += ` ORDER BY title ASC`;
-    const digitalRows = (await pool.query(digitalQuery, digitalParams)).rows;
-    digitalRows.forEach(r => books.push({ ...r, book_type: 'digital' }));
-
     if (!(searchQuery && aiSearch)) {
       books.sort((a, b) => (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase()));
     }
 
-    // AI search - stub for now
+    // AI search ranking within school library
     if (searchQuery && aiSearch && books.length > 0) {
       const scoredBooks = books.map(b => ({ ...b, ai_score: 50 }));
       books.length = 0;
@@ -285,13 +273,13 @@ router.get('/browse', studentOnly, async (req, res) => {
     }
 
     const genres = (await pool.query(
-      `SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND (school_code = $1 OR school_code = 'GLOBAL') AND (is_banned IS NULL OR (is_banned != 1 AND is_banned != '1'))`,
+      `SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND school_code = $1 AND (is_banned IS NULL OR (is_banned != 1 AND is_banned != '1'))`,
       [sCode])).rows.map(r => r.genre);
 
     const globalSections = (await pool.query('SELECT * FROM global_sections ORDER BY name ASC')).rows;
 
     res.render('student_browse', {
-      title: 'Book Catalog - E-Pathshala Network',
+      title: 'Digital Library Catalog - ' + (req.session.school_name || 'E-Pathshala Network'),
       books,
       genres,
       active_genre: genreFilter || null,
@@ -810,5 +798,80 @@ function generateDefaultQuiz(title, author) {
     }
   ];
 }
+
+
+// ── Additional Student Tab Routes ──────────────────────────────────────────
+router.get('/goals', studentOnly, async (req, res) => {
+  try {
+    const user = (await pool.query('SELECT * FROM users WHERE id = ', [req.session.user_id])).rows[0] || {};
+    const totalRead = parseInt((await pool.query("SELECT COUNT(*) as c FROM transactions WHERE user_id =  AND return_date IS NOT NULL AND return_date != 'LOST'", [req.session.user_id])).rows[0].c);
+    res.render('student_goals', {
+      title: 'Reading Goals - librika.in',
+      user,
+      total_read: totalRead,
+      goal_pages: user.daily_page_goal || 20,
+      goal_books: user.yearly_book_goal || 12,
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Goals route error:', err);
+    res.render('student_goals', { title: 'Reading Goals', user: {}, total_read: 0, goal_pages: 20, goal_books: 12, school_name: 'E-Pathshala Network' });
+  }
+});
+
+router.get('/notifications', studentOnly, async (req, res) => {
+  try {
+    const notifs = (await pool.query('SELECT * FROM announcements WHERE school_code =  OR school_code = 'GLOBAL' ORDER BY created_at DESC LIMIT 20', [req.session.school_code])).rows || [];
+    res.render('student_notifications', {
+      title: 'Notifications - librika.in',
+      notifications: notifs,
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Notifications route error:', err);
+    res.render('student_notifications', { title: 'Notifications', notifications: [], school_name: 'E-Pathshala Network' });
+  }
+});
+
+router.get('/settings', studentOnly, async (req, res) => {
+  try {
+    const user = (await pool.query('SELECT * FROM users WHERE id = ', [req.session.user_id])).rows[0] || {};
+    res.render('student_settings', {
+      title: 'Account Settings - librika.in',
+      user,
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Settings route error:', err);
+    res.render('student_settings', { title: 'Settings', user: {}, school_name: 'E-Pathshala Network' });
+  }
+});
+
+router.get(['/help', '/support'], studentOnly, async (req, res) => {
+  try {
+    res.render('student_support', {
+      title: 'Help & Support - librika.in',
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('Help route error:', err);
+    res.render('student_support', { title: 'Help & Support', school_name: 'E-Pathshala Network' });
+  }
+});
+
+router.get('/my-library', studentOnly, async (req, res) => {
+  try {
+    const txs = (await pool.query('SELECT t.*, b.title, b.author, b.cover_url FROM transactions t JOIN books b ON b.id = t.book_id WHERE t.user_id =  AND t.return_date IS NULL', [req.session.user_id])).rows;
+    res.render('student_mylibrary', {
+      title: 'My Library - librika.in',
+      transactions: txs,
+      school_name: req.session.school_name || 'E-Pathshala Network'
+    });
+  } catch (err) {
+    console.error('My library route error:', err);
+    res.redirect('/student');
+  }
+});
+
 
 module.exports = router;
