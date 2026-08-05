@@ -274,6 +274,7 @@ app.use('/', require('./routes/authRoutes'));
 
 // Admin routes
 app.use('/admin', require('./routes/admin'));
+app.use('/api', require('./routes/apiRoutes'));
 
 // Data Hub routes (Import / Export)
 app.use('/data', require('./routes/dataRoutes'));
