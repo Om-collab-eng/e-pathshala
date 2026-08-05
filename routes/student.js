@@ -817,7 +817,7 @@ function generateDefaultQuiz(title, author) {
 router.get('/goals', studentOnly, async (req, res) => {
   const userId = req.session.user_id;
   try {
-    const user = (await pool.query('SELECT * FROM users WHERE id = ', [userId])).rows[0] || {};
+    const user = (await pool.query('SELECT * FROM users WHERE id = $1', [userId])).rows[0] || {};
     let personalGoals = [];
     try {
       personalGoals = (await pool.query("SELECT * FROM reading_goals WHERE role = 'student' AND created_by = ", [userId])).rows || [];
@@ -830,7 +830,7 @@ router.get('/goals', studentOnly, async (req, res) => {
 
     let completed = 0;
     try {
-      completed = parseInt((await pool.query("SELECT COUNT(*) as c FROM transactions WHERE user_id =  AND return_date IS NOT NULL AND return_date != 'LOST'", [userId])).rows[0].c || 0, 10);
+      completed = parseInt((await pool.query("SELECT COUNT(*) as c FROM transactions WHERE user_id = $1 AND return_date IS NOT NULL AND return_date != 'LOST'", [userId])).rows[0].c || 0, 10);
     } catch (e) { completed = 0; }
 
     const pagesRead = progressRows.reduce((a, r) => a + (parseInt(r.last_page, 10) || 0), 0);
@@ -903,8 +903,8 @@ router.get('/settings', studentOnly, async (req, res) => {
     let user = {};
     let prefs = {};
     try {
-      user = (await pool.query('SELECT * FROM users WHERE id = ', [userId])).rows[0] || {};
-      prefs = (await pool.query('SELECT * FROM user_preferences WHERE user_id = ', [userId])).rows[0] || {};
+      user = (await pool.query('SELECT * FROM users WHERE id = $1', [userId])).rows[0] || {};
+      prefs = (await pool.query('SELECT * FROM user_preferences WHERE user_id = $1', [userId])).rows[0] || {};
     } catch (e) {
       user = {};
       prefs = {};
@@ -954,7 +954,7 @@ router.get(['/help', '/support'], studentOnly, async (req, res) => {
     const userId = req.session.user_id;
     let tickets = [];
     try {
-      tickets = (await pool.query('SELECT * FROM support_tickets WHERE user_id =  ORDER BY created_at DESC', [userId])).rows || [];
+      tickets = (await pool.query('SELECT * FROM support_tickets WHERE user_id = $1 ORDER BY created_at DESC', [userId])).rows || [];
     } catch (e) { tickets = []; }
     
     res.render('student_support', {
@@ -986,7 +986,7 @@ router.post('/support/ticket', studentOnly, async (req, res) => {
     const { category, subject, message } = req.body;
     try {
       await pool.query(
-        'INSERT INTO support_tickets (user_id, category, subject, message, status, created_at) VALUES (, , , , , )',
+        'INSERT INTO support_tickets (user_id, category, subject, message, status, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
         [userId, category || 'question', subject || 'Support Ticket', message || '', 'open', new Date().toISOString()]
       );
     } catch (e) {}
