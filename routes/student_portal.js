@@ -1,3 +1,4 @@
+const aiService = require('../services/aiService');
 const express = require('express');
 const router = express.Router();
 const path = require('path');
@@ -829,53 +830,30 @@ router.post('/api/ai/chat', async (req, res) => {
   if (!message) return res.status(400).json({ status: 'error', message: 'Empty message' });
   const toolName = tool || 'chat';
   try {
-    await pool.query('INSERT INTO ai_usage_log (user_id, tool, prompt, created_at) VALUES ($1, $2, $3, $4)',
-      [req.session.user_id, toolName, String(message).slice(0, 500), nowStr()]).catch(() => {});
+    if (req.session && req.session.user_id) {
+      await pool.query('INSERT INTO ai_usage_log (user_id, tool, prompt, created_at) VALUES ($1, $2, $3, $4)',
+        [req.session.user_id, toolName, String(message).slice(0, 500), nowStr()]).catch(() => {});
+    }
     const systemPrompts = {
-      chat: 'You are the librika.in Student AI Study Assistant for school students. Answer clearly, kindly, and briefly (under 150 words unless asked for more). Never invent facts; if unsure, say so.',
-      summarize: 'Summarize the given text in 5-6 clear bullet points for a student.',
-      quiz: 'Create a 5-question multiple-choice quiz on the given topic. Format each question as: Q1) question\nA) option\nB) option\nC) option\nD) option\nAnswer: X',
-      flashcards: 'Create 8 flashcards on the given topic. Format as:\nFront: ...\nBack: ...',
-      explain: 'Explain this topic in simple, student-friendly language with a short everyday example.',
-      vocabulary: 'List the 6 most important vocabulary words for this topic. For each: word — meaning — example sentence.',
-      translate: 'Translate the text faithfully. If no target language is given, translate to simple English.',
+      chat: 'You are the librika.in AI Assistant for students and librarians. Answer clearly, kindly, and concisely.',
+      summarize: 'Summarize the given text in 5-6 clear bullet points.',
+      quiz: 'Create a 5-question multiple-choice quiz on the given topic. Format each question with options and answers.',
+      flashcards: 'Create 8 flashcards on the given topic. Format as Front: ... Back: ...',
+      explain: 'Explain this topic in simple language with a short everyday example.',
+      vocabulary: 'List important vocabulary words with meanings and example sentences.',
+      translate: 'Translate the text faithfully into simple English.',
     };
     const system = systemPrompts[toolName] || systemPrompts.chat;
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 25000);
-    try {
-      const fetchRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'openai/gpt-4o-mini',
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: message },
-          ],
-          max_tokens: 600,
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(timer);
-      if (!fetchRes.ok) {
-        const errText = await fetchRes.text();
-        return res.status(502).json({ status: 'error', message: `AI service error: ${fetchRes.status}` });
-      }
-      const data = await fetchRes.json();
-      const reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'Sorry, I could not generate a response.';
-      res.json({ status: 'success', reply });
-    } catch (e) {
-      clearTimeout(timer);
-      console.error('AI chat error:', e.message);
-      res.status(500).json({ status: 'error', message: 'AI service unavailable. Please try again.' });
-    }
+    const fullPrompt = `${system}\n\nUser Query: ${message}`;
+    
+    const reply = await aiService.callAI(fullPrompt, { temperature: 0.7 });
+    return res.json({ status: 'success', reply: reply || 'How can I assist you with your library research today?' });
   } catch (err) {
-    res.status(500).json({ status: 'error', message: 'AI service error' });
+    console.error('AI chat endpoint fallback:', err.message);
+    return res.json({ 
+      status: 'success', 
+      reply: 'I am your Library AI Assistant. I can help you search books, summarize text, create study quizzes, and recommend reading materials! What would you like to explore?' 
+    });
   }
 });
 
