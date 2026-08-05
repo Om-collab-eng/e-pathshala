@@ -346,12 +346,12 @@ router.post('/settings', adminOnly, async (req, res) => {
 
 
 // ── Add Book ──────────────────────────────────────────────────────
-router.get('/add_book', adminOnly, (req, res) => {
+router.get(['/add_book', '/book/add'], adminOnly, (req, res) => {
   if (!hasPerm(req, 'manage_books')) return res.redirect('/admin');
   res.render('add_book', { title: 'Add Book - librika.in' });
 });
 
-router.post('/add_book', adminOnly, async (req, res) => {
+router.post(['/add_book', '/book/add'], adminOnly, async (req, res) => {
   if (!hasPerm(req, 'manage_books')) return res.redirect('/admin');
   const sCode = req.session.school_code;
   const { title, author, genre, copies, isbn, description } = req.body;

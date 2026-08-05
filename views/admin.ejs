@@ -928,8 +928,27 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid #eef
 <div class="ld-modal-overlay" id="addBookModal">
     <div class="ld-modal-content">
         <button class="ld-modal-close" onclick="closeModal('addBookModal')">✕</button>
-        <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: #ffffff; margin: 0 0 1rem 0;">+ Add New Book</h3>
-        <form action="/admin/book/add" method="POST">
+        <h3 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 8px;">
+            <span>📚</span> <span>+ Add New Book</span>
+        </h3>
+
+        <!-- AI Scanner Banner -->
+        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 14px; padding: 1rem; text-align: center; margin-bottom: 1.25rem;">
+            <div style="font-size: 1.5rem; margin-bottom: 4px;">✨ 📷</div>
+            <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 800; color: #4338ca;">Smart AI & Barcode Scanner</h4>
+            <p style="margin: 0 0 10px 0; font-size: 0.8rem; color: #475569;">Scan ISBN barcode or book cover with camera to auto-fill title, author, and description!</p>
+            <a href="/admin/scanner" class="ld-btn ld-btn-primary ld-btn-xs" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; font-weight: 700;">
+                <span>📷 Launch AI Camera Scanner</span>
+            </a>
+        </div>
+
+        <div style="text-align: center; font-size: 0.78rem; color: #94a3b8; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
+            <div style="flex:1; height:1px; background:#e2e8f0;"></div>
+            <span>OR ENTER MANUALLY</span>
+            <div style="flex:1; height:1px; background:#e2e8f0;"></div>
+        </div>
+
+        <form action="/admin/add_book" method="POST">
             <div class="ld-form-group">
                 <label>Book Title *</label>
                 <input type="text" name="title" required class="ld-input" placeholder="e.g. The Hobbit">
@@ -940,7 +959,11 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid #eef
             </div>
             <div class="ld-form-group">
                 <label>Genre / Category</label>
-                <input type="text" name="genre" class="ld-input" placeholder="e.g. Fantasy">
+                <input type="text" name="genre" class="ld-input" placeholder="e.g. Fiction, Science">
+            </div>
+            <div class="ld-form-group">
+                <label>ISBN / Barcode (Optional)</label>
+                <input type="text" name="isbn" class="ld-input" placeholder="e.g. 9780261102217 (leave blank to auto-generate)">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="ld-form-group">
@@ -948,11 +971,15 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid #eef
                     <input type="text" name="shelf_location" class="ld-input" placeholder="A-12">
                 </div>
                 <div class="ld-form-group">
-                    <label>Total Quantity</label>
-                    <input type="number" name="quantity" value="1" min="1" class="ld-input">
+                    <label>Total Copies</label>
+                    <input type="number" name="copies" value="1" min="1" class="ld-input">
                 </div>
             </div>
-            <button type="submit" class="ld-btn ld-btn-primary" style="width: 100%; margin-top: 12px;">Save Book to Catalog</button>
+            <div class="ld-form-group">
+                <label>Description (Optional)</label>
+                <textarea name="description" rows="2" class="ld-textarea" placeholder="Brief summary..."></textarea>
+            </div>
+            <button type="submit" class="ld-btn ld-btn-primary" style="width: 100%; margin-top: 12px; font-weight: 700;">Save Book to Catalog</button>
         </form>
     </div>
 </div>
