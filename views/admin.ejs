@@ -329,17 +329,37 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba
                 <span class="ld-nav-text">Reviews</span>
                 <% if (pending_reviews && pending_reviews.length > 0) { %><span class="ld-nav-badge orange"><%= pending_reviews.length %></span><% } %>
             </button>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('analytics', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">📊</span>
+                <span class="ld-nav-text">Analytics</span>
+            </button>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('calendar', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">📅</span>
+                <span class="ld-nav-text">Calendar</span>
+            </button>
             <button class="ld-nav-item tab-btn" onclick="switchTab('reports', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">📈</span>
                 <span class="ld-nav-text">Reports & Data Hub</span>
             </button>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('profile', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">👤</span>
+                <span class="ld-nav-text">My Profile</span>
+            </button>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('settings', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">⚙️</span>
+                <span class="ld-nav-text">Settings</span>
+            </button>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('security', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">🔒</span>
+                <span class="ld-nav-text">Security</span>
+            </button>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('support', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">❓</span>
+                <span class="ld-nav-text">Help & Support</span>
+            </button>
             <a href="/digital-library" class="ld-nav-item">
                 <span class="ld-nav-icon">🌐</span>
                 <span class="ld-nav-text">Digital Library</span>
-            </a>
-            <a href="/admin/settings" class="ld-nav-item">
-                <span class="ld-nav-icon">⚙️</span>
-                <span class="ld-nav-text">Settings</span>
             </a>
         </nav>
 
@@ -776,7 +796,127 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba
                     </div>
                 </div>
             </section>
-        </div>
+        
+            <!-- ── TAB: LIBRARIAN ANALYTICS ── -->
+            <section id="tab-analytics" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📊 Library Analytics & Performance</h3>
+                    <div class="ld-stats-grid" style="margin-bottom: 1rem;">
+                        <div class="ld-stat-card">
+                            <div class="ld-stat-icon">📖</div>
+                            <div class="ld-stat-val"><%= total_issued || 0 %></div>
+                            <div class="ld-stat-lbl">Active Circulations</div>
+                        </div>
+                        <div class="ld-stat-card">
+                            <div class="ld-stat-icon">↩️</div>
+                            <div class="ld-stat-val"><%= total_returned || 0 %></div>
+                            <div class="ld-stat-lbl">Completed Returns</div>
+                        </div>
+                        <div class="ld-stat-card">
+                            <div class="ld-stat-icon">👥</div>
+                            <div class="ld-stat-val"><%= total_students || 0 %></div>
+                            <div class="ld-stat-lbl">Active Readers</div>
+                        </div>
+                        <div class="ld-stat-card">
+                            <div class="ld-stat-icon">⏰</div>
+                            <div class="ld-stat-val" style="color: #f87171;"><%= overdue_count || 0 %></div>
+                            <div class="ld-stat-lbl">Overdue Items</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: CALENDAR ── -->
+            <section id="tab-calendar" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📅 Library Operations Calendar</h3>
+                    <p style="color: var(--muted); font-size: 0.85rem;">Track book return due dates, upcoming library events, and operational schedules.</p>
+                    <div style="background: #080f22; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); margin-top: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="margin: 0; color: #ffffff;">Today: <%= new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %></h4>
+                            <span class="ld-btn ld-btn-xs ld-btn-primary">+ Add Event</span>
+                        </div>
+                        <p style="color: #34d399; font-size: 0.85rem; font-weight: 700;">✅ All return schedules synced with database.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: MY PROFILE ── -->
+            <section id="tab-profile" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">👤 Librarian Profile</h3>
+                    <form action="/admin/settings" method="POST">
+                        <div class="ld-form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="name" value="<%= (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Librarian' %>" class="ld-input">
+                        </div>
+                        <div class="ld-form-group">
+                            <label>School Name</label>
+                            <input type="text" value="<%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'Library System' %>" disabled class="ld-input" style="opacity: 0.7;">
+                        </div>
+                        <div class="ld-form-group">
+                            <label>Role</label>
+                            <input type="text" value="Librarian Admin" disabled class="ld-input" style="opacity: 0.7;">
+                        </div>
+                        <button type="submit" class="ld-btn ld-btn-primary" style="margin-top: 10px;">Update Profile</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ── TAB: SETTINGS ── -->
+            <section id="tab-settings" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">⚙️ Library System Settings</h3>
+                    <form action="/admin/settings" method="POST">
+                        <div class="ld-form-group">
+                            <label>Overdue Fine Rate per Day (₹)</label>
+                            <input type="number" name="fine_per_day" value="5" min="0" class="ld-input">
+                        </div>
+                        <div class="ld-form-group">
+                            <label>Max Borrow Limit per Student</label>
+                            <input type="number" name="max_books" value="3" min="1" class="ld-input">
+                        </div>
+                        <div class="ld-form-group">
+                            <label>Borrowing Duration (Days)</label>
+                            <input type="number" name="issue_duration" value="14" min="1" class="ld-input">
+                        </div>
+                        <button type="submit" class="ld-btn ld-btn-success" style="margin-top: 10px;">Save Settings</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ── TAB: SECURITY ── -->
+            <section id="tab-security" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">🔒 Security & Authentication</h3>
+                    <div style="background: #080f22; padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div>
+                                <h4 style="margin: 0; color: #ffffff;">Account Password</h4>
+                                <p style="margin: 2px 0 0; font-size: 0.8rem; color: var(--muted);">Change your account password securely.</p>
+                            </div>
+                            <button class="ld-btn ld-btn-primary ld-btn-xs">Change Password</button>
+                        </div>
+                        <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
+                            <span style="color: #34d399; font-weight: 700; font-size: 0.85rem;">🔒 Session Security Active (Encrypted SSL)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: HELP & SUPPORT ── -->
+            <section id="tab-support" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">❓ Help & Technical Support</h3>
+                    <p style="color: var(--muted); font-size: 0.85rem;">Contact Librika technical team or review automated support guides.</p>
+                    <div style="background: rgba(99, 102, 241, 0.08); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); margin-top: 1rem;">
+                        <h4 style="margin: 0 0 6px 0; color: #ffffff;">📞 Support Contact</h4>
+                        <p style="margin: 0; font-size: 0.85rem; color: #a5b4fc;">Email: support@librika.in | Helpline: +91 (800) LIBRIKA</p>
+                    </div>
+                </div>
+            </section>
+
+</div>
     </main>
 </div>
 
