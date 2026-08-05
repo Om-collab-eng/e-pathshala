@@ -1222,7 +1222,7 @@ function toggleAdminSidebar() {
 }
 
 function autoCloseAdminSidebar() {
-    if (window.innerWidth <= 900) {
+    if (window.innerWidth <= 600) {
         const sb = document.getElementById('adminSidebar');
         const dim = document.getElementById('adminDim');
         if (sb) sb.classList.remove('open');

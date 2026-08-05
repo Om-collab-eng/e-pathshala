@@ -431,7 +431,7 @@ function toggleStudentSidebar() {
 }
 
 function autoCloseStudentSidebar() {
-    if (window.innerWidth <= 900) {
+    if (window.innerWidth <= 600) {
         const sb = document.getElementById('studentSidebar');
         const dim = document.getElementById('studentDim');
         if (sb) sb.classList.remove('open');

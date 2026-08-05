@@ -551,14 +551,9 @@
         }
 
         function applyMobileViewStatus() {
-            const isMobileView = localStorage.getItem('forceMobileView') === 'true';
-            if (isMobileView) {
-                document.body.classList.add('force-mobile-view');
-                document.documentElement.classList.add('force-mobile-view');
-            } else {
-                document.body.classList.remove('force-mobile-view');
-                document.documentElement.classList.remove('force-mobile-view');
-            }
+            document.body.classList.remove('force-mobile-view');
+            document.documentElement.classList.remove('force-mobile-view');
+            localStorage.removeItem('forceMobileView');
         }
         window.applyMobileViewStatus = applyMobileViewStatus;
         applyMobileViewStatus();
