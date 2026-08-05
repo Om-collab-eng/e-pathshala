@@ -674,10 +674,32 @@
             imgElement.onerror = null;
         };
 
-        function showToast(message, type = 'info') {
+        function showToast(message, type = 'info', titleText = '') {
             const container = document.getElementById('toastContainer');
+            if (!container) return;
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
+            let icon = '🔔';
+            if (type === 'success') icon = '✅';
+            if (type === 'error')   icon = '⚠️';
+            if (type === 'info')    icon = 'ℹ️';
+            
+            const titleHtml = titleText ? `<div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: #64748b; margin-bottom: 2px;">${titleText}</div>` : '';
+
+            toast.innerHTML = `
+                <span style="font-size: 1.2rem; flex-shrink: 0;">${icon}</span>
+                <div style="flex: 1; min-width: 0;">
+                    ${titleHtml}
+                    <div style="color: #0f172a; word-break: break-word;">${message}</div>
+                </div>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; color: #94a3b8; font-size: 1rem; cursor: pointer; padding: 2px 6px; flex-shrink: 0;">✕</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastExit 0.35s ease forwards';
+                setTimeout(() => toast.remove(), 350);
+            }, 4500);
+        }`;
             let icon = 'ℹ️';
             if(type === 'success') icon = '✅';
             if(type === 'error') icon = '❌';
@@ -971,6 +993,50 @@ For searching books: {"type": "search_book", "query": "..."}
         }
     </script>
     <%- defineContent('scripts') %>
+
+    <script>
+        // Real-time Top-Down Notification Pop-Up Poller
+        let lastNotifId = 0;
+        let notifPollInterval = null;
+
+        async function pollNewNotifications() {
+            try {
+                const res = await fetch('/api/notifications/poll?since_id=' + lastNotifId);
+                const data = await res.json();
+                if (data && data.status === 'success') {
+                    // Update badge counts in topbar
+                    if (typeof data.unreadCount === 'number') {
+                        document.querySelectorAll('.sp-notif-count, .st-notif-badge, .sp-badge-dot, .ld-notif-badge').forEach(b => {
+                            if (data.unreadCount > 0) {
+                                b.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                                b.style.display = 'flex';
+                            } else {
+                                b.style.display = 'none';
+                            }
+                        });
+                    }
+
+                    // Pop up new notifications from above
+                    if (data.newNotifications && data.newNotifications.length > 0) {
+                        data.newNotifications.forEach(n => {
+                            if (n.id > lastNotifId) {
+                                lastNotifId = n.id;
+                                showToast(n.message, 'notif', '🔔 New Notification');
+                            }
+                        });
+                    }
+                }
+            } catch (e) {}
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            <% if (typeof session !== 'undefined' && session && (session.user_id || session.user)) { %>
+            pollNewNotifications();
+            notifPollInterval = setInterval(pollNewNotifications, 10000);
+            <% } %>
+        });
+    </script>
+
 </body>
 <%- block('scripts') %>
 </html>

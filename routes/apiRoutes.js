@@ -344,3 +344,41 @@ router.post('/mobile/reserve', authMiddleware, async (req, res) => {
 
 module.exports = router;
 
+
+
+// Real-time Notification Polling Endpoint
+router.get('/notifications/poll', async (req, res) => {
+  try {
+    const userId = req.session ? req.session.user_id : null;
+    const sCode = req.session ? req.session.school_code : null;
+    if (!userId) return res.json({ status: 'success', unreadCount: 0, newNotifications: [] });
+
+    const sinceId = parseInt(req.query.since_id || '0', 10);
+    const db = require('../db');
+    
+    // Fetch unread count
+    const countRes = await db.query(
+      `SELECT COUNT(*) as c FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL') AND (is_read = false OR is_read = '0' OR is_read IS NULL)`,
+      [userId, sCode]
+    ).catch(() => ({ rows: [{ c: 0 }] }));
+    const unreadCount = parseInt(countRes.rows[0].c, 10) || 0;
+
+    // Fetch new unread notifications since last check
+    let newNotifs = [];
+    if (sinceId > 0) {
+      const newRes = await db.query(
+        `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = 'GLOBAL') AND id > $3 ORDER BY id DESC LIMIT 5`,
+        [userId, sCode, sinceId]
+      ).catch(() => ({ rows: [] }));
+      newNotifs = newRes.rows || [];
+    }
+
+    res.json({
+      status: 'success',
+      unreadCount,
+      newNotifications: newNotifs
+    });
+  } catch (err) {
+    res.json({ status: 'success', unreadCount: 0, newNotifications: [] });
+  }
+});
