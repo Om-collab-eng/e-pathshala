@@ -607,6 +607,8 @@ router.post('/requests', async (req, res) => {
       [req.session.user_id, title, author || '', request_type || 'book', details || '', req.session.school_code, nowStr()]);
     await pool.query('INSERT INTO notifications (user_id, message, type, created_at, school_code) VALUES ($1, $2, $3, $4, $5)',
       [req.session.user_id, `Your request for "${title}" has been submitted for review.`, 'request', nowStr(), req.session.school_code]);
+    await pool.query('INSERT INTO notifications (user_id, message, type, created_at, school_code) VALUES (0, $1, $2, $3, $4)',
+      [`📖 New Book Request submitted by student: ${title}`, 'admin_alert', nowStr(), req.session.school_code]).catch(() => {});
     req.flash('success', 'Book request submitted!');
     res.redirect('/student/requests');
   } catch (err) {
@@ -863,33 +865,47 @@ module.exports = router;
 // Notification Poll Endpoint
 // Notification Poll Endpoint (1-Second Realtime)
 // Notification Poll Endpoint
+// Notification Poll Endpoint (Role Aware Admin/Student)
 router.get('/api/notifications/poll', async (req, res) => {
   try {
     const userId = req.session ? (req.session.user_id || req.session.id || 0) : 0;
     const sCode  = req.session ? (req.session.school_code || 'GLOBAL') : 'GLOBAL';
-    
-    const countRes = await pool.query(
-      `SELECT COUNT(*) as c FROM notifications WHERE (school_code = $1 OR user_id = $2 OR school_code = 'GLOBAL') AND (is_read = false OR is_read = '0' OR is_read IS NULL)`,
-      [sCode, userId]
-    ).catch(() => ({ rows: [{ c: 0 }] }));
-    const unreadCount = parseInt(countRes.rows[0].c, 10) || 0;
+    const uRole  = req.session ? (req.session.role || 'student') : 'student';
+    const isAdmin = (uRole === 'admin' || uRole === 'super_admin' || uRole === 'superadmin' || uRole === 'librarian');
 
     const sinceId = parseInt(req.query.since_id || '0', 10);
-    let newNotifs = [];
 
-    if (sinceId === 0) {
-      const initRes = await pool.query(
-        `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR user_id = $2 OR school_code = 'GLOBAL') AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 5`,
-        [sCode, userId]
-      ).catch(() => ({ rows: [] }));
-      newNotifs = initRes.rows || [];
+    let countSql, listSql, countParams, listParams;
+
+    if (isAdmin) {
+      countSql = `SELECT COUNT(*) as c FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0) AND (is_read = false OR is_read = '0' OR is_read IS NULL)`;
+      countParams = [sCode, userId];
+
+      if (sinceId === 0) {
+        listSql = `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0) AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 5`;
+        listParams = [sCode, userId];
+      } else {
+        listSql = `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0) AND id > $3 ORDER BY id ASC LIMIT 5`;
+        listParams = [sCode, userId, sinceId];
+      }
     } else {
-      const newRes = await pool.query(
-        `SELECT id, message, type, created_at FROM notifications WHERE (school_code = $1 OR user_id = $2 OR school_code = 'GLOBAL') AND id > $3 ORDER BY id ASC LIMIT 5`,
-        [sCode, userId, sinceId]
-      ).catch(() => ({ rows: [] }));
-      newNotifs = newRes.rows || [];
+      countSql = `SELECT COUNT(*) as c FROM notifications WHERE (user_id = $1 OR (school_code = $2 AND (user_id IS NULL OR user_id = 0))) AND (is_read = false OR is_read = '0' OR is_read IS NULL)`;
+      countParams = [userId, sCode];
+
+      if (sinceId === 0) {
+        listSql = `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR (school_code = $2 AND (user_id IS NULL OR user_id = 0))) AND (is_read = false OR is_read = '0' OR is_read IS NULL) ORDER BY id DESC LIMIT 5`;
+        listParams = [userId, sCode];
+      } else {
+        listSql = `SELECT id, message, type, created_at FROM notifications WHERE (user_id = $1 OR (school_code = $2 AND (user_id IS NULL OR user_id = 0))) AND id > $3 ORDER BY id ASC LIMIT 5`;
+        listParams = [userId, sCode, sinceId];
+      }
     }
+
+    const countRes = await pool.query(countSql, countParams).catch(() => ({ rows: [{ c: 0 }] }));
+    const unreadCount = parseInt(countRes.rows[0].c, 10) || 0;
+
+    const listRes = await pool.query(listSql, listParams).catch(() => ({ rows: [] }));
+    const newNotifs = listRes.rows || [];
 
     const maxRes = await pool.query(`SELECT MAX(id) as m FROM notifications`).catch(() => ({ rows: [{ m: 0 }] }));
     const maxId = parseInt(maxRes.rows[0].m, 10) || 0;
