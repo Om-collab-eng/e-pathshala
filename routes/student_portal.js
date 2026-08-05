@@ -797,7 +797,31 @@ router.post('/support/ticket', async (req, res) => {
 
 /* ── AI Hub ─────────────────────────────────────────────────────── */
 router.get('/ai', async (req, res) => {
-  res.render('student_ai', { title: 'AI Assistant - librika.in', active: 'ai' });
+  try {
+    let notifCount = 0;
+    try {
+      const sCode = req.session ? req.session.school_code : null;
+      const uId = req.session ? req.session.user_id : null;
+      if (uId) {
+        const r = await pool.query('SELECT COUNT(*) as c FROM notifications WHERE (user_id = $1 OR school_code = $2 OR school_code = $3) AND is_read = false', [uId, sCode, 'GLOBAL']);
+        notifCount = parseInt(r.rows[0].c, 10) || 0;
+      }
+    } catch(e) { notifCount = 0; }
+    res.render('student_ai', {
+      title: 'AI Assistant - librika.in',
+      active: 'ai',
+      notifCount: notifCount,
+      school_name: (req.session && req.session.school_name) ? req.session.school_name : 'E-Pathshala Network'
+    });
+  } catch(err) {
+    console.error('AI route error:', err);
+    res.render('student_ai', {
+      title: 'AI Assistant - librika.in',
+      active: 'ai',
+      notifCount: 0,
+      school_name: 'E-Pathshala Network'
+    });
+  }
 });
 
 router.post('/api/ai/chat', async (req, res) => {

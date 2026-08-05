@@ -940,11 +940,17 @@ router.get(['/ai', '/ai-chat'], studentOnly, async (req, res) => {
     res.render('student_ai', {
       title: 'AI Chat Assistant - librika.in',
       active: 'ai',
-      school_name: req.session.school_name || 'E-Pathshala Network'
+      notifCount: 0,
+      school_name: (req.session && req.session.school_name) ? req.session.school_name : 'E-Pathshala Network'
     });
   } catch (err) {
     console.error('AI route error:', err);
-    res.redirect('/student');
+    res.render('student_ai', {
+      title: 'AI Chat Assistant - librika.in',
+      active: 'ai',
+      notifCount: 0,
+      school_name: 'E-Pathshala Network'
+    });
   }
 });
 

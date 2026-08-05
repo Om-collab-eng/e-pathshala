@@ -956,6 +956,15 @@ router.post('/api/add-scanned-book', adminOnly, async (req, res) => {
 module.exports = router;
 
 // ── AI Assistant Route ──────────────────────────────────────────────
-router.get('/ai', adminOnly, (req, res) => {
-  res.redirect('/admin?open_ai=true');
+router.get(['/ai', '/ai-chat'], adminOnly, (req, res) => {
+  try {
+    res.render('student_ai', {
+      title: 'AI Assistant - librika.in',
+      active: 'ai',
+      notifCount: 0,
+      school_name: (req.session && req.session.school_name) ? req.session.school_name : 'E-Pathshala Network'
+    });
+  } catch(err) {
+    res.redirect('/admin');
+  }
 });

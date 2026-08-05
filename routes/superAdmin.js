@@ -2249,6 +2249,15 @@ router.get('/backups/export', async (req, res) => {
 });
 
 // ── AI Assistant Route ──────────────────────────────────────────────
-router.get('/ai', (req, res) => {
-  res.redirect('/superadmin?open_ai=true');
+router.get(['/ai', '/ai-chat'], (req, res) => {
+  try {
+    res.render('student_ai', {
+      title: 'AI Assistant - librika.in',
+      active: 'ai',
+      notifCount: 0,
+      school_name: 'E-Pathshala Network'
+    });
+  } catch(err) {
+    res.redirect('/superadmin');
+  }
 });
