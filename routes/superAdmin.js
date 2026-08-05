@@ -2247,3 +2247,8 @@ router.get('/backups/export', async (req, res) => {
     res.status(500).send('Export error: ' + err.message);
   }
 });
+
+// ── AI Assistant Route ──────────────────────────────────────────────
+router.get('/ai', (req, res) => {
+  res.redirect('/superadmin?open_ai=true');
+});

@@ -954,3 +954,8 @@ router.post('/api/add-scanned-book', adminOnly, async (req, res) => {
 });
 
 module.exports = router;
+
+// ── AI Assistant Route ──────────────────────────────────────────────
+router.get('/ai', adminOnly, (req, res) => {
+  res.redirect('/admin?open_ai=true');
+});

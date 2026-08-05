@@ -755,7 +755,7 @@
         };
     </script>
 
-    <% if (session && session.user_id && (session.role === 'super_admin' || (locals.school_perms && locals.school_perms.canUseAIChat)) && (typeof title === 'undefined' || !title || !title.includes('Modern Library Management SaaS'))) { %>
+    <% if (typeof session !== 'undefined' && session && (session.user_id || session.user || session.role || session.user_name)) { %>
     <div id="aiChatWidget" class="ai-chat-widget-container">
         <div id="aiChatWindow" style="display: none; width: 90vw; max-width: 350px; height: 70vh; max-height: 450px; background: var(--bg-card); border-radius: 12px; box-shadow: var(--shadow-premium); backdrop-filter: var(--glass-blur); flex-direction: column; overflow: hidden; border: 1px solid var(--border-light); margin-bottom: 10px;">
             <div style="background: var(--primary-color); padding: 10px 15px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">

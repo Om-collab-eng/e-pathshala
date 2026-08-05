@@ -298,6 +298,10 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid #eef
 
         <!-- Navigation List -->
         <nav class="ld-sidebar-nav">
+            <button class="ld-nav-item" type="button" onclick="toggleAiChat()">
+                <span class="ld-nav-icon">🤖</span>
+                <span class="ld-nav-text">AI Assistant</span>
+            </button>
             <button class="ld-nav-item tab-btn active" onclick="switchTab('dashboard', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">📊</span>
                 <span class="ld-nav-text">Dashboard</span>
@@ -388,6 +392,7 @@ table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid #eef
                 <span class="ld-brand-title">📚 Librika Librarian</span>
             </div>
             <div class="ld-topbar-right">
+                <button class="ld-btn ld-btn-xs" onclick="toggleAiChat()" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.2); font-weight: 700;">🤖 AI Chat</button>
                 <button class="ld-btn ld-btn-primary ld-btn-xs" onclick="openModal('addBookModal')">+ Add Book</button>
                 <button class="ld-btn ld-btn-success ld-btn-xs" onclick="openModal('addUserModal')">+ Add Member</button>
                 <button class="ld-notif-btn" onclick="switchTab('overdue', this)">
