@@ -1,11 +1,13 @@
+<%- layout('base') %>
+
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <style>
 /* ═══════════════════════════════════════════════
-   LIBRIKA LIBRARIAN DASHBOARD — PRISTINE DESIGN SYSTEM
-   Zero Bottom Nav, Mobile Drawer & Isolated Theme
+   LIBRIKA LIBRARIAN DASHBOARD — PRISTINE SUPER ADMIN STYLE UI
+   Simple, Clean, Bug-Free & 100% Mobile Responsive
 ═══════════════════════════════════════════════ */
-* {
+*, *::before, *::after {
     box-sizing: border-box !important;
 }
 
@@ -15,7 +17,6 @@ html, body {
     color: #f1f5f9 !important;
     margin: 0 !important;
     padding: 0 !important;
-    padding-top: 0 !important;
     overflow-x: hidden !important;
     width: 100% !important;
     max-width: 100vw !important;
@@ -35,205 +36,100 @@ html, body {
     --lr-light: rgba(239, 68, 68, 0.15);
     --lb: #60a5fa;
     --lb-light: rgba(59, 130, 246, 0.15);
-    --lt: #22d3ee;
-    --lt-light: rgba(6, 182, 212, 0.15);
-    --lam: #fbbf24;
-    --lam-light: rgba(245, 158, 11, 0.15);
     --bg: #060d1f;
-    --white: #0d1630;
-    --border: rgba(99, 102, 241, 0.14);
+    --card-bg: #0d1630;
+    --sidebar-bg: #080f22;
+    --border: rgba(99, 102, 241, 0.16);
     --text: #f1f5f9;
-    --mid: #94a3b8;
-    --muted: #64748b;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    --radius: 18px;
+    --muted: #94a3b8;
 }
 
-/* ── FORM INPUTS & LABELS ── */
-.ld-form-group {
+/* ── LAYOUT SHELL ── */
+.ld-shell {
     display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    margin-bottom: 12px !important;
-}
-.ld-form-group label {
-    font-size: 0.78rem !important;
-    font-weight: 700 !important;
-    color: #a5b4fc !important;
-    margin-bottom: 2px !important;
-    display: block !important;
-}
-.ld-input, .ld-select, .ld-textarea, input[type="text"], input[type="email"], input[type="password"], input[type="number"], select, textarea {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    background: #080f22 !important;
-    border: 1px solid rgba(99, 102, 241, 0.25) !important;
-    color: #f1f5f9 !important;
-    border-radius: 12px !important;
-    padding: 10px 14px !important;
-    font-size: 0.88rem !important;
-    min-height: 44px !important;
-    outline: none !important;
-    margin: 0 !important;
-}
-.ld-input:focus, .ld-select:focus, select:focus, input:focus {
-    border-color: #818cf8 !important;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
-}
-
-/* ── BUTTONS ── */
-.ld-btn, button, .section-link {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    padding: 9px 16px !important;
-    min-height: 40px !important;
-    border-radius: 12px !important;
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    text-decoration: none !important;
-    border: none !important;
-    background: rgba(99, 102, 241, 0.15) !important;
-    color: #a5b4fc !important;
-    box-sizing: border-box !important;
-}
-.ld-btn-primary, button[type="submit"] {
-    background: linear-gradient(135deg, #6366f1, #a855f7) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important;
-}
-.ld-btn-danger {
-    background: rgba(239, 68, 68, 0.15) !important;
-    color: #f87171 !important;
-    border: 1px solid rgba(239, 68, 68, 0.25) !important;
-}
-.ld-btn-success {
-    background: rgba(16, 185, 129, 0.15) !important;
-    color: #34d399 !important;
-    border: 1px solid rgba(16, 185, 129, 0.25) !important;
-}
-.ld-btn-xs {
-    padding: 4px 10px !important;
-    min-height: 32px !important;
-    font-size: 0.75rem !important;
-    border-radius: 8px !important;
-}
-
-/* ── STAT CARDS GRID (Desktop 4 col, Mobile 2 col) ── */
-.ld-stats-grid, .stats-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-@media (min-width: 901px) {
-    .ld-stats-grid, .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
-}
-
-.ld-stat-card, .stat-card {
-    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
-    border: 1px solid rgba(99, 102, 241, 0.16) !important;
-    border-radius: 16px !important;
-    padding: 12px 10px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-    justify-content: center !important;
-    min-height: 105px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-.ld-stat-icon {
-    font-size: 1.4rem !important;
-    margin-bottom: 4px !important;
-}
-.ld-stat-val {
-    font-family: 'Outfit', sans-serif !important;
-    font-size: 1.35rem !important;
-    font-weight: 900 !important;
-    color: #ffffff !important;
-    line-height: 1.1 !important;
-}
-.ld-stat-lbl {
-    font-size: 0.7rem !important;
-    color: #94a3b8 !important;
-    font-weight: 700 !important;
-    margin-top: 2px !important;
-}
-
-/* ── MODALS SYSTEM ── */
-.ld-modal-overlay {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(3, 7, 18, 0.82) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 10000 !important;
-    display: none;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 1rem !important;
-    overflow-y: auto !important;
-}
-.ld-modal-overlay.active, .ld-modal-overlay[style*="display: flex"], .ld-modal-overlay[style*="display: block"] {
-    display: flex !important;
-}
-.ld-modal-content {
-    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
-    border: 1px solid rgba(99, 102, 241, 0.25) !important;
-    border-radius: 20px !important;
-    padding: 1.5rem !important;
-    width: 100% !important;
-    max-width: 500px !important;
-    max-height: 90vh !important;
-    overflow-y: auto !important;
+    min-height: 100vh !important;
+    background: #060d1f !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     position: relative !important;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
-    color: #f1f5f9 !important;
-    box-sizing: border-box !important;
-}
-.ld-modal-close {
-    position: absolute !important;
-    top: 14px !important;
-    right: 14px !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    color: #f1f5f9 !important;
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    font-size: 1rem !important;
+    overflow-x: hidden !important;
 }
 
-/* ── REDESIGNED FLEXBOX SIDEBAR DRAWER ── */
+.ld-main {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+    margin-left: 280px !important;
+    width: calc(100vw - 280px) !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    background: #060d1f !important;
+    padding-bottom: 30px !important;
+}
+@media (max-width: 900px) {
+    .ld-main { margin-left: 0 !important; width: 100vw !important; max-width: 100vw !important; }
+}
+
+/* ── TOPBAR ── */
+.ld-topbar {
+    background: rgba(8, 15, 34, 0.92) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 0.85rem 1.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    gap: 12px !important;
+}
+.ld-topbar-left { display: flex !important; align-items: center !important; gap: 12px !important; }
+.ld-menu-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+    width: 38px !important; height: 38px !important; border-radius: 10px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 1.1rem !important; cursor: pointer !important;
+}
+@media (min-width: 901px) { .ld-menu-btn { display: none !important; } }
+
+.ld-brand-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+}
+
+.ld-topbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
+.ld-notif-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+    width: 38px !important; height: 38px !important; border-radius: 50% !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 1.1rem !important; cursor: pointer !important; position: relative !important;
+}
+.ld-notif-badge {
+    position: absolute !important; top: -2px !important; right: -2px !important;
+    background: #f87171 !important; color: white !important; font-size: 0.65rem !important;
+    font-weight: 800 !important; padding: 2px 6px !important; border-radius: 10px !important;
+}
+
+/* ── SIDEBAR DRAWER ── */
 .ld-sidebar {
     width: 280px !important;
     max-width: 82vw !important;
-    background: #080f22 !important;
-    border-right: 1px solid rgba(99, 102, 241, 0.16) !important;
+    background: var(--sidebar-bg) !important;
+    border-right: 1px solid var(--border) !important;
     display: flex !important;
     flex-direction: column !important;
-    padding: 0 !important;
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-    flex-shrink: 0 !important;
+    top: 0 !important; left: 0 !important;
+    height: 100vh !important; height: 100dvh !important;
     z-index: 9999 !important;
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
@@ -248,394 +144,141 @@ html, body {
 
 .ld-sidebar-header {
     padding: 1.1rem 1rem !important;
-    border-bottom: 1px solid rgba(99, 102, 241, 0.14) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    flex-shrink: 0 !important;
-    background: #080f22 !important;
+    border-bottom: 1px solid var(--border) !important;
+    display: flex !important; align-items: center !important; justify-content: space-between !important;
+    gap: 10px !important; flex-shrink: 0 !important; background: var(--sidebar-bg) !important;
 }
-.ld-sidebar-user {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    min-width: 0 !important;
-    flex: 1 !important;
-}
+.ld-sidebar-user { display: flex !important; align-items: center !important; gap: 10px !important; flex: 1 !important; min-width: 0 !important; }
 .ld-avatar-lg {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    background: linear-gradient(135deg, #6366f1, #a855f7) !important;
-    color: #ffffff !important;
-    font-weight: 800 !important;
-    font-size: 1.05rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
+    width: 40px !important; height: 40px !important; border-radius: 50% !important;
+    background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important;
+    font-weight: 800 !important; font-size: 1.05rem !important; display: flex !important;
+    align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
 }
 .ld-user-meta { min-width: 0 !important; flex: 1 !important; }
 .ld-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.ld-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: #94a3b8 !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.ld-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: var(--muted) !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
 .ld-sidebar-close {
-    background: rgba(255, 255, 255, 0.06) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: #94a3b8 !important;
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 0.95rem !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
+    background: rgba(255, 255, 255, 0.06) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: var(--muted) !important; width: 32px !important; height: 32px !important; border-radius: 50% !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 0.95rem !important; cursor: pointer !important; flex-shrink: 0 !important;
 }
 
 .ld-sidebar-nav {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    padding: 0.85rem 0.75rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
+    flex: 1 !important; overflow-y: auto !important; padding: 0.85rem 0.75rem !important;
+    display: flex !important; flex-direction: column !important; gap: 4px !important;
 }
 
 .ld-nav-item {
-    display: flex !important;
-    align-items: center !important;
-    height: 50px !important;
-    min-height: 50px !important;
-    padding: 0 12px !important;
-    border-radius: 12px !important;
-    color: #94a3b8 !important;
-    font-size: 0.88rem !important;
-    font-weight: 600 !important;
-    text-decoration: none !important;
-    background: transparent !important;
-    border: none !important;
-    border-left: 3.5px solid transparent !important;
-    width: 100% !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    box-sizing: border-box !important;
-    white-space: nowrap !important;
+    display: flex !important; align-items: center !important; height: 50px !important; min-height: 50px !important;
+    padding: 0 12px !important; border-radius: 12px !important; color: var(--muted) !important;
+    font-size: 0.88rem !important; font-weight: 600 !important; text-decoration: none !important;
+    background: transparent !important; border: none !important; border-left: 3.5px solid transparent !important;
+    width: 100% !important; cursor: pointer !important; transition: all 0.2s ease !important;
+    box-sizing: border-box !important; white-space: nowrap !important;
 }
 .ld-nav-item:hover { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; }
 .ld-nav-item.active { background: rgba(99, 102, 241, 0.18) !important; color: #ffffff !important; border-left: 4px solid #818cf8 !important; font-weight: 700 !important; }
 
-.ld-nav-icon {
-    width: 24px !important;
-    height: 24px !important;
-    font-size: 1.15rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-    margin-right: 12px !important;
-}
-.ld-nav-text {
-    flex: 1 !important;
-    text-align: left !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-.ld-nav-badge {
-    margin-left: auto !important;
-    font-size: 0.64rem !important;
-    font-weight: 800 !important;
-    padding: 2px 7px !important;
-    border-radius: 20px !important;
-    color: white !important;
-    flex-shrink: 0 !important;
-}
+.ld-nav-icon { width: 24px !important; height: 24px !important; font-size: 1.15rem !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; margin-right: 12px !important; }
+.ld-nav-text { flex: 1 !important; text-align: left !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.ld-nav-badge { margin-left: auto !important; font-size: 0.64rem !important; font-weight: 800 !important; padding: 2px 7px !important; border-radius: 20px !important; color: white !important; flex-shrink: 0 !important; }
 .ld-nav-badge.red { background: #f87171 !important; }
 .ld-nav-badge.orange { background: #fb923c !important; }
 
-/* ── STICKY FOOTER ACTIONS ── */
 .ld-sidebar-footer {
-    padding: 0.85rem 0.75rem !important;
-    border-top: 1px solid rgba(99, 102, 241, 0.14) !important;
-    flex-shrink: 0 !important;
-    background: #080f22 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
+    padding: 0.85rem 0.75rem !important; border-top: 1px solid var(--border) !important;
+    flex-shrink: 0 !important; background: var(--sidebar-bg) !important; display: flex !important; flex-direction: column !important; gap: 6px !important;
 }
 .ld-footer-btn {
-    display: flex !important;
-    align-items: center !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    padding: 0 12px !important;
-    border-radius: 10px !important;
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
-    color: #94a3b8 !important;
-    text-decoration: none !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    transition: all 0.2s ease !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
+    display: flex !important; align-items: center !important; height: 44px !important; min-height: 44px !important;
+    padding: 0 12px !important; border-radius: 10px !important; font-size: 0.85rem !important; font-weight: 700 !important;
+    color: var(--muted) !important; text-decoration: none !important; background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important; transition: all 0.2s ease !important; width: 100% !important;
 }
 .ld-footer-btn:hover { background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; }
 .ld-footer-btn.danger { background: rgba(239, 68, 68, 0.12) !important; color: #f87171 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
-.ld-footer-btn.danger:hover { background: rgba(239, 68, 68, 0.25) !important; }
 
 .ld-overlay-dim {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(3, 7, 18, 0.8) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 9998 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity 0.28s ease !important;
+    position: fixed !important; inset: 0 !important; background: rgba(3, 7, 18, 0.8) !important;
+    backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 9998 !important; opacity: 0 !important; pointer-events: none !important; transition: opacity 0.28s ease !important;
 }
 .ld-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
 
-/* ── TOPBAR & NAVIGATION ── */
-.ld-topbar {
-    background: rgba(8, 15, 34, 0.95) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    padding: 0.75rem 1rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    border-bottom: 1px solid rgba(99, 102, 241, 0.14) !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 100 !important;
-    gap: 10px !important;
-    min-height: 56px !important;
-}
-.ld-topbar-left, .ld-topbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
-.ld-menu-btn {
-    width: 40px !important; height: 40px !important; border-radius: 10px !important;
-    background: rgba(255, 255, 255, 0.06) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: #f1f5f9 !important; display: flex !important; align-items: center !important; justify-content: center !important;
-    cursor: pointer !important; flex-shrink: 0 !important; padding: 0 !important; margin: 0 !important;
-}
-.ld-brand-title {
-    font-family: 'Outfit', sans-serif !important; font-size: 0.92rem !important; font-weight: 800 !important;
-    color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
-}
-.ld-notif-btn {
-    position: relative !important; width: 40px !important; height: 40px !important; border-radius: 50% !important;
-    background: rgba(255, 255, 255, 0.06) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: #f1f5f9 !important; display: flex !important; align-items: center !important; justify-content: center !important;
-    cursor: pointer !important; flex-shrink: 0 !important; padding: 0 !important; margin: 0 !important;
-}
-.ld-notif-badge {
-    position: absolute !important; top: -2px !important; right: -2px !important;
-    background: #f87171 !important; color: white !important; font-size: 0.62rem !important; font-weight: 900 !important;
-    padding: 2px 5px !important; border-radius: 10px !important; border: 2px solid #080f22 !important; line-height: 1 !important;
-}
-.ld-avatar-btn {
-    width: 38px !important; height: 38px !important; border-radius: 50% !important;
-    background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: white !important;
-    font-size: 0.95rem !important; font-weight: 800 !important; display: flex !important;
-    align-items: center !important; justify-content: center !important; cursor: pointer !important;
-    flex-shrink: 0 !important; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3) !important;
-}
+/* ── CONTENT AREA ── */
+.ld-content { padding: 1.25rem !important; display: flex !important; flex-direction: column !important; gap: 1.25rem !important; background: #060d1f !important; }
 
-/* ── SEARCH BAR & ACTION BUTTON ── */
-.ld-search-bar-wrap {
-    display: flex !important; gap: 10px !important; align-items: center !important; width: 100% !important; margin-bottom: 1.2rem !important;
-}
-@media (max-width: 500px) {
-    .ld-search-bar-wrap { flex-direction: column !important; }
-    .ld-scan-action-btn { width: 100% !important; }
-}
-.ld-search-box {
-    flex: 1 !important; display: flex !important; align-items: center !important; gap: 8px !important;
-    background: #080f22 !important; border: 1px solid rgba(99, 102, 241, 0.22) !important;
-    border-radius: 12px !important; padding: 0 12px !important; min-height: 44px !important; width: 100% !important;
-}
-.ld-search-box input {
-    background: transparent !important; border: none !important; color: #f1f5f9 !important;
-    font-size: 0.88rem !important; outline: none !important; width: 100% !important; min-height: auto !important; padding: 0 !important; margin: 0 !important;
-}
-.ld-scan-action-btn {
-    height: 44px !important; min-height: 44px !important; white-space: nowrap !important;
-}
+/* ── METRIC STAT CARDS GRID ── */
+.ld-stats-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; width: 100% !important; }
+@media (min-width: 901px) { .ld-stats-grid { grid-template-columns: repeat(4, 1fr) !important; } }
 
-/* ── OVERVIEW & QUICK ACTIONS STYLING ── */
-.ld-overview {
+.ld-stat-card {
     background: linear-gradient(145deg, #0d1630, #111c3a) !important;
-    border: 1px solid rgba(99, 102, 241, 0.18) !important;
-    border-radius: 20px !important;
-    padding: 1.25rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1.2rem !important;
+    border: 1px solid var(--border) !important; border-radius: 18px !important;
+    padding: 14px 12px !important; display: flex !important; flex-direction: column !important;
+    align-items: center !important; text-align: center !important; justify-content: center !important; min-height: 105px !important;
 }
-.ld-overview-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-}
-.ld-overview-header h2 {
-    font-family: 'Outfit', sans-serif !important;
-    font-size: 1.2rem !important;
-    font-weight: 800 !important;
-    color: #ffffff !important;
-    margin: 0 !important;
-}
-.ld-view-reports {
-    background: rgba(99, 102, 241, 0.15) !important;
-    border: 1px solid rgba(99, 102, 241, 0.25) !important;
-    color: #a5b4fc !important;
-    padding: 6px 14px !important;
-    border-radius: 10px !important;
-    font-size: 0.78rem !important;
-    font-weight: 700 !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
-    min-height: 36px !important;
-}
-.ld-view-reports:hover {
-    background: #6366f1 !important;
-    color: #ffffff !important;
-}
+.ld-stat-icon { font-size: 1.4rem !important; margin-bottom: 4px !important; }
+.ld-stat-val { font-family: 'Outfit', sans-serif !important; font-size: 1.4rem !important; font-weight: 900 !important; color: #ffffff !important; line-height: 1.1 !important; }
+.ld-stat-lbl { font-size: 0.72rem !important; color: var(--muted) !important; font-weight: 700 !important; margin-top: 2px !important; }
 
-.ld-quick-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-}
-@media (min-width: 901px) {
-    .ld-quick-grid { grid-template-columns: repeat(4, 1fr) !important; }
-}
-.ld-qa-card {
+/* ── CARDS & TABLES ── */
+.ld-card {
     background: linear-gradient(145deg, #0d1630, #111c3a) !important;
-    border: 1px solid rgba(99, 102, 241, 0.16) !important;
-    border-radius: 16px !important;
-    padding: 12px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-    text-decoration: none !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
-    box-sizing: border-box !important;
-}
-.ld-qa-card:hover { transform: translateY(-2px); border-color: #818cf8 !important; }
-.ld-qa-icon {
-    width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font-size: 1.15rem; margin-bottom: 8px;
-}
-.qa-purple { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
-.qa-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-.qa-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-.qa-orange { background: rgba(249, 115, 22, 0.15); color: #fb923c; }
-
-.ld-qa-name { font-size: 0.82rem; font-weight: 800; color: #ffffff; margin-bottom: 2px; }
-.ld-qa-desc { font-size: 0.68rem; color: #94a3b8; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-
-/* ── SHELL & MAIN ── */
-.ld-shell { display: flex; min-height: 100vh; background: #060d1f; position: relative; overflow-x: hidden; width: 100vw; max-width: 100vw; }
-.ld-main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow-y: auto; padding-bottom: 20px; background: #060d1f; width: 100%; max-width: 100vw; }
-.ld-content { padding: 1.2rem; display: flex; flex-direction: column; gap: 1.2rem; background: #060d1f; width: 100%; max-width: 100%; box-sizing: border-box; }
-
-/* Table containment */
-.ld-shell table, .ld-shell td, .ld-shell th, .ld-shell tr {
-    display: table-cell !important; background: transparent !important; color: #94a3b8 !important;
-}
-.ld-shell tr { display: table-row !important; }
-.ld-shell table { display: table !important; width: 100% !important; border-collapse: collapse !important; }
-
-/* ═══════════════════════════════════════════════
-   RESPONSIVE OVERFLOW & LAYOUT AUDIT PROTECTION
-   Implements 22-Point Audit Rules for Mobile/Tablet
-═══════════════════════════════════════════════ */
-*, *::before, *::after {
-    box-sizing: border-box !important;
+    border: 1px solid var(--border) !important; border-radius: 20px !important;
+    padding: 1.25rem !important; color: #f1f5f9 !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important;
 }
 
-html, body {
-    width: 100% !important;
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
-}
+.ld-table-container { width: 100% !important; max-width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; margin-top: 10px !important; border-radius: 14px !important; }
+table.ld-table { width: 100% !important; border-collapse: collapse !important; text-align: left !important; font-size: 0.85rem !important; }
+table.ld-table th { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; font-weight: 800 !important; padding: 12px 14px !important; border-bottom: 1px solid var(--border) !important; white-space: nowrap !important; }
+table.ld-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba(99, 102, 241, 0.08) !important; color: #94a3b8 !important; vertical-align: middle !important; word-break: break-word !important; }
 
-/* Table Containment & Horizontal Touch Scroll */
-.ld-table-container, .table-responsive, .table-wrapper, div:has(> table) {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    margin-bottom: 1rem !important;
-    border-radius: 14px !important;
-    box-sizing: border-box !important;
+/* ── BUTTONS ── */
+.ld-btn {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    gap: 8px !important; padding: 9px 16px !important; min-height: 40px !important; border-radius: 12px !important;
+    font-size: 0.85rem !important; font-weight: 700 !important; cursor: pointer !important;
+    transition: all 0.2s ease !important; text-decoration: none !important; border: none !important;
+    background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; box-sizing: border-box !important;
 }
+.ld-btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important; }
+.ld-btn-danger { background: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; border: 1px solid rgba(239, 68, 68, 0.25) !important; }
+.ld-btn-success { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; border: 1px solid rgba(16, 185, 129, 0.25) !important; }
+.ld-btn-xs { padding: 4px 10px !important; min-height: 32px !important; font-size: 0.75rem !important; border-radius: 8px !important; }
 
-/* Text Wrapping & Cell Protection */
-.ld-shell td, .ld-shell th, .ld-card, p, span, h1, h2, h3, h4 {
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
+/* ── MODALS ── */
+.ld-modal-overlay {
+    position: fixed !important; inset: 0 !important; background: rgba(3, 7, 18, 0.82) !important;
+    backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 10000 !important; display: none; align-items: center !important; justify-content: center !important;
+    padding: 1rem !important; overflow-y: auto !important;
 }
+.ld-modal-overlay.active { display: flex !important; }
+.ld-modal-content {
+    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    border: 1px solid rgba(99, 102, 241, 0.25) !important; border-radius: 20px !important;
+    padding: 1.5rem !important; width: 100% !important; max-width: 500px !important;
+    max-height: 90vh !important; overflow-y: auto !important; position: relative !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important; color: #f1f5f9 !important;
+}
+.ld-modal-close { position: absolute !important; top: 14px !important; right: 14px !important; background: rgba(255, 255, 255, 0.08) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; color: #f1f5f9 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; }
 
-/* Action Button Groups & Button Wrapping */
-.ld-actions-cell, .action-buttons, .btn-group, td:has(> button) {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    align-items: center !important;
-}
-
-/* Responsive Cards & Containers */
-.ld-card, .ld-stat-card, .card, .ld-qa-card {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-}
-
-/* Inputs & Search Protection */
-.ld-input, .ld-select, .ld-textarea, .search, input, select, textarea {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* Image Scaling Protection */
-img {
-    max-width: 100% !important;
-    height: auto !important;
-}
-
-/* Page Layout & Viewport Height */
-.ld-main {
-    padding-bottom: 30px !important;
-    margin-left: 280px !important;
-    width: calc(100vw - 280px) !important;
-    max-width: 100vw !important;
-}
-@media (max-width: 900px) {
-    .ld-main {
-        margin-left: 0 !important;
-        width: 100vw !important;
-        max-width: 100vw !important;
-    }
-}
+.ld-form-group { display: flex !important; flex-direction: column !important; gap: 4px !important; width: 100% !important; margin-bottom: 12px !important; }
+.ld-form-group label { font-size: 0.78rem !important; font-weight: 700 !important; color: #a5b4fc !important; margin-bottom: 2px !important; }
+.ld-input, .ld-select, .ld-textarea { width: 100% !important; background: #080f22 !important; border: 1px solid rgba(99, 102, 241, 0.25) !important; color: #f1f5f9 !important; border-radius: 12px !important; padding: 10px 14px !important; font-size: 0.88rem !important; min-height: 44px !important; outline: none !important; }
 </style>
 
 <div class="ld-overlay-dim" id="adminDim" onclick="toggleAdminSidebar()"></div>
-<div class="ld-shell">
 
-    <!-- ══ SIDEBAR (Desktop) ══ -->
+<div class="ld-shell">
+    <!-- ══ SIDEBAR DRAWER ══ -->
     <aside class="ld-sidebar" id="adminSidebar">
-        <!-- Fixed Header -->
+        <!-- Header -->
         <div class="ld-sidebar-header">
             <div class="ld-sidebar-user">
                 <% const adminInitial = ((typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name).trim()[0] : 'L').toUpperCase(); %>
@@ -650,7 +293,7 @@ img {
             <button class="ld-sidebar-close" onclick="toggleAdminSidebar()" aria-label="Close sidebar">✕</button>
         </div>
 
-        <!-- Scrollable Navigation Items -->
+        <!-- Navigation List -->
         <nav class="ld-sidebar-nav">
             <button class="ld-nav-item tab-btn active" onclick="switchTab('dashboard', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">📊</span>
@@ -659,14 +302,17 @@ img {
             <button class="ld-nav-item tab-btn" onclick="switchTab('books', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">📚</span>
                 <span class="ld-nav-text">Books Catalog</span>
+                <span class="ld-nav-badge orange"><%= books ? books.length : 0 %></span>
             </button>
             <button class="ld-nav-item tab-btn" onclick="switchTab('members', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">👥</span>
                 <span class="ld-nav-text">Members</span>
+                <span class="ld-nav-badge"><%= total_students || 0 %></span>
             </button>
             <button class="ld-nav-item tab-btn" onclick="switchTab('transactions', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">🔄</span>
                 <span class="ld-nav-text">Transactions</span>
+                <span class="ld-nav-badge"><%= total_issued || 0 %></span>
             </button>
             <button class="ld-nav-item tab-btn" onclick="switchTab('overdue', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">⏰</span>
@@ -676,32 +322,28 @@ img {
             <button class="ld-nav-item tab-btn" onclick="switchTab('reservations', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">📖</span>
                 <span class="ld-nav-text">Book Requests</span>
-                <% if (reservations) { %><span class="ld-nav-badge orange"><%= reservations.length %></span><% } %>
+                <% if (reservations && reservations.length > 0) { %><span class="ld-nav-badge orange"><%= reservations.length %></span><% } %>
             </button>
             <button class="ld-nav-item tab-btn" onclick="switchTab('reviews', this); autoCloseAdminSidebar();">
                 <span class="ld-nav-icon">⭐</span>
                 <span class="ld-nav-text">Reviews</span>
-                <% if (pending_reviews) { %><span class="ld-nav-badge orange"><%= pending_reviews.length %></span><% } %>
+                <% if (pending_reviews && pending_reviews.length > 0) { %><span class="ld-nav-badge orange"><%= pending_reviews.length %></span><% } %>
             </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('moderation', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">🛡</span>
-                <span class="ld-nav-text">Content Review</span>
+            <button class="ld-nav-item tab-btn" onclick="switchTab('reports', this); autoCloseAdminSidebar();">
+                <span class="ld-nav-icon">📈</span>
+                <span class="ld-nav-text">Reports & Data Hub</span>
             </button>
             <a href="/digital-library" class="ld-nav-item">
                 <span class="ld-nav-icon">🌐</span>
                 <span class="ld-nav-text">Digital Library</span>
             </a>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('reports', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">📈</span>
-                <span class="ld-nav-text">Reports & Analytics</span>
-            </button>
             <a href="/admin/settings" class="ld-nav-item">
-                <span class="ld-nav-icon">⚙</span>
+                <span class="ld-nav-icon">⚙️</span>
                 <span class="ld-nav-text">Settings</span>
             </a>
         </nav>
 
-        <!-- Sticky Footer Actions -->
+        <!-- Sticky Footer -->
         <div class="ld-sidebar-footer">
             <a href="/student" class="ld-footer-btn">
                 <span class="ld-nav-icon">🏠</span>
@@ -714,1684 +356,518 @@ img {
         </div>
     </aside>
 
-    <!-- ══ MAIN ══ -->
-    <div class="ld-main">
-
-        <!-- Mobile Top Bar -->
+    <!-- ══ MAIN CONTENT ══ -->
+    <main class="ld-main">
+        <!-- Topbar -->
         <div class="ld-topbar">
             <div class="ld-topbar-left">
-                <button class="ld-menu-btn" onclick="toggleAdminSidebar()" type="button" aria-label="Menu">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                </button>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.1rem;">📚</span>
-                    <span class="ld-brand-title"><%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'Librika' %></span>
-                </div>
+                <button class="ld-menu-btn" onclick="toggleAdminSidebar()" aria-label="Menu">☰</button>
+                <span class="ld-brand-title">📚 Librika Librarian</span>
             </div>
             <div class="ld-topbar-right">
-                <button class="ld-notif-btn" onclick="switchTab('overdue')" type="button">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                    <% if (overdue_count > 0) { %>
-                    <span class="ld-notif-badge"><%= overdue_count %></span>
-                    <% } %>
+                <button class="ld-btn ld-btn-primary ld-btn-xs" onclick="openModal('addBookModal')">+ Add Book</button>
+                <button class="ld-btn ld-btn-success ld-btn-xs" onclick="openModal('addUserModal')">+ Add Member</button>
+                <button class="ld-notif-btn" onclick="switchTab('overdue', this)">
+                    🔔
+                    <% if (overdue_count > 0) { %><span class="ld-notif-badge"><%= overdue_count %></span><% } %>
                 </button>
-                <div class="ld-avatar-btn" onclick="openModal('viewSchoolModal')">
-                    <%= (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name).trim()[0].toUpperCase() : 'L' %>
-                </div>
             </div>
         </div>
 
-        <!-- Page Content -->
         <div class="ld-content">
-
-            <!-- =================== 1. DASHBOARD TAB =================== -->
-            <div id="tab-dashboard" class="tab-content" style="display: block;">
-                <!-- Welcome -->
-                <div class="ld-welcome" style="margin-bottom: 1.5rem;">
-                    <div>
-                        <h1 id="greetingText">Good Morning, <%= (session.user_name || 'Librarian').split(' ')[0] %>!</h1>
-                        <p>Here's what's happening in your library today.</p>
+            <!-- ── TAB: DASHBOARD ── -->
+            <section id="tab-dashboard" class="tab-content">
+                <!-- Stats Grid -->
+                <div class="ld-stats-grid">
+                    <div class="ld-stat-card">
+                        <div class="ld-stat-icon">📚</div>
+                        <div class="ld-stat-val"><%= books ? books.length : 0 %></div>
+                        <div class="ld-stat-lbl">Total Books</div>
                     </div>
-                    <div class="ld-date-chip">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        <span id="todayDate"></span>
+                    <div class="ld-stat-card">
+                        <div class="ld-stat-icon">✅</div>
+                        <div class="ld-stat-val"><%= available_books || 0 %></div>
+                        <div class="ld-stat-lbl">Available Copies</div>
                     </div>
-                </div>
-
-                <!-- Library Overview Card -->
-                <div class="ld-overview" style="margin-bottom: 1.5rem;">
-                    <div class="ld-overview-header">
-                        <h2>Library Overview</h2>
-                        <button class="ld-view-reports" onclick="switchTab('reports')">View Reports</button>
+                    <div class="ld-stat-card">
+                        <div class="ld-stat-icon">🔄</div>
+                        <div class="ld-stat-val"><%= total_issued || 0 %></div>
+                        <div class="ld-stat-lbl">Active Loans</div>
                     </div>
-
-                    <div class="ld-stats-grid">
-                        <!-- Total Books -->
-                        <div class="ld-stat-card">
-                            <div class="ld-stat-icon-wrap">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                            </div>
-                            <div class="ld-stat-val"><%= books.length %></div>
-                            <div class="ld-stat-label">Total Books</div>
-                            <span class="ld-stat-delta up">↑ <%= available_books %> available</span>
-                        </div>
-                        <!-- Total Members -->
-                        <div class="ld-stat-card">
-                            <div class="ld-stat-icon-wrap">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            </div>
-                            <div class="ld-stat-val"><%= total_students %></div>
-                            <div class="ld-stat-label">Total Members</div>
-                            <span class="ld-stat-delta up">↑ Active</span>
-                        </div>
-                        <!-- Issued Books -->
-                        <div class="ld-stat-card">
-                            <div class="ld-stat-icon-wrap">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                            </div>
-                            <div class="ld-stat-val"><%= transactions.length %></div>
-                            <div class="ld-stat-label">Issued Books</div>
-                            <span class="ld-stat-delta up">↑ <%= total_issued %> total</span>
-                        </div>
-                        <!-- Overdue -->
-                        <div class="ld-stat-card">
-                            <div class="ld-stat-icon-wrap">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            </div>
-                            <div class="ld-stat-val"><%= overdue_count %></div>
-                            <div class="ld-stat-label">Overdue Books</div>
-                            <span class="ld-stat-delta <% if (overdue_count > 0) { %>down<% } else { %>up<% } %>">
-                                <% if (overdue_count > 0) { %>⚠ Needs attention<% } else { %>✓ All good<% } %>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="ld-active-members">
-                        <span class="ld-active-label">Active Members</span>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div class="ld-avatar-stack">
-                                <% for (let sIdx=0; sIdx<Math.min(students.length,5); sIdx++) { let s = students[sIdx]; %>
-                                <div class="ld-avatar-stack-item"><%= s.name ? s.name[0].toUpperCase() : 'M' %></div>
-                                <% } %>
-                            </div>
-                            <% if (total_students > 5) { %>
-                            <span class="ld-avatar-stack-more" style="color:white; font-size:0.68rem; font-weight:800;">+<%= total_students - 5 %></span>
-                            <% } %>
-                        </div>
+                    <div class="ld-stat-card">
+                        <div class="ld-stat-icon">⏰</div>
+                        <div class="ld-stat-val" style="color: #f87171;"><%= overdue_count || 0 %></div>
+                        <div class="ld-stat-lbl">Overdue Items</div>
                     </div>
                 </div>
 
-                <!-- Search -->
-                <div class="ld-search-bar-wrap">
-                    <div class="ld-search-box">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted); flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="globalSearch" placeholder="Search books, members, or ID..." onkeyup="doSearch(this.value)">
-                    </div>
-                    <% if ('manage_books' in (session.permissions || []) && (typeof school_perms !== 'undefined' && school_perms && school_perms.canUseAIScanner)) { %>
-                        <a href="/admin/scanner" class="ld-btn ld-btn-primary ld-scan-action-btn" style="text-decoration: none;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                            <span>Smart Scan</span>
-                        </a>
-                    <% } else { %>
-                        <button class="ld-btn ld-btn-primary ld-scan-action-btn" onclick="alert('Smart Scan requires AI Scanner permissions')">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="4" height="16"/><rect x="8" y="4" width="2" height="16"/><rect x="12" y="4" width="4" height="16"/><rect x="18" y="4" width="4" height="16"/></svg>
-                            <span>Scan ISBN</span>
-                        </button>
-                    <% } %>
-                </div>
-
-                <!-- Quick Actions -->
-                <div style="margin-bottom: 1.5rem;">
-                    <h2 class="ld-section-title">Quick Actions</h2>
-                    <div class="ld-quick-grid">
-                        <a href="/admin/issue" class="ld-qa-card">
-                            <div class="ld-qa-icon qa-purple">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Issue Book</span>
-                            <span class="ld-qa-desc">Issue a book to member</span>
-                        </a>
-                        <button class="ld-qa-card" onclick="switchTab('transactions')" style="background: var(--white); border: 1px solid var(--border); width: 100%;">
-                            <div class="ld-qa-icon qa-green">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><polyline points="9 12 11 14 15 10"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Return Book</span>
-                            <span class="ld-qa-desc">Receive returned books</span>
-                        </button>
-                        <a href="/admin/add_book" class="ld-qa-card">
-                            <div class="ld-qa-icon qa-blue">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Add Book</span>
-                            <span class="ld-qa-desc">Add new book to collection</span>
-                        </a>
-                        <a href="/admin/acquisitions" class="ld-qa-card">
-                            <div class="ld-qa-icon qa-teal" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
-                                📦
-                            </div>
-                            <span class="ld-qa-name">Book Acquisition</span>
-                            <span class="ld-qa-desc">Upload invoices &amp; catalog books</span>
-                        </a>
-                        <button class="ld-qa-card" onclick="openModal('addUserModal')" style="background: var(--white); border: 1px solid var(--border); width: 100%;">
-                            <div class="ld-qa-icon qa-orange">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Add Member</span>
-                            <span class="ld-qa-desc">Register a new member</span>
-                        </button>
-                        <button class="ld-qa-card" onclick="switchTab('books')" style="background: var(--white); border: 1px solid var(--border); width: 100%;">
-                            <div class="ld-qa-icon qa-teal">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Search Books</span>
-                            <span class="ld-qa-desc">Search in your collection</span>
-                        </button>
-                        <button class="ld-qa-card" onclick="switchTab('overdue')" style="background: var(--white); border: 1px solid var(--border); width: 100%;">
-                            <div class="ld-qa-icon qa-red">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Overdue Books</span>
-                            <span class="ld-qa-desc">View overdue books</span>
-                        </button>
-                        <button class="ld-qa-card" onclick="switchTab('members')" style="background: var(--white); border: 1px solid var(--border); width: 100%;">
-                            <div class="ld-qa-icon qa-purple">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Member List</span>
-                            <span class="ld-qa-desc">View all library members</span>
-                        </button>
-                        <button class="ld-qa-card" onclick="switchTab('reports')" style="background: var(--white); border: 1px solid var(--border); width: 100%;">
-                            <div class="ld-qa-icon qa-amber">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Data Hub</span>
-                            <span class="ld-qa-desc">Import/Export library files</span>
-                        </button>
-                        <button class="ld-qa-card" onclick="switchTab('reservations')" style="background: var(--white); border: 1px solid var(--border); width: 100%; position:relative;">
-                            <div class="ld-qa-icon" style="background:#fff7ed; color:#f97316;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-                            </div>
-                            <span class="ld-qa-name">Book Requests</span>
-                            <span class="ld-qa-desc">Student borrow requests</span>
-                            <% if (reservations) { %>
-                            <span style="position:absolute;top:6px;right:8px;background:#f97316;color:white;font-size:0.6rem;font-weight:800;padding:1px 6px;border-radius:20px;"><%= reservations.length %></span>
-                            <% } %>
-                        </button>
-                    </div>
-                </div>
-
-                <% if (reservations) { %>
-                <!-- Pending Requests Alert Banner -->
-                <div onclick="switchTab('reservations')" style="background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1.5px solid #f97316; border-radius: 14px; padding: 1rem 1.25rem; display:flex; align-items:center; gap:0.85rem; cursor:pointer; margin-bottom: 1.5rem; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-                    <div style="background:#f97316; color:white; width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;">📋</div>
-                    <div style="flex:1; min-width:0;">
-                        <div style="font-weight:800; font-size:0.9rem; color:#c2410c;"><%= reservations.length %> Pending Book Request<%= reservations.length !== 1 ? 's' : '' %></div>
-                        <div style="font-size:0.75rem; color:#ea580c; font-weight:500; margin-top:2px;">Students are waiting — click to review && approve or reject</div>
-                    </div>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </div>
-                <% } %>
-
-                <!-- Recent Activities -->
-                <div>
-                    <div class="ld-activity-header">
-                        <h2 class="ld-section-title" style="margin-bottom:0;">Recent Activities</h2>
-                        <button class="ld-view-all" onclick="switchTab('transactions')">
-                            View All
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                        </button>
-                    </div>
-                    <div class="ld-activity-list">
-                        <% if (transactions) { %>
-                            <% for (let txIdx=0; txIdx<Math.min(transactions.length,6); txIdx++) { let tx = transactions[txIdx]; %>
-                            <div class="ld-activity-card">
-                                <div class="ld-activity-icon <% if (tx.is_overdue) { %>qa-red<% } else { %>qa-green<% } %>">
-                                    <% if (tx.is_overdue) { %>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                    <% } else { %>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                                    <% } %>
-                                </div>
-                                <div class="ld-activity-info">
-                                    <div class="ld-activity-title">
-                                        "<%= tx.book_title %>" <% if (tx.is_overdue) { %>OVERDUE for<% } else { %>issued to<% } %> <%= tx.user_name %>
-                                    </div>
-                                    <div class="ld-activity-meta">
-                                        <%= tx.issue_date %> &bull; <span>Due: <%= tx.due_date %></span>
-                                        <% if (tx.fine && tx.fine > 0) { %> &bull; <span style="color:var(--lr); font-weight: 700;">Fine: ₹<%= tx.fine %></span><% } %>
-                                    </div>
-                                </div>
-                                <a href="/admin/return/<%= tx.id %>" class="ld-activity-view">Return</a>
-                            </div>
-                            <% } %>
-                        <% } else { %>
-                            <div style="text-align:center; padding:2.5rem; background:var(--white); border-radius:var(--radius); border:1px solid var(--border);">
-                                <div style="font-size:2.5rem; margin-bottom:0.75rem;">📋</div>
-                                <p style="color:var(--muted); font-size:0.85rem; font-weight:600;">No active transactions</p>
-                                <p style="color:var(--muted); font-size:0.75rem; margin-top:4px;">Issue a book to get started</p>
-                            </div>
-                        <% } %>
-                    </div>
-                </div>
-            </div>
-
-            <!-- =================== RESERVATIONS TAB =================== -->
-            <div id="tab-reservations" class="tab-content" style="display: none;">
-                <div class="ld-panel">
-                    <div class="ld-panel-header">
-                        <div>
-                            <h3 class="ld-panel-title">📋 Book Requests</h3>
-                            <p style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Students who have requested to borrow a book. Approve to issue, or reject to decline.</p>
-                        </div>
-                    </div>
-
-                    <% if (reservations) { %>
-                    <div class="ld-table-responsive">
-                        <table class="ld-table" id="reservationsTable">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Book</th>
-                                    <th>Requested On</th>
-                                    <th style="text-align:right;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% for (const res of reservations) { %>
-                                <tr id="res-row-<%= res.id %>">
-                                    <td>
-                                        <div style="font-weight:700;color:var(--text);"><%= res.student_name %></div>
-                                        <div style="font-size:0.72rem;color:var(--muted);"><%= res.student_phone || '' %></div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight:700;color:var(--text);"><%= res.book_title %></div>
-                                        <div style="font-size:0.72rem;color:var(--muted);"><%= res.book_author || '' %></div>
-                                    </td>
-                                    <td style="font-size:0.8rem;color:var(--muted);"><%= res.created_at %></td>
-                                    <td style="text-align:right;">
-                                        <div style="display:inline-flex;gap:8px;">
-                                            <button onclick="approveReservation(<%= res.id %>, <%= res.book_id %>, <%= res.user_id %>)"
-                                                style="background:var(--lg);color:white;border:none;border-radius:8px;padding:6px 14px;font-weight:700;font-size:0.78rem;cursor:pointer;transition:opacity 0.2s;"
-                                                onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                                                ✅ Approve
-                                            </button>
-                                            <button onclick="rejectReservation(<%= res.id %>)"
-                                                style="background:#fee2e2;color:#ef4444;border:2px solid #ef4444;border-radius:8px;padding:6px 14px;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.2s;"
-                                                onmouseover="this.style.background='#ef4444';this.style.color='white';" onmouseout="this.style.background='#fee2e2';this.style.color='#ef4444';">
-                                                ✕ Reject
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                    <% } else { %>
-                    <div style="text-align:center;padding:3rem;color:var(--muted);">
-                        <div style="font-size:3rem;margin-bottom:1rem;">📭</div>
-                        <div style="font-weight:700;font-size:1rem;">No Pending Requests</div>
-                        <div style="font-size:0.8rem;margin-top:0.5rem;">When students reserve books from the catalog, they'll appear here.</div>
-                    </div>
-                    <% } %>
-                </div>
-            </div>
-
-            <!-- =================== REVIEWS TAB =================== -->
-            <div id="tab-reviews" class="tab-content" style="display: none;">
-                <div class="ld-panel">
-                    <div class="ld-panel-header">
-                        <div>
-                            <h3 class="ld-panel-title">✍️ Pending Book Reviews</h3>
-                            <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Review student book summaries && approve points allocation (+20 points).</p>
-                        </div>
-                    </div>
-
-                    <div class="ld-table-responsive">
-                        <% if (pending_reviews) { %>
+                <!-- Recent Transactions Table -->
+                <div class="ld-card" style="margin-top: 1rem;">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 10px 0;">🔄 Recent Transactions</h3>
+                    <div class="ld-table-container">
                         <table class="ld-table">
                             <thead>
                                 <tr>
-                                    <th>Student</th>
-                                    <th>Book/Resource</th>
-                                    <th>Type</th>
-                                    <th>Review Content</th>
-                                    <th style="text-align:right;">Actions</th>
+                                    <th>Book Title</th>
+                                    <th>Member Name</th>
+                                    <th>Issue Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <% for (const r of pending_reviews) { %>
-                                <tr>
-                                    <td>
-                                        <div style="font-weight:700;"><%= r.student_name %></div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight:700;"><%= r.book_title %></div>
-                                    </td>
-                                    <td>
-                                        <span class="ld-badge" style="background: var(--purple-light); color: var(--purple);">
-                                            <%= r.book_type.toUpperCase() %>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style="font-size:0.8rem; line-height:1.4;">
-                                            <strong>What I learned:</strong> <%= r.learned %><br>
-                                            <strong>Favorite:</strong> <%= r.favorite %><br>
-                                            <strong>Recommend:</strong> <%= r.recommend %>
-                                        </div>
-                                    </td>
-                                    <td style="text-align:right; white-space:nowrap;">
-                                        <form action="/admin/review/<%= r.id %>/approve" method="POST" style="display:inline;">
-                                            <button type="submit" class="ld-btn" style="font-size:0.75rem; padding:6px 12px; background:#10b981; border:none; color:white;">Approve</button>
-                                        </form>
-                                        <form action="/admin/review/<%= r.id %>/reject" method="POST" style="display:inline; margin-left:4px;">
-                                            <button type="submit" class="ld-btn" style="font-size:0.75rem; padding:6px 12px; background:#ef4444; border:none; color:white;">Reject</button>
-                                        </form>
-                                    </td>
-                                </tr>
+                                <% if (transactions && transactions.length > 0) { %>
+                                    <% transactions.slice(0, 10).forEach(t => { %>
+                                        <tr>
+                                            <td style="font-weight: 700; color: #ffffff;"><%= t.title %></td>
+                                            <td><%= t.user_name || t.student_name || 'Member' %></td>
+                                            <td><%= t.issue_date %></td>
+                                            <td><%= t.due_date %></td>
+                                            <td>
+                                                <% if (t.return_date) { %>
+                                                    <span style="color: #34d399; font-weight: 700;">Returned</span>
+                                                <% } else if (t.is_overdue) { %>
+                                                    <span style="color: #f87171; font-weight: 700;">OVERDUE</span>
+                                                <% } else { %>
+                                                    <span style="color: #fb923c; font-weight: 700;">Issued</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (!t.return_date) { %>
+                                                    <form action="/admin/return" method="POST" style="display: inline;">
+                                                        <input type="hidden" name="transaction_id" value="<%= t.id %>">
+                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Return</button>
+                                                    </form>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="6" style="text-align: center; color: var(--muted);">No transactions found.</td></tr>
                                 <% } %>
                             </tbody>
                         </table>
-                        <% } else { %>
-                        <div style="text-align:center; padding:3rem; color:var(--muted);">No pending reviews found.</div>
-                        <% } %>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- =================== 2. BOOKS TAB =================== -->
-            <div id="tab-books" class="tab-content" style="display: none;">
-                <div class="ld-panel">
-                    <div class="ld-panel-header">
-                        <div>
-                            <h3 class="ld-panel-title">See Books (Repository)</h3>
-                            <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Manage catalog inventory, copies, && download barcodes. Click any row to edit or manage.</p>
-                        </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <button onclick="confirmDeleteAll()" class="ld-btn" style="background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;display:flex;align-items:center;gap:6px;" title="Delete all books in this library">
-                                <span style="font-size:1rem;">🗑️</span> Delete All Books
-                            </button>
-                            <a href="/admin/add_book" class="ld-btn">+ Add Book</a>
-                        </div>
+            <!-- ── TAB: BOOKS CATALOG ── -->
+            <section id="tab-books" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0;">📚 Books Catalog</h3>
+                        <button class="ld-btn ld-btn-primary" onclick="openModal('addBookModal')">+ Add New Book</button>
                     </div>
 
-                    <div class="ld-search-wrap" style="box-shadow: none; border-color: var(--border);">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted); flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="booksSearchInput" placeholder="Search by title, author, barcode..." onkeyup="filterTable('booksSearchInput', 'booksTable', [0, 1])">
-                    </div>
-
-                    <div class="ld-table-responsive">
-                        <% if (books) { %>
-                        <table class="ld-table" id="booksTable">
+                    <div class="ld-table-container">
+                        <table class="ld-table">
                             <thead>
                                 <tr>
-                                    <th style="width:52px;">Cover</th>
-                                    <th>Asset Details</th>
-                                    <th>Barcode ID</th>
-                                    <th>Allocation Progress</th>
-                                    <th>Availability</th>
-                                    <th style="text-align:right;">Actions</th>
+                                    <th>Cover</th>
+                                    <th>Title & Author</th>
+                                    <th>Genre</th>
+                                    <th>Shelf</th>
+                                    <th>Available / Total</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <% for (const book of books) { %>
-                                <tr onclick="openBookMenu(<%= book.id %>, '<%= book.title %>', '<%= book.author %>', '<%= book.cover_url || '' %>', '<%= book.barcode_id %>', <%= book.total_copies %>, <%= book.available_copies %>)" style="cursor:pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--lp-light)'" onmouseout="this.style.background=''">
-                                    <td>
-                                        <% var isbn = book.isbn || ''; %>
-                                        <% if (book.cover_url) { %>
-                                            <img src="<%= book.cover_url %>" alt="cover"
-                                                 data-isbn="<%= isbn %>"
-                                                 style="width:40px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"
-                                                 onerror="bookCoverFallback(this)">
-                                        <% } else if (isbn) { %>
-                                            <img src="https://covers.openlibrary.org/b/isbn/<%= isbn %>-S.jpg" alt="cover"
-                                                 data-isbn="<%= isbn %>"
-                                                 style="width:40px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"
-                                                 onerror="this.onerror=null; this.outerHTML='<div style=&quot;width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;&quot;>📖</div>';">
-                                        <% } else { %>
-                                            <div style="width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 700; color: var(--text);"><%= book.title %></div>
-                                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 1px;">by <%= book.author %></div>
-                                    </td>
-                                    <td><code style="background: var(--bg); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; font-family: monospace;"><%= book.barcode_id %></code></td>
-                                    <td>
-                                        <% var pct = 0; %>
-                                        <% if (book.total_copies > 0) { %>
-                                            <% var pct = (book.available_copies / book.total_copies * 100); %>
-                                        <% } %>
-                                        <div class="ld-progress-container">
-                                            <div class="ld-progress-bar">
-                                                <div class="ld-progress-fill" style="width: <%= pct %>%; background: <% if (pct < 20) { %>var(--lr)<% } else if (pct < 50) { %>var(--lam)<% } else { %>var(--lp)<% } %>;"></div>
-                                            </div>
-                                            <span style="font-size: 0.72rem; font-weight: 700; color: var(--mid);"><%= pct %>%</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="ld-badge <% if (book.available_copies > 0) { %>ld-badge-success<% } else { %>ld-badge-danger<% } %>">
-                                            <%= book.available_copies %> of <%= book.total_copies %> left
-                                        </span>
-                                    </td>
-                                    <td style="text-align:right;" onclick="event.stopPropagation()">
-                                        <div style="display:inline-flex; gap:6px;">
-                                            <a href="/static/barcodes/<%= book.barcode_id %>.png" download class="ld-btn-alt" style="font-size: 0.7rem; padding: 6px 12px;">Barcode</a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <% if (books && books.length > 0) { %>
+                                    <% books.forEach(b => { %>
+                                        <tr>
+                                            <td>
+                                                <img src="<%= b.cover_url || '/static/placeholder-cover.jpg' %>" alt="Cover" style="width: 36px; height: 50px; object-fit: cover; border-radius: 6px;">
+                                            </td>
+                                            <td>
+                                                <div style="font-weight: 700; color: #ffffff;"><%= b.title %></div>
+                                                <div style="font-size: 0.75rem; color: var(--muted);"><%= b.author %></div>
+                                            </td>
+                                            <td><%= b.genre || 'General' %></td>
+                                            <td><%= b.shelf_location || 'Main Shelf' %></td>
+                                            <td>
+                                                <span style="color: #34d399; font-weight: 700;"><%= b.available_copies %></span> / <%= b.quantity %>
+                                            </td>
+                                            <td>
+                                                <div style="display: flex; gap: 6px;">
+                                                    <form action="/admin/book/delete" method="POST" onsubmit="return confirm('Delete this book?')">
+                                                        <input type="hidden" name="book_id" value="<%= b.id %>">
+                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-danger">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="6" style="text-align: center; color: var(--muted);">No books in catalog.</td></tr>
                                 <% } %>
                             </tbody>
                         </table>
-                        <% } else { %>
-                        <div style="text-align: center; padding: 3rem; color: var(--muted);">No books in repository. Click Add Book to create one.</div>
-                        <% } %>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- =================== BOOK ACTION MODAL =================== -->
-            <div id="bookActionModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)closeBookMenu()">
-                <div class="ld-modal-content" style="max-width:440px; padding:0; overflow:hidden; border-radius:20px;">
-
-                    <!-- Header with cover -->
-                    <div id="bamHeader" style="background: linear-gradient(135deg, var(--lp), #7c3aed); padding: 1.5rem; display:flex; gap:1rem; align-items:center;">
-                        <img id="bamCover" src="" alt="cover" style="width:54px;height:72px;object-fit:cover;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.3); background:#fff; flex-shrink:0;" onerror="this.style.display='none';document.getElementById('bamCoverFallback').style.display='flex'">
-                        <div id="bamCoverFallback" style="display:none;width:54px;height:72px;background:rgba(255,255,255,0.2);border-radius:8px;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">📖</div>
-                        <div style="flex:1; min-width:0;">
-                            <div id="bamTitle" style="color:white;font-family:'Outfit';font-weight:800;font-size:1.05rem;line-height:1.3; word-break:break-word;"></div>
-                            <div id="bamAuthor" style="color:rgba(255,255,255,0.75);font-size:0.78rem;margin-top:3px;"></div>
-                            <div id="bamCopies" style="color:rgba(255,255,255,0.9);font-size:0.72rem;margin-top:6px;font-weight:700;"></div>
-                        </div>
-                        <button onclick="closeBookMenu()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;align-self:flex-start;flex-shrink:0;">✕</button>
+            <!-- ── TAB: MEMBERS ── -->
+            <section id="tab-members" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0;">👥 Registered Members</h3>
+                        <button class="ld-btn ld-btn-success" onclick="openModal('addUserModal')">+ Add Member</button>
                     </div>
 
-                    <!-- Action buttons grid -->
-                    <div id="bamActions" style="padding: 1.25rem; display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
-                        <button onclick="bamEdit()" style="background:var(--lp-light);border:2px solid var(--lp);border-radius:14px;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='var(--lp)';this.querySelector('div').style.color='white';this.querySelector('span').style.color='white'" onmouseout="this.style.background='var(--lp-light)';this.querySelector('div').style.color='var(--lp)';this.querySelector('span').style.color='var(--muted)'">
-                            <div style="font-size:1.5rem;">✏️</div>
-                            <div>
-                                <div style="font-weight:800;font-size:0.85rem;color:var(--lp);font-family:'Outfit';">Edit Book</div>
-                                <span style="font-size:0.68rem;color:var(--muted);">Update details</span>
-                            </div>
-                        </button>
-                        <button onclick="bamAddCopy()" style="background:var(--lg-light);border:2px solid var(--lg);border-radius:14px;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='var(--lg)';this.querySelector('div:first-child').style.opacity='1'" onmouseout="this.style.background='var(--lg-light)'">
-                            <div style="font-size:1.5rem;">➕</div>
-                            <div>
-                                <div style="font-weight:800;font-size:0.85rem;color:var(--lg);font-family:'Outfit';">Add Copy</div>
-                                <span style="font-size:0.68rem;color:var(--muted);">Increase stock</span>
-                            </div>
-                        </button>
-                        <button onclick="bamIssue()" style="background:#fff7ed;border:2px solid #f97316;border-radius:14px;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;">
-                            <div style="font-size:1.5rem;">📤</div>
-                            <div>
-                                <div style="font-weight:800;font-size:0.85rem;color:#f97316;font-family:'Outfit';">Issue Book</div>
-                                <span style="font-size:0.68rem;color:var(--muted);">Lend to member</span>
-                            </div>
-                        </button>
-                        <button onclick="bamView()" style="background:var(--lb-light);border:2px solid var(--lb);border-radius:14px;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s;">
-                            <div style="font-size:1.5rem;">👁️</div>
-                            <div>
-                                <div style="font-weight:800;font-size:0.85rem;color:var(--lb);font-family:'Outfit';">View Details</div>
-                                <span style="font-size:0.68rem;color:var(--muted);">Full catalog info</span>
-                            </div>
-                        </button>
-
-                        <!-- Delete tile — full width, 5th option -->
-                        <button onclick="bamDelete()" id="bamDeleteBtn"
-                            style="grid-column:1/-1;background:#fff0f0;border:2px solid #ef4444;border-radius:14px;padding:0.9rem 1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all 0.2s;"
-                            onmouseover="this.style.background='#ef4444';this.style.borderColor='#dc2626';this.querySelectorAll('div,span').forEach(e=>e.style.color='#fff');"
-                            onmouseout="this.style.background='#fff0f0';this.style.borderColor='#ef4444';this.querySelectorAll('div,span').forEach(e=>e.style.color='');">
-                            <div style="font-size:1.4rem;">🗑️</div>
-                            <div>
-                                <div style="font-weight:800;font-size:0.85rem;color:#ef4444;font-family:'Outfit';">Delete Book</div>
-                                <span style="font-size:0.68rem;color:var(--muted);">Permanently remove</span>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- =================== EDIT BOOK MODAL =================== -->
-            <div id="editBookModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('editBookModal').style.display='none'">
-                <div class="ld-modal-content" style="max-width:520px;">
-                    <button class="ld-modal-close" onclick="document.getElementById('editBookModal').style.display='none'">✕</button>
-                    <h3 class="ld-modal-title">✏️ Edit Book</h3>
-                    <form id="editBookForm" onsubmit="submitEditBook(event)">
-                        <input type="hidden" id="editBookId">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                            <div style="grid-column:1/-1;">
-                                <label class="ld-label">Title</label>
-                                <input class="ld-input" id="editTitle" placeholder="Book title" required>
-                            </div>
-                            <div style="grid-column:1/-1;">
-                                <label class="ld-label">Author</label>
-                                <input class="ld-input" id="editAuthor" placeholder="Author name" required>
-                            </div>
-                            <div>
-                                <label class="ld-label">Publisher</label>
-                                <input class="ld-input" id="editPublisher" placeholder="Publisher">
-                            </div>
-                            <div>
-                                <label class="ld-label">ISBN</label>
-                                <input class="ld-input" id="editIsbn" placeholder="ISBN">
-                            </div>
-                            <div>
-                                <label class="ld-label">Genre / Category</label>
-                                <input class="ld-input" id="editGenre" placeholder="Genre">
-                            </div>
-                            <div>
-                                <label class="ld-label">Class / Grade</label>
-                                <input class="ld-input" id="editClass" placeholder="e.g. IX, 10">
-                            </div>
-                            <div>
-                                <label class="ld-label">Subject</label>
-                                <input class="ld-input" id="editSubject" placeholder="Subject">
-                            </div>
-                            <div>
-                                <label class="ld-label">Language</label>
-                                <input class="ld-input" id="editLanguage" placeholder="Language">
-                            </div>
-                            <div style="grid-column:1/-1;">
-                                <label class="ld-label">Description</label>
-                                <textarea class="ld-input" id="editDescription" rows="3" placeholder="Short description"></textarea>
-                            </div>
-                        </div>
-                        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
-                            <button type="button" onclick="document.getElementById('editBookModal').style.display='none'" class="ld-btn-alt" style="flex:1;">Cancel</button>
-                            <button type="submit" class="ld-btn" style="flex:2;" id="editBookSaveBtn">Save Changes</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-
-            <!-- =================== DELETE BOOK CONFIRM MODAL =================== -->
-            <div id="deleteBookModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeleteBookModal()">
-                <div class="ld-modal-content" style="max-width:400px;text-align:center;">
-                    <div style="font-size:3rem;margin-bottom:0.5rem;">🗑️</div>
-                    <h3 class="ld-modal-title" style="color:#ef4444;" id="deleteBookModalTitle">Delete Book?</h3>
-                    <p id="deleteBookModalMsg" style="color:var(--muted);font-size:0.88rem;margin:0.5rem 0 1.5rem;">This will permanently remove this book && all its transaction history.</p>
-                    <div style="display:flex;gap:0.75rem;">
-                        <button onclick="closeDeleteBookModal()" class="ld-btn-alt" style="flex:1;">Cancel</button>
-                        <button onclick="confirmDeleteBookNow()" id="deleteBookConfirmBtn" class="ld-btn" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;">Yes, Delete</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- =================== DELETE ALL BOOKS CONFIRM MODAL =================== -->
-            <div id="deleteAllBooksModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeleteAllModal()">
-                <div class="ld-modal-content" style="max-width:420px;text-align:center;">
-                    <div style="font-size:3rem;margin-bottom:0.5rem;">☢️</div>
-                    <h3 class="ld-modal-title" style="color:#ef4444;">Delete ALL Books?</h3>
-                    <p style="color:var(--muted);font-size:0.88rem;margin:0.5rem 0;">This will permanently wipe <strong>every book</strong> in this library's catalog including all transaction history. This cannot be undone.</p>
-                    <p style="color:#ef4444;font-size:0.8rem;font-weight:700;margin-bottom:1.25rem;">Type <code>DELETE ALL</code> below to confirm:</p>
-                    <input id="deleteAllConfirmInput" class="ld-input" placeholder="DELETE ALL" style="text-align:center;letter-spacing:2px;font-weight:700;margin-bottom:1rem;">
-                    <div style="display:flex;gap:0.75rem;">
-                        <button onclick="closeDeleteAllModal()" class="ld-btn-alt" style="flex:1;">Cancel</button>
-                        <button onclick="confirmDeleteAllNow()" id="deleteAllConfirmBtn" class="ld-btn" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;">Wipe All Books</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- =================== 3. MEMBERS TAB =================== -->
-            <div id="tab-members" class="tab-content" style="display: none;">
-                <div class="ld-panel">
-                    <div class="ld-panel-header">
-                        <div>
-                            <h3 class="ld-panel-title">User Management</h3>
-                            <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">View registered students, ban accounts, or delete records.</p>
-                        </div>
-                        <button class="ld-btn" onclick="openModal('addUserModal')">+ Create User</button>
-                    </div>
-
-                    <div class="ld-search-wrap" style="box-shadow: none; border-color: var(--border);">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted); flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="membersSearchInput" placeholder="Search by name, phone, email, admission ID..." onkeyup="filterTable('membersSearchInput', 'membersTable', [0, 1])">
-                    </div>
-
-                    <div class="ld-table-responsive">
-                        <% if (students) { %>
-                        <table class="ld-table" id="membersTable">
+                    <div class="ld-table-container">
+                        <table class="ld-table">
                             <thead>
                                 <tr>
                                     <th>Name</th>
-                                    <th>Contact Info</th>
-                                    <th>Class / Stream</th>
                                     <th>Role</th>
+                                    <th>Class & Sec</th>
+                                    <th>Admission No</th>
                                     <th>Status</th>
-                                    <th style="text-align:right;">Actions</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <% for (const u of students) { %>
-                                <tr>
-                                    <td>
-                                        <div style="display:flex; align-items:center; gap:8px;">
-                                            <div class="ld-sidebar-avatar" style="width:30px; height:30px; font-size:0.75rem; background: var(--lp-light); color: var(--lp);"><%= u.name ? u.name[0].toUpperCase() : 'M' %></div>
-                                            <div style="font-weight: 700; color: var(--text);"><%= u.name %></div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style="font-size:0.8rem; font-weight:600;"><%= u.phone %></div>
-                                        <div style="font-size:0.7rem; color:var(--muted);"><%= u.email || 'No Email' %></div>
-                                    </td>
-                                    <td>
-                                        <% if (u.role == 'student') { %>
-                                        <div style="font-weight:700;">Class <%= u.class || 'N/A' %></div>
-                                        <div style="font-size:0.7rem; color:var(--muted);">ID: <%= u.admission_no || 'N/A' %></div>
-                                        <% } else { %>
-                                        <div style="color:var(--muted); font-style:italic;">N/A (Staff)</div>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <span class="ld-badge <% if (u.role == 'admin') { %>ld-badge-warning<% } else { %>ld-badge-info<% } %>">
-                                            <%= u.role.toUpperCase() %>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="ld-badge <% if (u.is_banned) { %>ld-badge-danger<% } else { %>ld-badge-success<% } %>">
-<%= u.is_banned ? 'Banned' : 'Active' %>
-                                        </span>
-                                    </td>
-                                    <td style="text-align:right;">
-                                        <div style="display:inline-flex; gap:6px; align-items:center;">
-                                            <button class="ld-btn-alt" style="font-size:0.7rem; padding:6px 12px;" onclick="openViewUserModal(<%= u %>)">Info</button>
-                                            
-                                            <form action="/admin/student/<%= u.id %>/toggle-ban" method="POST" style="margin:0;">
-                                                    <button type="submit" class="ld-btn-alt <% if (u.is_banned) { %>ld-btn-success<% } else { %>ld-btn-danger<% } %>" style="font-size: 0.7rem; padding: 6px 12px;">
-<%= u.is_banned ? 'Unban' : 'Ban' %>
-                                                    </button>
-                                            </form>
-
-                                            <form action="/admin/student/<%= u.id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('WARNING: Permanently delete this user? This cannot be undone.');">
-                                                <button type="submit" class="ld-btn-alt ld-btn-danger" style="font-size: 0.7rem; padding: 6px 12px;">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <% if (students && students.length > 0) { %>
+                                    <% students.forEach(s => { %>
+                                        <tr>
+                                            <td style="font-weight: 700; color: #ffffff;"><%= s.name || s.user_name %></td>
+                                            <td><span style="text-transform: capitalize;"><%= s.role || 'Student' %></span></td>
+                                            <td><%= s.class || '-' %> <%= s.section ? '(' + s.section + ')' : '' %></td>
+                                            <td><%= s.admission_no || s.user_id || '-' %></td>
+                                            <td>
+                                                <% if (s.is_banned) { %>
+                                                    <span style="color: #f87171; font-weight: 700;">Banned</span>
+                                                <% } else { %>
+                                                    <span style="color: #34d399; font-weight: 700;">Active</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <div style="display: flex; gap: 6px;">
+                                                    <form action="/admin/student/<%= s.id %>/toggle-ban" method="POST">
+                                                        <button type="submit" class="ld-btn ld-btn-xs <%= s.is_banned ? 'ld-btn-success' : 'ld-btn-danger' %>"><%= s.is_banned ? 'Unban' : 'Ban' %></button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="6" style="text-align: center; color: var(--muted);">No registered members.</td></tr>
                                 <% } %>
                             </tbody>
                         </table>
-                        <% } else { %>
-                        <div style="text-align: center; padding: 3rem; color: var(--muted);">No registered members found.</div>
-                        <% } %>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- =================== 4. TRANSACTIONS TAB =================== -->
-            <div id="tab-transactions" class="tab-content" style="display: none;">
-                <div class="ld-panel">
-                    <div class="ld-panel-header">
-                        <div>
-                            <h3 class="ld-panel-title">Active Borrowed Books</h3>
-                            <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">View all active outstanding book distributions && process return sequences.</p>
-                        </div>
-                        <a href="/admin/issue" class="ld-btn">Issue Book</a>
-                    </div>
-
-                    <div class="ld-search-wrap" style="box-shadow: none; border-color: var(--border);">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted); flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="txsSearchInput" placeholder="Search by student, book title..." onkeyup="filterTable('txsSearchInput', 'txsTable', [0, 1])">
-                    </div>
-
-                    <div class="ld-table-responsive">
-                        <% if (transactions) { %>
-                        <table class="ld-table" id="txsTable">
+            <!-- ── TAB: TRANSACTIONS ── -->
+            <section id="tab-transactions" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">🔄 Active Issued Loans</h3>
+                    <div class="ld-table-container">
+                        <table class="ld-table">
                             <thead>
                                 <tr>
-                                    <th>Student Entity</th>
-                                    <th>Asset Details</th>
-                                    <th>Timing</th>
-                                    <th>Fine Status</th>
-                                    <th style="text-align:right;">Actions</th>
+                                    <th>Book Title</th>
+                                    <th>Member Name</th>
+                                    <th>Issue Date</th>
+                                    <th>Due Date</th>
+                                    <th>Fine</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <% for (const tx of transactions) { %>
-                                <tr>
-                                    <td>
-                                        <div style="font-weight: 700; color: var(--text);"><%= tx.user_name %></div>
-                                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 1px;">
-                                            Class <%= tx.class || 'N/A' %>
-                                            <% if (tx.user_admission) { %> | ID: <%= tx.user_admission %><% } %>
-                                            <% if (tx.user_phone) { %> | Ph: <%= tx.user_phone %><% } %>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 700;"><%= tx.book_title %></div>
-                                        <% if (tx.book_barcode) { %>
-                                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 1px;">Barcode: <%= tx.book_barcode %></div>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <div style="font-size: 0.85rem; font-weight: 600;">Issued: <%= tx.issue_date %></div>
-                                        <div style="font-size: 0.8rem; color: var(--muted); margin-top: 2px;">
-                                            Due: <span class="<% if (tx.is_overdue) { %>ld-badge-danger<% } %>" style="font-weight: 600;"><%= tx.due_date %></span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <% if (tx.fine > 0) { %>
-                                        <span class="ld-badge ld-badge-danger" style="font-weight:800;">₹<%= tx.fine %> Fine</span>
-                                        <% } else { %>
-                                        <span class="ld-badge ld-badge-success">Clean</span>
-                                        <% } %>
-                                    </td>
-                                    <td style="text-align:right;">
-                                        <a href="/admin/return/<%= tx.id %>" class="ld-btn" style="font-size: 0.72rem; padding: 6px 12px; background: var(--lg);">Process Return</a>
-                                        <form action="/admin/transaction/<%= tx.id %>/lost" method="POST" style="display:inline; margin-left: 4px;" onsubmit="return confirm('Are you sure you want to mark this book as Lost/Damaged? Student will be penalized -50 points.')">
-                                            <button type="submit" class="ld-btn" style="font-size: 0.72rem; padding: 6px 12px; background: var(--lr); border: none; color: white; cursor: pointer;">Mark Lost</button>
-                                        </form>
-                                    </td>
-                                </tr>
+                                <% if (transactions && transactions.length > 0) { %>
+                                    <% transactions.filter(t => !t.return_date).forEach(t => { %>
+                                        <tr>
+                                            <td style="font-weight: 700; color: #ffffff;"><%= t.title %></td>
+                                            <td><%= t.user_name || t.student_name || 'Member' %></td>
+                                            <td><%= t.issue_date %></td>
+                                            <td><%= t.due_date %></td>
+                                            <td style="color: <%= t.calculated_fine > 0 ? '#f87171' : '#34d399' %>; font-weight: 700;">₹<%= t.calculated_fine || 0 %></td>
+                                            <td>
+                                                <form action="/admin/return" method="POST">
+                                                    <input type="hidden" name="transaction_id" value="<%= t.id %>">
+                                                    <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Return Book</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="6" style="text-align: center; color: var(--muted);">No active loans.</td></tr>
                                 <% } %>
                             </tbody>
                         </table>
-                        <% } else { %>
-                        <div style="text-align: center; padding: 3rem; color: var(--muted);">No active book issues found.</div>
-                        <% } %>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- =================== 5. OVERDUE TAB =================== -->
-            <div id="tab-overdue" class="tab-content" style="display: none;">
-                <div class="ld-panel">
-                    <div class="ld-panel-header">
-                        <div>
-                            <h3 class="ld-panel-title">Overdue Alerts</h3>
-                            <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Attention required: active borrowing records that have passed their deadline.</p>
-                        </div>
-                    </div>
-
-                    <div class="ld-search-wrap" style="box-shadow: none; border-color: var(--border);">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted); flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="overdueSearchInput" placeholder="Search overdue student, book..." onkeyup="filterTable('overdueSearchInput', 'overdueTable', [0, 1])">
-                    </div>
-
-                    <div class="ld-table-responsive">
-                        <table class="ld-table" id="overdueTable">
+            <!-- ── TAB: OVERDUE ── -->
+            <section id="tab-overdue" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #f87171; margin: 0 0 1rem 0;">⏰ Overdue Register</h3>
+                    <div class="ld-table-container">
+                        <table class="ld-table">
                             <thead>
                                 <tr>
-                                    <th>Student Entity</th>
-                                    <th>Asset Details</th>
-                                    <th>Timing</th>
-                                    <th>Fine Status</th>
-                                    <th style="text-align:right;">Actions</th>
+                                    <th>Book Title</th>
+                                    <th>Member Name</th>
+                                    <th>Due Date</th>
+                                    <th>Calculated Fine</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <% var overdue_shown = false; %>
-                                <% for (const tx of transactions) { %>
-                                    <% if (tx.is_overdue) { %>
-                                    <% var overdue_shown = true; %>
-                                    <tr>
-                                        <td>
-                                            <div style="font-weight: 700; color: var(--lr);"><%= tx.user_name %></div>
-                                            <div style="font-size: 0.72rem; color: var(--muted); margin-top: 1px;">
-                                                Class <%= tx.class || 'N/A' %>
-                                                <% if (tx.user_admission) { %> | ID: <%= tx.user_admission %><% } %>
-                                                <% if (tx.user_phone) { %> | Ph: <%= tx.user_phone %><% } %>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div style="font-weight: 700;"><%= tx.book_title %></div>
-                                            <% if (tx.book_barcode) { %>
-                                            <div style="font-size: 0.72rem; color: var(--muted); margin-top: 1px;">Barcode: <%= tx.book_barcode %></div>
-                                            <% } %>
-                                        </td>
-                                        <td>
-                                            <div style="font-size: 0.85rem; font-weight: 600;">Issued: <%= tx.issue_date %></div>
-                                            <div style="font-size: 0.8rem; color: var(--muted); margin-top: 2px;">
-                                                Due: <span style="font-weight: 700; color: var(--lr); text-decoration: underline;"><%= tx.due_date %></span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="ld-badge ld-badge-danger" style="font-weight: 800; font-size: 0.75rem;">₹<%= tx.fine %> Fine</span>
-                                        </td>
-                                        <td style="text-align:right;">
-                                            <a href="/admin/return/<%= tx.id %>" class="ld-btn" style="font-size: 0.72rem; padding: 6px 12px; background: var(--lr);">Process Return</a>
-                                            <form action="/admin/transaction/<%= tx.id %>/lost" method="POST" style="display:inline; margin-left: 4px;" onsubmit="return confirm('Are you sure you want to mark this book as Lost/Damaged? Student will be penalized -50 points.')">
-                                                <button type="submit" class="ld-btn" style="font-size: 0.72rem; padding: 6px 12px; background: var(--lr); border: none; color: white; cursor: pointer;">Mark Lost</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    <% } %>
-                                <% } %>
-                                <% if (! overdue_shown) { %>
-                                <tr>
-                                    <td colspan="5" style="text-align: center; padding: 3rem; color: var(--muted);">✓ No overdue alert flags! All systems running smoothly.</td>
-                                </tr>
+                                <% if (transactions && transactions.filter(t => t.is_overdue).length > 0) { %>
+                                    <% transactions.filter(t => t.is_overdue).forEach(t => { %>
+                                        <tr>
+                                            <td style="font-weight: 700; color: #ffffff;"><%= t.title %></td>
+                                            <td><%= t.user_name || t.student_name || 'Member' %></td>
+                                            <td style="color: #f87171; font-weight: 700;"><%= t.due_date %></td>
+                                            <td style="color: #f87171; font-weight: 800;">₹<%= t.calculated_fine || 0 %></td>
+                                            <td>
+                                                <form action="/admin/return" method="POST">
+                                                    <input type="hidden" name="transaction_id" value="<%= t.id %>">
+                                                    <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Clear & Return</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="5" style="text-align: center; color: var(--muted);">No overdue books! 🎉</td></tr>
                                 <% } %>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- =================== 6. MODERATION TAB =================== -->
-            <div id="tab-moderation" class="tab-content" style="display: none;">
-                <div class="ld-panel" style="text-align: center; padding: 3.5rem 2rem;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚖️</div>
-                    <h3 class="ld-panel-title" style="margin-bottom: 0.5rem; font-size: 1.5rem;">Content Moderation Portal</h3>
-                    <p style="color: var(--muted); max-width: 500px; margin: 0 auto 2rem; font-size: 0.88rem; line-height: 1.5;">
-                        Review, approve or reject digital book contributions, student summaries, && reading group assets submitted to the digital catalog.
-                    </p>
-                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                        <a href="/admin/review-queue" class="ld-btn" style="padding: 12px 24px;">Content Review Queue</a>
-                        <a href="/digital-library" class="ld-btn-alt" style="padding: 12px 24px;">Digital Library</a>
+            <!-- ── TAB: RESERVATIONS / BOOK REQUESTS ── -->
+            <section id="tab-reservations" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📖 Student Book Requests</h3>
+                    <div class="ld-table-container">
+                        <table class="ld-table">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Student Name</th>
+                                    <th>Request Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (reservations && reservations.length > 0) { %>
+                                    <% reservations.forEach(r => { %>
+                                        <tr>
+                                            <td style="font-weight: 700; color: #ffffff;"><%= r.title %></td>
+                                            <td><%= r.student_name || 'Student' %></td>
+                                            <td><%= r.created_at ? r.created_at.slice(0, 10) : 'Recent' %></td>
+                                            <td>
+                                                <div style="display: flex; gap: 6px;">
+                                                    <form action="/admin/reservation/approve" method="POST">
+                                                        <input type="hidden" name="reservation_id" value="<%= r.id %>">
+                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Approve</button>
+                                                    </form>
+                                                    <form action="/admin/reservation/reject" method="POST">
+                                                        <input type="hidden" name="reservation_id" value="<%= r.id %>">
+                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-danger">Reject</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="4" style="text-align: center; color: var(--muted);">No pending book requests.</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- =================== 7. REPORTS & HUB TAB =================== -->
-            <div id="tab-reports" class="tab-content" style="display: none;">
-                <!-- Summary Stats -->
-                <div class="ld-panel">
-                    <h3 class="ld-panel-title">Reports & Data Sync</h3>
-                    <p style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Download summaries of activities, or manage import/export workflows.</p>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 10px;">
-                        <div style="background:var(--bg); border:1px solid var(--border); padding: 1.25rem; border-radius:12px;">
-                            <div style="font-size: 0.75rem; font-weight:700; color:var(--muted);">LIFETIME ISSUES</div>
-                            <div style="font-family:'Outfit'; font-size:1.75rem; font-weight:800; color:var(--lp); margin: 4px 0;"><%= total_issued %></div>
-                            <span style="font-size:0.68rem; color:var(--muted); font-weight:600;">Total lifetime checkouts</span>
-                        </div>
-                        <div style="background:var(--bg); border:1px solid var(--border); padding: 1.25rem; border-radius:12px;">
-                            <div style="font-size: 0.75rem; font-weight:700; color:var(--muted);">LIFETIME RETURNS</div>
-                            <div style="font-family:'Outfit'; font-size:1.75rem; font-weight:800; color:var(--lg); margin: 4px 0;"><%= total_returned %></div>
-                            <span style="font-size:0.68rem; color:var(--muted); font-weight:600;">Total lifetime completions</span>
-                        </div>
-                        <div style="background:var(--bg); border:1px solid var(--border); padding: 1.25rem; border-radius:12px;">
-                            <div style="font-size: 0.75rem; font-weight:700; color:var(--muted);">LIFETIME TRANSACTIONS</div>
-                            <div style="font-family:'Outfit'; font-size:1.75rem; font-weight:800; color:var(--lb); margin: 4px 0;"><%= total_issued + total_returned %></div>
-                            <span style="font-size:0.68rem; color:var(--muted); font-weight:600;">Combined library transactions</span>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-top: 0.5rem; flex-wrap: wrap;">
-                        <a href="/admin?export=txt" class="ld-btn-alt">📄 Export Text Summary</a>
-                        <a href="/admin?export=csv" class="ld-btn-alt">📊 Export CSV Report</a>
-                    </div>
-                </div>
-
-                <div class="ld-grid-2">
-                    <!-- CSV Excel Import/Export Box -->
-                    <div class="ld-panel">
-                        <h3 class="ld-panel-title">1. Import CSV Data</h3>
-                        <p style="font-size: 0.72rem; color: var(--muted); margin-top: -8px;">Select target table && upload CSV/Excel files.</p>
-                        
-                        <div class="ld-form-group">
-                            <label>Import Target</label>
-                            <select id="importModule" class="ld-select">
-                                <option value="books">Books</option>
-                                <option value="students">Students</option>
-                                <option value="librarians">Librarians</option>
-                            </select>
-                        </div>
-                        
-                        <div class="ld-form-group">
-                            <label>Choose File</label>
-                            <input type="file" id="importFile" accept=".csv, .xlsx" style="font-size:0.8rem;">
-                        </div>
-
-                        <% if (typeof school_perms !== 'undefined' && school_perms && school_perms.canImportCSV) { %>
-                            <button onclick="handleImport()" class="ld-btn" style="justify-content:center;">Upload & Import</button>
-                        <% } else { %>
-                            <button onclick="alert('Upgrade to BASIC plan to import files')" class="ld-btn" style="background:var(--border); color:var(--muted); cursor:not-allowed; justify-content:center;">🔒 Upload & Import (BASIC required)</button>
-                        <% } %>
-                        <div id="importResult" style="font-size: 0.75rem; font-weight: 600; margin-top: 5px;"></div>
-                    </div>
-
-                    <div class="ld-panel">
-                        <h3 class="ld-panel-title">2. Export Core Tables</h3>
-                        <p style="font-size: 0.72rem; color: var(--muted); margin-top: -8px;">Export database tables directly into spreadsheets.</p>
-                        
-                        <div class="ld-form-group">
-                            <label>Export Target</label>
-                            <select id="exportModule" class="ld-select">
-                                <option value="books">Books</option>
-                                <option value="students">Students</option>
-                                <option value="transactions">Transactions</option>
-                                <option value="librarians">Librarians</option>
-                            </select>
-                        </div>
-                        
-                        <div class="ld-form-group">
-                            <label>Format</label>
-                            <select id="exportFormat" class="ld-select">
-                                <option value="csv">CSV (.csv)</option>
-                                <option value="xlsx">Excel (.xlsx)</option>
-                            </select>
-                        </div>
-
-                        <% if (typeof school_perms !== 'undefined' && school_perms && school_perms.canExportCSV) { %>
-                            <button onclick="handleExport()" class="ld-btn-alt" style="justify-content:center;">Download spreadsheet</button>
-                        <% } else { %>
-                            <button onclick="alert('Upgrade to BASIC plan to export files')" class="ld-btn-alt" style="border-color:var(--border); color:var(--muted); cursor:not-allowed; justify-content:center;">🔒 Download Export (BASIC required)</button>
-                        <% } %>
+            <!-- ── TAB: REVIEWS ── -->
+            <section id="tab-reviews" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">⭐ Book Reviews Moderation</h3>
+                    <div class="ld-table-container">
+                        <table class="ld-table">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Student</th>
+                                    <th>Learned Summary</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (pending_reviews && pending_reviews.length > 0) { %>
+                                    <% pending_reviews.forEach(rv => { %>
+                                        <tr>
+                                            <td style="font-weight: 700; color: #ffffff;"><%= rv.book_title %></td>
+                                            <td><%= rv.student_name %></td>
+                                            <td><%= rv.learned %></td>
+                                            <td>
+                                                <div style="display: flex; gap: 6px;">
+                                                    <form action="/admin/review/approve" method="POST">
+                                                        <input type="hidden" name="review_id" value="<%= rv.id %>">
+                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Approve</button>
+                                                    </form>
+                                                    <form action="/admin/review/reject" method="POST">
+                                                        <input type="hidden" name="review_id" value="<%= rv.id %>">
+                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-danger">Reject</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="4" style="text-align: center; color: var(--muted);">No pending reviews for moderation.</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+            </section>
 
-                <!-- Template Download Panel -->
-                <div class="ld-panel">
-                    <h3 class="ld-panel-title">Data Spreadsheets Templates</h3>
-                    <p style="font-size: 0.72rem; color: var(--muted); margin-top: -8px;">Download empty formatted CSV templates for correct import mapping.</p>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-                        <a href="/data/template/books" class="ld-btn-alt" style="font-size:0.75rem;">Books Template</a>
-                        <a href="/data/template/students" class="ld-btn-alt" style="font-size:0.75rem;">Students Template</a>
-                        <a href="/data/template/librarians" class="ld-btn-alt" style="font-size:0.75rem;">Librarians Template</a>
+            <!-- ── TAB: REPORTS & DATA HUB ── -->
+            <section id="tab-reports" class="tab-content" style="display: none;">
+                <div class="ld-card">
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📈 Reports & Data Hub</h3>
+                    <p style="color: var(--muted); font-size: 0.85rem;">Export or import catalog and member records using CSV/Excel formats.</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 1rem;">
+                        <div style="background: rgba(99, 102, 241, 0.08); padding: 1rem; border-radius: 14px; border: 1px solid var(--border);">
+                            <h4 style="margin: 0 0 8px 0; color: #ffffff;">📥 Import Data</h4>
+                            <div class="ld-form-group">
+                                <label>Target Module</label>
+                                <select id="importModule" class="ld-select">
+                                    <option value="books">Books Catalog</option>
+                                    <option value="students">Students / Members</option>
+                                </select>
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Select CSV/Excel File</label>
+                                <input type="file" id="importFile" accept=".csv,.xlsx" class="ld-input">
+                            </div>
+                            <button onclick="handleImport()" class="ld-btn ld-btn-primary" style="width: 100%; margin-top: 6px;">Upload & Import</button>
+                            <div id="importResult" style="margin-top: 8px; font-size: 0.8rem;"></div>
+                        </div>
+
+                        <div style="background: rgba(16, 185, 129, 0.08); padding: 1rem; border-radius: 14px; border: 1px solid var(--border);">
+                            <h4 style="margin: 0 0 8px 0; color: #ffffff;">📤 Export Data</h4>
+                            <div class="ld-form-group">
+                                <label>Export Module</label>
+                                <select id="exportModule" class="ld-select">
+                                    <option value="books">Books Catalog</option>
+                                    <option value="students">Students List</option>
+                                    <option value="transactions">Loan Transactions</option>
+                                </select>
+                            </div>
+                            <div class="ld-form-group">
+                                <label>Format</label>
+                                <select id="exportFormat" class="ld-select">
+                                    <option value="csv">CSV</option>
+                                    <option value="xlsx">Excel (XLSX)</option>
+                                </select>
+                            </div>
+                            <button onclick="handleExport()" class="ld-btn ld-btn-success" style="width: 100%; margin-top: 6px;">Download Export</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-        </div><!-- end ld-content -->
-
-        <!-- Mobile Bottom Nav -->
-        <nav class="ld-bottom-nav">
-            <button class="ld-bnav-item active tab-btn" onclick="switchTab('dashboard', this)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                <span>Dashboard</span>
-            </button>
-            <button class="ld-bnav-item tab-btn" onclick="switchTab('books', this)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                <span>Books</span>
-            </button>
-            <button class="ld-bnav-item tab-btn" onclick="switchTab('members', this)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span>Members</span>
-            </button>
-            <button class="ld-bnav-item tab-btn" onclick="switchTab('transactions', this)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                <span>Activity</span>
-            </button>
-        </nav>
-
-    </div><!-- end ld-main -->
-</div><!-- end ld-shell -->
-
-<!-- ══ MODALS ══ -->
-
-<!-- Admin Book Info Modal (replaces student book page view) -->
-<div id="adminBookInfoModal" class="ld-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('adminBookInfoModal').style.display='none'">
-    <div class="ld-modal-content" style="max-width:480px; padding:0; overflow:hidden; border-radius:20px;">
-        <div style="background: linear-gradient(135deg, var(--lp), #7c3aed); padding: 1.5rem; display:flex; gap:1rem; align-items:center;">
-            <img id="abiCover" src="" alt="cover" style="width:60px;height:80px;object-fit:cover;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.3);flex-shrink:0;" onerror="this.style.display='none'">
-            <div style="flex:1; min-width:0;">
-                <div id="abiTitle" style="color:white;font-family:'Outfit';font-weight:800;font-size:1.1rem;line-height:1.3;word-break:break-word;"></div>
-                <div id="abiAuthor" style="color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:4px;"></div>
-            </div>
-            <button onclick="document.getElementById('adminBookInfoModal').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;align-self:flex-start;flex-shrink:0;">✕</button>
+            </section>
         </div>
-        <div style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
-                <div style="background:var(--bg);border-radius:12px;padding:0.75rem;">
-                    <div style="font-size:0.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Barcode ID</div>
-                    <div id="abiBarcode" style="font-size:0.9rem;font-weight:700;color:var(--text);font-family:monospace;"></div>
-                </div>
-                <div style="background:var(--bg);border-radius:12px;padding:0.75rem;">
-                    <div style="font-size:0.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Copies</div>
-                    <div id="abiCopies" style="font-size:0.9rem;font-weight:700;color:var(--text);"></div>
-                </div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-top:0.25rem;">
-                <button onclick="document.getElementById('adminBookInfoModal').style.display='none'; bamEdit();" style="background:var(--lp-light);border:2px solid var(--lp);border-radius:12px;padding:0.75rem;cursor:pointer;font-weight:700;font-size:0.82rem;color:var(--lp);font-family:'Plus Jakarta Sans',sans-serif;">✏️ Edit Book</button>
-                <button onclick="document.getElementById('adminBookInfoModal').style.display='none'; bamIssue();" style="background:#fff7ed;border:2px solid #f97316;border-radius:12px;padding:0.75rem;cursor:pointer;font-weight:700;font-size:0.82rem;color:#f97316;font-family:'Plus Jakarta Sans',sans-serif;">📤 Issue Book</button>
-            </div>
-        </div>
-    </div>
+    </main>
 </div>
 
-<!-- Add User Modal -->
-<div id="addUserModal" class="ld-modal-overlay">
+<!-- ══ MODALS ══ -->
+<!-- Add Book Modal -->
+<div class="ld-modal-overlay" id="addBookModal">
     <div class="ld-modal-content">
-        <button class="ld-modal-close" onclick="closeModal('addUserModal')">✕</button>
-        <h3 class="ld-modal-title">👤 Register Member / Staff</h3>
-        
-        <form action="/admin/student/add" method="POST">
+        <button class="ld-modal-close" onclick="closeModal('addBookModal')">✕</button>
+        <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: #ffffff; margin: 0 0 1rem 0;">+ Add New Book</h3>
+        <form action="/admin/book/add" method="POST">
             <div class="ld-form-group">
-                <label>Full Name</label>
-                <input type="text" name="name" class="ld-input" required placeholder="e.g. Rahul Sharma">
+                <label>Book Title *</label>
+                <input type="text" name="title" required class="ld-input" placeholder="e.g. The Hobbit">
             </div>
             <div class="ld-form-group">
-                <label>Email Address</label>
-                <input type="email" name="reqEmail" class="ld-input" required placeholder="e.g. name@gmail.com">
+                <label>Author *</label>
+                <input type="text" name="author" required class="ld-input" placeholder="e.g. J.R.R. Tolkien">
             </div>
             <div class="ld-form-group">
-                <label>Phone Number (Login ID)</label>
-                <input type="text" name="phone" class="ld-input" required placeholder="e.g. 9876543210">
+                <label>Genre / Category</label>
+                <input type="text" name="genre" class="ld-input" placeholder="e.g. Fantasy">
             </div>
-            <div class="ld-form-group">
-                <label>Password</label>
-                <input type="text" name="password" class="ld-input" required value="userpass">
-            </div>
-            <div class="ld-form-group">
-                <label>User Role</label>
-                <select name="role" id="addUserRole" class="ld-select" onchange="toggleAddUserClassField()">
-                    <option value="student">Student</option>
-                    <option value="admin">Admin / Librarian</option>
-                </select>
-            </div>
-            <div class="ld-form-group">
-                <label>Library School Code</label>
-                <input type="text" name="school_code" readonly value="<%= (session.school_code || '') %>" class="ld-input" style="opacity: 0.7;">
-            </div>
-            
-            <!-- Student Specific Fields -->
-            <div id="addUserClassGroup" style="display:block;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="ld-form-group">
-                    <label>Class Grade</label>
-                    <input type="number" name="class" min="1" max="12" class="ld-input" placeholder="e.g. 10">
+                    <label>Shelf Location</label>
+                    <input type="text" name="shelf_location" class="ld-input" placeholder="A-12">
+                </div>
+                <div class="ld-form-group">
+                    <label>Total Quantity</label>
+                    <input type="number" name="quantity" value="1" min="1" class="ld-input">
                 </div>
             </div>
-            <div id="addUserAdmissionGroup" style="display:block;">
-                <div class="ld-form-group">
-                    <label>Admission No / Student ID</label>
-                    <input type="text" name="admission_no" class="ld-input" placeholder="e.g. SCH7890">
-                </div>
-            </div>
-
-            <button type="submit" class="ld-btn" style="width: 100%; justify-content: center; margin-top: 1rem; padding: 12px;">Register Account</button>
+            <button type="submit" class="ld-btn ld-btn-primary" style="width: 100%; margin-top: 12px;">Save Book to Catalog</button>
         </form>
     </div>
 </div>
 
-<!-- View User Modal -->
-<div id="viewUserModal" class="ld-modal-overlay">
-    <div class="ld-modal-content" style="max-width: 450px;">
-        <button class="ld-modal-close" onclick="closeModal('viewUserModal')">✕</button>
-        <h3 class="ld-modal-title">👤 Member Profile Card</h3>
-        
-        <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 0.88rem;">
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                <span style="color:var(--muted); font-weight:700;">Full Name:</span>
-                <span id="vUserName" style="font-weight:700;"></span>
+<!-- Add Member Modal -->
+<div class="ld-modal-overlay" id="addUserModal">
+    <div class="ld-modal-content">
+        <button class="ld-modal-close" onclick="closeModal('addUserModal')">✕</button>
+        <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: #ffffff; margin: 0 0 1rem 0;">+ Add New Member</h3>
+        <form action="/admin/student/add" method="POST">
+            <div class="ld-form-group">
+                <label>Full Name *</label>
+                <input type="text" name="name" required class="ld-input" placeholder="Student Name">
             </div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                <span style="color:var(--muted); font-weight:700;">Phone / ID:</span>
-                <span id="vUserPhone" style="font-weight:700; font-family:monospace;"></span>
+            <div class="ld-form-group">
+                <label>Role *</label>
+                <select name="role" id="addUserRole" onchange="toggleAddUserClassField()" class="ld-select">
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                </select>
             </div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                <span style="color:var(--muted); font-weight:700;">Email Address:</span>
-                <span id="vUserEmail" style="font-weight:700;"></span>
+            <div class="ld-form-group" id="addUserClassGroup">
+                <label>Class & Section</label>
+                <input type="text" name="class" class="ld-input" placeholder="e.g. 10th-A">
             </div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                <span style="color:var(--muted); font-weight:700;">Password:</span>
-                <span id="vUserPassword" style="font-weight:700; font-family:monospace;"></span>
+            <div class="ld-form-group" id="addUserAdmissionGroup">
+                <label>Admission No / Roll No</label>
+                <input type="text" name="admission_no" class="ld-input" placeholder="e.g. ADM-102">
             </div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                <span style="color:var(--muted); font-weight:700;">Role:</span>
-                <span id="vUserRole" class="ld-badge ld-badge-info"></span>
-            </div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                <span style="color:var(--muted); font-weight:700;">School Code:</span>
-                <span id="vUserSchool" style="font-weight:700; font-family:monospace;"></span>
-            </div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                <span style="color:var(--muted); font-weight:700;">Class Grade:</span>
-                <span id="vUserClass" style="font-weight:700;"></span>
-            </div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                <span style="color:var(--muted); font-weight:700;">Admission ID:</span>
-                <span id="vUserAdmission" style="font-weight:700; font-family:monospace;"></span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding-bottom:4px;">
-                <span style="color:var(--muted); font-weight:700;">Status:</span>
-                <span id="vUserStatus" class="ld-badge"></span>
-            </div>
-        </div>
-
-        <button class="ld-btn" onclick="closeModal('viewUserModal')" style="width: 100%; justify-content: center; margin-top: 1.5rem;">Close Details</button>
-    </div>
-</div>
-
-<!-- View School / Profile Modal -->
-<div id="viewSchoolModal" class="ld-modal-overlay">
-    <div class="ld-modal-content" style="max-width: 480px;">
-        <button class="ld-modal-close" onclick="closeModal('viewSchoolModal')">✕</button>
-        <h3 class="ld-modal-title">🏫 School Profile & Subscriptions</h3>
-        
-        <div style="display: grid; grid-template-columns: 1fr; gap: 14px; font-size: 0.88rem;">
-            <div>
-                <span style="color:var(--muted); font-weight:700; display:block; margin-bottom:2px;">LIBRARY NAME</span>
-                <span style="font-weight:800; font-size:1rem; color:var(--text);"><%= (session.school_name || 'librika.in') %></span>
-            </div>
-            <div>
-                <span style="color:var(--muted); font-weight:700; display:block; margin-bottom:2px;">LIBRARY UNIQUE CODE</span>
-                <code style="background:var(--bg); border:1px solid var(--border); padding:4px 8px; border-radius:6px; font-weight:800; font-family:monospace; color:var(--lp); font-size:0.85rem;"><%= (session.school_code || 'GLOBAL') %></code>
-            </div>
-            
-            <hr style="border:0; border-top:1px solid var(--border); margin:4px 0;">
-            <h4 style="font-family:'Outfit'; font-weight:800; color:var(--lp);">Plan Allowances & Quota</h4>
-            
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:700; color:var(--mid);">Active Plan</span>
-                <span class="ld-badge ld-badge-warning" style="font-size:0.75rem; padding:4px 12px; background:var(--lp-light); color:var(--lp);"><%= typeof school_plan !== 'undefined' ? school_plan : 'PRO' %></span>
-            </div>
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center; background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:12px;">
-                <div>
-                    <div style="font-weight:800; font-size:1.1rem; color:var(--lp);"><%= school_limits.studentLimit != 999999 ? school_limits.studentLimit : 'Unlimited' %></div>
-                    <div style="font-size:0.68rem; color:var(--muted); font-weight:700;">MAX STUDENTS</div>
-                </div>
-                <div>
-                    <div style="font-weight:800; font-size:1.1rem; color:var(--lp);"><%= school_limits.librarianLimit != 999999 ? school_limits.librarianLimit : 'Unlimited' %></div>
-                    <div style="font-size:0.68rem; color:var(--muted); font-weight:700;">MAX LIBS</div>
-                </div>
-                <div>
-                    <div style="font-weight:800; font-size:1.1rem; color:var(--lp);"><%= school_limits.adminLimit != 999999 ? school_limits.adminLimit : 'Unlimited' %></div>
-                    <div style="font-size:0.68rem; color:var(--muted); font-weight:700;">MAX ADMINS</div>
-                </div>
-            </div>
-
-            <hr style="border:0; border-top:1px solid var(--border); margin:4px 0;">
-            <h4 style="font-family:'Outfit'; font-weight:800; color:var(--lp);">Feature Access Manifest</h4>
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.78rem;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:1rem;"><% if (typeof school_perms !== 'undefined' && school_perms && school_perms.canImportCSV) { %>✓<% } else { %>🔒<% } %></span>
-                    <span style="color:var(--mid); font-weight:600;">CSV Data Import</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:1rem;"><% if (typeof school_perms !== 'undefined' && school_perms && school_perms.canExportCSV) { %>✓<% } else { %>🔒<% } %></span>
-                    <span style="color:var(--mid); font-weight:600;">CSV Data Export</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:1rem;"><% if (typeof school_perms !== 'undefined' && school_perms && school_perms.canUseAIScanner) { %>✓<% } else { %>🔒<% } %></span>
-                    <span style="color:var(--mid); font-weight:600;">AI Camera Scanner</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:1rem;"><% if (typeof school_perms !== 'undefined' && school_perms && school_perms.canUseBarcodeScanner) { %>✓<% } else { %>🔒<% } %></span>
-                    <span style="color:var(--mid); font-weight:600;">Barcode Engine</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:1rem;"><% if (typeof school_perms !== 'undefined' && school_perms && school_perms.canUseAdvancedAnalytics) { %>✓<% } else { %>🔒<% } %></span>
-                    <span style="color:var(--mid); font-weight:600;">Analytics Engine</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:1rem;"><% if (typeof school_perms !== 'undefined' && school_perms && school_perms.canUsePublishing) { %>✓<% } else { %>🔒<% } %></span>
-                    <span style="color:var(--mid); font-weight:600;">Author Publishing</span>
-                </div>
-            </div>
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-top: 1.5rem; width: 100%;">
-            <a href="/logout" class="ld-btn ld-btn-danger" style="flex: 1; text-decoration: none; justify-content: center;">🚪 Log Out</a>
-            <button class="ld-btn" onclick="closeModal('viewSchoolModal')" style="flex: 1; justify-content: center; background: var(--bg); color: var(--text); border: 1px solid var(--border);">Close Details</button>
-        </div>
+            <button type="submit" class="ld-btn ld-btn-success" style="width: 100%; margin-top: 12px;">Add Member</button>
+        </form>
     </div>
 </div>
 
 <script>
-    // Tab switching engine
-    function switchTab(tabId, element) {
-        // Hide all tab contents
-        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-        
-        // Remove active class from all tab buttons
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        
-        // Show target tab content
-        const targetTab = document.getElementById('tab-' + tabId);
-        if (targetTab) {
-            targetTab.style.display = 'block';
-        }
-        
-        // Find corresponding tab buttons && mark active (sync sidebar + bottom nav buttons)
-        document.querySelectorAll(`.tab-btn[onclick*="switchTab('${tabId}'"]`).forEach(el => el.classList.add('active'));
-        if (element) {
-            element.classList.add('active');
-        }
+function switchTab(tabName, element) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    const target = document.getElementById('tab-' + tabName);
+    if (target) target.style.display = 'block';
 
-        // Update URL state without page reload
-        window.history.pushState(null, '', `?section=${tabId}`);
+    if (element) {
+        document.querySelectorAll('.ld-nav-item').forEach(b => b.classList.remove('active'));
+        element.classList.add('active');
     }
+}
 
-    // Table filter engine
-    function filterTable(inputId, tableId, searchColumns) {
-        const input = document.getElementById(inputId);
-        const filter = input.value.toLowerCase();
-        const table = document.getElementById(tableId);
-        if (!table) return;
-        
-        const tr = table.getElementsByTagName("tr");
+function openModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.add('active');
+}
 
-        for (let i = 1; i < tr.length; i++) {
-            const tds = tr[i].getElementsByTagName("td");
-            let matchFound = false;
-            
-            for(let colIndex of searchColumns) {
-                if (tds[colIndex]) {
-                    const textValue = tds[colIndex].textContent || tds[colIndex].innerText;
-                    if (textValue.toLowerCase().indexOf(filter) > -1) {
-                        matchFound = true;
-                        break;
-                    }
-                }
-            }
-            
-            tr[i].style.display = matchFound ? "" : "none";
-        }
-    }
-
-    // ── Book Action Modal ─────────────────────────────────────────────────────
-    let _bamBookId = null, _bamBarcodeId = null;
-
-    function openBookMenu(id, title, author, coverUrl, barcodeId, totalCopies, availCopies) {
-        _bamBookId    = id;
-        _bamBarcodeId = barcodeId;
-
-        document.getElementById('bamTitle').textContent  = title;
-        document.getElementById('bamAuthor').textContent = 'by ' + author;
-        document.getElementById('bamCopies').textContent = availCopies + ' of ' + totalCopies + ' copies available';
-
-        const img = document.getElementById('bamCover');
-        const fb  = document.getElementById('bamCoverFallback');
-        if (coverUrl) {
-            img.src = coverUrl;
-            img.style.display = 'block';
-            fb.style.display  = 'none';
-        } else {
-            img.style.display = 'none';
-            fb.style.display  = 'flex';
-        }
-
-        document.getElementById('editBookId').value = id;
-        document.getElementById('editTitle').value  = title;
-        document.getElementById('editAuthor').value = author;
-
-        document.getElementById('bookActionModal').style.display = 'flex';
-    }
-
-    function closeBookMenu() {
-        document.getElementById('bookActionModal').style.display = 'none';
-    }
-
-    function bamEdit() {
-        closeBookMenu();
-        fetch('/admin/api/book/' + _bamBookId)
-            .then(r => r.json())
-            .then(d => {
-                if (d.book) {
-                    const b = d.book;
-                    document.getElementById('editBookId').value      = b.id;
-                    document.getElementById('editTitle').value       = b.title       || '';
-                    document.getElementById('editAuthor').value      = b.author      || '';
-                    document.getElementById('editPublisher').value   = b.publisher   || '';
-                    document.getElementById('editIsbn').value        = b.isbn        || '';
-                    document.getElementById('editGenre').value       = b.genre       || '';
-                    document.getElementById('editClass').value       = b['class']    || '';
-                    document.getElementById('editSubject').value     = b.subject     || '';
-                    document.getElementById('editLanguage').value    = b.language    || '';
-                    document.getElementById('editDescription').value = b.description || '';
-                }
-            })
-            .catch(() => {});
-        document.getElementById('editBookModal').style.display = 'flex';
-    }
-
-    function bamAddCopy() {
-        if (!confirm('Add 1 more copy to this book?')) return;
-        fetch('/admin/api/add-copy/' + _bamBookId, { method: 'POST' })
-            .then(r => r.json())
-            .then(d => {
-                if (d.status === 'success') {
-                    showBamAlert('Copy added! Total copies: ' + d.total_copies, 'success');
-                    closeBookMenu();
-                    setTimeout(() => location.reload(), 1200);
-                } else {
-                    showBamAlert(d.message || 'Failed to add copy', 'error');
-                }
-            });
-    }
-
-    function bamIssue() {
-        closeBookMenu();
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        const txTab = document.querySelector('[data-tab="tab-tx"]');
-        if (txTab) txTab.click();
-        const bcInput = document.getElementById('txBookBarcode');
-        if (bcInput) { bcInput.value = _bamBarcodeId; bcInput.focus(); }
-    }
-
-    function bamView() {
-        closeBookMenu();
-        // Show admin book info modal instead of student page
-        const modal = document.getElementById('adminBookInfoModal');
-        if (modal) {
-            document.getElementById('abiTitle').textContent = _bamTitle;
-            document.getElementById('abiAuthor').textContent = _bamAuthor;
-            document.getElementById('abiBarcode').textContent = _bamBarcodeId;
-            document.getElementById('abiCopies').textContent = _bamTotalCopies + ' total, ' + _bamAvailCopies + ' available';
-            const imgEl = document.getElementById('abiCover');
-            if (_bamCoverUrl) { imgEl.src = _bamCoverUrl; imgEl.style.display = 'block'; }
-            else { imgEl.style.display = 'none'; }
-            modal.style.display = 'flex';
-        }
-    }
-
-    async function submitEditBook(e) {
-        e.preventDefault();
-        const btn = document.getElementById('editBookSaveBtn');
-        btn.textContent = 'Saving...'; btn.disabled = true;
-
-        const payload = {
-            title:       document.getElementById('editTitle').value,
-            author:      document.getElementById('editAuthor').value,
-            publisher:   document.getElementById('editPublisher').value,
-            isbn:        document.getElementById('editIsbn').value,
-            genre:       document.getElementById('editGenre').value,
-            class:       document.getElementById('editClass').value,
-            subject:     document.getElementById('editSubject').value,
-            language:    document.getElementById('editLanguage').value,
-            description: document.getElementById('editDescription').value,
-        };
-
-        const res  = await fetch('/admin/api/update-book/' + document.getElementById('editBookId').value, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        btn.textContent = 'Save Changes'; btn.disabled = false;
-
-        if (data.status === 'success') {
-            document.getElementById('editBookModal').style.display = 'none';
-            showBamAlert('Book updated!', 'success');
-            setTimeout(() => location.reload(), 1200);
-        } else {
-            showBamAlert(data.message || 'Update failed', 'error');
-        }
-    }
-
-    function showBamAlert(msg, type) {
-        const el = document.createElement('div');
-        const bg = type === 'success' ? 'var(--lg)' : 'var(--lr)';
-        el.style.cssText = `position:fixed;top:1.5rem;right:1.5rem;z-index:99999;background:${bg};color:white;padding:12px 20px;border-radius:12px;font-weight:700;font-size:0.88rem;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:opacity 0.4s;`;
-        el.textContent = msg;
-        document.body.appendChild(el);
-        setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 2500);
-    }
-    // ─────────────────────────────────────────────────────────────────────────
-
-    // ── Reservation approve / reject ──────────────────────────────────────────
-    function approveReservation(resId, bookId, userId) {
-        const row = document.getElementById('res-row-' + resId);
-        fetch('/admin/api/reservation/' + resId + '/approve', { method: 'POST' })
-            .then(r => r.json())
-            .then(d => {
-                if (d.status === 'success') {
-                    showBamAlert('✅ Reservation approved — book issued!', 'success');
-                    if (row) { row.style.opacity = '0'; setTimeout(() => row.remove(), 400); }
-                    // Update badge count
-                    const badge = document.getElementById('resBadge');
-                    if (badge) {
-                        const cur = parseInt(badge.textContent) - 1;
-                        if (cur <= 0) badge.remove(); else badge.textContent = cur;
-                    }
-                } else {
-                    showBamAlert(d.message || 'Failed to approve', 'error');
-                }
-            })
-            .catch(() => showBamAlert('Network error', 'error'));
-    }
-
-    function rejectReservation(resId) {
-        if (!confirm('Reject this book request? The student will be notified.')) return;
-        const row = document.getElementById('res-row-' + resId);
-        fetch('/admin/api/reservation/' + resId + '/reject', { method: 'POST' })
-            .then(r => r.json())
-            .then(d => {
-                if (d.status === 'success') {
-                    showBamAlert('Request rejected.', 'success');
-                    if (row) { row.style.opacity = '0'; setTimeout(() => row.remove(), 400); }
-                    const badge = document.getElementById('resBadge');
-                    if (badge) {
-                        const cur = parseInt(badge.textContent) - 1;
-                        if (cur <= 0) badge.remove(); else badge.textContent = cur;
-                    }
-                } else {
-                    showBamAlert(d.message || 'Failed to reject', 'error');
-                }
-            })
-            .catch(() => showBamAlert('Network error', 'error'));
-    }
-    // ─────────────────────────────────────────────────────────────────────────
-
-    // ── Book Cover Fallback (tries Open Library via ISBN, then emoji) ─────────
-    function bookCoverFallback(img) {
-        const isbn = img.dataset.isbn;
-        if (isbn) {
-            img.onerror = function() {
-                this.onerror = null;
-                this.outerHTML = '<div style="width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>';
-            };
-            img.src = 'https://covers.openlibrary.org/b/isbn/' + isbn + '-S.jpg';
-        } else {
-            img.onerror = null;
-            img.outerHTML = '<div style="width:40px;height:54px;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>';
-        }
-    }
-
-    // ── Delete single book ────────────────────────────────────────────────────
-    let _deleteTargetId   = null;
-    let _deleteTargetName = '';
-
-    function bamDelete() {
-        _deleteTargetId   = _bamBookId;
-        _deleteTargetName = document.getElementById('bamTitle').textContent;
-        closeBookMenu();
-        document.getElementById('deleteBookModalTitle').textContent = 'Delete "' + _deleteTargetName + '"?';
-        document.getElementById('deleteBookModalMsg').textContent   = 'This will permanently remove this book && all its copies. Active loans will be logged as returned. This cannot be undone.';
-        document.getElementById('deleteBookModal').style.display    = 'flex';
-    }
-
-    function closeDeleteBookModal() {
-        document.getElementById('deleteBookModal').style.display = 'none';
-    }
-
-    function confirmDeleteBookNow() {
-        const btn = document.getElementById('deleteBookConfirmBtn');
-        btn.textContent = 'Deleting...'; btn.disabled = true;
-        fetch('/admin/api/delete-book/' + _deleteTargetId, { method: 'POST' })
-            .then(r => r.json())
-            .then(d => {
-                btn.textContent = 'Yes, Delete'; btn.disabled = false;
-                if (d.status === 'success') {
-                    closeDeleteBookModal();
-                    showBamAlert('Book deleted successfully!', 'success');
-                    // Remove the row from DOM instantly without reload
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showBamAlert(d.message || 'Delete failed', 'error');
-                }
-            })
-            .catch(() => { btn.textContent = 'Yes, Delete'; btn.disabled = false; showBamAlert('Network error', 'error'); });
-    }
-
-    // ── Delete ALL books ──────────────────────────────────────────────────────
-    function confirmDeleteAll() {
-        document.getElementById('deleteAllConfirmInput').value = '';
-        document.getElementById('deleteAllBooksModal').style.display = 'flex';
-    }
-
-    function closeDeleteAllModal() {
-        document.getElementById('deleteAllBooksModal').style.display = 'none';
-    }
-
-    function confirmDeleteAllNow() {
-        const inputVal = document.getElementById('deleteAllConfirmInput').value.trim();
-        if (inputVal !== 'DELETE ALL') {
-            showBamAlert('Please type DELETE ALL exactly to confirm', 'error');
-            return;
-        }
-        const btn = document.getElementById('deleteAllConfirmBtn');
-        btn.textContent = 'Deleting...'; btn.disabled = true;
-        fetch('/admin/api/delete-all-books', { method: 'POST' })
-            .then(r => r.json())
-            .then(d => {
-                btn.textContent = 'Wipe All Books'; btn.disabled = false;
-                if (d.status === 'success') {
-                    closeDeleteAllModal();
-                    showBamAlert('All books deleted — ' + (d.deleted || 0) + ' removed!', 'success');
-                    setTimeout(() => location.reload(), 1200);
-                } else {
-                    showBamAlert(d.message || 'Delete failed', 'error');
-                }
-            })
-            .catch(() => { btn.textContent = 'Wipe All Books'; btn.disabled = false; showBamAlert('Network error', 'error'); });
-    }
-    // ─────────────────────────────────────────────────────────────────────────
-
-    // Modal Control
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = 'flex';
-        if (modalId === 'addUserModal') {
-            toggleAddUserClassField();
-        }
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    // View User details modal injector
-    function openViewUserModal(userData) {
-        document.getElementById('vUserName').innerText = userData.name || 'Pending Profile';
-        document.getElementById('vUserPhone').innerText = userData.phone || 'N/A';
-        document.getElementById('vUserEmail').innerText = userData.email || 'N/A';
-        document.getElementById('vUserPassword').innerText = userData.password || 'N/A';
-        
-        const roleSpan = document.getElementById('vUserRole');
-        roleSpan.innerText = (userData.role || 'student').toUpperCase();
-        if (userData.role === 'admin') {
-            roleSpan.className = 'ld-badge ld-badge-warning';
-        } else {
-            roleSpan.className = 'ld-badge ld-badge-info';
-        }
-        
-        document.getElementById('vUserSchool').innerText = userData.school_code || 'N/A';
-        document.getElementById('vUserClass').innerText = userData.class || 'N/A';
-        document.getElementById('vUserAdmission').innerText = userData.admission_no || 'N/A';
-        
-        const statusSpan = document.getElementById('vUserStatus');
-        if (userData.is_banned) {
-            statusSpan.innerText = 'BANNED';
-            statusSpan.className = 'ld-badge ld-badge-danger';
-        } else {
-            statusSpan.innerText = 'ACTIVE';
-            statusSpan.className = 'ld-badge ld-badge-success';
-        }
-        
-        openModal('viewUserModal');
-    }
-
-    // Toggle class && admission field inputs dynamically based on selected role
-    function toggleAddUserClassField() {
-        const role = document.getElementById('addUserRole').value;
-        const classGroup = document.getElementById('addUserClassGroup');
-        const admissionGroup = document.getElementById('addUserAdmissionGroup');
-        const classInput = classGroup.querySelector('input');
-        const admissionInput = admissionGroup.querySelector('input');
-        
-        if (role === 'student') {
-            classGroup.style.display = 'block';
-            admissionGroup.style.display = 'block';
-            classInput.setAttribute('required', 'required');
-            admissionInput.setAttribute('required', 'required');
-        } else {
-            classGroup.style.display = 'none';
-            admissionGroup.style.display = 'none';
-            classInput.removeAttribute('required');
-            admissionInput.removeAttribute('required');
-        }
-    }
-
-    // Data Hub Handlers
-    async function handleImport() {
-        const fileInput = document.getElementById('importFile');
-        const module = document.getElementById('importModule').value;
-        const resultDiv = document.getElementById('importResult');
-
-        if (!fileInput.files[0]) {
-            resultDiv.innerHTML = '<span style="color:var(--lr)">Please select a file first.</span>';
-            return;
-        }
-
-        resultDiv.innerHTML = '<span style="color:var(--lp)">Uploading && processing file...</span>';
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        try {
-            const res = await fetch(`/data/import/${module}`, { method: 'POST', body: formData });
-            const data = await res.json();
-            
-            if (res.ok) {
-                let html = `<span style="color:var(--lg)">Import Complete!</span><br>
-                            Total: ${data.total} | Success: ${data.success}<br>
-                            Failed: ${data.failed} | Duplicates: ${data.duplicates}`;
-                if (data.errors && data.errors.length > 0) {
-                    html += `<div style="color:var(--lr); font-size:0.7rem; margin-top:5px; max-height: 80px; overflow-y: auto;">
-                                ${data.errors.join('<br>')}
-                             </div>`;
-                }
-                resultDiv.innerHTML = html;
-            } else {
-                resultDiv.innerHTML = `<span style="color:var(--lr)">Error: ${data.error || 'Upload failed'}</span>`;
-            }
-        } catch (e) {
-            resultDiv.innerHTML = `<span style="color:var(--lr)">Network connection error occurred.</span>`;
-        }
-    }
-
-    function handleExport() {
-        const module = document.getElementById('exportModule').value;
-        const format = document.getElementById('exportFormat').value;
-        window.location.href = `/data/export/${module}?format=${format}`;
-    }
-
-    // Close modal when clicking on overlay background
-    window.onclick = function(event) {
-        if (event.target.classList.contains('ld-modal-overlay')) {
-            event.target.style.display = 'none';
-        }
-    }
-
-    // Smart greeting
-    const hour = new Date().getHours();
-    const greet = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-    const name = '<%= (session.user_name || "Librarian").split(' ')[0] %>';
-    document.getElementById('greetingText').textContent = `${greet}, ${name}!`;
-
-    // Today's date
-    const opts = { day: 'numeric', month: 'long', year: 'numeric' };
-    document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN', opts);
-
-    // Search clear button
-    const searchInput = document.getElementById('globalSearch');
-    const clearBtn = document.getElementById('searchClear');
-    function doSearch(val) {
-        clearBtn.style.display = val ? 'block' : 'none';
-        // Filter activity cards
-        document.querySelectorAll('.ld-activity-card').forEach(card => {
-            const text = card.textContent.toLowerCase();
-            card.style.display = (!val || text.includes(val.toLowerCase())) ? '' : 'none';
-        });
-    }
-
-    // Initialize Tab based on URL
-    document.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-        const section = params.get('section') || 'dashboard';
-        switchTab(section);
-    });
-
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('active');
+}
 
 function toggleAdminSidebar() {
-    const sb = document.getElementById('adminSidebar') || document.querySelector('.ld-sidebar');
+    const sb = document.getElementById('adminSidebar');
     const dim = document.getElementById('adminDim');
     if (!sb) return;
     sb.classList.toggle('open');
@@ -2400,151 +876,63 @@ function toggleAdminSidebar() {
 
 function autoCloseAdminSidebar() {
     if (window.innerWidth <= 900) {
-        const sb = document.getElementById('adminSidebar') || document.querySelector('.ld-sidebar');
+        const sb = document.getElementById('adminSidebar');
         const dim = document.getElementById('adminDim');
         if (sb) sb.classList.remove('open');
         if (dim) dim.classList.remove('active');
     }
 }
 
-// Close sidebar on Escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') autoCloseAdminSidebar();
-});
-
-// Touch swipe left listener to close sidebar on mobile
-let touchStartX = 0;
-document.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-}, { passive: true });
-
-document.addEventListener('touchend', (e) => {
-    const touchEndX = e.changedTouches[0].clientX;
-    if (touchStartX - touchEndX > 60) {
-        // Swiped left
-        autoCloseAdminSidebar();
+function toggleAddUserClassField() {
+    const role = document.getElementById('addUserRole').value;
+    const classGroup = document.getElementById('addUserClassGroup');
+    const admissionGroup = document.getElementById('addUserAdmissionGroup');
+    if (role === 'student') {
+        classGroup.style.display = 'block';
+        admissionGroup.style.display = 'block';
+    } else {
+        classGroup.style.display = 'none';
+        admissionGroup.style.display = 'none';
     }
-}, { passive: true });
+}
 
+async function handleImport() {
+    const fileInput = document.getElementById('importFile');
+    const module = document.getElementById('importModule').value;
+    const resultDiv = document.getElementById('importResult');
 
+    if (!fileInput.files[0]) {
+        resultDiv.innerHTML = '<span style="color:#f87171;">Please select a file first.</span>';
+        return;
+    }
+
+    resultDiv.innerHTML = '<span style="color:#a5b4fc;">Uploading & processing...</span>';
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    try {
+        const res = await fetch('/data/import/' + module, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+            resultDiv.innerHTML = '<span style="color:#34d399;">Import Complete!</span> Total: ' + data.total + ' | Success: ' + data.success;
+        } else {
+            resultDiv.innerHTML = '<span style="color:#f87171;">Error: ' + (data.error || 'Upload failed') + '</span>';
+        }
+    } catch (e) {
+        resultDiv.innerHTML = '<span style="color:#f87171;">Network error occurred.</span>';
+    }
+}
+
+function handleExport() {
+    const module = document.getElementById('exportModule').value;
+    const format = document.getElementById('exportFormat').value;
+    window.location.href = '/data/export/' + module + '?format=' + format;
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        autoCloseAdminSidebar();
+        document.querySelectorAll('.ld-modal-overlay').forEach(m => m.classList.remove('active'));
+    }
+});
 </script>
-
-<style>
-/* ═══════════════════════════════════════════════════════════════
-   LIBRIKA LIGHT PREMIUM — SaaS presentation overrides
-   Visual only. No markup, IDs, routes or JS are modified.
-   ═══════════════════════════════════════════════════════════════ */
-:root {
-  --lp: #2563eb; --lp-mid: #4f46e5; --lp-light: rgba(37, 99, 235, 0.10);
-  --lg: #22c55e; --lg-light: rgba(34, 197, 94, 0.12);
-  --lo: #f59e0b; --lo-light: rgba(245, 158, 11, 0.12);
-  --lr: #ef4444; --lr-light: rgba(239, 68, 68, 0.10);
-  --lb: #2563eb; --lb-light: rgba(37, 99, 235, 0.10);
-  --lt: #0891b2; --lt-light: rgba(6, 182, 212, 0.12);
-  --lam: #f59e0b; --lam-light: rgba(245, 158, 11, 0.12);
-  --bg: #f8fafc; --white: #ffffff; --border: #e5e7eb;
-  --text: #111827; --mid: #475569; --muted: #94a3b8;
-  --radius: 16px;
-  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px rgba(17, 24, 39, 0.06);
-}
-
-html, body {
-  background: #f8fafc !important;
-  background-color: #f8fafc !important;
-  color: #111827 !important;
-  color-scheme: light;
-}
-
-.ld-shell, .ld-main, .ld-content { background: #f8fafc !important; }
-
-/* ── SIDEBAR — premium white ── */
-.ld-sidebar, .ld-sidebar-header, .ld-sidebar-footer {
-  background: #ffffff !important;
-  border-color: #e5e7eb !important;
-}
-.ld-sidebar {
-  box-shadow: 1px 0 0 rgba(17, 24, 39, 0.02) !important;
-}
-.ld-user-name { color: #111827 !important; }
-.ld-user-school { color: #64748b !important; }
-.ld-sidebar-close { background: #f1f5f9 !important; border-color: #e5e7eb !important; color: #475569 !important; }
-.ld-avatar-lg { background: linear-gradient(135deg, #2563eb, #4f46e5) !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important; }
-
-.ld-nav-item { color: #475569 !important; }
-.ld-nav-item:hover { background: rgba(37, 99, 235, 0.08) !important; color: #2563eb !important; }
-.ld-nav-item.active {
-  background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
-  color: #ffffff !important;
-  border-left: none !important;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
-}
-.ld-footer-btn { background: #f8fafc !important; border-color: #e5e7eb !important; color: #475569 !important; }
-.ld-footer-btn:hover { background: rgba(37, 99, 235, 0.08) !important; color: #2563eb !important; }
-
-/* ── TOPBAR — white ── */
-.ld-topbar { background: rgba(255, 255, 255, 0.92) !important; border-bottom: 1px solid #e5e7eb !important; }
-.ld-menu-btn, .ld-notif-btn { background: #f1f5f9 !important; border-color: #e5e7eb !important; color: #475569 !important; }
-.ld-brand-title { color: #111827 !important; }
-.ld-notif-badge { border-color: #ffffff !important; }
-.ld-avatar-btn { background: linear-gradient(135deg, #2563eb, #4f46e5) !important; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25) !important; }
-
-/* ── CARDS — white ── */
-.ld-stat-card, .ld-modal-content, .ld-overview, .ld-qa-card {
-  background: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
-  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px rgba(17, 24, 39, 0.05) !important;
-}
-.ld-stat-val { color: #111827 !important; }
-.ld-stat-lbl { color: #64748b !important; }
-.ld-overview-header h2 { color: #111827 !important; }
-.ld-qa-name { color: #111827 !important; }
-.ld-qa-desc { color: #64748b !important; }
-.ld-qa-card:hover { border-color: rgba(37, 99, 235, 0.35) !important; box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08) !important; }
-.qa-purple { background: rgba(37, 99, 235, 0.10) !important; color: #2563eb !important; }
-.qa-green { background: rgba(34, 197, 94, 0.12) !important; color: #22c55e !important; }
-.qa-blue { background: rgba(37, 99, 235, 0.10) !important; color: #2563eb !important; }
-.qa-orange { background: rgba(245, 158, 11, 0.12) !important; color: #f59e0b !important; }
-.ld-view-reports { background: rgba(37, 99, 235, 0.08) !important; border-color: rgba(37, 99, 235, 0.2) !important; color: #2563eb !important; }
-.ld-view-reports:hover { background: #2563eb !important; color: #ffffff !important; }
-
-/* ── INPUTS & FORMS ── */
-.ld-input, .ld-select, .ld-textarea,
-.admin.ejs input[type="text"], .admin.ejs input[type="email"], .admin.ejs input[type="password"], .admin.ejs input[type="number"],
-.admin.ejs select, .admin.ejs textarea {
-  background: #ffffff !important;
-  border-color: #e5e7eb !important;
-  color: #111827 !important;
-}
-.admin.ejs .ld-input:focus, .admin.ejs .ld-select:focus, .admin.ejs select:focus, .admin.ejs input:focus {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-}
-.ld-form-group label { color: #475569 !important; }
-.ld-search-box { background: #ffffff !important; border-color: #e5e7eb !important; }
-.ld-search-box input { color: #111827 !important; }
-
-/* ── BUTTONS ── */
-.ld-btn { background: rgba(37, 99, 235, 0.08) !important; color: #2563eb !important; }
-.ld-btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5) !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important; }
-.ld-btn-danger { background: rgba(239, 68, 68, 0.10) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.25) !important; }
-.ld-btn-success { background: rgba(34, 197, 94, 0.10) !important; color: #22c55e !important; border: 1px solid rgba(34, 197, 94, 0.25) !important; }
-
-/* ── TABLES ── */
-.ld-shell table, .ld-shell td, .ld-shell th, .ld-shell tr { color: #475569 !important; }
-.ld-shell th { color: #94a3b8 !important; }
-.ld-shell .ld-table tbody td { background: #ffffff !important; border-color: #e5e7eb !important; }
-.ld-shell .ld-table tbody tr:hover td { background: #f8fafc !important; }
-
-/* ── BADGES ── */
-.ld-badge { background: #f1f5f9 !important; color: #475569 !important; }
-.ld-badge-success { background: rgba(34, 197, 94, 0.12) !important; color: #22c55e !important; }
-.ld-badge-danger { background: rgba(239, 68, 68, 0.10) !important; color: #ef4444 !important; }
-.ld-badge-warning { background: rgba(245, 158, 11, 0.12) !important; color: #f59e0b !important; }
-.ld-badge-info { background: rgba(37, 99, 235, 0.10) !important; color: #2563eb !important; }
-
-/* ── MODALS ── */
-.ld-modal-overlay { background: rgba(17, 24, 39, 0.5) !important; }
-.ld-modal-close { background: #f1f5f9 !important; border-color: #e5e7eb !important; color: #475569 !important; }
-.ld-modal-content { color: #111827 !important; }
-</style>
-
