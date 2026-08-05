@@ -393,34 +393,41 @@ router.get('/calendar', async (req, res) => {
   const month = parseInt(req.query.month, 10) || (now.getMonth() + 1);
   const userId = req.session.user_id;
   const sCode = req.session.school_code || 'GLOBAL';
-  try {
-    const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 0);
-    const startStr = `${year}-${String(month).padStart(2, '0')}-01 00:00`;
-    const endStr = `${year}-${String(month).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')} 23:59`;
-    const events = (await pool.query(
-      `SELECT * FROM student_events WHERE (school_code = $1 OR user_id = $2) AND event_date >= $3 AND event_date <= $4 ORDER BY event_date ASC`,
-      [sCode, userId, startStr, endStr])).rows;
-    const assignments = (await pool.query(
-      `SELECT id, title, subject, due_date FROM assignments WHERE school_code = $1 AND due_date IS NOT NULL AND due_date >= $2 AND due_date <= $3`,
-      [sCode, startStr, endStr])).rows;
-    const dueBooks = (await pool.query(
-      `SELECT t.due_date, b.title FROM transactions t JOIN books b ON b.id = t.book_id
-       WHERE t.user_id = $1 AND t.return_date IS NULL AND t.due_date >= $2 AND t.due_date <= $3`,
-      [userId, startStr, endStr])).rows;
 
-    res.render('student_calendar', {
-      title: 'Calendar - librika.in',
-      active: 'calendar',
-      notifCount: 0,
-      year, month, events, assignments, dueBooks,
-      school_name: req.session.school_name || 'E-Pathshala Network'
-    });
-  } catch (err) {
-    console.error('Calendar error:', err);
-    req.flash('error', 'Failed to load calendar');
-    res.redirect('/student');
-  }
+  const startStr = `${year}-${String(month).padStart(2, '0')}-01 00:00`;
+  const endDay = new Date(year, month, 0).getDate();
+  const endStr = `${year}-${String(month).padStart(2, '0')}-${String(endDay).padStart(2, '0')} 23:59`;
+
+  let events = [], assignments = [], dueBooks = [];
+
+  try {
+    events = (await pool.query(
+      `SELECT * FROM student_events WHERE (school_code = $1 OR user_id = $2) AND event_date >= $3 AND event_date <= $4 ORDER BY event_date ASC`,
+      [sCode, userId, startStr, endStr])).rows || [];
+  } catch (e) { events = []; }
+
+  try {
+    assignments = (await pool.query(
+      `SELECT id, title, subject, due_date FROM assignments WHERE school_code = $1 AND due_date IS NOT NULL AND due_date >= $2 AND due_date <= $3`,
+      [sCode, startStr, endStr])).rows || [];
+  } catch (e) { assignments = []; }
+
+  try {
+    dueBooks = (await pool.query(
+      `SELECT t.due_date, b.title FROM transactions t JOIN books b ON b.id = t.book_id WHERE t.user_id = $1 AND t.return_date IS NULL AND t.due_date >= $2 AND t.due_date <= $3`,
+      [userId, startStr, endStr])).rows || [];
+  } catch (e) { dueBooks = []; }
+
+  res.render('student_calendar', {
+    title: 'Calendar - librika.in',
+    active: 'calendar',
+    notifCount: 0,
+    year, month,
+    events,
+    assignments,
+    dueBooks,
+    school_name: req.session.school_name || 'E-Pathshala Network'
+  });
 });
 
 router.post('/api/events', async (req, res) => {
@@ -449,24 +456,30 @@ router.post('/api/events/remove/:id', async (req, res) => {
 /* ── Notifications ──────────────────────────────────────────────── */
 router.get('/notifications', async (req, res) => {
   const filter = req.query.filter || 'all';
+  let rows = [];
   try {
-    let rows;
     if (filter === 'unread') {
       rows = (await pool.query(
-        'SELECT * FROM notifications WHERE user_id = $1 AND is_read = 0 ORDER BY created_at DESC LIMIT 100', [req.session.user_id])).rows;
+        'SELECT * FROM notifications WHERE user_id = $1 AND is_read = 0 ORDER BY created_at DESC LIMIT 100', [req.session.user_id])).rows || [];
     } else if (filter !== 'all') {
       rows = (await pool.query(
-        'SELECT * FROM notifications WHERE user_id = $1 AND type = $2 ORDER BY created_at DESC LIMIT 100', [req.session.user_id, filter])).rows;
+        'SELECT * FROM notifications WHERE user_id = $1 AND type = $2 ORDER BY created_at DESC LIMIT 100', [req.session.user_id, filter])).rows || [];
     } else {
       rows = (await pool.query(
-        'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100', [req.session.user_id])).rows;
+        'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100', [req.session.user_id])).rows || [];
     }
-    res.render('student_notifications', { title: 'Notifications - librika.in', active: 'notifications', notifCount: rows.filter(n => !n.is_read).length, notifications: rows, filter, school_name: req.session.school_name || 'E-Pathshala Network' });
   } catch (err) {
-    console.error('Notifications error:', err);
-    req.flash('error', 'Failed to load notifications');
-    res.redirect('/student');
+    console.error('Notifications DB error:', err);
+    rows = [];
   }
+  res.render('student_notifications', {
+    title: 'Notifications - librika.in',
+    active: 'notifications',
+    notifCount: rows.filter(n => !n.is_read).length,
+    notifications: rows,
+    filter,
+    school_name: req.session.school_name || 'E-Pathshala Network'
+  });
 });
 
 router.post('/notifications/read-all', async (req, res) => {
@@ -490,8 +503,10 @@ router.post('/api/notifications/read', async (req, res) => {
 
 /* ── Assignments ────────────────────────────────────────────────── */
 router.get('/assignments', async (req, res) => {
-  const sCode = req.session.school_code;
+  const sCode = req.session.school_code || 'GLOBAL';
   const stuClass = req.session.class || null;
+  let assignments = [], submissions = [];
+
   try {
     let queryStr = `SELECT * FROM assignments WHERE school_code = $1`;
     const params = [sCode];
@@ -500,15 +515,22 @@ router.get('/assignments', async (req, res) => {
       queryStr += ` AND (class = $${params.length} OR class IS NULL OR class = '')`;
     }
     queryStr += ` ORDER BY due_date ASC`;
-    const assignments = (await pool.query(queryStr, params)).rows;
-    const submissions = (await pool.query(
-      `SELECT * FROM assignment_submissions WHERE user_id = $1`, [req.session.user_id])).rows;
-    res.render('student_assignments', { title: 'Assignments - librika.in', active: 'assignments', notifCount: 0, assignments, submissions, school_name: req.session.school_name || 'E-Pathshala Network' });
-  } catch (err) {
-    console.error('Assignments error:', err);
-    req.flash('error', 'Failed to load assignments');
-    res.redirect('/student');
-  }
+    assignments = (await pool.query(queryStr, params)).rows || [];
+  } catch (e) { assignments = []; }
+
+  try {
+    submissions = (await pool.query(
+      `SELECT * FROM assignment_submissions WHERE user_id = $1`, [req.session.user_id])).rows || [];
+  } catch (e) { submissions = []; }
+
+  res.render('student_assignments', {
+    title: 'Assignments - librika.in',
+    active: 'assignments',
+    notifCount: 0,
+    assignments,
+    submissions,
+    school_name: req.session.school_name || 'E-Pathshala Network'
+  });
 });
 
 router.get('/assignments/:id', async (req, res) => {
@@ -556,15 +578,20 @@ router.post('/assignments/:id/submit', upload.single('file'), async (req, res) =
 
 /* ── Book Requests ──────────────────────────────────────────────── */
 router.get('/requests', async (req, res) => {
+  let requests = [];
   try {
-    const requests = (await pool.query(
-      `SELECT * FROM book_requests WHERE user_id = $1 ORDER BY created_at DESC`, [req.session.user_id])).rows;
-    res.render('student_requests', { title: 'Book Requests - librika.in', active: 'requests', notifCount: 0, requests, success: (req.flash && req.flash('success') && req.flash('success')[0]) ? req.flash('success')[0] : null, error: (req.flash && req.flash('error') && req.flash('error')[0]) ? req.flash('error')[0] : null, school_name: req.session.school_name || 'E-Pathshala Network' });
-  } catch (err) {
-    console.error('Requests error:', err);
-    req.flash('error', 'Failed to load requests');
-    res.redirect('/student');
-  }
+    requests = (await pool.query(
+      `SELECT * FROM book_requests WHERE user_id = $1 ORDER BY created_at DESC`, [req.session.user_id])).rows || [];
+  } catch (err) { requests = []; }
+  res.render('student_requests', {
+    title: 'Book Requests - librika.in',
+    active: 'requests',
+    notifCount: 0,
+    requests,
+    success: (req.flash && req.flash('success') && req.flash('success')[0]) ? req.flash('success')[0] : null,
+    error: (req.flash && req.flash('error') && req.flash('error')[0]) ? req.flash('error')[0] : null,
+    school_name: req.session.school_name || 'E-Pathshala Network'
+  });
 });
 
 router.post('/requests', async (req, res) => {
