@@ -110,7 +110,7 @@ body {
     animation: fadeIn 0.8s ease-out;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
     .dashboard { padding-top: 0; }
 }
 
@@ -410,7 +410,7 @@ aside .class-list .btn-alt.active {
     overflow-x: hidden;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 600px) {
     .grid-layout { flex-direction: column; }
     aside { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); padding: 1rem; }
     aside .class-list { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 0; scrollbar-width: none; }
@@ -438,12 +438,12 @@ aside .class-list .btn-alt.active {
     gap: 2rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
     .grid-2-col, .grid-3-col {
         grid-template-columns: 1fr;
     }
 }
-@media (max-width: 1024px) {
+@media (max-width: 600px) {
     .grid-with-sidebar {
         grid-template-columns: 1fr;
     }
@@ -685,7 +685,7 @@ tr:hover td {
     display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
     .chat-panel {
         width: 90vw;
         right: 5vw;
@@ -907,7 +907,7 @@ tr:hover td {
     display: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 600px) {
     .portal-wrapper {
         width: 100% !important;
         max-width: 100% !important;
@@ -1079,7 +1079,7 @@ tr:hover td {
 }
 
 /* Dynamic Scrollable Bottom Navigation Bar on Mobile devices (All Roles) */
-@media (max-width: 1024px) {
+@media (max-width: 600px) {
     nav.bottom-nav, 
     nav.sa-bottom-nav, 
     nav.ld-bottom-nav {

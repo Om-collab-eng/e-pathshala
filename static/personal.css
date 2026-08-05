@@ -454,7 +454,7 @@
 }
 
 /* Responsive Overrides */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
     .personal-sidebar {
         width: 100%;
         height: auto;
