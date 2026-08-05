@@ -1,8 +1,16 @@
 <%- layout("base") %>
-<% contentFor("title") %>Publish Content - librika.in<%%>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+
 <% contentFor("content") %>
 <!-- Load custom Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'publish' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Publish Content' }) %>
+      <main class="sp-content">
+
 
 <style>
     /* Styling System overrides */
@@ -1471,4 +1479,8 @@
         goToStep(1);
     }
 </script>
-<%%>
+
+      </main>
+    </div>
+  </div>
+</div>
