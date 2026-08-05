@@ -1,44 +1,20 @@
+<%- layout('base') %>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
 /* ═══════════════════════════════════════════════
-   LIBRIKA STUDENT PORTAL — LIGHT THEME DEFAULT SYSTEM
-   Supports Instant Live Toggle: Light ☀️ / Dark 🌙 / System 💻
+   LIBRIKA STUDENT PORTAL — PRISTINE SUPER ADMIN STYLE UI
+   Simple, Clean, Bug-Free & 100% Mobile Responsive
 ═══════════════════════════════════════════════ */
-* {
+*, *::before, *::after {
     box-sizing: border-box !important;
 }
 
-/* Light Theme Default */
-:root, [data-theme="light"] {
-    --bg-main: #f8fafc;
-    --bg-card: #ffffff;
-    --bg-sidebar: #ffffff;
-    --bg-topbar: rgba(255, 255, 255, 0.95);
-    --border-color: #e2e8f0;
-    --text-main: #0f172a;
-    --text-muted: #64748b;
-    --accent-purple: #6366f1;
-    --accent-purple-light: #eef2ff;
-    --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-}
-
-/* Dark Theme Support */
-[data-theme="dark"] {
-    --bg-main: #060d1f;
-    --bg-card: #0d1630;
-    --bg-sidebar: #080f22;
-    --bg-topbar: rgba(8, 15, 34, 0.95);
-    --border-color: rgba(99, 102, 241, 0.16);
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
-    --accent-purple: #818cf8;
-    --accent-purple-light: rgba(99, 102, 241, 0.15);
-    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
-
 html, body {
-    background: var(--bg-main) !important;
-    background-color: var(--bg-main) !important;
-    color: var(--text-main) !important;
+    background: #060d1f !important;
+    background-color: #060d1f !important;
+    color: #f1f5f9 !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden !important;
@@ -48,208 +24,54 @@ html, body {
     font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
 
-.portal-wrapper {
+:root {
+    --sp-purple: #818cf8;
+    --sp-purple-mid: #6366f1;
+    --sp-purple-light: rgba(99, 102, 241, 0.15);
+    --sp-green: #34d399;
+    --sp-orange: #fb923c;
+    --sp-red: #f87171;
+    --sp-bg: #060d1f;
+    --sp-card-bg: #0d1630;
+    --sp-sidebar-bg: #080f22;
+    --sp-border: rgba(99, 102, 241, 0.16);
+    --sp-text: #f1f5f9;
+    --sp-muted: #94a3b8;
+}
+
+/* ── LAYOUT SHELL ── */
+.st-shell {
+    display: flex !important;
+    min-height: 100vh !important;
+    background: #060d1f !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    margin: 0 !important;
-    background: var(--bg-main) !important;
-    min-height: 100vh !important;
-    display: flex !important;
     position: relative !important;
     overflow-x: hidden !important;
 }
 
-/* ── REDESIGNED STUDENT SIDEBAR DRAWER ── */
-.st-sidebar {
-    width: 280px !important;
-    max-width: 82vw !important;
-    background: var(--bg-sidebar) !important;
-    border-right: 1px solid var(--border-color) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 0 !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-    flex-shrink: 0 !important;
-    z-index: 9999 !important;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.15) !important;
-    transform: translateX(-105%) !important;
-}
-@media (max-width: 900px) {
-    .st-sidebar.open { transform: translateX(0) !important; box-shadow: 20px 0 60px rgba(0, 0, 0, 0.3) !important; }
-}
-@media (min-width: 901px) {
-    .st-sidebar { transform: translateX(0) !important; position: sticky !important; }
-}
-
-.st-sidebar-header {
-    padding: 1.1rem 1rem !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    flex-shrink: 0 !important;
-    background: var(--bg-sidebar) !important;
-}
-.st-user-info {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    min-width: 0 !important;
-    flex: 1 !important;
-}
-.st-avatar-circle {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    background: linear-gradient(135deg, #6366f1, #a855f7) !important;
-    color: #ffffff !important;
-    font-weight: 800 !important;
-    font-size: 1.05rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-}
-.st-user-meta { min-width: 0 !important; flex: 1 !important; }
-.st-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: var(--text-main) !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.st-user-sub { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: var(--text-muted) !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-
-.st-close-btn {
-    background: rgba(0, 0, 0, 0.05) !important;
-    border: 1px solid var(--border-color) !important;
-    color: var(--text-muted) !important;
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 0.95rem !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-}
-
-.st-sidebar-nav {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    padding: 0.85rem 0.75rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-}
-
-.st-nav-item {
-    display: flex !important;
-    align-items: center !important;
-    height: 48px !important;
-    min-height: 48px !important;
-    padding: 0 12px !important;
-    border-radius: 12px !important;
-    color: var(--text-muted) !important;
-    font-size: 0.88rem !important;
-    font-weight: 600 !important;
-    text-decoration: none !important;
-    background: transparent !important;
-    border: none !important;
-    border-left: 3.5px solid transparent !important;
-    width: 100% !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    box-sizing: border-box !important;
-    white-space: nowrap !important;
-}
-.st-nav-item:hover { background: var(--accent-purple-light) !important; color: var(--accent-purple) !important; }
-.st-nav-item.active { background: var(--accent-purple-light) !important; color: var(--accent-purple) !important; border-left: 4px solid var(--accent-purple) !important; font-weight: 700 !important; }
-
-.st-nav-icon {
-    width: 24px !important;
-    height: 24px !important;
-    font-size: 1.15rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-    margin-right: 12px !important;
-}
-.st-nav-label {
-    flex: 1 !important;
-    text-align: left !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.st-sidebar-footer {
-    padding: 0.85rem 0.75rem !important;
-    border-top: 1px solid var(--border-color) !important;
-    flex-shrink: 0 !important;
-    background: var(--bg-sidebar) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-}
-.st-footer-btn {
-    display: flex !important;
-    align-items: center !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    padding: 0 12px !important;
-    border-radius: 10px !important;
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
-    color: var(--text-muted) !important;
-    text-decoration: none !important;
-    background: rgba(0, 0, 0, 0.04) !important;
-    border: 1px solid var(--border-color) !important;
-    transition: all 0.2s ease !important;
-    width: 100% !important;
-    cursor: pointer !important;
-    box-sizing: border-box !important;
-}
-.st-footer-btn:hover { background: var(--accent-purple-light) !important; color: var(--accent-purple) !important; }
-.st-footer-btn.danger { background: rgba(239, 68, 68, 0.08) !important; color: #ef4444 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
-
-.st-overlay-dim {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(15, 23, 42, 0.6) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 9998 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity 0.28s ease !important;
-}
-.st-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
-
-/* ── MAIN & CONTENT ── */
 .st-main {
-    margin-left: 280px !important;
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
     min-height: 100vh !important;
+    margin-left: 280px !important;
     width: calc(100vw - 280px) !important;
     max-width: 100vw !important;
     overflow-x: hidden !important;
-    background: var(--bg-main) !important;
+    background: #060d1f !important;
+    padding-bottom: 30px !important;
 }
 @media (max-width: 900px) {
     .st-main { margin-left: 0 !important; width: 100vw !important; max-width: 100vw !important; }
 }
 
+/* ── TOPBAR ── */
 .st-topbar {
-    background: var(--bg-topbar) !important;
+    background: rgba(8, 15, 34, 0.92) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
-    border-bottom: 1px solid var(--border-color) !important;
+    border-bottom: 1px solid var(--sp-border) !important;
     padding: 0.85rem 1.5rem !important;
     display: flex !important;
     align-items: center !important;
@@ -259,665 +81,366 @@ html, body {
     z-index: 100 !important;
     gap: 12px !important;
 }
+.st-topbar-left { display: flex !important; align-items: center !important; gap: 12px !important; }
+.st-menu-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+    width: 38px !important; height: 38px !important; border-radius: 10px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 1.1rem !important; cursor: pointer !important;
+}
+@media (min-width: 901px) { .st-menu-btn { display: none !important; } }
 
-.portal-content, .st-content {
-    background: var(--bg-main) !important;
-    padding: 1.5rem !important;
-    padding-bottom: 24px !important;
-    flex: 1 !important;
+.st-brand-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+}
+
+.st-topbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
+.st-notif-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+    width: 38px !important; height: 38px !important; border-radius: 50% !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 1.1rem !important; cursor: pointer !important; position: relative !important;
+}
+.st-notif-badge {
+    position: absolute !important; top: -2px !important; right: -2px !important;
+    background: #f87171 !important; color: white !important; font-size: 0.65rem !important;
+    font-weight: 800 !important; padding: 2px 6px !important; border-radius: 10px !important;
+}
+
+/* ── SIDEBAR DRAWER ── */
+.st-sidebar {
+    width: 280px !important;
+    max-width: 82vw !important;
+    background: var(--sp-sidebar-bg) !important;
+    border-right: 1px solid var(--sp-border) !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 1.5rem !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    height: 100vh !important; height: 100dvh !important;
+    z-index: 9999 !important;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
+    transform: translateX(-105%) !important;
+}
+@media (max-width: 900px) {
+    .st-sidebar.open { transform: translateX(0) !important; box-shadow: 20px 0 60px rgba(0, 0, 0, 0.8) !important; }
+}
+@media (min-width: 901px) {
+    .st-sidebar { transform: translateX(0) !important; position: sticky !important; }
 }
 
-/* CARDS & CONTRAST FIX */
-.reading-card, .recommend-card, .action-card, .stat-card, .goal-banner, .portal-card {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 18px !important;
-    box-shadow: var(--card-shadow) !important;
-    color: var(--text-main) !important;
+.st-sidebar-header {
+    padding: 1.1rem 1rem !important;
+    border-bottom: 1px solid var(--sp-border) !important;
+    display: flex !important; align-items: center !important; justify-content: space-between !important;
+    gap: 10px !important; flex-shrink: 0 !important; background: var(--sp-sidebar-bg) !important;
 }
-.reading-card-title, .recommend-title, .section-title, .goal-title, .stat-value, h1, h2, h3, h4 {
-    color: var(--text-main) !important;
+.st-sidebar-user { display: flex !important; align-items: center !important; gap: 10px !important; flex: 1 !important; min-width: 0 !important; }
+.st-avatar-lg {
+    width: 40px !important; height: 40px !important; border-radius: 50% !important;
+    background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important;
+    font-weight: 800 !important; font-size: 1.05rem !important; display: flex !important;
+    align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
 }
-.reading-card-author, .recommend-author, .stat-label, .goal-subtitle, p, span {
-    color: var(--text-muted);
-}
-.bottom-nav, .portal-bottom-nav, nav.bottom-nav {
-    display: none !important;
+.st-user-meta { min-width: 0 !important; flex: 1 !important; }
+.st-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.st-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: var(--sp-muted) !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+.st-sidebar-close {
+    background: rgba(255, 255, 255, 0.06) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: var(--sp-muted) !important; width: 32px !important; height: 32px !important; border-radius: 50% !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 0.95rem !important; cursor: pointer !important; flex-shrink: 0 !important;
 }
 
-/* ── CRITICAL FIXES FOR IMAGE LARGENING & ACTIONS GRID ── */
-.header-illustration {
-    position: absolute !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 140px !important;
-    max-width: 36vw !important;
-    max-height: 130px !important;
-    object-fit: contain !important;
-    pointer-events: none !important;
-    z-index: 2 !important;
+.st-sidebar-nav {
+    flex: 1 !important; overflow-y: auto !important; padding: 0.85rem 0.75rem !important;
+    display: flex !important; flex-direction: column !important; gap: 4px !important;
 }
 
-/* Constrain all book images so they never enlarge */
-img {
-    max-width: 100% !important;
+.st-nav-item {
+    display: flex !important; align-items: center !important; height: 48px !important; min-height: 48px !important;
+    padding: 0 12px !important; border-radius: 12px !important; color: var(--sp-muted) !important;
+    font-size: 0.88rem !important; font-weight: 600 !important; text-decoration: none !important;
+    background: transparent !important; border: none !important; border-left: 3.5px solid transparent !important;
+    width: 100% !important; cursor: pointer !important; transition: all 0.2s ease !important;
+    box-sizing: border-box !important; white-space: nowrap !important;
 }
-.reading-card-cover, .recommend-card img, .book-card img, .recommend-cover {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 160px !important;
-    max-height: 160px !important;
-    object-fit: cover !important;
-    border-radius: 12px !important;
+.st-nav-item:hover { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; }
+.st-nav-item.active { background: rgba(99, 102, 241, 0.18) !important; color: #ffffff !important; border-left: 4px solid #818cf8 !important; font-weight: 700 !important; }
+
+.st-nav-icon { width: 24px !important; height: 24px !important; font-size: 1.15rem !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; margin-right: 12px !important; }
+.st-nav-text { flex: 1 !important; text-align: left !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+.st-sidebar-footer {
+    padding: 0.85rem 0.75rem !important; border-top: 1px solid var(--sp-border) !important;
+    flex-shrink: 0 !important; background: var(--sp-sidebar-bg) !important; display: flex !important; flex-direction: column !important; gap: 6px !important;
+}
+.st-footer-btn {
+    display: flex !important; align-items: center !important; height: 44px !important; min-height: 44px !important;
+    padding: 0 12px !important; border-radius: 10px !important; font-size: 0.85rem !important; font-weight: 700 !important;
+    color: var(--sp-muted) !important; text-decoration: none !important; background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important; transition: all 0.2s ease !important; width: 100% !important; cursor: pointer !important;
+}
+.st-footer-btn:hover { background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; }
+.st-footer-btn.danger { background: rgba(239, 68, 68, 0.12) !important; color: #f87171 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+
+.st-overlay-dim {
+    position: fixed !important; inset: 0 !important; background: rgba(3, 7, 18, 0.8) !important;
+    backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 9998 !important; opacity: 0 !important; pointer-events: none !important; transition: opacity 0.28s ease !important;
+}
+.st-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
+
+/* ── CONTENT AREA ── */
+.st-content { padding: 1.25rem !important; display: flex !important; flex-direction: column !important; gap: 1.25rem !important; background: #060d1f !important; }
+
+/* ── METRIC STAT CARDS GRID ── */
+.st-stats-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; width: 100% !important; }
+@media (min-width: 901px) { .st-stats-grid { grid-template-columns: repeat(4, 1fr) !important; } }
+
+.st-stat-card {
+    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    border: 1px solid var(--sp-border) !important; border-radius: 18px !important;
+    padding: 14px 12px !important; display: flex !important; flex-direction: column !important;
+    align-items: center !important; text-align: center !important; justify-content: center !important; min-height: 105px !important;
+}
+.st-stat-icon { font-size: 1.4rem !important; margin-bottom: 4px !important; }
+.st-stat-val { font-family: 'Outfit', sans-serif !important; font-size: 1.4rem !important; font-weight: 900 !important; color: #ffffff !important; line-height: 1.1 !important; }
+.st-stat-lbl { font-size: 0.72rem !important; color: var(--sp-muted) !important; font-weight: 700 !important; margin-top: 2px !important; }
+
+/* ── CARDS & TABLES ── */
+.st-card {
+    background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+    border: 1px solid var(--sp-border) !important; border-radius: 20px !important;
+    padding: 1.25rem !important; color: #f1f5f9 !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important;
 }
 
-/* Quick Actions Grid layout & cards */
-.actions-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    margin-bottom: 1.25rem !important;
-}
-@media (min-width: 600px) {
-    .actions-grid { grid-template-columns: repeat(4, 1fr) !important; }
-}
+.st-table-container { width: 100% !important; max-width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; margin-top: 10px !important; border-radius: 14px !important; }
+table.st-table { width: 100% !important; border-collapse: collapse !important; text-align: left !important; font-size: 0.85rem !important; }
+table.st-table th { background: rgba(99, 102, 241, 0.1) !important; color: #a5b4fc !important; font-weight: 800 !important; padding: 12px 14px !important; border-bottom: 1px solid var(--sp-border) !important; white-space: nowrap !important; }
+table.st-table td { padding: 12px 14px !important; border-bottom: 1px solid rgba(99, 102, 241, 0.08) !important; color: #94a3b8 !important; vertical-align: middle !important; word-break: break-word !important; }
 
-.action-card {
-    background: var(--bg-card, #ffffff) !important;
-    border: 1px solid var(--border-color, #e2e8f0) !important;
-    border-radius: 16px !important;
-    padding: 14px 10px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    text-decoration: none !important;
-    color: var(--text-main, #0f172a) !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04) !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    min-height: 90px !important;
+/* ── BUTTONS ── */
+.st-btn {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    gap: 8px !important; padding: 9px 16px !important; min-height: 40px !important; border-radius: 12px !important;
+    font-size: 0.85rem !important; font-weight: 700 !important; cursor: pointer !important;
+    transition: all 0.2s ease !important; text-decoration: none !important; border: none !important;
+    background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; box-sizing: border-box !important;
 }
-.action-card:hover { transform: translateY(-2px) !important; }
+.st-btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important; }
+.st-btn-danger { background: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; border: 1px solid rgba(239, 68, 68, 0.25) !important; }
+.st-btn-success { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; border: 1px solid rgba(16, 185, 129, 0.25) !important; }
+.st-btn-xs { padding: 4px 10px !important; min-height: 32px !important; font-size: 0.75rem !important; border-radius: 8px !important; }
 
-.action-icon-wrapper {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 12px !important;
-    background: rgba(99, 102, 241, 0.12) !important;
-    color: #6366f1 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.2rem !important;
-    margin-bottom: 6px !important;
-    flex-shrink: 0 !important;
-}
-
-.action-label {
-    font-size: 0.78rem !important;
-    font-weight: 700 !important;
-    color: var(--text-main, #0f172a) !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    max-width: 100% !important;
-}
+/* REMOVE BOTTOM NAVS */
+.bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav { display: none !important; height: 0 !important; visibility: hidden !important; }
 </style>
-<style>
-/* sp- conversion overrides */
-.desktop-sidebar, .st-sidebar, .st-overlay-dim, #sidebarBackdrop, .portal-bottom-nav { display: none !important; }
-.portal-wrapper { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; background: transparent !important; }
-.portal-main { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; background: transparent !important; min-height: 0 !important; overflow: visible !important; }
-.portal-header-top { display: none !important; }
-.portal-header { display: block !important; }
-.portal-content { padding: 0 !important; }
-.portal-grid { display: grid !important; grid-template-columns: 1fr !important; gap: 1.5rem !important; }
-@media (min-width: 900px) { .portal-grid { grid-template-columns: 2fr 1fr !important; } }
-</style>
-<% contentFor("head") %>
-<% contentFor("content") %>
-<% var spNotif = (typeof stats !== 'undefined' && stats) ? ((stats.due_soon_count || 0) + (stats.overdue_count || 0)) : 0; %>
-<div class="sp-page">
-  <div class="sp-layout">
-    <%- include('partials/student_sidebar', { active: 'dashboard' }) %>
-    <div class="sp-main">
-      <%- include('partials/student_topbar', { title: 'Student Dashboard', notifCount: spNotif }) %>
-      <main class="sp-content">
-<div class="portal-wrapper">
-    <!-- Desktop Sidebar Navigation -->
-    <aside class="desktop-sidebar">
-        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 12px; padding-bottom: 1rem;">
-            <% const sName = (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : (typeof user_name !== 'undefined' ? user_name : 'Student'); %>
-            <% const sInitial = sName.trim()[0].toUpperCase(); %>
-            <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.15rem; flex-shrink: 0; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
-                <%= sInitial %>
+
+<div class="st-overlay-dim" id="studentDim" onclick="toggleStudentSidebar()"></div>
+
+<div class="st-shell">
+    <!-- ══ SIDEBAR DRAWER ══ -->
+    <aside class="st-sidebar" id="studentSidebar">
+        <!-- Header -->
+        <div class="st-sidebar-header">
+            <div class="st-sidebar-user">
+                <% const stuName = (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : (typeof user_name !== 'undefined' ? user_name : 'Student'); %>
+                <% const stuInitial = stuName.trim()[0].toUpperCase(); %>
+                <div class="st-avatar-lg">
+                    <%= stuInitial %>
+                </div>
+                <div class="st-user-meta">
+                    <h4 class="st-user-name"><%= stuName %></h4>
+                    <p class="st-user-school"><%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'E-Pathshala Network' %></p>
+                </div>
             </div>
-            <div class="brand-info" style="min-width: 0;">
-                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--text-high); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= sName %></h4>
-                <p style="margin: 0; font-size: 0.72rem; color: var(--text-mid); font-weight: 600;">Student Portal</p>
-            </div>
+            <button class="st-sidebar-close" onclick="toggleStudentSidebar()" aria-label="Close sidebar">✕</button>
         </div>
-        <nav class="sidebar-menu">
-            <a href="/student" class="sidebar-link active">
-                <span class="link-icon">📊</span>
-                <span>Dashboard</span>
+
+        <!-- Navigation List -->
+        <nav class="st-sidebar-nav">
+            <a href="/student" class="st-nav-item active">
+                <span class="st-nav-icon">🏠</span>
+                <span class="st-nav-text">Dashboard</span>
             </a>
-            <a href="/leaderboard" class="sidebar-link">
-                <span class="link-icon">🏆</span>
-                <span>Leaderboard</span>
+            <a href="/student/browse" class="st-nav-item">
+                <span class="st-nav-icon">📚</span>
+                <span class="st-nav-text">Digital Library</span>
             </a>
-            <a href="/student/browse" class="sidebar-link">
-                <span class="link-icon">📚</span>
-                <span>Digital Library</span>
+            <a href="/digital-library" class="st-nav-item">
+                <span class="st-nav-icon">🌐</span>
+                <span class="st-nav-text">Community Library</span>
             </a>
-            <a href="/digital-library" class="sidebar-link">
-                <span class="link-icon">🌐</span>
-                <span>Community Library</span>
+            <a href="/student/my-publications" class="st-nav-item">
+                <span class="st-nav-icon">📖</span>
+                <span class="st-nav-text">My Books</span>
             </a>
-            <a href="/student/publish" class="sidebar-link">
-                <span class="link-icon">✏️</span>
-                <span>Publish Content</span>
+            <a href="/student/assignments" class="st-nav-item">
+                <span class="st-nav-icon">📝</span>
+                <span class="st-nav-text">Assignments</span>
             </a>
-            <a href="/student/my-publications" class="sidebar-link">
-                <span class="link-icon">📄</span>
-                <span>Publications</span>
+            <a href="/student/requests" class="st-nav-item">
+                <span class="st-nav-icon">📋</span>
+                <span class="st-nav-text">Book Requests</span>
             </a>
-            <a href="/student/bookmarks" class="sidebar-link">
-                <span class="link-icon">🔖</span>
-                <span>Saved Items</span>
+            <a href="/student/calendar" class="st-nav-item">
+                <span class="st-nav-icon">📅</span>
+                <span class="st-nav-text">Calendar</span>
             </a>
-            <a href="/student/profile" class="sidebar-link">
-                <span class="link-icon">👤</span>
-                <span>My Profile</span>
+            <a href="/student/goals" class="st-nav-item">
+                <span class="st-nav-icon">🎯</span>
+                <span class="st-nav-text">Reading Goals</span>
             </a>
-            <hr class="sidebar-divider">
-            <a href="/logout" class="sidebar-link logout-link">
-                <span class="link-icon">🚪</span>
-                <span>Log Out</span>
+            <a href="/student/browse?ai=true" class="st-nav-item">
+                <span class="st-nav-icon">🔍</span>
+                <span class="st-nav-text">AI Search</span>
+            </a>
+            <a href="/student/notifications" class="st-nav-item">
+                <span class="st-nav-icon">🔔</span>
+                <span class="st-nav-text">Notifications</span>
+            </a>
+            <a href="/student/profile" class="st-nav-item">
+                <span class="st-nav-icon">👤</span>
+                <span class="st-nav-text">My Profile</span>
+            </a>
+            <a href="/student/settings" class="st-nav-item">
+                <span class="st-nav-icon">⚙️</span>
+                <span class="st-nav-text">Settings</span>
+            </a>
+            <a href="/student/help" class="st-nav-item">
+                <span class="st-nav-icon">❓</span>
+                <span class="st-nav-text">Help & Support</span>
             </a>
         </nav>
-        
-        <div class="sidebar-profile-card">
-            <div class="profile-card-avatar">
-                <%= session.name ? session.name[0] : 'S' %>
-            </div>
-            <div class="profile-card-info">
-                <h5><%= session.name %></h5>
-                <p>Class: <%= session.class %></p>
-            </div>
+
+        <!-- Sticky Footer -->
+        <div class="st-sidebar-footer">
+            <a href="/logout" class="st-footer-btn danger">
+                <span class="st-nav-icon">🚪</span>
+                <span>Logout</span>
+            </a>
         </div>
     </aside>
 
-    <!-- Main Container -->
-    <div class="portal-main">
-        <!-- Header -->
-        <header class="portal-header">
-            <div class="portal-header-top">
-                <!-- Hamburger button and User Profile (top-left) -->
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button class="header-btn" onclick="toggleSidebarMenu()" title="Main Menu">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                    <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.href='/student/profile'">
-                        <% const userHeaderName = (session && (session.user_name || session.name) ? (session.user_name || session.name) : (typeof user_name !== 'undefined' ? user_name : 'Student')); %>
-                        <% const userHeaderInitial = userHeaderName.trim()[0].toUpperCase(); %>
-                        <div class="header-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.15)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
-                            <% if (session && session.profile_photo) { %>
-                                <img src="<%= session.profile_photo %>" style="width: 100%; height: 100%; object-fit: cover;" alt="<%= userHeaderName %>">
-                            <% } else { %>
-                                <%= userHeaderInitial %>
-                            <% } %>
-                        </div>
-                        <span style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;"><%= userHeaderName %></span>
-                    </div>
-                </div>
-                <div class="portal-header-actions">
-                    <!-- Notifications button -->
-                    <button class="header-btn" onclick="window.location.href='/student/bookmarks'" title="Notifications" style="position: relative;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <% var alert_count = (stats.due_soon_count || 0) + (stats.overdue_count || 0); %>
-                        <% if (alert_count > 0) { %>
-                        <span class="header-badge"><%= alert_count %></span>
-                        <% } else { %>
-                        <span class="header-badge" style="background: var(--sp-purple); border-color: #3b2bc4;">3</span>
-                        <% } %>
-                    </button>
-                </div>
+    <!-- ══ MAIN CONTENT ══ -->
+    <main class="st-main">
+        <!-- Topbar -->
+        <div class="st-topbar">
+            <div class="st-topbar-left">
+                <button class="st-menu-btn" onclick="toggleStudentSidebar()" aria-label="Menu">☰</button>
+                <span class="st-brand-title">🎓 Student Portal</span>
             </div>
-            <div class="portal-welcome">
-                <h2>Hello, <%= session.name ? session.name.split(' ')[0] : 'Student' %>! 👋</h2>
-                <p>Welcome back to your Digital Library</p>
-            </div>
-            <img src="/student_books_illustration.png" class="header-illustration" alt="Digital Library">
-        </header>
-
-        <!-- Content overlapping -->
-        <div class="portal-content">
-            <div class="portal-grid">
-                
-                <!-- Left Column (Main content blocks) -->
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <!-- Quick Actions Grid -->
-                    <div>
-                        <div class="section-header">
-                            <h3 class="section-title">Quick Actions</h3>
-                        </div>
-                        <div class="actions-grid">
-                            <a href="/student/browse" class="action-card">
-                                <div class="action-icon-wrapper" style="background: var(--sp-purple-light); color: var(--sp-purple);">🔍</div>
-                                <span class="action-label">Browse Library</span>
-                            </a>
-                            
-                            <% if (school_perms && school_perms.canUsePublishing) { %>
-                            <a href="/student/publish" class="action-card">
-                                <div class="action-icon-wrapper" style="background: var(--sp-pink-light); color: var(--sp-pink);">✏️</div>
-                                <span class="action-label">Publish Content</span>
-                            </a>
-                            <% } else { %>
-                            <div class="action-card" onclick="requireFeature('PROFESSIONAL', 'E-Library Publishing')" style="opacity: 0.7; cursor: pointer;">
-                                <div class="action-icon-wrapper" style="background: var(--sp-pink-light); color: var(--sp-pink);">🔒</div>
-                                <span class="action-label">Publish Content</span>
-                            </div>
-                            <% } %>
-                            
-                            <a href="/student/bookmarks" class="action-card">
-                                <div class="action-icon-wrapper" style="background: var(--sp-orange-light); color: var(--sp-orange);">🔖</div>
-                                <span class="action-label">My Bookmarks</span>
-                            </a>
-                            <a href="/student/my-publications" class="action-card">
-                                <div class="action-icon-wrapper" style="background: var(--sp-green-light); color: var(--sp-green);">📄</div>
-                                <span class="action-label">My Publications</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Continue Reading Section -->
-                    <div>
-                        <div class="section-header">
-                            <h3 class="section-title">Continue Reading</h3>
-                            <a href="/student" class="section-link">View All ➔</a>
-                        </div>
-                        
-                        <% if (transactions && transactions.length) { %>
-                            <% var reading_tx = transactions[0]; %>
-                            <div class="reading-card">
-                                <div class="reading-card-info">
-                                    <img src="<%= reading_tx.cover_url || '/static/placeholder-cover.jpg' %>" class="reading-card-cover" alt="<%= reading_tx.title %>" onerror="generateBookCoverFallback(this, '<%= reading_tx.title %>', '<%= reading_tx.author %>', '<%= reading_tx.genre || reading_tx.category || 'Literature' %>')" data-fallback-title="<%= reading_tx.title %>" data-fallback-author="<%= reading_tx.author %>" data-fallback-genre="<%= reading_tx.genre || reading_tx.category || 'Literature' %>">
-                                    <div class="reading-card-details">
-                                        <h4 class="reading-card-title"><%= reading_tx.title %></h4>
-                                        <p class="reading-card-author"><%= reading_tx.author %></p>
-                                        <% var day_hash = (reading_tx.book_id % 4) + 1; %>
-                                        <% var total_pages = (reading_tx.book_id % 15) + 12; %>
-                                        <div class="reading-card-progress-text">
-                                            <span>Page <%= day_hash %> of <%= total_pages %></span>
-                                            <span><%= Math.round((day_hash / total_pages) * 100) %>%</span>
-                                        </div>
-                                        <div class="reading-card-progress-bar">
-                                            <div class="reading-card-progress-fill" style="width: <%= (day_hash / total_pages) * 100 %>%;"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <a href="/student/book/<%= reading_tx.book_id %>" class="resume-btn">
-                                    <span>▶ Resume Reading</span>
-                                </a>
-                            </div>
-                        <% } else { %>
-                            <div class="reading-card">
-                                <div class="reading-card-info">
-                                    <div class="reading-card-cover-fallback" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);">💡</div>
-                                    <div class="reading-card-details">
-                                        <h4 class="reading-card-title">Explore E-Pathshala</h4>
-                                        <p class="reading-card-author">SaaS Digital Shelf</p>
-                                        <p style="font-size: 0.78rem; color: var(--sp-text-muted); margin: 0; line-height: 1.4;">Borrow and read electronic books from the global library catalog.</p>
-                                    </div>
-                                </div>
-                                <a href="/student/browse" class="resume-btn" style="background: #e0f2fe; color: #0284c7;">
-                                    <span>📚 Browse Catalog</span>
-                                </a>
-                            </div>
-                        <% } %>
-                    </div>
-
-                    <!-- My Reading History & Quizzes Section -->
-                    <div>
-                        <div class="section-header">
-                            <h3 class="section-title">📊 Quizzes & Reviews</h3>
-                        </div>
-                        
-                        <div style="background: var(--sp-white); border-radius: 24px; padding: 1.25rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 15px;">
-                            <!-- Physical Book History -->
-                            <div>
-                                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--sp-text-dark); margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">📚 Physical Book Challenges</h4>
-                                <% if (returned_transactions && returned_transactions.length) { %>
-                                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                                        <% returned_transactions.forEach(function(tx) { %>
-                                        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--sp-bg-light); padding: 10px 14px; border-radius: 16px;">
-                                            <div style="flex-grow: 1; min-width: 0; padding-right: 10px;">
-                                                <div style="font-weight: 800; font-size: 0.85rem; color: var(--sp-text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= tx.title %></div>
-                                                <div style="font-size: 0.72rem; color: var(--sp-text-muted); margin-top: 2px;">Returned: <%= tx.return_date %></div>
-                                            </div>
-                                            <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
-                                                <% if (tx.quiz_passed != null) { %>
-                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-green); background: var(--sp-green-light); padding: 6px 10px; border-radius: 12px;">Quiz Passed</span>
-                                                <% } else { %>
-                                                    <a href="/student/quiz/physical/<%= tx.book_id %>" style="font-size: 0.72rem; font-weight: 800; color: white; background: var(--sp-purple); padding: 6px 12px; border-radius: 12px; text-decoration: none;">Take Quiz</a>
-                                                <% } %>
-                                                
-                                                <% if (tx.review_status === 'approved') { %>
-                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-orange); background: var(--sp-orange-light); padding: 6px 10px; border-radius: 12px;">Review Approved</span>
-                                                <% } else if (tx.review_status === 'pending') { %>
-                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-text-muted); background: #e2e8f0; padding: 6px 10px; border-radius: 12px;">Review Pending</span>
-                                                <% } else { %>
-                                                    <a href="/student/review/physical/<%= tx.book_id %>" style="font-size: 0.72rem; font-weight: 800; color: var(--sp-purple); background: var(--sp-purple-light); padding: 6px 12px; border-radius: 12px; text-decoration: none;">Write Review</a>
-                                                <% } %>
-                                            </div>
-                                        </div>
-                                        <% }); %>
-                                    </div>
-                                <% } else { %>
-                                    <div style="font-size: 0.8rem; color: var(--sp-text-muted); text-align: center; padding: 10px 0;">No returned physical books yet.</div>
-                                <% } %>
-                            </div>
-
-                            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 5px 0;">
-
-                            <!-- Digital Book History -->
-                            <div>
-                                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--sp-text-dark); margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">📱 Digital Book Challenges</h4>
-                                <% if (digital_progress && digital_progress.length) { %>
-                                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                                        <% digital_progress.forEach(function(dp) { %>
-                                        <% var percent = dp.total_pages > 0 ? (dp.last_page / dp.total_pages) * 100 : 0; %>
-                                        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--sp-bg-light); padding: 10px 14px; border-radius: 16px;">
-                                            <div style="flex-grow: 1; min-width: 0; padding-right: 10px;">
-                                                <div style="font-weight: 800; font-size: 0.85rem; color: var(--sp-text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= dp.title %></div>
-                                                <div style="font-size: 0.72rem; color: var(--sp-text-muted); margin-top: 2px;">Progress: <%= Math.round(percent) %>%</div>
-                                            </div>
-                                            <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
-                                                <% if (dp.quiz_passed != null) { %>
-                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-green); background: var(--sp-green-light); padding: 6px 10px; border-radius: 12px;">Quiz Passed</span>
-                                                <% } else if (percent >= 80) { %>
-                                                    <a href="/student/quiz/digital/<%= dp.content_id %>" style="font-size: 0.72rem; font-weight: 800; color: white; background: var(--sp-purple); padding: 6px 12px; border-radius: 12px; text-decoration: none;">Take Quiz</a>
-                                                <% } else { %>
-                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-text-muted); background: #e2e8f0; padding: 6px 12px; border-radius: 12px;" title="Unlock at 80% read">Quiz Locked</span>
-                                                <% } %>
-                                                
-                                                <% if (dp.review_status === 'approved') { %>
-                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-orange); background: var(--sp-orange-light); padding: 6px 10px; border-radius: 12px;">Review Approved</span>
-                                                <% } else if (dp.review_status === 'pending') { %>
-                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-text-muted); background: #e2e8f0; padding: 6px 10px; border-radius: 12px;">Review Pending</span>
-                                                <% } else if (percent >= 100) { %>
-                                                    <a href="/student/review/digital/<%= dp.content_id %>" style="font-size: 0.72rem; font-weight: 800; color: var(--sp-purple); background: var(--sp-purple-light); padding: 6px 12px; border-radius: 12px; text-decoration: none;">Write Review</a>
-                                                <% } else { %>
-                                                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--sp-text-muted); background: #e2e8f0; padding: 6px 12px; border-radius: 12px;" title="Unlock at 100% read">Review Locked</span>
-                                                <% } %>
-                                            </div>
-                                        </div>
-                                        <% }); %>
-                                    </div>
-                                <% } else { %>
-                                    <div style="font-size: 0.8rem; color: var(--sp-text-muted); text-align: center; padding: 10px 0;">No digital reading activity yet.</div>
-                                <% } %>
-                            </div>
-                        </div>
-
-                    <!-- Recommended For You Carousel -->
-                    <div>
-                        <div class="section-header">
-                            <h3 class="section-title">Recommended For You</h3>
-                            <a href="/student/browse" class="section-link">View All ➔</a>
-                        </div>
-                        <div class="scroller-container">
-                            <% if (recommended_books && recommended_books.length) { %>
-                                <% recommended_books.forEach(function(book) { %>
-                                    <div class="recommend-card" onclick="window.location.href='/student/book/<%= book.id %>'">
-                                        <img src="<%= book.cover_url || '/static/placeholder-cover.jpg' %>" class="recommend-cover" alt="<%= book.title %>" onerror="generateBookCoverFallback(this, '<%= book.title %>', '<%= book.author %>', '<%= book.genre || book.category || 'Fiction' %>')" data-fallback-title="<%= book.title %>" data-fallback-author="<%= book.author %>" data-fallback-genre="<%= book.genre || book.category || 'Fiction' %>">
-                                        <h4 class="recommend-title"><%= book.title %></h4>
-                                        <p class="recommend-author"><%= book.author %></p>
-                                        <div class="recommend-meta">
-                                            <div class="recommend-rating">
-                                                <span>★</span>
-                                                <span><%= (((book.id % 5) * 0.1 + 4.5)).toFixed(1) %></span>
-                                            </div>
-                                            <button class="recommend-dots" onclick="event.stopPropagation(); showBookOptions('<%= book.id %>')">⋮</button>
-                                        </div>
-                                    </div>
-                                <% }); %>
-                            <% } else { %>
-                                <div class="recommend-card">
-                                    <div class="recommend-cover-fallback" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📘</div>
-                                    <h4 class="recommend-title">Deep Work</h4>
-                                    <p class="recommend-author">Cal Newport</p>
-                                    <div class="recommend-meta">
-                                        <div class="recommend-rating"><span>★</span><span>4.6</span></div>
-                                    </div>
-                                </div>
-                                <div class="recommend-card">
-                                    <div class="recommend-cover-fallback" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">📙</div>
-                                    <h4 class="recommend-title">The Alchemist</h4>
-                                    <p class="recommend-author">Paulo Coelho</p>
-                                    <div class="recommend-meta">
-                                        <div class="recommend-rating"><span>★</span><span>4.8</span></div>
-                                    </div>
-                                </div>
-                            <% } %>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column (Sidebar contents) -->
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <!-- Stats Grid -->
-                    <div>
-                        <div class="section-header">
-                            <h3 class="section-title">My Shelf Stats</h3>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-card" onclick="window.location.href='/student'">
-                                <div class="stat-icon-wrapper" style="background: var(--sp-purple-light); color: var(--sp-purple);">📖</div>
-                                <div class="stat-value"><%= stats.currently_borrowed %></div>
-                                <div class="stat-label">Active Books</div>
-                            </div>
-                            <div class="stat-card" onclick="window.location.href='/student'">
-                                <div class="stat-icon-wrapper" style="background: var(--sp-orange-light); color: var(--sp-orange);">⏰</div>
-                                <div class="stat-value"><%= stats.due_soon_count %></div>
-                                <div class="stat-label">Due Soon</div>
-                            </div>
-                            <div class="stat-card" onclick="window.location.href='/student'">
-                                <div class="stat-icon-wrapper" style="background: var(--sp-pink-light); color: var(--sp-pink);">❗</div>
-                                <div class="stat-value"><%= stats.overdue_count %></div>
-                                <div class="stat-label">Overdue</div>
-                            </div>
-                            <div class="stat-card" onclick="window.location.href='/student'">
-                                <div class="stat-icon-wrapper" style="background: var(--sp-green-light); color: var(--sp-green);">✅</div>
-                                <div class="stat-value"><%= stats.total_read %></div>
-                                <div class="stat-label">Books Read</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Daily Reading Goal -->
-                    <div>
-                        <div class="section-header">
-                            <h3 class="section-title">Reading Goal</h3>
-                        </div>
-                        <div class="goal-banner">
-                            <div class="goal-header">
-                                <div class="goal-icon-wrapper">🏆</div>
-                                <div class="goal-text">
-                                    <h4 class="goal-title">Daily Reading Goal</h4>
-                                    <p class="goal-subtitle">Read 20 pages today</p>
-                                </div>
-                                <% var goal_progress = (stats.total_read || 0) * 5 % 20; %>
-                                <span class="goal-value"><%= goal_progress %> / 20</span>
-                            </div>
-                            <div class="reading-card-progress-bar" style="background: rgba(92, 60, 243, 0.08);">
-                                <div class="reading-card-progress-fill" style="width: <%= (goal_progress / 20) * 100 %>%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+            <div class="st-topbar-right">
+                <a href="/student/browse" class="st-btn st-btn-primary st-btn-xs">📚 Catalog</a>
+                <a href="/student/notifications" class="st-notif-btn">
+                    🔔
+                    <% const notifBadgeCount = (typeof stats !== 'undefined' && stats) ? ((stats.due_soon_count || 0) + (stats.overdue_count || 0)) : 0; %>
+                    <% if (notifBadgeCount > 0) { %><span class="st-notif-badge"><%= notifBadgeCount %></span><% } %>
+                </a>
             </div>
         </div>
-    </div>
 
-    
+        <div class="st-content">
+            <!-- Hero Welcome Card -->
+            <div class="st-card" style="background: linear-gradient(135deg, #1e1b4b, #312e81) !important;">
+                <h2 style="font-family: 'Outfit'; font-size: 1.4rem; color: #ffffff; margin: 0 0 6px 0;">Hello, <%= (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Student' %>! 👋</h2>
+                <p style="margin: 0; color: #a5b4fc; font-size: 0.88rem;">Welcome back to your Digital Library. Track your reading goals & explore community books!</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="st-stats-grid">
+                <div class="st-stat-card">
+                    <div class="st-stat-icon">📚</div>
+                    <div class="st-stat-val"><%= (typeof stats !== 'undefined' && stats && stats.borrowed_count) ? stats.borrowed_count : (typeof issued_count !== 'undefined' ? issued_count : 0) %></div>
+                    <div class="st-stat-lbl">Active Loans</div>
+                </div>
+                <div class="st-stat-card">
+                    <div class="st-stat-icon">🎯</div>
+                    <div class="st-stat-val"><%= (typeof stats !== 'undefined' && stats && stats.goal_pages) ? stats.goal_pages : 20 %></div>
+                    <div class="st-stat-lbl">Daily Goal Pages</div>
+                </div>
+                <div class="st-stat-card">
+                    <div class="st-stat-icon">🏆</div>
+                    <div class="st-stat-val"><%= (typeof stats !== 'undefined' && stats && stats.reader_score) ? stats.reader_score : 100 %></div>
+                    <div class="st-stat-lbl">Reader Score</div>
+                </div>
+                <div class="st-stat-card">
+                    <div class="st-stat-icon">🔥</div>
+                    <div class="st-stat-val" style="color: #fb923c;"><%= (typeof stats !== 'undefined' && stats && stats.streak) ? stats.streak : 1 %> Day</div>
+                    <div class="st-stat-lbl">Reading Streak</div>
+                </div>
+            </div>
+
+            <!-- Currently Reading / Issued Books Table -->
+            <div class="st-card">
+                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 10px 0;">📖 My Borrowed Books</h3>
+                <div class="st-table-container">
+                    <table class="st-table">
+                        <thead>
+                            <tr>
+                                <th>Book Title</th>
+                                <th>Issue Date</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (typeof issued_books !== 'undefined' && issued_books && issued_books.length > 0) { %>
+                                <% issued_books.forEach(b => { %>
+                                    <tr>
+                                        <td style="font-weight: 700; color: #ffffff;"><%= b.title %></td>
+                                        <td><%= b.issue_date %></td>
+                                        <td><%= b.due_date %></td>
+                                        <td>
+                                            <% if (b.is_overdue) { %>
+                                                <span style="color: #f87171; font-weight: 700;">OVERDUE</span>
+                                            <% } else { %>
+                                                <span style="color: #34d399; font-weight: 700;">Issued</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr><td colspan="4" style="text-align: center; color: var(--sp-muted);">No active book loans. <a href="/student/browse" style="color: #818cf8;">Browse Digital Library</a></td></tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
 
-<!-- Simple Mobile Sidebar Drawer -->
-<div class="st-overlay-dim" id="sidebarBackdrop" onclick="toggleSidebarMenu()"></div>
-
-<aside class="st-sidebar" id="portalSidebar">
-    <!-- Header -->
-    <div class="st-sidebar-header">
-        <div class="st-user-info">
-            <% const userInitial = ((session && (session.name || session.user_name)) ? (session.name || session.user_name).trim()[0] : 'S').toUpperCase(); %>
-            <div class="st-avatar-circle"><%= userInitial %></div>
-            <div class="st-user-meta">
-                <h4 class="st-user-name"><%= (session && (session.name || session.user_name)) ? (session.name || session.user_name) : 'Student' %></h4>
-                <p class="st-user-sub">Class <%= (session && session.class) ? session.class : '10th' %> &bull; <%= (session && session.school_name) ? session.school_name : 'E-Pathshala' %></p>
-            </div>
-        </div>
-        <button class="st-close-btn" onclick="toggleSidebarMenu()" aria-label="Close sidebar">✕</button>
-    </div>
-
-    <!-- Navigation Items -->
-    <nav class="st-sidebar-nav">
-        <a href="/student" class="st-nav-item active" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">🏠</span>
-            <span class="st-nav-label">Home</span>
-        </a>
-        <a href="/student/browse" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">📚</span>
-            <span class="st-nav-label">Digital Library</span>
-        </a>
-        <a href="/digital-library" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">👥</span>
-            <span class="st-nav-label">Community Library</span>
-        </a>
-        <a href="/student/my-publications" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">📖</span>
-            <span class="st-nav-label">My Books</span>
-        </a>
-        <a href="/student/assignments" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">📝</span>
-            <span class="st-nav-label">Assignments</span>
-        </a>
-        <a href="/student/requests" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">📋</span>
-            <span class="st-nav-label">Book Requests</span>
-        </a>
-        <a href="/student/calendar" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">📅</span>
-            <span class="st-nav-label">Calendar</span>
-        </a>
-        <a href="/student/goals" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">🎯</span>
-            <span class="st-nav-label">Reading Goals</span>
-        </a>
-        <a href="/student/browse?ai=true" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">🔍</span>
-            <span class="st-nav-label">AI Search</span>
-        </a>
-        <a href="/student/notifications" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">🔔</span>
-            <span class="st-nav-label">Notifications</span>
-        </a>
-        <a href="/student/profile" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">👤</span>
-            <span class="st-nav-label">My Profile</span>
-        </a>
-        <a href="/student/settings" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">⚙️</span>
-            <span class="st-nav-label">Settings</span>
-        </a>
-        <a href="/student/help" class="st-nav-item" onclick="autoCloseStudentSidebar()">
-            <span class="st-nav-icon">❓</span>
-            <span class="st-nav-label">Help & Support</span>
-        </a>
-    </nav>
-
-    <!-- Sticky Footer Actions -->
-    <div class="st-sidebar-footer">
-        <button onclick="cycleTheme()" class="st-footer-btn" type="button">
-            <span class="st-nav-icon">☀️</span>
-            <span id="themeBtnText">Appearance: Light</span>
-        </button>
-        <a href="/logout" class="st-footer-btn danger">
-            <span class="st-nav-icon">🚪</span>
-            <span>Logout</span>
-        </a>
-    </div>
-</aside>
-
 <script>
-function getSystemTheme() {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-function applyTheme(theme) {
-    let activeTheme = theme;
-    if (theme === 'system') {
-        activeTheme = getSystemTheme();
-    }
-    document.documentElement.setAttribute('data-theme', activeTheme);
-    localStorage.setItem('librika_student_theme', theme);
-    
-    const btnText = document.getElementById('themeBtnText');
-    if (btnText) {
-        btnText.textContent = theme === 'dark' ? 'Appearance: 🌙 Dark' : (theme === 'light' ? 'Appearance: ☀️ Light' : 'Appearance: 💻 System');
-    }
-}
-
-function cycleTheme() {
-    const current = localStorage.getItem('librika_student_theme') || 'light';
-    const next = current === 'light' ? 'dark' : (current === 'dark' ? 'system' : 'light');
-    applyTheme(next);
-}
-
-function toggleSidebarMenu() {
-    const sidebar = document.getElementById('portalSidebar');
-    const backdrop = document.getElementById('sidebarBackdrop');
-    if (!sidebar) return;
-    sidebar.classList.toggle('open');
-    if (backdrop) backdrop.classList.toggle('active', sidebar.classList.contains('open'));
+function toggleStudentSidebar() {
+    const sb = document.getElementById('studentSidebar');
+    const dim = document.getElementById('studentDim');
+    if (!sb) return;
+    sb.classList.toggle('open');
+    if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
 }
 
 function autoCloseStudentSidebar() {
-    const sidebar = document.getElementById('portalSidebar');
-    const backdrop = document.getElementById('sidebarBackdrop');
-    if (sidebar) sidebar.classList.remove('open');
-    if (backdrop) backdrop.classList.remove('active');
+    if (window.innerWidth <= 900) {
+        const sb = document.getElementById('studentSidebar');
+        const dim = document.getElementById('studentDim');
+        if (sb) sb.classList.remove('open');
+        if (dim) dim.classList.remove('active');
+    }
 }
 
-// Auto restore saved theme on load
-document.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('librika_student_theme') || 'light';
-    applyTheme(saved);
-});
-
-// Close sidebar on Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') autoCloseStudentSidebar();
 });
 </script>
-
-      </main>
-    </div>
-  </div>
-</div>
