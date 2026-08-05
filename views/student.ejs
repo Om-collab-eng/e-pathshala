@@ -1,7 +1,184 @@
-<%- layout("base") %>
-<% contentFor("title") %>Student Portal - E-Pathshala Network<%%>
-<% contentFor("head") %>
 <style>
+/* ═══════════════════════════════════════════════
+   STUDENT PORTAL — PREMIUM DARK NAVY DESIGN SYSTEM
+   Zero Whitespace, Mobile Responsive & Isolated Theme
+═══════════════════════════════════════════════ */
+html, body {
+  background: #060d1f !important;
+  background-color: #060d1f !important;
+  color: #f1f5f9 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  padding-top: 0 !important;
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  min-height: 100vh !important;
+}
+
+:root {
+  --sp-purple: #818cf8;
+  --sp-purple-light: rgba(99, 102, 241, 0.15);
+  --sp-pink-light: rgba(236, 72, 153, 0.15);
+  --sp-pink: #f472b6;
+  --sp-orange-light: rgba(249, 115, 22, 0.15);
+  --sp-orange: #fb923c;
+  --sp-green-light: rgba(16, 185, 129, 0.15);
+  --sp-green: #34d399;
+  --sp-text-dark: #f1f5f9;
+  --sp-text-muted: #94a3b8;
+  --sp-bg-light: #060d1f;
+  --sp-white: #0d1630;
+}
+
+.portal-wrapper {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  background: #060d1f !important;
+  min-height: 100vh;
+  display: flex;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  color: #f1f5f9;
+}
+
+/* ── STUDENT SIDEBAR ── */
+.st-sidebar {
+  width: 260px;
+  max-width: 85vw;
+  background: #080f22;
+  border-right: 1px solid rgba(99, 102, 241, 0.14);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 9999;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+}
+@media (max-width: 900px) {
+  .st-sidebar { transform: translateX(-105%); }
+  .st-sidebar.open { transform: translateX(0); box-shadow: 20px 0 60px rgba(0, 0, 0, 0.8); }
+}
+
+.st-sidebar-brand {
+  padding: 1.1rem 1.2rem 0.9rem;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.st-brand-logo { display: flex; align-items: center; gap: 10px; }
+.st-brand-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+.st-brand-text h2 {
+  font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 900; margin: 0;
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.st-brand-text p { font-size: 0.67rem; color: #475569; margin: 1px 0 0; font-weight: 600; }
+
+.st-sidebar-close-mob {
+  display: none; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8; width: 36px; height: 36px; border-radius: 9px; align-items: center;
+  justify-content: center; font-size: 1.1rem; cursor: pointer;
+}
+@media (max-width: 900px) { .st-sidebar-close-mob { display: flex; } }
+
+.st-nav {
+  flex: 1; overflow-y: auto; padding: 0.75rem 0.6rem;
+  scrollbar-width: thin; scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.st-nav-section-title {
+  font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px;
+  color: #475569; padding: 0.7rem 0.7rem 0.35rem; margin-top: 0.5rem;
+  display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none;
+}
+.st-nav-section-title:first-child { margin-top: 0; }
+.st-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.st-nav-link {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-height: 44px;
+  border-radius: 10px; color: #94a3b8; font-size: 0.83rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s ease; margin-bottom: 2px; border: 1px solid transparent;
+  background: none; width: 100%; text-align: left; white-space: nowrap; text-decoration: none; box-sizing: border-box;
+}
+.st-nav-link:hover { background: rgba(99, 102, 241, 0.1); color: #a5b4fc; }
+.st-nav-link.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.24), rgba(168, 85, 247, 0.14));
+  color: #a5b4fc; border-left: 3.5px solid #818cf8; border-color: rgba(99, 102, 241, 0.25); font-weight: 700;
+}
+
+.st-sidebar-footer {
+  padding: 0.85rem; border-top: 1px solid rgba(99, 102, 241, 0.12);
+  flex-shrink: 0; background: #080f22; display: flex; flex-direction: column; gap: 8px;
+}
+.st-user-chip {
+  display: flex; align-items: center; gap: 9px; padding: 8px 10px;
+  background: rgba(99, 102, 241, 0.08); border-radius: 11px; border: 1px solid rgba(99, 102, 241, 0.14);
+}
+
+/* Semi-transparent dark overlay for mobile */
+.st-overlay-dim {
+  position: fixed; inset: 0; background: rgba(3, 7, 18, 0.75);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.28s ease;
+}
+.st-overlay-dim.active { opacity: 1; pointer-events: auto; }
+
+/* ── MAIN CONTENT ── */
+.st-main {
+  margin-left: 260px; flex: 1; display: flex; flex-direction: column;
+  min-height: 100vh; width: calc(100vw - 260px); max-width: 100vw; overflow-x: hidden;
+}
+@media (max-width: 900px) {
+  .st-main { margin-left: 0 !important; width: 100vw !important; max-width: 100vw !important; }
+}
+
+.st-topbar {
+  background: rgba(8, 15, 34, 0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.12); padding: 0.85rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 12px;
+}
+.st-mob-toggle {
+  display: none; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0; font-size: 1.2rem; cursor: pointer; padding: 8px 12px; border-radius: 10px;
+  min-height: 44px; min-width: 44px; align-items: center; justify-content: center;
+}
+@media (max-width: 900px) { .st-mob-toggle { display: flex; } }
+
+.st-content { padding: 1.5rem; flex: 1; width: 100%; max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
+
+/* ── CARDS & TABLES ISOLATION ── */
+.reading-card, .recommend-card, .action-card, .stat-card, .goal-banner {
+  background: linear-gradient(145deg, #0d1630, #111c3a) !important;
+  border: 1px solid rgba(99, 102, 241, 0.14) !important; color: #f1f5f9 !important;
+}
+.reading-card-title, .recommend-title, .section-title, .goal-title, .stat-value {
+  color: #ffffff !important;
+}
+.reading-card-author, .recommend-author, .stat-label, .goal-subtitle {
+  color: #94a3b8 !important;
+}
+
+/* Table containment */
+.st-page-wrapper table, .st-page-wrapper td, .st-page-wrapper th, .st-page-wrapper tr {
+  display: table-cell !important; background: transparent !important; color: #94a3b8 !important;
+}
+.st-page-wrapper tr { display: table-row !important; }
+.st-page-wrapper table { display: table !important; width: 100% !important; border-collapse: collapse !important; }
+</style>
     /* Styling variables and custom reset */
     :root {
         --sp-purple: #5c3cf3;
@@ -147,12 +324,13 @@
         margin-top: -2.5rem;
         border-top-left-radius: 32px;
         border-top-right-radius: 32px;
-        padding: 1.5rem;
+        padding: 1.5rem 1.5rem 95px 1.5rem; /* Extra bottom padding so Reading Goal card is never clipped by bottom nav */
         position: relative;
         z-index: 20;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        overflow-x: hidden;
     }
 
     .portal-grid {
@@ -165,19 +343,29 @@
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-        background: var(--sp-white);
-        border-radius: 24px;
-        padding: 1rem 0.5rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        gap: 10px;
+        background: transparent;
+        border-radius: 20px;
+        padding: 0;
     }
 
     .stat-card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 12px 6px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        border: 1px solid #f1f5f9;
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
         cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
     }
 
     .stat-icon-wrapper {
@@ -187,20 +375,20 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        margin-bottom: 8px;
+        font-size: 1.25rem;
+        margin-bottom: 6px;
     }
 
     .stat-value {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         font-weight: 800;
-        color: var(--sp-text-dark);
+        color: #0f172a;
         font-family: 'Outfit', sans-serif;
     }
 
     .stat-label {
-        font-size: 0.65rem;
-        color: var(--sp-text-muted);
+        font-size: 0.7rem;
+        color: #475569;
         font-weight: 700;
         margin-top: 2px;
     }
@@ -523,20 +711,25 @@
 
     /* Fixed Bottom Nav Bar (Mobile only) */
     .bottom-nav {
-        position: absolute;
+        position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        height: 75px;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-top: 1px solid #f1f5f9;
-        display: flex;
-        justify-content: space-around;
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        height: 68px;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(226, 232, 240, 0.9);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
         align-items: center;
-        padding: 0 1rem;
+        padding: 0 4px;
+        box-sizing: border-box;
         z-index: 1000;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
     }
 
     .bottom-nav-item {
@@ -545,31 +738,45 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 4px;
-        color: #94a3b8;
+        justify-content: center;
+        gap: 3px;
+        color: #64748b;
         cursor: pointer;
         text-decoration: none;
-        font-size: 0.65rem;
+        font-size: 0.68rem;
         font-weight: 700;
-        transition: color 0.2s;
-        padding: 8px 12px;
+        transition: all 0.2s ease;
+        padding: 6px 2px;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        line-height: 1.1;
     }
 
     .bottom-nav-icon {
-        font-size: 1.35rem;
-        transition: transform 0.2s;
+        font-size: 1.25rem;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .bottom-nav-item:hover {
-        color: var(--sp-purple);
+    .bottom-nav-item span:last-child {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        letter-spacing: -0.2px;
     }
 
+    .bottom-nav-item:hover,
     .bottom-nav-item.active {
         color: var(--sp-purple);
     }
 
     .bottom-nav-item.active .bottom-nav-icon {
-        transform: scale(1.1);
+        transform: translateY(-2px) scale(1.12);
     }
 
     /* Hide global floaters inside this dashboard */
@@ -809,11 +1016,15 @@
 <div class="portal-wrapper">
     <!-- Desktop Sidebar Navigation -->
     <aside class="desktop-sidebar">
-        <div class="sidebar-brand">
-            <span class="brand-icon">🌐</span>
-            <div class="brand-info">
-                <h4><%= school_name %></h4>
-                <p>Student Portal</p>
+        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 12px; padding-bottom: 1rem;">
+            <% const sName = (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : (typeof user_name !== 'undefined' ? user_name : 'Student'); %>
+            <% const sInitial = sName.trim()[0].toUpperCase(); %>
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.15rem; flex-shrink: 0; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                <%= sInitial %>
+            </div>
+            <div class="brand-info" style="min-width: 0;">
+                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--text-high); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= sName %></h4>
+                <p style="margin: 0; font-size: 0.72rem; color: var(--text-mid); font-weight: 600;">Student Portal</p>
             </div>
         </div>
         <nav class="sidebar-menu">
@@ -872,14 +1083,28 @@
         <!-- Header -->
         <header class="portal-header">
             <div class="portal-header-top">
-                <!-- Hamburger button (visible on mobile only) -->
-                <button class="header-btn" onclick="toggleSidebarMenu()" title="Main Menu">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
+                <!-- Hamburger button and User Profile (top-left) -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="header-btn" onclick="toggleSidebarMenu()" title="Main Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.href='/student/profile'">
+                        <% const userHeaderName = (session && (session.user_name || session.name) ? (session.user_name || session.name) : (typeof user_name !== 'undefined' ? user_name : 'Student')); %>
+                        <% const userHeaderInitial = userHeaderName.trim()[0].toUpperCase(); %>
+                        <div class="header-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.15)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
+                            <% if (session && session.profile_photo) { %>
+                                <img src="<%= session.profile_photo %>" style="width: 100%; height: 100%; object-fit: cover;" alt="<%= userHeaderName %>">
+                            <% } else { %>
+                                <%= userHeaderInitial %>
+                            <% } %>
+                        </div>
+                        <span style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;"><%= userHeaderName %></span>
+                    </div>
+                </div>
                 <div class="portal-header-actions">
                     <!-- Notifications button -->
                     <button class="header-btn" onclick="window.location.href='/student/bookmarks'" title="Notifications" style="position: relative;">
@@ -894,10 +1119,6 @@
                         <span class="header-badge" style="background: var(--sp-purple); border-color: #3b2bc4;">3</span>
                         <% } %>
                     </button>
-                    <!-- Avatar button -->
-                    <div class="header-avatar" onclick="window.location.href='/student/profile'">
-                        <%= session.name ? session.name[0] : 'S' %>
-                    </div>
                 </div>
             </div>
             <div class="portal-welcome">
@@ -958,11 +1179,7 @@
                             <% var reading_tx = transactions[0]; %>
                             <div class="reading-card">
                                 <div class="reading-card-info">
-                                    <% if (reading_tx.cover_url) { %>
-                                    <img src="<%= reading_tx.cover_url %>" class="reading-card-cover" alt="<%= reading_tx.title %>">
-                                    <% } else { %>
-                                    <div class="reading-card-cover-fallback">📖</div>
-                                    <% } %>
+                                    <img src="<%= reading_tx.cover_url || '/static/placeholder-cover.jpg' %>" class="reading-card-cover" alt="<%= reading_tx.title %>" onerror="generateBookCoverFallback(this, '<%= reading_tx.title %>', '<%= reading_tx.author %>', '<%= reading_tx.genre || reading_tx.category || 'Literature' %>')" data-fallback-title="<%= reading_tx.title %>" data-fallback-author="<%= reading_tx.author %>" data-fallback-genre="<%= reading_tx.genre || reading_tx.category || 'Literature' %>">
                                     <div class="reading-card-details">
                                         <h4 class="reading-card-title"><%= reading_tx.title %></h4>
                                         <p class="reading-card-author"><%= reading_tx.author %></p>
@@ -1091,11 +1308,7 @@
                             <% if (recommended_books && recommended_books.length) { %>
                                 <% recommended_books.forEach(function(book) { %>
                                     <div class="recommend-card" onclick="window.location.href='/student/book/<%= book.id %>'">
-                                        <% if (book.cover_url) { %>
-                                        <img src="<%= book.cover_url %>" class="recommend-cover" alt="<%= book.title %>">
-                                        <% } else { %>
-                                        <div class="recommend-cover-fallback">📖</div>
-                                        <% } %>
+                                        <img src="<%= book.cover_url || '/static/placeholder-cover.jpg' %>" class="recommend-cover" alt="<%= book.title %>" onerror="generateBookCoverFallback(this, '<%= book.title %>', '<%= book.author %>', '<%= book.genre || book.category || 'Fiction' %>')" data-fallback-title="<%= book.title %>" data-fallback-author="<%= book.author %>" data-fallback-genre="<%= book.genre || book.category || 'Fiction' %>">
                                         <h4 class="recommend-title"><%= book.title %></h4>
                                         <p class="recommend-author"><%= book.author %></p>
                                         <div class="recommend-meta">
@@ -1204,29 +1417,47 @@
             <span class="bottom-nav-icon">✏️</span>
             <span>Creator Hub</span>
         </a>
-        <a href="/student/profile" class="bottom-nav-item">
-            <span class="bottom-nav-icon">👤</span>
-            <span>Profile</span>
-        </a>
     </nav>
 </div>
 
 <!-- Simple Mobile Sidebar Drawer -->
-<div id="portalSidebar" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; z-index: 11000; box-shadow: 10px 0 30px rgba(0,0,0,0.15); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden;">
-    <div style="background: linear-gradient(135deg, #3b2bc4 0%, #5c3cf3 100%); padding: 2.5rem 1.5rem; color: white;">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🌐</div>
-        <h4 style="margin: 0; font-family: 'Outfit'; font-size: 1.15rem; font-weight: 800;"><%= school_name %></h4>
-        <p style="margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.8;">Student Portal</p>
-    </div>
-    <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto;">
-        <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Academic Profile</p>
-        <div style="background: #f8fafc; border-radius: 12px; padding: 12px; font-size: 0.85rem; margin-bottom: 1rem;">
-            <div style="margin-bottom: 6px;">Name: <strong style="color: var(--sp-text-dark);"><%= session.name %></strong></div>
-            <div style="margin-bottom: 6px;">ID: <strong style="color: var(--sp-text-dark);">#<%= session.admission_no %></strong></div>
-            <div>Class: <strong style="color: var(--sp-text-dark);"><%= session.class %></strong></div>
+<div id="portalSidebar" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #ffffff; z-index: 11000; box-shadow: 10px 0 30px rgba(0,0,0,0.15); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden;">
+    <div style="background: linear-gradient(135deg, #3b2bc4 0%, #5c3cf3 100%); padding: 2rem 1.5rem 1.5rem 1.5rem; color: white;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <% const mobDrawerInitial = ((session && (session.name || session.user_name)) ? (session.name || session.user_name).trim()[0] : 'S').toUpperCase(); %>
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.25); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <%= mobDrawerInitial %>
+            </div>
+            <button onclick="toggleSidebarMenu()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">✕</button>
         </div>
-        
-        <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Navigation</p>
+        <h4 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800;"><%= session.name || session.user_name || school_name %></h4>
+        <p style="margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.85; font-weight: 600;">Student Portal • <%= school_name %></p>
+    </div>
+
+    <div style="padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto;">
+        <!-- Redesigned Academic Profile Section -->
+        <div style="background: linear-gradient(135deg, rgba(92, 60, 243, 0.06) 0%, rgba(139, 92, 246, 0.1) 100%); border: 1px solid rgba(92, 60, 243, 0.18); border-radius: 16px; padding: 14px; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span style="font-size: 0.75rem; font-weight: 800; color: #5c3cf3; text-transform: uppercase; letter-spacing: 0.5px;">Academic Profile</span>
+                <span style="font-size: 0.68rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 8px; border-radius: 8px;">Active</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div style="background: #ffffff; padding: 8px 10px; border-radius: 10px; border: 1px solid #f1f5f9; grid-column: span 2;">
+                    <div style="font-size: 0.62rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Full Name</div>
+                    <div style="font-size: 0.85rem; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= session.name || 'Student' %></div>
+                </div>
+                <div style="background: #ffffff; padding: 8px 10px; border-radius: 10px; border: 1px solid #f1f5f9;">
+                    <div style="font-size: 0.62rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Admission ID</div>
+                    <div style="font-size: 0.82rem; font-weight: 800; color: #0f172a;"><%= (session.admission_no && session.admission_no !== 'undefined') ? '#' + session.admission_no : '#STD-' + (session.user_id || '101') %></div>
+                </div>
+                <div style="background: #ffffff; padding: 8px 10px; border-radius: 10px; border: 1px solid #f1f5f9;">
+                    <div style="font-size: 0.62rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Class & Sec</div>
+                    <div style="font-size: 0.82rem; font-weight: 800; color: #0f172a;"><%= session.class || '10th' %> <%= session.section ? '(' + session.section + ')' : '' %></div>
+                </div>
+            </div>
+        </div>
+
+        <p style="color: var(--sp-text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 800; margin: 5px 0 2px 0;">Navigation</p>
         <a href="/student" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📊 Dashboard Overview</a>
         <a href="/leaderboard" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">🏆 Leaderboard</a>
         <a href="/student/browse" style="color: var(--sp-text-dark); text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0eeff'; this.style.color='#5c3cf3';" onmouseout="this.style.background='transparent'; this.style.color='var(--sp-text-dark)';">📚 Digital Library</a>
