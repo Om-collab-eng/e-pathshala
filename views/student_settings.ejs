@@ -1,0 +1,145 @@
+<%- layout("base") %>
+<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<div class="sp-page">
+  <div class="sp-layout">
+    <%- include('partials/student_sidebar', { active: 'prefs' }) %>
+    <div class="sp-main">
+      <%- include('partials/student_topbar', { title: 'Settings', notifCount }) %>
+      <main class="sp-content">
+        <div class="sp-page-header">
+          <h1 class="sp-page-title">Settings</h1>
+          <p class="sp-page-sub">Personalise your reading experience.</p>
+        </div>
+
+        <% if (success) { %><div class="sp-banner sp-banner-green"><span>✅</span><span><%= success %></span></div><% } %>
+        <% if (error) { %><div class="sp-banner sp-banner-red"><span>⚠️</span><span><%= error %></span></div><% } %>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Reading Preferences</h2>
+          <form method="POST" action="/student/prefs" class="sp-form">
+            <div class="sp-form-row">
+              <div class="sp-field">
+                <label class="sp-label">Theme</label>
+                <select name="theme" class="sp-input">
+                  <option value="dark" <%= (prefs && prefs.theme === 'dark') ? 'selected' : '' %>>Dark</option>
+                  <option value="light" <%= (prefs && prefs.theme === 'light') ? 'selected' : '' %>>Light</option>
+                </select>
+              </div>
+              <div class="sp-field">
+                <label class="sp-label">Accent Color</label>
+                <select name="accent_color" class="sp-input">
+                  <option value="#6366f1" <%= (prefs && prefs.accent_color === '#6366f1') ? 'selected' : '' %>>Indigo</option>
+                  <option value="#10b981" <%= (prefs && prefs.accent_color === '#10b981') ? 'selected' : '' %>>Green</option>
+                  <option value="#f59e0b" <%= (prefs && prefs.accent_color === '#f59e0b') ? 'selected' : '' %>>Amber</option>
+                  <option value="#ec4899" <%= (prefs && prefs.accent_color === '#ec4899') ? 'selected' : '' %>>Pink</option>
+                </select>
+              </div>
+            </div>
+            <div class="sp-form-row">
+              <div class="sp-field">
+                <label class="sp-label">Font Size</label>
+                <select name="font_size" class="sp-input">
+                  <option value="small" <%= (prefs && prefs.font_size === 'small') ? 'selected' : '' %>>Small</option>
+                  <option value="medium" <%= (!prefs || prefs.font_size === 'medium') ? 'selected' : '' %>>Medium</option>
+                  <option value="large" <%= (prefs && prefs.font_size === 'large') ? 'selected' : '' %>>Large</option>
+                </select>
+              </div>
+              <div class="sp-field">
+                <label class="sp-label">UI Density</label>
+                <select name="ui_density" class="sp-input">
+                  <option value="comfortable" <%= (prefs && prefs.ui_density === 'comfortable') ? 'selected' : '' %>>Comfortable</option>
+                  <option value="compact" <%= (prefs && prefs.ui_density === 'compact') ? 'selected' : '' %>>Compact</option>
+                </select>
+              </div>
+              <div class="sp-field">
+                <label class="sp-label">Language</label>
+                <select name="language" class="sp-input">
+                  <option value="en" <%= (prefs && prefs.language === 'en') ? 'selected' : '' %>>English</option>
+                  <option value="hi" <%= (prefs && prefs.language === 'hi') ? 'selected' : '' %>>Hindi</option>
+                  <option value="gu" <%= (prefs && prefs.language === 'gu') ? 'selected' : '' %>>Gujarati</option>
+                  <option value="mr" <%= (prefs && prefs.language === 'mr') ? 'selected' : '' %>>Marathi</option>
+                </select>
+              </div>
+            </div>
+            <div class="sp-form-actions">
+              <button type="submit" class="sp-btn sp-btn-primary">Save Preferences</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Notifications</h2>
+          <form method="POST" action="/student/prefs" class="sp-form">
+            <label class="sp-toggle-row">
+              <span>Enable notifications</span>
+              <input type="checkbox" name="notifications_enabled" value="1" <%= (prefs && prefs.notifications_enabled) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+            <label class="sp-toggle-row">
+              <span>Email notifications</span>
+              <input type="checkbox" name="email_notifications" value="1" <%= (prefs && prefs.email_notifications) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+            <label class="sp-toggle-row">
+              <span>Remind me before a book is due</span>
+              <input type="checkbox" name="due_reminders" value="1" <%= (prefs && prefs.due_reminders) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+            <label class="sp-toggle-row">
+              <span>Community activity updates</span>
+              <input type="checkbox" name="community_notifications" value="1" <%= (prefs && prefs.community_notifications) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+            <label class="sp-toggle-row">
+              <span>AI book recommendations</span>
+              <input type="checkbox" name="ai_recommendations" value="1" <%= (prefs && prefs.ai_recommendations) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+          </form>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Privacy</h2>
+          <form method="POST" action="/student/prefs" class="sp-form">
+            <label class="sp-toggle-row">
+              <span>Show my reading progress on my profile</span>
+              <input type="checkbox" name="privacy_show_progress" value="1" <%= (prefs && prefs.privacy_show_progress) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+            <label class="sp-toggle-row">
+              <span>Show my badges publicly</span>
+              <input type="checkbox" name="privacy_show_badges" value="1" <%= (prefs && prefs.privacy_show_badges) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+            <label class="sp-toggle-row">
+              <span>Show my reading activity</span>
+              <input type="checkbox" name="privacy_show_activity" value="1" <%= (prefs && prefs.privacy_show_activity) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+          </form>
+        </div>
+
+        <div class="sp-card">
+          <h2 class="sp-section-title">Offline & Data</h2>
+          <form method="POST" action="/student/prefs" class="sp-form">
+            <label class="sp-toggle-row">
+              <span>Auto-download new content for offline reading</span>
+              <input type="checkbox" name="auto_download" value="1" <%= (prefs && prefs.auto_download) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+            <label class="sp-toggle-row">
+              <span>Keep recent content available offline</span>
+              <input type="checkbox" name="offline_content" value="1" <%= (prefs && prefs.offline_content) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+            <label class="sp-toggle-row">
+              <span>Data saver mode</span>
+              <input type="checkbox" name="data_saver" value="1" <%= (prefs && prefs.data_saver) ? 'checked' : '' %> onchange="this.form.submit()">
+              <span class="sp-toggle"></span>
+            </label>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>

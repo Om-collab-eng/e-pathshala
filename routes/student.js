@@ -846,21 +846,43 @@ router.get('/notifications', studentOnly, async (req, res) => {
   }
 });
 
+// ── Settings Route ──────────────────────────────────────────────────────────
 router.get('/settings', studentOnly, async (req, res) => {
   try {
     const userId = req.session.user_id;
-    const user = (await pool.query('SELECT * FROM users WHERE id = ', [userId])).rows[0] || {};
+    let user = {};
+    let prefs = {};
+    try {
+      user = (await pool.query('SELECT * FROM users WHERE id = ', [userId])).rows[0] || {};
+      prefs = (await pool.query('SELECT * FROM user_preferences WHERE user_id = ', [userId])).rows[0] || {};
+    } catch (e) {
+      user = {};
+      prefs = {};
+    }
     res.render('student_settings', {
       title: 'Account Settings - librika.in',
+      active: 'settings',
       user,
+      prefs,
+      notifCount: 0,
+      success: (req.flash && req.flash('success') && req.flash('success')[0]) ? req.flash('success')[0] : null,
+      error: (req.flash && req.flash('error') && req.flash('error')[0]) ? req.flash('error')[0] : null,
       school_name: req.session.school_name || 'E-Pathshala Network'
     });
   } catch (err) {
     console.error('Settings route error:', err);
-    res.render('student_settings', { title: 'Settings', user: {}, school_name: 'E-Pathshala Network' });
+    res.render('student_settings', {
+      title: 'Settings',
+      active: 'settings',
+      user: {},
+      prefs: {},
+      notifCount: 0,
+      success: null,
+      error: null,
+      school_name: 'E-Pathshala Network'
+    });
   }
 });
-
 
 // ── AI Chat Assistant Route ────────────────────────────────────────────────
 router.get(['/ai', '/ai-chat'], studentOnly, async (req, res) => {
