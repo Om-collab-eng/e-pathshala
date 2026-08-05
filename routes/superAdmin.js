@@ -69,6 +69,70 @@ const upload = multer({
 // ─────────────────────────────────────────────
 //  MIDDLEWARE
 // ─────────────────────────────────────────────
+
+// Auto-heal missing security tables on startup
+let _securityTablesChecked = false;
+async function ensureSecurityTables() {
+  if (_securityTablesChecked) return;
+  _securityTablesChecked = true;
+  try {
+    // 1. login_history
+    await db.query(`CREATE TABLE IF NOT EXISTS login_history (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT,
+      email VARCHAR(255),
+      phone VARCHAR(30),
+      role VARCHAR(50),
+      ip_address VARCHAR(45),
+      user_agent TEXT,
+      success INT DEFAULT 1,
+      failure_reason VARCHAR(255),
+      school_code VARCHAR(50),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`).catch(() => {});
+
+    // 2. ip_allowlist
+    await db.query(`CREATE TABLE IF NOT EXISTS ip_allowlist (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      cidr VARCHAR(100) NOT NULL,
+      label VARCHAR(255),
+      enabled INT DEFAULT 1,
+      created_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`).catch(() => {});
+
+    // 3. backup_schedules
+    await db.query(`CREATE TABLE IF NOT EXISTS backup_schedules (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      cron VARCHAR(100) NOT NULL,
+      target VARCHAR(50) DEFAULT 'db',
+      retention_days INT DEFAULT 30,
+      enabled INT DEFAULT 1,
+      last_run TIMESTAMP,
+      last_status VARCHAR(50),
+      last_error TEXT,
+      created_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`).catch(() => {});
+
+    // 4. logs
+    await db.query(`CREATE TABLE IF NOT EXISTS logs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT,
+      action TEXT,
+      module VARCHAR(100),
+      ip_address VARCHAR(45),
+      school_code VARCHAR(50),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`).catch(() => {});
+
+    // 5. two_factor_enabled column check
+    await db.query(`ALTER TABLE users ADD COLUMN two_factor_enabled INT DEFAULT 0`).catch(() => {});
+    await db.query(`ALTER TABLE users ADD COLUMN two_factor_secret TEXT`).catch(() => {});
+  } catch (e) {}
+}
+
 function superAdminOnly(req, res, next) {
   const role = req.session && req.session.role;
   if (role === 'super_admin' || role === 'superadmin') return next();
@@ -663,7 +727,7 @@ router.post('/notify', async (req, res) => {
 // ─────────────────────────────────────────────
 //  AUDIT LOGS
 // ─────────────────────────────────────────────
-router.get('/audit-logs', async (req, res) => {
+router.get('/audit-logs', async (req, res) => { await ensureSecurityTables();
   const { school_code, module, search, page = 1, limit = 50 } = req.query;
   try {
     let where = '1=1';
@@ -1544,7 +1608,7 @@ router.get('/audit-logs/:id', async (req, res) => {
 });
 
 // Login history
-router.get('/login-history', async (req, res) => {
+router.get('/login-history', async (req, res) => { await ensureSecurityTables();
   const { user_id, school_code, success, ip, date_from, date_to, page = 1, limit = 50 } = req.query;
   try {
     let where = '1=1';
@@ -1573,7 +1637,7 @@ router.get('/login-history', async (req, res) => {
 });
 
 // Devices (active sessions) — read from session store if available, else from users.session_token
-router.get('/devices', async (req, res) => {
+router.get('/devices', async (req, res) => { await ensureSecurityTables();
   const { user_id } = req.query;
   try {
     // Try to read from sessions table; fall back to listing users with last_login_at
@@ -1636,7 +1700,7 @@ router.post('/users/:id/2fa/disable', async (req, res) => {
 });
 
 // IP allowlist
-router.get('/ip-allowlist', async (req, res) => {
+router.get('/ip-allowlist', async (req, res) => { await ensureSecurityTables();
   try {
     const r = await db.query(`SELECT * FROM ip_allowlist ORDER BY created_at DESC`);
     res.json({ success: true, rules: r.rows || [] });
@@ -1768,7 +1832,7 @@ router.post('/settings/grouped', async (req, res) => {
 });
 
 // Backup schedules
-router.get('/backup-schedules', async (req, res) => {
+router.get('/backup-schedules', async (req, res) => { await ensureSecurityTables();
   try {
     const r = await db.query(`SELECT * FROM backup_schedules ORDER BY created_at DESC`);
     res.json({ success: true, schedules: r.rows || [] });
@@ -2149,3 +2213,45 @@ router.get('/export/ai-search-usage', async (req, res) => {
 });
 
 module.exports = router;
+
+
+// Backup Aliases & Direct Export
+router.get('/backups', async (req, res) => {
+  try {
+    await ensureSecurityTables();
+    const dir = backupDir();
+    const files = fs.readdirSync(dir).map(f => {
+      const st = fs.statSync(path.join(dir, f));
+      return { name: f, size: st.size, mtime: st.mtime };
+    }).sort((a, b) => b.mtime - a.mtime);
+    res.json({ success: true, backups: files });
+  } catch (err) {
+    res.json({ success: true, backups: [] });
+  }
+});
+
+router.get('/backups/export', async (req, res) => {
+  try {
+    const users = await db.query('SELECT id, name, phone, email, role, school_code FROM users');
+    const schools = await db.query('SELECT * FROM schools');
+    const books = await db.query('SELECT id, title, author, isbn, school_code FROM books');
+    let csv = '# LIBRIKA SYSTEM DATABASE EXPORT
+';
+    csv += '# SCHOOLS
+' + buildCSV(['id','school_code','name','status'], schools.rows || []) + '
+
+';
+    csv += '# USERS
+' + buildCSV(['id','name','phone','email','role','school_code'], users.rows || []) + '
+
+';
+    csv += '# BOOKS
+' + buildCSV(['id','title','author','isbn','school_code'], books.rows || []);
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=librika_full_backup.csv');
+    res.send(csv);
+  } catch (err) {
+    res.status(500).send('Export error: ' + err.message);
+  }
+});

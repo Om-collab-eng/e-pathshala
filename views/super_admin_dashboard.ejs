@@ -3598,4 +3598,67 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+
+// ═══════════════════════════════════════
+//  SECURITY & BACKUPS HANDLERS
+// ═══════════════════════════════════════
+async function loadBackups() {
+  const el = document.getElementById('backupsListWrap') || document.getElementById('backupsWrap');
+  if (!el) return;
+  el.innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading backups...</div>';
+  try {
+    const d = await (await fetch('/super-admin/backups')).json();
+    const files = d.backups || [];
+    if (!files.length) {
+      el.innerHTML = '<div class="sa-empty"><p>No backup files created yet.</p><a href="/super-admin/backups/export" class="sa-btn sa-btn-primary sa-btn-sm" download style="margin-top:.5rem">📥 Export Instant Full Backup (CSV)</a></div>';
+      return;
+    }
+    el.innerHTML = `
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>File Name</th><th>Size</th><th>Last Modified</th><th>Action</th></tr></thead>
+        <tbody>${files.map(f => `
+          <tr>
+            <td style="color:#e2e8f0;font-weight:600">${f.name}</td>
+            <td style="font-size:.78rem">${Math.round((f.size || 0)/1024)} KB</td>
+            <td style="font-size:.78rem;color:#64748b">${f.mtime ? new Date(f.mtime).toLocaleString() : '—'}</td>
+            <td><a href="/super-admin/backups/export" class="sa-btn sa-btn-success sa-btn-xs" download>📥 Download</a></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  } catch (e) {
+    if (el) el.innerHTML = '<div class="sa-empty"><p>Instant Backup Ready.</p><a href="/super-admin/backups/export" class="sa-btn sa-btn-primary sa-btn-sm" download style="margin-top:.5rem">📥 Export Full Database Backup</a></div>';
+  }
+}
+
+async function triggerInstantBackup() {
+  showToast('Downloading database backup export...', 'info');
+  window.location.href = '/super-admin/backups/export';
+}
+
+async function loadBackupSchedules() {
+  const el = document.getElementById('backupSchedWrap');
+  if (!el) return;
+  try {
+    const d = await (await fetch('/super-admin/backup-schedules')).json();
+    const scheds = d.schedules || [];
+    if (!scheds.length) { el.innerHTML = '<p style="color:#475569;font-size:.82rem">No automated backup schedules configured yet.</p>'; return; }
+    el.innerHTML = `
+      <div class="sa-table-wrap"><table class="sa-table">
+        <thead><tr><th>Name</th><th>Cron</th><th>Target</th><th>Retention</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${scheds.map(s => `
+          <tr>
+            <td style="color:#e2e8f0;font-weight:600">${s.name}</td>
+            <td><code>${s.cron}</code></td>
+            <td><span class="badge badge-indigo">${s.target || 'db'}</span></td>
+            <td>${s.retention_days || 30} days</td>
+            <td><span class="badge ${s.enabled ? 'badge-green' : 'badge-gray'}">${s.enabled ? 'Enabled' : 'Disabled'}</span></td>
+            <td><button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteBackupSched(${s.id})">🗑</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  } catch (e) {
+    if (el) el.innerHTML = '<p style="color:#475569;font-size:.82rem">No backup schedules configured.</p>';
+  }
+}
+
 </script>
