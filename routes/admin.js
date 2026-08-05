@@ -275,13 +275,19 @@ router.post('/api/reservation/:resId/reject', adminOnly, async (req, res) => {
 router.post('/student/add', adminOnly, async (req, res) => {
   if (!hasPerm(req, 'manage_students')) return res.redirect('/admin');
   const sCode = req.session.school_code || '00000';
-  const { name, admission_no, phone, class: cls, password, reqEmail, role, school_code } = req.body;
+  const { name, admission_no, phone, class: cls, password, email, reqEmail, role, school_code } = req.body;
   const sc = (school_code || sCode || '00000').toUpperCase();
+  const targetEmail = email || reqEmail || (name.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000) + '@gmail.com');
+  const targetPass  = password || 'librika123';
+  const targetPhone = phone || ('9' + Math.floor(100000000 + Math.random() * 900000000));
+
   try {
-    const dup = (await db.query('SELECT id FROM users WHERE phone = $1', [phone])).rows[0];
-    if (dup) { req.flash('error', 'Phone number already in use'); return res.redirect('/admin?section=members'); }
+    const dup = (await db.query('SELECT id FROM users WHERE email = $1 OR (phone = $2 AND phone IS NOT NULL AND phone != "")', [targetEmail, targetPhone])).rows[0];
+    if (dup) { 
+      req.flash('error', 'Email or Phone already registered in system'); 
+      return res.redirect('/admin?tab=members'); 
+    }
     
-    // Generate next unique user ID for MySQL & SQLite
     let nextId = Date.now();
     try {
       const maxRes = await db.query('SELECT MAX(CAST(id AS UNSIGNED)) as max_id FROM users');
@@ -289,19 +295,18 @@ router.post('/student/add', adminOnly, async (req, res) => {
         const mVal = parseInt(maxRes.rows[0].max_id || maxRes.rows[0].MAX_ID || 0, 10);
         if (!isNaN(mVal) && mVal > 0) nextId = mVal + 1;
       }
-    } catch (e) {
-      console.log('User max id query error:', e.message);
-    }
+    } catch (e) {}
 
     await db.query(
       'INSERT INTO users (id, name, admission_no, phone, class, role, password, school_code, email, is_banned) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,0)',
-      [nextId, name, admission_no || null, phone, cls || null, role || 'student', password, sc, reqEmail || null]);
-    req.flash('success', 'Member successfully registered!');
-    res.redirect('/admin?section=members');
+      [nextId, name, admission_no || null, targetPhone, cls || null, role || 'student', targetPass, sc, targetEmail]);
+    
+    req.flash('success', `Member ${name} successfully registered! Email: ${targetEmail}, Pass: ${targetPass}`);
+    res.redirect('/admin?tab=members');
   } catch (err) {
     console.error('Error adding member:', err);
     req.flash('error', 'Failed to add member: ' + (err.message || 'Error'));
-    res.redirect('/admin?section=members');
+    res.redirect('/admin?tab=members');
   }
 });
 
