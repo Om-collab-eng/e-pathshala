@@ -1478,17 +1478,26 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
     <!-- TAB: LOGIN HISTORY -->
     <div class="sa-tab-pane" id="tab-login-history">
       <div class="sa-card">
-        <div class="sa-card-header"><div class="sa-card-title">🔐 Login History</div></div>
-        <div class="sa-toolbar">
-          <input type="date" class="sa-input" id="lhDateFrom" onchange="loadLoginHistory(1)" style="max-width:160px">
-          <input type="date" class="sa-input" id="lhDateTo" onchange="loadLoginHistory(1)" style="max-width:160px">
+        <div class="sa-card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div class="sa-card-title">🔐 Login History</div>
+          <button class="sa-btn sa-btn-secondary sa-btn-xs" onclick="loadLoginHistory(1)" style="gap:5px;">🔄 Refresh</button>
+        </div>
+        <div class="sa-toolbar" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <div style="flex:1;min-width:200px;max-width:320px;">
+            <input class="sa-search" type="text" id="lhSearch" placeholder="Search by name, email, phone, IP..." oninput="debouncedLoadLoginHistory()" style="width:100%;">
+          </div>
+          <select class="sa-select" id="lhTimeframe" onchange="loadLoginHistory(1)">
+            <option value="today" selected>⚡ Today's Logins</option>
+            <option value="all">📜 All Time Logins</option>
+            <option value="7days">📅 Last 7 Days</option>
+          </select>
           <select class="sa-select" id="lhSuccessFilter" onchange="loadLoginHistory(1)">
-            <option value="">All</option>
-            <option value="true">Successful</option>
-            <option value="false">Failed</option>
+            <option value="">All Statuses</option>
+            <option value="true">✅ Successful Logins</option>
+            <option value="false">❌ Failed Attempts</option>
           </select>
         </div>
-        <div id="lhTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+        <div id="lhTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading today's logins...</div>
         <div class="sa-pagination" id="lhPagination"></div>
       </div>
     </div>
@@ -3437,35 +3446,63 @@ async function deleteBackupSched(id) {
   if (d.success) { showToast('Deleted', 'success'); loadBackupSchedules(); }
 }
 
+let _lhPage = 1;
+function debouncedLoadLoginHistory() {
+  clearTimeout(window._lhDebounce);
+  window._lhDebounce = setTimeout(() => loadLoginHistory(1), 300);
+}
+
 async function loadLoginHistory(page=1) {
   _lhPage = page;
-  document.getElementById('lhTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  const wrap = document.getElementById('lhTableWrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading logins...</div>';
+  
+  const search = document.getElementById('lhSearch')?.value?.trim() || '';
+  const timeframe = document.getElementById('lhTimeframe')?.value || 'today';
+  const success = document.getElementById('lhSuccessFilter')?.value || '';
+
   const params = new URLSearchParams({ page, limit: 50 });
-  const from = document.getElementById('lhDateFrom')?.value;
-  const to = document.getElementById('lhDateTo')?.value;
-  const success = document.getElementById('lhSuccessFilter')?.value;
-  if (from) params.set('date_from', from);
-  if (to) params.set('date_to', to);
+  if (search) params.set('search', search);
+  if (timeframe) params.set('timeframe', timeframe);
   if (success) params.set('success', success);
+
   try {
     const d = await (await fetch('/super-admin/login-history?' + params)).json();
     const h = d.history || [];
-    if (!h.length) { document.getElementById('lhTableWrap').innerHTML='<div class="sa-empty"><p>No login history.</p></div>'; return; }
-    document.getElementById('lhTableWrap').innerHTML = `
+    if (!h.length) {
+      const msg = timeframe === 'today' ? "No logins recorded today yet." : "No login records found for this selection.";
+      wrap.innerHTML = `<div class="sa-empty"><div class="sa-empty-icon">🔐</div><p>${msg}</p></div>`;
+      renderPagination('lhPagination', 1, 0, 50, 'loadLoginHistory');
+      return;
+    }
+
+    wrap.innerHTML = `
       <div class="sa-table-wrap"><table class="sa-table">
-        <thead><tr><th>When</th><th>User</th><th>Phone/Email</th><th>IP</th><th>Success</th><th>Reason</th></tr></thead>
-        <tbody>${h.map(r => `
+        <thead><tr><th>Time</th><th>User</th><th>Identifier</th><th>Role</th><th>IP Address</th><th>Status</th><th>Details</th></tr></thead>
+        <tbody>${h.map(r => {
+          const dateObj = r.created_at ? new Date(r.created_at) : null;
+          const timeStr = dateObj ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
+          const dateStr = dateObj ? dateObj.toISOString().slice(0, 10) : '';
+          return `
           <tr>
-            <td style="font-size:.78rem">${r.created_at?.substr(0,16) || '—'}</td>
-            <td>${r.user_name || 'Unknown'}</td>
-            <td style="font-size:.78rem">${r.phone || r.email || '—'}</td>
-            <td><code style="font-size:.78rem">${r.ip_address||'—'}</code></td>
-            <td><span class="badge ${r.success?'badge-green':'badge-red'}">${r.success?'✓':'✗'}</span></td>
-            <td style="font-size:.78rem;color:#f87171">${r.failure_reason||''}</td>
-          </tr>`).join('')}
+            <td style="font-size:.78rem;color:#0f172a;white-space:nowrap;">
+              <strong>${timeStr}</strong>
+              <div style="font-size:0.7rem;color:#94a3b8;">${dateStr}</div>
+            </td>
+            <td style="font-weight:600;color:#0f172a">${r.user_name || 'Anonymous User'}</td>
+            <td style="font-size:.78rem;color:#475569">${r.phone || r.email || '—'}</td>
+            <td><span class="badge badge-indigo">${r.role || '—'}</span></td>
+            <td><code style="font-size:.78rem">${r.ip_address || '—'}</code></td>
+            <td><span class="badge ${r.success ? 'badge-green' : 'badge-red'}">${r.success ? '✓ Successful' : '✗ Failed'}</span></td>
+            <td style="font-size:.78rem;color:${r.success ? '#10b981' : '#f87171'}">${r.failure_reason || (r.success ? 'Verified' : '—')}</td>
+          </tr>`;
+        }).join('')}
         </tbody></table></div>`;
     renderPagination('lhPagination', page, d.total || h.length, 50, 'loadLoginHistory');
-  } catch (e) {}
+  } catch (e) {
+    wrap.innerHTML = '<div class="sa-empty"><p>Failed to load login history.</p></div>';
+  }
 }
 
 async function loadDevices() {

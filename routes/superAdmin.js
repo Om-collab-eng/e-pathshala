@@ -71,69 +71,6 @@ const upload = multer({
 //  MIDDLEWARE
 // ─────────────────────────────────────────────
 
-// Auto-heal missing security tables on startup
-let _securityTablesChecked = false;
-async function ensureSecurityTables() {
-  if (_securityTablesChecked) return;
-  _securityTablesChecked = true;
-  try {
-    // 1. login_history
-    await db.query(`CREATE TABLE IF NOT EXISTS login_history (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT,
-      email VARCHAR(255),
-      phone VARCHAR(30),
-      role VARCHAR(50),
-      ip_address VARCHAR(45),
-      user_agent TEXT,
-      success INT DEFAULT 1,
-      failure_reason VARCHAR(255),
-      school_code VARCHAR(50),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`).catch(() => {});
-
-    // 2. ip_allowlist
-    await db.query(`CREATE TABLE IF NOT EXISTS ip_allowlist (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      cidr VARCHAR(100) NOT NULL,
-      label VARCHAR(255),
-      enabled INT DEFAULT 1,
-      created_by INT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`).catch(() => {});
-
-    // 3. backup_schedules
-    await db.query(`CREATE TABLE IF NOT EXISTS backup_schedules (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      cron VARCHAR(100) NOT NULL,
-      target VARCHAR(50) DEFAULT 'db',
-      retention_days INT DEFAULT 30,
-      enabled INT DEFAULT 1,
-      last_run TIMESTAMP,
-      last_status VARCHAR(50),
-      last_error TEXT,
-      created_by INT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`).catch(() => {});
-
-    // 4. logs
-    await db.query(`CREATE TABLE IF NOT EXISTS logs (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT,
-      action TEXT,
-      module VARCHAR(100),
-      ip_address VARCHAR(45),
-      school_code VARCHAR(50),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`).catch(() => {});
-
-    // 5. two_factor_enabled column check
-    await db.query(`ALTER TABLE users ADD COLUMN two_factor_enabled INT DEFAULT 0`).catch(() => {});
-    await db.query(`ALTER TABLE users ADD COLUMN two_factor_secret TEXT`).catch(() => {});
-  } catch (e) {}
-}
-
 function superAdminOnly(req, res, next) {
   const role = req.session && req.session.role;
   if (role === 'super_admin' || role === 'superadmin') return next();
@@ -1609,11 +1546,13 @@ router.get('/audit-logs/:id', async (req, res) => {
 });
 
 // Login history
-router.get('/login-history', async (req, res) => { await ensureSecurityTables();
-  const { user_id, school_code, success, ip, date_from, date_to, page = 1, limit = 50 } = req.query;
+router.get('/login-history', async (req, res) => {
+  await ensureSecurityTables();
+  const { user_id, school_code, success, ip, date_from, date_to, timeframe = 'today', search, page = 1, limit = 50 } = req.query;
   try {
     let where = '1=1';
     const params = [];
+
     if (user_id) { params.push(safeInt(user_id, 0)); where += ` AND lh.user_id = $${params.length}`; }
     if (school_code) { params.push(school_code); where += ` AND lh.school_code = $${params.length}`; }
     if (success !== undefined && success !== '') {
@@ -1621,8 +1560,27 @@ router.get('/login-history', async (req, res) => { await ensureSecurityTables();
       where += ` AND lh.success = $${params.length}`;
     }
     if (ip) { params.push(`%${ip}%`); where += ` AND lh.ip_address LIKE $${params.length}`; }
-    if (date_from) { params.push(date_from); where += ` AND lh.created_at >= $${params.length}`; }
-    if (date_to) { params.push(date_to); where += ` AND lh.created_at <= $${params.length}`; }
+    if (search) {
+      params.push(`%${search}%`);
+      where += ` AND (lh.email LIKE $${params.length} OR lh.phone LIKE $${params.length} OR u.name LIKE $${params.length} OR lh.ip_address LIKE $${params.length})`;
+    }
+
+    // Default to today unless 'all' or '7days' or custom dates are requested
+    if (timeframe === 'today' && !date_from && !date_to) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      params.push(todayStr + ' 00:00:00');
+      where += ` AND lh.created_at >= $${params.length}`;
+    } else if (timeframe === '7days' && !date_from && !date_to) {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      const sevenDaysStr = d.toISOString().slice(0, 10);
+      params.push(sevenDaysStr + ' 00:00:00');
+      where += ` AND lh.created_at >= $${params.length}`;
+    }
+
+    if (date_from) { params.push(date_from + ' 00:00:00'); where += ` AND lh.created_at >= $${params.length}`; }
+    if (date_to) { params.push(date_to + ' 23:59:59'); where += ` AND lh.created_at <= $${params.length}`; }
+
     const offset = (safeInt(page, 1) - 1) * safeInt(limit, 50);
     params.push(safeInt(limit, 50)); params.push(offset);
     const r = await db.query(
@@ -1632,8 +1590,18 @@ router.get('/login-history', async (req, res) => { await ensureSecurityTables();
       params
     );
     const countParams = params.slice(0, -2);
-    const countR = await db.query(`SELECT COUNT(*) as c FROM login_history lh WHERE ${where}`, countParams);
-    res.json({ success: true, history: r.rows || [], total: safeInt(countR.rows[0]?.c || countR.rows[0]?.['COUNT(*)']) });
+    const countR = await db.query(
+      `SELECT COUNT(*) as c FROM login_history lh
+       LEFT JOIN users u ON u.id = lh.user_id
+       WHERE ${where}`,
+      countParams
+    );
+    res.json({
+      success: true,
+      timeframe,
+      history: r.rows || [],
+      total: safeInt(countR.rows[0]?.c || countR.rows[0]?.['COUNT(*)'])
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
