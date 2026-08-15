@@ -3477,7 +3477,6 @@ async function deleteBackupSched(id) {
   if (d.success) { showToast('Deleted', 'success'); loadBackupSchedules(); }
 }
 
-let _lhPage = 1;
 function debouncedLoadLoginHistory() {
   clearTimeout(window._lhDebounce);
   window._lhDebounce = setTimeout(() => loadLoginHistory(1), 300);
