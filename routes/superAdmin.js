@@ -767,9 +767,20 @@ router.post('/master-login', async (req, res) => {
 
 // ─────────────────────────────────────────────
 //  ADVERTISEMENT MANAGEMENT
+router.post(['/notifications/read-all', '/api/notifications/read-all'], async (req, res) => {
+  try {
+    await ensureSecurityTables();
+    await db.query('UPDATE notifications SET is_read = 1');
+    res.json({ success: true, message: 'All notifications marked as read' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ─────────────────────────────────────────────
 router.get('/ads-data', async (req, res) => {
   try {
+    await ensureSecurityTables();
     const result = await db.query(`SELECT *,
       (CASE WHEN end_time IS NOT NULL AND end_time < NOW() THEN 'expired' ELSE status END) as computed_status,
       ROUND(CASE WHEN impressions > 0 THEN (clicks*100.0/impressions) ELSE 0 END,2) as ctr
@@ -781,16 +792,34 @@ router.get('/ads-data', async (req, res) => {
 });
 
 router.post('/ads/create', async (req, res) => {
-  const { title, subtitle, description, cta_text, target_url, image_url, bg_gradient, start_time, end_time, status, priority, target_section } = req.body;
+  let { title, subtitle, description, cta_text, target_url, image_url, bg_gradient, start_time, end_time, status, priority, target_section } = req.body;
   try {
+    await ensureSecurityTables();
+    const cleanStart = (start_time && String(start_time).trim()) ? String(start_time).replace('T', ' ') : null;
+    const cleanEnd = (end_time && String(end_time).trim()) ? String(end_time).replace('T', ' ') : null;
     await db.query(
       `INSERT INTO advertisements (title, subtitle, description, cta_text, target_url, image_url, bg_gradient, start_time, end_time, status, priority, target_section)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-      [title, subtitle || null, description || null, cta_text || 'Learn More', target_url || '#',
-       image_url || null, bg_gradient || 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-       start_time || null, end_time || null, status || 'active', safeInt(priority, 1), target_section || 'all']
+      [
+        title,
+        subtitle || null,
+        description || null,
+        cta_text || 'Learn More',
+        target_url || '#',
+        image_url || null,
+        bg_gradient || 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+        cleanStart,
+        cleanEnd,
+        status || 'active',
+        safeInt(priority, 1),
+        target_section || 'all'
+      ]
     );
-    res.json({ success: true });
+    await logActivity(req, {
+      action: `Published advertisement: "${title}"`,
+      module: 'marketing'
+    });
+    res.json({ success: true, message: 'Advertisement published successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -798,6 +827,7 @@ router.post('/ads/create', async (req, res) => {
 
 router.post('/ads/toggle/:id', async (req, res) => {
   try {
+    await ensureSecurityTables();
     await db.query(`UPDATE advertisements SET status=(CASE WHEN status='active' THEN 'inactive' ELSE 'active' END) WHERE id=$1`, [req.params.id]);
     res.json({ success: true });
   } catch (err) {
@@ -806,20 +836,34 @@ router.post('/ads/toggle/:id', async (req, res) => {
 });
 
 router.post('/ads/edit/:id', async (req, res) => {
-  const { title, subtitle, description, cta_text, target_url, image_url, bg_gradient, start_time, end_time, status, priority, target_section } = req.body;
+  let { title, subtitle, description, cta_text, target_url, image_url, bg_gradient, start_time, end_time, status, priority, target_section } = req.body;
   try {
+    await ensureSecurityTables();
+    const cleanStart = (start_time && String(start_time).trim()) ? String(start_time).replace('T', ' ') : null;
+    const cleanEnd = (end_time && String(end_time).trim()) ? String(end_time).replace('T', ' ') : null;
     await db.query(
       `UPDATE advertisements SET
          title=$1, subtitle=$2, description=$3, cta_text=$4, target_url=$5,
          image_url=$6, bg_gradient=$7, start_time=$8, end_time=$9,
          status=$10, priority=$11, target_section=$12
        WHERE id=$13`,
-      [title, subtitle || null, description || null, cta_text || 'Learn More', target_url || '#',
-       image_url || null, bg_gradient || 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-       start_time || null, end_time || null, status || 'active', safeInt(priority, 1),
-       target_section || 'all', req.params.id]
+      [
+        title,
+        subtitle || null,
+        description || null,
+        cta_text || 'Learn More',
+        target_url || '#',
+        image_url || null,
+        bg_gradient || 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+        cleanStart,
+        cleanEnd,
+        status || 'active',
+        safeInt(priority, 1),
+        target_section || 'all',
+        req.params.id
+      ]
     );
-    res.json({ success: true });
+    res.json({ success: true, message: 'Advertisement updated successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -827,6 +871,7 @@ router.post('/ads/edit/:id', async (req, res) => {
 
 router.post('/ads/delete/:id', async (req, res) => {
   try {
+    await ensureSecurityTables();
     await db.query('DELETE FROM advertisements WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
@@ -1615,21 +1660,24 @@ router.get('/devices', async (req, res) => {
 
     if (db.poolMain || db.mysqlPool) {
       try {
-        const r = await db.query(`SELECT sid, sess, expire FROM sessions WHERE expire > NOW()`);
+        const r = await db.query(`SELECT * FROM sessions LIMIT 100`).catch(() => ({ rows: [] }));
         for (const row of (r.rows || [])) {
-          let sess = row.sess;
+          const sid = row.session_id || row.sid;
+          let sess = row.data || row.sess;
           if (typeof sess === 'string') { try { sess = JSON.parse(sess); } catch (e) {} }
-          if (sess && sess.user_id) {
+          const expire = row.expires || row.expire;
+          if (sess && (sess.user_id || sess.userId || (sess.passport && sess.passport.user))) {
+            const uId = sess.user_id || sess.userId || (sess.passport && sess.passport.user);
             sessions.push({
-              sid: row.sid,
-              user_id: sess.user_id,
-              user_name: sess.name || sess.user_name,
-              role: sess.role,
+              sid: String(sid),
+              user_id: uId,
+              user_name: sess.name || sess.user_name || 'User #' + uId,
+              role: sess.role || 'user',
               ip: sess.ip || '',
               ua: sess.user_agent || '',
-              expire: row.expire,
+              expire: expire,
             });
-            seenSids.add(String(row.sid));
+            seenSids.add(String(sid));
           }
         }
       } catch (e) {}
@@ -1643,7 +1691,7 @@ router.get('/devices', async (req, res) => {
         FROM student_devices d
         LEFT JOIN users u ON u.id = d.user_id
         ORDER BY d.last_active DESC LIMIT 100
-      `);
+      `).catch(() => ({ rows: [] }));
       for (const d of (devRes.rows || [])) {
         const sidKey = String(d.sid || d.id);
         if (!seenSids.has(sidKey)) {
@@ -1670,7 +1718,7 @@ router.get('/devices', async (req, res) => {
 router.post('/devices/:sid/revoke', async (req, res) => {
   try {
     const sid = req.params.sid;
-    await db.query(`DELETE FROM sessions WHERE sid = $1`, [sid]).catch(() => {});
+    await db.query(`DELETE FROM sessions WHERE session_id = $1 OR sid = $1`, [sid]).catch(() => {});
     await db.query(`DELETE FROM student_devices WHERE session_token = $1 OR CAST(id AS CHAR) = $1`, [sid]).catch(() => {});
     await logActivity(req, {
       action: 'Super-admin revoked session/device: ' + sid,

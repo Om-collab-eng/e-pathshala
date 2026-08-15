@@ -394,3 +394,20 @@ router.get('/notifications/poll', async (req, res) => {
     res.json({ status: 'success', unreadCount: 0, newNotifications: [], maxId: 0 });
   }
 });
+
+router.post('/notifications/read-all', async (req, res) => {
+  try {
+    const userId = req.session ? (req.session.user_id || req.session.id || 0) : 0;
+    const sCode  = req.session ? (req.session.school_code || 'GLOBAL') : 'GLOBAL';
+    const db     = require('../db');
+    await db.query(
+      `UPDATE notifications SET is_read = 1 WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0 OR user_id IS NULL)`,
+      [sCode, userId]
+    );
+    res.json({ status: 'success', message: 'All notifications marked as read' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+module.exports = router;

@@ -86,8 +86,45 @@ async function ensureSecurityTables() {
       )
     `).catch(() => {});
 
-    // 6. User 2FA columns & logs details column
+    // 6. Advertisements table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS advertisements (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        subtitle VARCHAR(255),
+        description TEXT,
+        cta_text VARCHAR(100) DEFAULT 'Learn More',
+        target_url VARCHAR(500) DEFAULT '#',
+        image_url VARCHAR(500),
+        bg_gradient VARCHAR(255) DEFAULT 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+        start_time DATETIME NULL DEFAULT NULL,
+        end_time DATETIME NULL DEFAULT NULL,
+        status VARCHAR(50) DEFAULT 'active',
+        priority INT DEFAULT 1,
+        target_section VARCHAR(100) DEFAULT 'all',
+        impressions INT DEFAULT 0,
+        clicks INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+
+    // 7. Notifications table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT DEFAULT 0,
+        message TEXT NOT NULL,
+        type VARCHAR(50) DEFAULT 'info',
+        is_read INT DEFAULT 0,
+        school_code VARCHAR(50) DEFAULT 'GLOBAL',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+
+    // 8. User 2FA columns & logs details column
     await db.query(`ALTER TABLE logs ADD COLUMN details TEXT`).catch(() => {});
+    await db.query(`ALTER TABLE notifications ADD COLUMN is_read INT DEFAULT 0`).catch(() => {});
+    await db.query(`ALTER TABLE notifications ADD COLUMN school_code VARCHAR(50) DEFAULT 'GLOBAL'`).catch(() => {});
     await db.query(`ALTER TABLE users ADD COLUMN two_factor_enabled INT DEFAULT 0`).catch(() => {});
     await db.query(`ALTER TABLE users ADD COLUMN two_factor_secret TEXT`).catch(() => {});
   } catch (err) {

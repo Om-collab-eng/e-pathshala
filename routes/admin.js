@@ -271,6 +271,26 @@ router.post('/api/reservation/:resId/reject', adminOnly, async (req, res) => {
   } catch (err) { console.error(err); res.json({ status: 'error', message: err.message }); }
 });
 
+router.post(['/notifications/read-all', '/api/notifications/read-all'], adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'GLOBAL';
+  const uId = req.session.user_id || 0;
+  try {
+    await db.query(
+      `UPDATE notifications SET is_read = 1 WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0 OR user_id IS NULL)`,
+      [sCode, uId]
+    );
+    if (req.xhr || req.headers.accept?.includes('json')) {
+      return res.json({ success: true, message: 'All notifications marked as read' });
+    }
+    return res.redirect('/admin?tab=notifications');
+  } catch (err) {
+    if (req.xhr || req.headers.accept?.includes('json')) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+    return res.redirect('/admin?tab=notifications');
+  }
+});
+
 
 // ── Student Management ──────────────────────────────────────────
 router.post('/student/add', adminOnly, async (req, res) => {

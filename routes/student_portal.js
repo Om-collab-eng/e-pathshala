@@ -483,11 +483,22 @@ router.get('/notifications', async (req, res) => {
   });
 });
 
-router.post('/notifications/read-all', async (req, res) => {
+router.post(['/notifications/read-all', '/api/notifications/read-all'], async (req, res) => {
   try {
-    await pool.query('UPDATE notifications SET is_read = 1 WHERE user_id = $1', [req.session.user_id]);
+    const uId = req.session && req.session.user_id;
+    const sCode = (req.session && req.session.school_code) || 'GLOBAL';
+    await pool.query(
+      'UPDATE notifications SET is_read = 1 WHERE user_id = $1 OR (school_code = $2 AND (user_id = 0 OR user_id IS NULL)) OR school_code = $3',
+      [uId, sCode, 'GLOBAL']
+    );
+    if (req.xhr || req.headers.accept?.includes('json')) {
+      return res.json({ success: true, message: 'All notifications marked as read' });
+    }
     res.redirect('/student/notifications');
   } catch (err) {
+    if (req.xhr || req.headers.accept?.includes('json')) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
     req.flash('error', 'Failed to update notifications');
     res.redirect('/student/notifications');
   }
@@ -495,7 +506,7 @@ router.post('/notifications/read-all', async (req, res) => {
 
 router.post('/api/notifications/read', async (req, res) => {
   try {
-    await pool.query('UPDATE notifications SET is_read = 1 WHERE id = $1 AND user_id = $2', [parseInt(req.body.id, 10), req.session.user_id]);
+    await pool.query('UPDATE notifications SET is_read = 1 WHERE id = $1 AND (user_id = $2 OR user_id = 0 OR user_id IS NULL)', [parseInt(req.body.id, 10), req.session.user_id]);
     res.json({ status: 'success' });
   } catch (err) {
     res.status(500).json({ status: 'error' });

@@ -1039,7 +1039,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                             <h3 style="font-family: 'Outfit'; font-size: 1.15rem; color: #0f172a; margin: 0;">🔔 Notifications & Activity Center</h3>
                             <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0;">Real-time system alerts, book requests, returns, and student activity logs.</p>
                         </div>
-                        <button class="ld-btn ld-btn-primary ld-btn-xs" onclick="showToast('All notifications marked as read', 'success', '✅ System');">Mark All as Read</button>
+                        <button class="ld-btn ld-btn-primary ld-btn-xs" onclick="markAllNotificationsRead(this)">Mark All as Read</button>
                     </div>
 
                     <div class="ld-table-container">
@@ -1434,6 +1434,29 @@ async function toggleAdmin2fa() {
         }
     } catch (err) {
         showToast('Failed to toggle 2FA.', 'error', '⚠️ Server Error');
+    }
+}
+
+async function markAllNotificationsRead(btn) {
+    try {
+        if (btn) btn.disabled = true;
+        const res = await fetch('/admin/api/notifications/read-all', { method: 'POST' });
+        const d = await res.json();
+        if (d.success) {
+            showToast('All notifications marked as read', 'success', '🔔 Notifications');
+            document.querySelectorAll('.ld-notif-badge').forEach(b => b.style.display = 'none');
+            document.querySelectorAll('#tab-notifications tbody tr td span.badge, #tab-notifications tbody tr td span[class*="badge"]').forEach(badge => {
+                badge.className = 'badge';
+                badge.style = 'background: rgba(100, 116, 139, 0.1); color: #64748b; padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;';
+                badge.textContent = 'Read';
+            });
+        } else {
+            showToast(d.error || 'Failed to mark as read', 'error', '⚠️ Error');
+        }
+    } catch (e) {
+        showToast('Error updating notifications', 'error', '⚠️ Error');
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 
