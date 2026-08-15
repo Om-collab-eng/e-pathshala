@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const aiService = require('../services/aiService');
+const { logActivity, ensureSecurityTables } = require('../services/auditLogger');
 require('dotenv').config();
 
 const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
@@ -975,7 +976,102 @@ router.post('/api/add-scanned-book', adminOnly, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-module.exports = router;
+// ── Security & Authentication Handlers ──────────────────────────────
+router.post('/security/password', adminOnly, async (req, res) => {
+  const userId = req.session.user_id;
+  const { current_password, new_password, confirm_password } = req.body;
+  if (!current_password || !new_password) {
+    return res.json({ success: false, error: 'Current and new password required.' });
+  }
+  if (new_password.length < 6) {
+    return res.json({ success: false, error: 'New password must be at least 6 characters long.' });
+  }
+  if (confirm_password && new_password !== confirm_password) {
+    return res.json({ success: false, error: 'Passwords do not match.' });
+  }
+  try {
+    const uRes = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+    const user = uRes.rows && uRes.rows[0];
+    if (!user) return res.json({ success: false, error: 'User not found.' });
+
+    let match = false;
+    const userPass = String(user.password || '').trim();
+    if (userPass.startsWith('$2a$') || userPass.startsWith('$2b$')) {
+      match = await bcrypt.compare(current_password, userPass).catch(() => false);
+    } else {
+      match = (userPass === current_password);
+    }
+    if (!match) return res.json({ success: false, error: 'Current password is incorrect.' });
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await db.query('UPDATE users SET password = $1 WHERE id = $2', [hashed, userId]);
+    await logActivity(req, {
+      userId,
+      action: 'Librarian changed account password',
+      module: 'security',
+      schoolCode: req.session.school_code
+    });
+    return res.json({ success: true, message: 'Password updated successfully!' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/security/2fa', adminOnly, async (req, res) => {
+  const userId = req.session.user_id;
+  try {
+    const uRes = await db.query('SELECT two_factor_enabled FROM users WHERE id = $1', [userId]);
+    const user = uRes.rows && uRes.rows[0];
+    const nowEnabled = user && user.two_factor_enabled ? 0 : 1;
+    await db.query('UPDATE users SET two_factor_enabled = $1 WHERE id = $2', [nowEnabled, userId]);
+    await logActivity(req, {
+      userId,
+      action: nowEnabled ? 'Enabled 2FA' : 'Disabled 2FA',
+      module: 'security',
+      schoolCode: req.session.school_code
+    });
+    return res.json({ success: true, enabled: !!nowEnabled });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.get('/api/security-logs', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'GLOBAL';
+  const userId = req.session.user_id;
+  try {
+    await ensureSecurityTables();
+    const logsRes = await db.query(
+      `SELECT l.*, u.name as user_name FROM logs l
+       LEFT JOIN users u ON u.id = l.user_id
+       WHERE l.school_code = $1 OR l.user_id = $2
+       ORDER BY l.id DESC LIMIT 40`,
+      [sCode, userId]
+    ).catch(() => ({ rows: [] }));
+
+    const loginRes = await db.query(
+      `SELECT lh.*, u.name as user_name FROM login_history lh
+       LEFT JOIN users u ON u.id = lh.user_id
+       WHERE lh.school_code = $1 OR lh.user_id = $2
+       ORDER BY lh.id DESC LIMIT 30`,
+      [sCode, userId]
+    ).catch(() => ({ rows: [] }));
+
+    const devicesRes = await db.query(
+      `SELECT * FROM student_devices WHERE user_id = $1 ORDER BY last_active DESC LIMIT 10`,
+      [userId]
+    ).catch(() => ({ rows: [] }));
+
+    return res.json({
+      success: true,
+      logs: logsRes.rows || [],
+      loginHistory: loginRes.rows || [],
+      devices: devicesRes.rows || []
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // ── AI Assistant Route ──────────────────────────────────────────────
 router.get(['/ai', '/ai-chat'], adminOnly, (req, res) => {
@@ -991,8 +1087,9 @@ router.get(['/ai', '/ai-chat'], adminOnly, (req, res) => {
   }
 });
 
-
-// ── Admin Digital Library Redirect ──────────────────────────────────────────
+// ── Admin Digital Library Redirect ──────────────────────────────────
 router.get(['/digital', '/digital-library'], adminOnly, (req, res) => {
   res.redirect('/admin?tab=books');
 });
+
+module.exports = router;

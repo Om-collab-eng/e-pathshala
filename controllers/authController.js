@@ -1,6 +1,7 @@
 const { query } = require('../db');
 const bcrypt = require('bcryptjs');
 const { getRoleDashboard, isSuperAdmin } = require('../middleware/roleHome');
+const { logLoginAttempt, logActivity, recordDevice, getClientIp } = require('../services/auditLogger');
 
 exports.getLogin = (req, res) => {
   if (req.session && req.session.user_id) {
@@ -18,8 +19,18 @@ exports.getLogin = (req, res) => {
 exports.postLogin = async (req, res) => {
   const { login_type, school_code, username, password } = req.body;
   const loginInput = (username || req.body.login || '').trim();
+  const clientIp = getClientIp(req);
+  const userAgent = req.headers['user-agent'] || '';
 
   if (!loginInput || !password) {
+    await logLoginAttempt({
+      email: loginInput,
+      phone: loginInput,
+      ip: clientIp,
+      userAgent,
+      success: 0,
+      failureReason: 'Missing login ID or password'
+    });
     req.flash('error', 'Please enter both login ID and password');
     return res.redirect('/login');
   }
@@ -70,12 +81,31 @@ exports.postLogin = async (req, res) => {
     }
 
     if (!user) {
+      await logLoginAttempt({
+        email: loginInput.includes('@') ? loginInput : null,
+        phone: !loginInput.includes('@') ? loginInput : null,
+        ip: clientIp,
+        userAgent,
+        success: 0,
+        failureReason: 'Invalid login ID or password'
+      });
       req.flash('error', 'Invalid login ID or password');
       return res.redirect('/login');
     }
 
     const isBanned = user.is_banned === 1 || user.is_banned === '1' || user.is_banned === true || user.is_banned === 'true';
     if (isBanned) {
+      await logLoginAttempt({
+        userId: user.id,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        schoolCode: user.school_code,
+        ip: clientIp,
+        userAgent,
+        success: 0,
+        failureReason: 'Account is banned'
+      });
       req.flash('error', 'Your account has been banned. Contact support.');
       return res.redirect('/login');
     }
@@ -104,6 +134,21 @@ exports.postLogin = async (req, res) => {
       }
     }
 
+    // Record login in login_history and audit log
+    await logLoginAttempt({
+      userId: user.id,
+      email: user.email,
+      phone: user.phone,
+      role: req.session.role,
+      schoolCode: user.school_code,
+      ip: clientIp,
+      userAgent,
+      success: 1
+    });
+
+    // Record active device
+    await recordDevice({ userId: user.id, req });
+
     req.session.save((err) => {
       if (err) {
         console.error('Session save error:', err);
@@ -125,7 +170,15 @@ exports.postLogin = async (req, res) => {
   }
 };
 
-exports.getLogout = (req, res) => {
+exports.getLogout = async (req, res) => {
+  if (req.session && req.session.user_id) {
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: 'User logged out',
+      module: 'auth',
+      schoolCode: req.session.school_code
+    });
+  }
   req.session.destroy((err) => {
     if (err) console.error('Logout error:', err);
     res.redirect('/login');

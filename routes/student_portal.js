@@ -710,7 +710,15 @@ router.post('/security/password', async (req, res) => {
   try {
     const user = (await pool.query('SELECT * FROM users WHERE id = $1', [req.session.user_id])).rows[0];
     if (!user || !user.password) return res.redirect('/student/security');
-    const ok = await bcrypt.compare(current_password, user.password).catch(() => false);
+    
+    let ok = false;
+    const userPass = String(user.password || '').trim();
+    if (userPass.startsWith('$2a$') || userPass.startsWith('$2b$')) {
+      ok = await bcrypt.compare(current_password, userPass).catch(() => false);
+    } else {
+      ok = (userPass === String(current_password).trim());
+    }
+
     if (!ok) {
       req.flash('error', 'Current password is incorrect.');
       return res.redirect('/student/security');
@@ -721,6 +729,17 @@ router.post('/security/password', async (req, res) => {
     }
     const hashed = await bcrypt.hash(new_password, 10);
     await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashed, req.session.user_id]);
+    
+    try {
+      const { logActivity } = require('../services/auditLogger');
+      await logActivity(req, {
+        userId: req.session.user_id,
+        action: 'Student changed account password',
+        module: 'security',
+        schoolCode: req.session.school_code
+      });
+    } catch (e) {}
+
     req.flash('success', 'Password updated successfully!');
     res.redirect('/student/security');
   } catch (err) {

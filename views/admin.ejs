@@ -924,20 +924,81 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                 </div>
             </section>
 
-            <!-- ── TAB: SECURITY ── -->
+            <!-- ── TAB: SECURITY & LOGS ── -->
             <section id="tab-security" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">🔒 Security & Authentication</h3>
-                    <div style="background: #f8fafc; padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <div>
-                                <h4 style="margin: 0; color: #0f172a;">Account Password</h4>
-                                <p style="margin: 2px 0 0; font-size: 0.8rem; color: var(--muted);">Change your account password securely.</p>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Top row: Password & 2FA -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
+                        <!-- Change Password Card -->
+                        <div class="ld-card" style="padding: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(99, 102, 241, 0.1); color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🔑</div>
+                                <div>
+                                    <h3 style="font-family: 'Outfit'; font-size: 1.05rem; color: #0f172a; margin: 0;">Account Password</h3>
+                                    <p style="margin: 2px 0 0; font-size: 0.78rem; color: #64748b;">Update your administrator credentials</p>
+                                </div>
                             </div>
-                            <button class="ld-btn ld-btn-primary ld-btn-xs">Change Password</button>
+                            <form id="adminPasswordForm" onsubmit="handleAdminPasswordChange(event)" style="display: flex; flex-direction: column; gap: 10px;">
+                                <div>
+                                    <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Current Password</label>
+                                    <input type="password" id="adminCurrPass" class="ld-input" required placeholder="Enter current password" style="width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">New Password</label>
+                                    <input type="password" id="adminNewPass" class="ld-input" required minlength="6" placeholder="Min. 6 characters" style="width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Confirm New Password</label>
+                                    <input type="password" id="adminConfPass" class="ld-input" required minlength="6" placeholder="Re-enter new password" style="width: 100%;">
+                                </div>
+                                <button type="submit" class="ld-btn ld-btn-primary" style="margin-top: 6px; width: 100%; justify-content: center;">Update Password</button>
+                            </form>
                         </div>
-                        <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
-                            <span style="color: #34d399; font-weight: 700; font-size: 0.85rem;">🔒 Session Security Active (Encrypted SSL)</span>
+
+                        <!-- 2FA & Session Security Card -->
+                        <div class="ld-card" style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🛡️</div>
+                                    <div>
+                                        <h3 style="font-family: 'Outfit'; font-size: 1.05rem; color: #0f172a; margin: 0;">Two-Factor & Session Security</h3>
+                                        <p style="margin: 2px 0 0; font-size: 0.78rem; color: #64748b;">Protect your portal from unauthorized access</p>
+                                    </div>
+                                </div>
+                                <div style="background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a;">Two-Factor Authentication (2FA)</div>
+                                            <div style="font-size: 0.78rem; color: #64748b;">Extra layer of account protection</div>
+                                        </div>
+                                        <button id="admin2faBtn" onclick="toggleAdmin2fa()" class="ld-btn ld-btn-xs ld-btn-primary">Enable 2FA</button>
+                                    </div>
+                                </div>
+                                <div style="background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; align-items: center; gap: 8px; color: #10b981; font-weight: 700; font-size: 0.84rem;">
+                                        <span>🔒</span> SSL 256-bit Encryption Active
+                                    </div>
+                                    <div style="font-size: 0.76rem; color: #64748b; margin-top: 4px;">Session tokens are strictly isolated per school environment.</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <h4 style="font-size: 0.82rem; font-weight: 700; color: #475569; margin: 0 0 6px 0;">Active Devices</h4>
+                                <div id="adminDevicesList" style="font-size: 0.78rem; color: #64748b;">Current browser session active.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security & Audit Activity Logs Table -->
+                    <div class="ld-card" style="padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #0f172a; margin: 0;">📜 Security & Audit Activity Logs</h3>
+                                <p style="margin: 2px 0 0; font-size: 0.8rem; color: #64748b;">Real-time access logs and administrative actions for this school</p>
+                            </div>
+                            <button onclick="loadAdminSecurityLogs()" class="ld-btn ld-btn-secondary ld-btn-xs" style="gap: 6px;">🔄 Refresh Logs</button>
+                        </div>
+                        <div id="adminSecurityLogsWrap" style="overflow-x: auto;">
+                            <div style="text-align: center; padding: 2rem; color: #94a3b8;">Loading security logs...</div>
                         </div>
                     </div>
                 </div>
@@ -1200,6 +1261,127 @@ function switchTab(tabName, element) {
     if (element) {
         document.querySelectorAll('.ld-nav-item').forEach(b => b.classList.remove('active'));
         element.classList.add('active');
+    }
+
+    if (tabName === 'security') {
+        loadAdminSecurityLogs();
+    }
+}
+
+async function loadAdminSecurityLogs() {
+    const wrap = document.getElementById('adminSecurityLogsWrap');
+    if (!wrap) return;
+    try {
+        const res = await fetch('/admin/api/security-logs');
+        const data = await res.json();
+        if (!data.success) {
+            wrap.innerHTML = '<div style="text-align:center;padding:2rem;color:#ef4444;">Failed to load logs.</div>';
+            return;
+        }
+
+        const logs = data.logs || [];
+        const loginHistory = data.loginHistory || [];
+        const devices = data.devices || [];
+
+        // Render devices
+        const devWrap = document.getElementById('adminDevicesList');
+        if (devWrap) {
+            if (!devices.length) {
+                devWrap.innerHTML = '<span style="color:#94a3b8;">Current browser session active.</span>';
+            } else {
+                devWrap.innerHTML = devices.map(d => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">
+                        <span>💻 <strong>${d.device_name || d.device_type || 'Browser'}</strong> (${d.ip_address || 'Current IP'})</span>
+                        <span style="font-size:0.72rem;color:#94a3b8;">${d.last_active ? new Date(d.last_active).toLocaleString() : 'Active'}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        if (!logs.length && !loginHistory.length) {
+            wrap.innerHTML = '<div style="text-align:center;padding:2rem;color:#94a3b8;">No security activity logged yet.</div>';
+            return;
+        }
+
+        let rows = '';
+        logs.forEach(l => {
+            rows += `
+                <tr>
+                    <td style="font-weight:600;color:#0f172a;">${l.user_name || 'Admin'}</td>
+                    <td><span class="badge" style="background:rgba(99,102,241,0.1);color:#4f46e5;padding:2px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;">${l.module || 'system'}</span></td>
+                    <td style="color:#334155;font-size:0.82rem;">${l.action || '—'}</td>
+                    <td style="font-size:0.78rem;color:#64748b;"><code>${l.ip_address || '—'}</code></td>
+                    <td style="font-size:0.75rem;color:#94a3b8;white-space:nowrap;">${l.created_at ? new Date(l.created_at).toLocaleString() : '—'}</td>
+                </tr>
+            `;
+        });
+
+        wrap.innerHTML = `
+            <table class="ld-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Module</th>
+                        <th>Action Performed</th>
+                        <th>IP Address</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    } catch (e) {
+        wrap.innerHTML = '<div style="text-align:center;padding:2rem;color:#ef4444;">Error loading logs.</div>';
+    }
+}
+
+async function handleAdminPasswordChange(e) {
+    e.preventDefault();
+    const curr = document.getElementById('adminCurrPass').value;
+    const newP = document.getElementById('adminNewPass').value;
+    const conf = document.getElementById('adminConfPass').value;
+
+    if (newP !== conf) {
+        showToast('New passwords do not match.', 'error', '⚠️ Password Error');
+        return;
+    }
+
+    try {
+        const res = await fetch('/admin/security/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ current_password: curr, new_password: newP, confirm_password: conf })
+        });
+        const d = await res.json();
+        if (d.success) {
+            showToast(d.message || 'Password changed successfully!', 'success', '🔒 Security');
+            document.getElementById('adminPasswordForm').reset();
+            loadAdminSecurityLogs();
+        } else {
+            showToast(d.error || 'Failed to change password.', 'error', '⚠️ Password Error');
+        }
+    } catch (err) {
+        showToast('An error occurred updating password.', 'error', '⚠️ Server Error');
+    }
+}
+
+async function toggleAdmin2fa() {
+    try {
+        const res = await fetch('/admin/security/2fa', { method: 'POST' });
+        const d = await res.json();
+        if (d.success) {
+            const btn = document.getElementById('admin2faBtn');
+            if (btn) {
+                btn.textContent = d.enabled ? 'Disable 2FA' : 'Enable 2FA';
+                btn.className = d.enabled ? 'ld-btn ld-btn-xs ld-btn-danger' : 'ld-btn ld-btn-xs ld-btn-primary';
+            }
+            showToast(d.enabled ? 'Two-Factor Authentication Enabled' : 'Two-Factor Authentication Disabled', 'success', '🛡️ 2FA Updated');
+            loadAdminSecurityLogs();
+        } else {
+            showToast(d.error || 'Failed to update 2FA.', 'error', '⚠️ Error');
+        }
+    } catch (err) {
+        showToast('Failed to toggle 2FA.', 'error', '⚠️ Server Error');
     }
 }
 

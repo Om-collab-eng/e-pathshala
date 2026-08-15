@@ -9,6 +9,7 @@ const csv = require('csv-parser');
 const { Readable } = require('stream');
 const cron = require('node-cron');
 const { isSuperAdmin, getRoleDashboard } = require('../middleware/roleHome');
+const { logActivity, ensureSecurityTables } = require('../services/auditLogger');
 
 // ─────────────────────────────────────────────
 //  SETTINGS TABLE ADAPTER
@@ -1636,12 +1637,14 @@ router.get('/login-history', async (req, res) => { await ensureSecurityTables();
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Devices (active sessions) — read from session store if available, else from users.session_token
-router.get('/devices', async (req, res) => { await ensureSecurityTables();
+// Devices (active sessions) — read from sessions + student_devices
+router.get('/devices', async (req, res) => {
+  await ensureSecurityTables();
   const { user_id } = req.query;
   try {
-    // Try to read from sessions table; fall back to listing users with last_login_at
     let sessions = [];
+    const seenSids = new Set();
+
     if (db.poolMain || db.mysqlPool) {
       try {
         const r = await db.query(`SELECT sid, sess, expire FROM sessions WHERE expire > NOW()`);
@@ -1658,12 +1661,38 @@ router.get('/devices', async (req, res) => { await ensureSecurityTables();
               ua: sess.user_agent || '',
               expire: row.expire,
             });
+            seenSids.add(String(row.sid));
           }
         }
-      } catch (e) {
-        // sessions table not present
-      }
+      } catch (e) {}
     }
+
+    // Always fetch active device records from student_devices
+    try {
+      const devRes = await db.query(`
+        SELECT d.id, d.user_id, d.device_name, d.device_type, d.ip_address as ip, d.session_token as sid, d.user_agent as ua, d.last_active as expire,
+               u.name as user_name, u.role
+        FROM student_devices d
+        LEFT JOIN users u ON u.id = d.user_id
+        ORDER BY d.last_active DESC LIMIT 100
+      `);
+      for (const d of (devRes.rows || [])) {
+        const sidKey = String(d.sid || d.id);
+        if (!seenSids.has(sidKey)) {
+          sessions.push({
+            sid: sidKey,
+            user_id: d.user_id,
+            user_name: d.user_name || 'Unknown',
+            role: d.role || 'user',
+            ip: d.ip || '',
+            ua: `${d.device_name || ''} (${d.device_type || 'Web'})`,
+            expire: d.expire
+          });
+          seenSids.add(sidKey);
+        }
+      }
+    } catch (e) {}
+
     // Filter by user_id if requested
     if (user_id) sessions = sessions.filter(s => String(s.user_id) === String(user_id));
     res.json({ success: true, devices: sessions });
@@ -1672,12 +1701,27 @@ router.get('/devices', async (req, res) => { await ensureSecurityTables();
 
 router.post('/devices/:sid/revoke', async (req, res) => {
   try {
-    await db.query(`DELETE FROM sessions WHERE sid = $1`, [req.params.sid]);
+    const sid = req.params.sid;
+    await db.query(`DELETE FROM sessions WHERE sid = $1`, [sid]).catch(() => {});
+    await db.query(`DELETE FROM student_devices WHERE session_token = $1 OR CAST(id AS CHAR) = $1`, [sid]).catch(() => {});
+    await logActivity(req, {
+      action: 'Super-admin revoked session/device: ' + sid,
+      module: 'security'
+    });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 2FA management
+router.get('/two-factor/list', async (req, res) => {
+  try {
+    const r = await db.query(
+      `SELECT id, name, phone, email, role, school_code, two_factor_enabled FROM users WHERE two_factor_enabled = 1 ORDER BY id DESC LIMIT 200`
+    );
+    res.json({ success: true, users: r.rows || [] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 router.get('/users/:id/2fa', async (req, res) => {
   try {
     const r = await db.query(`SELECT id, two_factor_enabled FROM users WHERE id = $1`, [req.params.id]);
@@ -1689,12 +1733,12 @@ router.get('/users/:id/2fa', async (req, res) => {
 router.post('/users/:id/2fa/disable', async (req, res) => {
   try {
     await db.query(`UPDATE users SET two_factor_enabled = 0, two_factor_secret = NULL WHERE id = $1`, [req.params.id]);
-    await db.query(`DELETE FROM two_factor_backup_codes WHERE user_id = $1`, [req.params.id]);
-    await db.query(
-      `INSERT INTO logs (user_id, action, module, ip_address, created_at)
-       VALUES ($1, $2, '2fa', $3, NOW())`,
-      [req.params.id, '2FA disabled by super-admin', req.ip || '']
-    );
+    await db.query(`DELETE FROM two_factor_backup_codes WHERE user_id = $1`, [req.params.id]).catch(() => {});
+    await logActivity(req, {
+      userId: req.params.id,
+      action: '2FA disabled by super-admin for user #' + req.params.id,
+      module: '2fa'
+    });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -2212,9 +2256,6 @@ router.get('/export/ai-search-usage', async (req, res) => {
   } catch (err) { res.status(500).send('Export Error'); }
 });
 
-module.exports = router;
-
-
 // Backup Aliases & Direct Export
 router.get('/backups', async (req, res) => {
   try {
@@ -2261,3 +2302,5 @@ router.get(['/ai', '/ai-chat'], (req, res) => {
     res.redirect('/superadmin');
   }
 });
+
+module.exports = router;

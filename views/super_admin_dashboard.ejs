@@ -3496,24 +3496,48 @@ async function revokeDevice(sid) {
 }
 
 async function loadTwoFactor() {
+  document.getElementById('twofaWrap').innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading 2FA status...</div>';
   try {
-    const d = await (await fetch('/super-admin/users?limit=500')).json();
+    const d = await (await fetch('/super-admin/two-factor/list')).json();
     const users = d.users || [];
-    document.getElementById('twofaWrap').innerHTML = `
-      <p style="color:#94a3b8;font-size:.86rem">Users with <code>two_factor_enabled=1</code> (table-level filter). Use the Users tab "Edit" → "2FA" action to disable for any user.</p>
-      <div style="display:flex;gap:.5rem;align-items:center;margin-top:.7rem">
-        <input class="sa-search" id="twofaUserId" type="number" placeholder="User ID">
+    let html = `
+      <div style="margin-bottom:1rem;display:flex;gap:.5rem;align-items:center;">
+        <input class="sa-search" id="twofaUserId" type="number" placeholder="Enter User ID to disable 2FA..." style="max-width:260px">
         <button class="sa-btn sa-btn-warning sa-btn-sm" onclick="disableUser2fa()">Disable 2FA</button>
       </div>`;
-  } catch (e) {}
+    if (!users.length) {
+      html += '<div class="sa-empty"><p>No users currently have Two-Factor Authentication enabled.</p></div>';
+    } else {
+      html += `
+        <div class="sa-table-wrap"><table class="sa-table">
+          <thead><tr><th>ID</th><th>User</th><th>Role</th><th>School</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>${users.map(u => `
+            <tr>
+              <td>#${u.id}</td>
+              <td style="font-weight:600;color:#0f172a">${u.name || '—'}<br><span style="font-size:0.75rem;color:#64748b">${u.phone || u.email || ''}</span></td>
+              <td><span class="badge badge-indigo">${u.role || '—'}</span></td>
+              <td>${u.school_code || '—'}</td>
+              <td><span class="badge badge-green">2FA Enabled</span></td>
+              <td><button class="sa-btn sa-btn-danger sa-btn-xs" onclick="disableUser2faDirect(${u.id})">Disable 2FA</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>`;
+    }
+    document.getElementById('twofaWrap').innerHTML = html;
+  } catch (e) {
+    document.getElementById('twofaWrap').innerHTML = '<div class="sa-empty"><p>Failed to load 2FA users.</p></div>';
+  }
+}
+async function disableUser2faDirect(id) {
+  if (!confirm(`Disable 2FA for user #${id}?`)) return;
+  const d = await apiPost('/super-admin/users/' + id + '/2fa/disable', {});
+  if (d.success) { showToast('2FA disabled for user #' + id, 'success'); loadTwoFactor(); }
+  else showToast(d.error || 'Failed', 'error');
 }
 async function disableUser2fa() {
   const id = document.getElementById('twofaUserId').value;
   if (!id) return showToast('Enter user ID', 'error');
-  if (!confirm(`Disable 2FA for user ${id}?`)) return;
-  const d = await apiPost('/super-admin/users/' + id + '/2fa/disable', {});
-  if (d.success) { showToast('2FA disabled', 'success'); loadTwoFactor(); }
-  else showToast(d.error || 'Failed', 'error');
+  disableUser2faDirect(id);
 }
 
 async function loadIpAllowlist() {
