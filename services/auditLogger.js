@@ -122,13 +122,14 @@ async function ensureSecurityTables() {
     `).catch(() => {});
 
     // 8. User 2FA columns & logs details column
-    await db.query(`ALTER TABLE logs ADD COLUMN details TEXT`).catch(() => {});
-    await db.query(`ALTER TABLE notifications ADD COLUMN is_read INT DEFAULT 0`).catch(() => {});
-    await db.query(`ALTER TABLE notifications ADD COLUMN school_code VARCHAR(50) DEFAULT 'GLOBAL'`).catch(() => {});
-    await db.query(`ALTER TABLE users ADD COLUMN two_factor_enabled INT DEFAULT 0`).catch(() => {});
-    await db.query(`ALTER TABLE users ADD COLUMN two_factor_secret TEXT`).catch(() => {});
+    await db.query(`ALTER TABLE logs ADD COLUMN IF NOT EXISTS details TEXT`).catch(() => {});
+    await db.query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read INT DEFAULT 0`).catch(() => {});
+    await db.query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS school_code VARCHAR(50) DEFAULT 'GLOBAL'`).catch(() => {});
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_enabled INT DEFAULT 0`).catch(() => {});
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_secret TEXT`).catch(() => {});
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete TINYINT(1) DEFAULT 0`).catch(() => {});
   } catch (err) {
-    console.error('[AuditLogger] Table initialization note:', err.message);
+    // Silently ignore schema migration notes
   }
 }
 

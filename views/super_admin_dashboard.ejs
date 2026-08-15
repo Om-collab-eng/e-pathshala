@@ -51,9 +51,13 @@ html, body {
   height: 100vh;
   height: 100dvh;
   z-index: 9999;
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.28s ease, width 0.28s ease;
   overflow: hidden;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+}
+
+.sa-sidebar.collapsed {
+  transform: translateX(-105%) !important;
 }
 
 .sa-sidebar-brand {
@@ -263,11 +267,16 @@ html, body {
   width: calc(100vw - 260px);
   max-width: 100vw;
   overflow-x: hidden;
+  transition: margin-left 0.28s ease, width 0.28s ease;
 }
+
+.sa-main.expanded {
+  margin-left: 0 !important;
+  width: 100vw !important;
+}
+
 .sa-topbar {
   background: rgba(8, 15, 34, 0.92);
-  
-  
   border-bottom: 1px solid rgba(99, 102, 241, 0.12);
   padding: 0.85rem 1.5rem;
   display: flex;
@@ -284,18 +293,24 @@ html, body {
   gap: 12px;
 }
 .sa-mob-toggle {
-  display: none;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex !important;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: #e2e8f0;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 10px;
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 40px;
+  min-width: 40px;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
+}
+.sa-mob-toggle:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #ffffff;
 }
 .sa-breadcrumbs {
   font-size: 0.72rem;
@@ -522,16 +537,16 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 }
 
 /* ── RESPONSIVE BREAKPOINTS ── */
-@media (max-width: 600px) {
+@media (max-width: 900px) {
   .sa-sidebar {
     transform: translateX(-105%);
   }
   .sa-sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
     box-shadow: 20px 0 60px rgba(0, 0, 0, 0.8);
   }
   .sa-sidebar-close-mob {
-    display: flex;
+    display: flex !important;
   }
   .sa-main {
     margin-left: 0 !important;
@@ -539,7 +554,7 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
     max-width: 100vw !important;
   }
   .sa-mob-toggle {
-    display: flex;
+    display: inline-flex !important;
   }
   .sa-content {
     padding: 1rem;
@@ -2003,15 +2018,31 @@ const SA = {
 function toggleSidebar() {
   const sb = document.getElementById('saSidebar');
   const dim = document.getElementById('saDim');
+  const main = document.querySelector('.sa-main');
   if (!sb) return;
-  sb.classList.toggle('open');
-  if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
+
+  if (window.innerWidth <= 900) {
+    sb.classList.toggle('open');
+    if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
+  } else {
+    // Desktop toggle: collapse/expand sidebar
+    sb.classList.toggle('collapsed');
+    if (main) main.classList.toggle('expanded', sb.classList.contains('collapsed'));
+  }
 }
+
 function closeSidebar() {
   const sb = document.getElementById('saSidebar');
   const dim = document.getElementById('saDim');
   if (sb) sb.classList.remove('open');
   if (dim) dim.classList.remove('active');
+}
+
+function openSidebar() {
+  const sb = document.getElementById('saSidebar');
+  const dim = document.getElementById('saDim');
+  if (sb) sb.classList.add('open');
+  if (dim) dim.classList.add('active');
 }
 
 const TAB_TITLES = {
@@ -3631,21 +3662,6 @@ function toggleNavGroup(grpId) {
   if (!grp) return;
   grp.classList.toggle('collapsed');
   if (arr) arr.textContent = grp.classList.contains('collapsed') ? '▸' : '▾';
-}
-
-function toggleSidebar() {
-  const sb = document.getElementById('saSidebar');
-  const dim = document.getElementById('saDim');
-  if (!sb) return;
-  sb.classList.toggle('open');
-  if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
-}
-
-function closeSidebar() {
-  const sb = document.getElementById('saSidebar');
-  const dim = document.getElementById('saDim');
-  if (sb) sb.classList.remove('open');
-  if (dim) dim.classList.remove('active');
 }
 
 // Mobile swipe gesture to close sidebar

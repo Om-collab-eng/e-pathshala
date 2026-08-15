@@ -84,6 +84,9 @@ if (useMysql) {
         lastId: isArray ? null : rows.insertId
       };
     } catch (err) {
+      if (err.code === 'ER_DUP_FIELDNAME' || err.errno === 1060) {
+        return { rows: [], rowCount: 0 };
+      }
       console.error('Database query error (MySQL):', err);
       throw err;
     }
