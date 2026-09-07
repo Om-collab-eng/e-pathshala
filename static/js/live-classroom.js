@@ -6,13 +6,14 @@
 (function() {
   'use strict';
 
-  // Config & State
+  // Reliable Public WebRTC STUN & Turn Servers
   const ICE_SERVERS = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' }
+      { urls: 'stun:stun3.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' }
     ]
   };
 
@@ -26,17 +27,18 @@
   let isWhiteboardOpen = false;
   let isChatOpen = true;
   let isParticipantsOpen = false;
-  let currentLayout = 'grid'; // 'grid' | 'spotlight'
   let pinnedSocketId = null;
 
   // Peer Connections: Map(socketId -> RTCPeerConnection)
   const peerConnections = new Map();
   // Remote Streams: Map(socketId -> MediaStream)
   const remoteStreams = new Map();
-  // Remote User Meta: Map(socketId -> { userId, userName, role, isMuted, isVideoOff, handRaised })
+  // Pending ICE Candidates: Map(socketId -> Array<RTCIceCandidate>)
+  const pendingIceCandidates = new Map();
+  // Remote User Meta: Map(socketId -> { userId, userName, role, isMuted, isVideoOff, handRaised, isScreenSharing })
   const participants = new Map();
 
-  // Whiteboard State
+  // Whiteboard State & History
   let wbCanvas = null;
   let wbCtx = null;
   let isDrawing = false;
@@ -45,6 +47,7 @@
   let currentLineWidth = 3;
   let lastX = 0;
   let lastY = 0;
+  let wbStrokesHistory = [];
 
   // Session Duration Timer
   let timerInterval = null;
@@ -57,7 +60,7 @@
   let whiteboardOverlay, timerEl;
 
   // ─────────────────────────────────────────────────────────────
-  // 1. INITIALIZATION & SETUP
+  // 1. INITIALIZATION & SEQUENCE
   // ─────────────────────────────────────────────────────────────
   window.addEventListener('DOMContentLoaded', async () => {
     cacheElements();
@@ -65,11 +68,11 @@
     initWhiteboard();
     bindDockEvents();
     
-    // Connect to Socket.io
-    initSocket();
-
-    // Start local media
+    // 1. Capture local audio/video media FIRST so tracks are ready before signaling
     await startLocalMedia();
+
+    // 2. Connect to Socket.IO Signaling Engine
+    initSocket();
   });
 
   function cacheElements() {
@@ -112,7 +115,66 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 2. SOCKET.IO & SIGNALING
+  // 2. LOCAL MEDIA CAPTURE
+  // ─────────────────────────────────────────────────────────────
+  async function startLocalMedia() {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+      if (selfVideo) {
+        selfVideo.srcObject = localStream;
+        selfVideo.muted = true; // prevent local audio feedback echo
+        selfVideo.play().catch(() => {});
+      }
+    } catch (err) {
+      console.warn('Camera/Mic permission not granted or device not available:', err);
+      localStream = createPlaceholderMediaStream();
+      if (selfVideo) {
+        selfVideo.srcObject = localStream;
+        selfVideo.muted = true;
+      }
+      isVideoOff = true;
+      isMuted = true;
+      updateSelfMediaUI();
+    }
+  }
+
+  function createPlaceholderMediaStream() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(0, 0, 640, 360);
+    const videoTrack = canvas.captureStream(10).getVideoTracks()[0];
+    
+    // Silent WebAudio oscillator track
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const dst = audioCtx.createMediaStreamDestination();
+      osc.connect(dst);
+      const audioTrack = dst.stream.getAudioTracks()[0];
+      audioTrack.enabled = false;
+      return new MediaStream([videoTrack, audioTrack]);
+    } catch (e) {
+      return new MediaStream([videoTrack]);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 3. SOCKET.IO & WEBRTC SIGNALING
   // ─────────────────────────────────────────────────────────────
   function initSocket() {
     if (typeof io === 'undefined') {
@@ -138,14 +200,20 @@
       });
     });
 
-    // Receive list of existing peers in the room
-    socket.on('room-users', async ({ users, self }) => {
+    // Receive existing participants & whiteboard history
+    socket.on('room-users', async ({ users, self, wbHistory }) => {
       console.log('Existing users in room:', users);
+
+      if (wbHistory && Array.isArray(wbHistory)) {
+        wbStrokesHistory = wbHistory;
+        redrawWhiteboardHistory();
+      }
+
       users.forEach(user => {
         participants.set(user.socketId, user);
         createRemoteVideoTile(user.socketId, user);
-        // We initiate call to each existing user
-        initiatePeerConnection(user.socketId, true);
+        // Call existing peer
+        initiatePeerCall(user.socketId);
       });
       updateParticipantsListUI();
     });
@@ -156,25 +224,25 @@
       participants.set(user.socketId, user);
       createRemoteVideoTile(user.socketId, user);
       updateParticipantsListUI();
-      showToast(`${user.userName} joined the live classroom`);
+      showToast(`${user.userName} joined`);
     });
 
     // Handle incoming WebRTC Offer
     socket.on('signal-offer', async ({ callerSocketId, callerData, offer }) => {
-      console.log('Received offer from:', callerSocketId);
+      console.log('Received WebRTC Offer from:', callerSocketId);
       if (callerData) {
         participants.set(callerSocketId, callerData);
         createRemoteVideoTile(callerSocketId, callerData);
         updateParticipantsListUI();
       }
 
-      let pc = peerConnections.get(callerSocketId);
-      if (!pc) {
-        pc = createPeerConnection(callerSocketId);
-      }
+      const pc = getOrCreatePeerConnection(callerSocketId);
 
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        // Drain pending ICE candidates
+        await drainPendingCandidates(callerSocketId, pc);
+
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
 
@@ -183,32 +251,40 @@
           answer
         });
       } catch (err) {
-        console.error('Error handling offer:', err);
+        console.error('Error handling WebRTC offer:', err);
       }
     });
 
     // Handle incoming WebRTC Answer
     socket.on('signal-answer', async ({ responderSocketId, answer }) => {
-      console.log('Received answer from:', responderSocketId);
+      console.log('Received WebRTC Answer from:', responderSocketId);
       const pc = peerConnections.get(responderSocketId);
       if (pc) {
         try {
           await pc.setRemoteDescription(new RTCSessionDescription(answer));
+          await drainPendingCandidates(responderSocketId, pc);
         } catch (err) {
-          console.error('Error handling answer:', err);
+          console.error('Error handling WebRTC answer:', err);
         }
       }
     });
 
     // Handle incoming ICE Candidate
     socket.on('ice-candidate', async ({ fromSocketId, candidate }) => {
+      if (!candidate) return;
       const pc = peerConnections.get(fromSocketId);
-      if (pc && candidate) {
+      if (pc && pc.remoteDescription && pc.remoteDescription.type) {
         try {
           await pc.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (err) {
           console.error('Error adding ice candidate:', err);
         }
+      } else {
+        // Queue until remoteDescription is set
+        if (!pendingIceCandidates.has(fromSocketId)) {
+          pendingIceCandidates.set(fromSocketId, []);
+        }
+        pendingIceCandidates.get(fromSocketId).push(candidate);
       }
     });
 
@@ -237,7 +313,7 @@
       }
     });
 
-    // Live Chat Message
+    // Live In-Class Chat Message
     socket.on('receive-chat', (msg) => {
       appendChatMessage(msg);
       if (!isChatOpen) {
@@ -248,10 +324,12 @@
 
     // Collaborative Whiteboard Stroke
     socket.on('wb-draw', (data) => {
-      renderRemoteWhiteboardStroke(data);
+      wbStrokesHistory.push(data);
+      renderStroke(data);
     });
 
     socket.on('wb-clear', () => {
+      wbStrokesHistory = [];
       clearWhiteboardCanvas();
     });
 
@@ -259,7 +337,7 @@
     socket.on('force-mute', () => {
       if (!window.ROOM_CONFIG.isHost) {
         muteAudio();
-        showToast('The host has muted all participants');
+        showToast('The host has muted all microphones');
       }
     });
 
@@ -278,99 +356,48 @@
       participants.delete(socketId);
       removeRemoteVideoTile(socketId);
       updateParticipantsListUI();
-      showToast(`${userName} left the classroom`);
+      showToast(`${userName} left`);
     });
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 3. MEDIA CAPTURE & WEBRTC CONNECTIONS
+  // 4. WEBRTC PEER CONNECTION MANAGEMENT
   // ─────────────────────────────────────────────────────────────
-  async function startLocalMedia() {
+  async function initiatePeerCall(targetSocketId) {
+    const pc = getOrCreatePeerConnection(targetSocketId);
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30 }
-        },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
       });
+      await pc.setLocalDescription(offer);
 
-      if (selfVideo) {
-        selfVideo.srcObject = localStream;
-        selfVideo.muted = true; // prevent local feedback
-      }
+      socket.emit('signal-offer', {
+        targetSocketId,
+        offer
+      });
     } catch (err) {
-      console.warn('Camera/Mic permission not granted or device not available:', err);
-      // Fallback: Create silent audio/black video canvas stream
-      localStream = createPlaceholderMediaStream();
-      if (selfVideo) selfVideo.srcObject = localStream;
-      isVideoOff = true;
-      isMuted = true;
-      updateSelfMediaUI();
+      console.error('Error initiating peer call:', err);
     }
   }
 
-  function createPlaceholderMediaStream() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 640;
-    canvas.height = 360;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#0F172A';
-    ctx.fillRect(0, 0, 640, 360);
-    const videoTrack = canvas.captureStream(10).getVideoTracks()[0];
-    
-    // Silent WebAudio track
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const dst = audioCtx.createMediaStreamDestination();
-    osc.connect(dst);
-    const audioTrack = dst.stream.getAudioTracks()[0];
-    audioTrack.enabled = false;
-
-    return new MediaStream([videoTrack, audioTrack]);
-  }
-
-  function initiatePeerConnection(targetSocketId, isCaller) {
-    let pc = createPeerConnection(targetSocketId);
-    
-    if (isCaller) {
-      pc.onnegotiationneeded = async () => {
-        try {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          socket.emit('signal-offer', {
-            targetSocketId,
-            offer
-          });
-        } catch (err) {
-          console.error('Error creating offer for peer:', err);
-        }
-      };
-    }
-  }
-
-  function createPeerConnection(targetSocketId) {
+  function getOrCreatePeerConnection(targetSocketId) {
     if (peerConnections.has(targetSocketId)) {
       return peerConnections.get(targetSocketId);
     }
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
 
-    // Add local media tracks to peer connection
+    // Add local tracks (Audio & Video)
     if (localStream) {
       localStream.getTracks().forEach(track => {
         pc.addTrack(track, localStream);
       });
     }
 
-    // ICE Candidate generation
+    // ICE Candidate Handler
     pc.onicecandidate = (event) => {
-      if (event.candidate) {
+      if (event.candidate && socket) {
         socket.emit('ice-candidate', {
           targetSocketId,
           candidate: event.candidate
@@ -378,18 +405,22 @@
       }
     };
 
-    // Remote Track Handler
+    // Remote Track Arrival (Video / Audio stream)
     pc.ontrack = (event) => {
-      console.log('Received remote track from:', targetSocketId, event.streams[0]);
+      console.log('Received remote track from:', targetSocketId, event.track.kind);
       let stream = remoteStreams.get(targetSocketId);
       if (!stream) {
-        stream = event.streams[0] || new MediaStream();
+        stream = new MediaStream();
         remoteStreams.set(targetSocketId, stream);
       }
       
+      stream.addTrack(event.track);
+
       const remoteVideoEl = document.getElementById(`video_${targetSocketId}`);
       if (remoteVideoEl) {
         remoteVideoEl.srcObject = stream;
+        remoteVideoEl.muted = false; // UNMUTED so audio is heard clearly
+        remoteVideoEl.play().catch(e => console.warn('Autoplay error:', e));
       }
     };
 
@@ -404,6 +435,20 @@
     return pc;
   }
 
+  async function drainPendingCandidates(socketId, pc) {
+    const pending = pendingIceCandidates.get(socketId);
+    if (pending && pending.length > 0) {
+      for (const candidate of pending) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) {
+          console.error('Error draining candidate:', e);
+        }
+      }
+      pendingIceCandidates.delete(socketId);
+    }
+  }
+
   function cleanupPeer(socketId) {
     const pc = peerConnections.get(socketId);
     if (pc) {
@@ -411,53 +456,22 @@
       peerConnections.delete(socketId);
     }
     remoteStreams.delete(socketId);
+    pendingIceCandidates.delete(socketId);
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 4. DOCK CONTROLS & MEDIA ACTIONS
+  // 5. DOCK MEDIA CONTROLS
   // ─────────────────────────────────────────────────────────────
   function bindDockEvents() {
-    // Mic Toggle
-    if (dockMicBtn) {
-      dockMicBtn.addEventListener('click', toggleAudio);
-    }
+    if (dockMicBtn) dockMicBtn.addEventListener('click', toggleAudio);
+    if (dockCamBtn) dockCamBtn.addEventListener('click', toggleVideo);
+    if (dockScreenBtn) dockScreenBtn.addEventListener('click', toggleScreenShare);
+    if (dockHandBtn) dockHandBtn.addEventListener('click', toggleHandRaise);
+    if (dockWbBtn) dockWbBtn.addEventListener('click', toggleWhiteboard);
+    if (dockChatBtn) dockChatBtn.addEventListener('click', toggleChatPanel);
+    if (dockParticipantsBtn) dockParticipantsBtn.addEventListener('click', toggleParticipantsPanel);
+    if (dockLeaveBtn) dockLeaveBtn.addEventListener('click', leaveMeeting);
 
-    // Video Cam Toggle
-    if (dockCamBtn) {
-      dockCamBtn.addEventListener('click', toggleVideo);
-    }
-
-    // Screen Sharing Toggle
-    if (dockScreenBtn) {
-      dockScreenBtn.addEventListener('click', toggleScreenShare);
-    }
-
-    // Raise Hand
-    if (dockHandBtn) {
-      dockHandBtn.addEventListener('click', toggleHandRaise);
-    }
-
-    // Whiteboard Toggle
-    if (dockWbBtn) {
-      dockWbBtn.addEventListener('click', toggleWhiteboard);
-    }
-
-    // Chat Toggle
-    if (dockChatBtn) {
-      dockChatBtn.addEventListener('click', toggleChatPanel);
-    }
-
-    // Participants List Toggle
-    if (dockParticipantsBtn) {
-      dockParticipantsBtn.addEventListener('click', toggleParticipantsPanel);
-    }
-
-    // Leave / End Meeting
-    if (dockLeaveBtn) {
-      dockLeaveBtn.addEventListener('click', leaveMeeting);
-    }
-
-    // Chat Form Submit
     if (chatForm) {
       chatForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -465,11 +479,8 @@
       });
     }
 
-    // Copy Invite Button
     const copyInviteBtn = document.getElementById('copyInviteBtn');
-    if (copyInviteBtn) {
-      copyInviteBtn.addEventListener('click', copyMeetingInvite);
-    }
+    if (copyInviteBtn) copyInviteBtn.addEventListener('click', copyMeetingInvite);
   }
 
   function toggleAudio() {
@@ -512,7 +523,7 @@
       try {
         screenStream = await navigator.mediaDevices.getDisplayMedia({
           video: { cursor: 'always' },
-          audio: false
+          audio: true
         });
 
         const screenTrack = screenStream.getVideoTracks()[0];
@@ -527,6 +538,7 @@
 
         if (selfVideo) {
           selfVideo.srcObject = screenStream;
+          selfVideo.play().catch(() => {});
         }
 
         isScreenSharing = true;
@@ -539,9 +551,9 @@
         };
 
         broadcastMediaState();
-        showToast('Screen sharing started');
+        showToast('Screen sharing active');
       } catch (err) {
-        console.warn('Screen share cancelled or failed:', err);
+        console.warn('Screen share cancelled:', err);
       }
     }
   }
@@ -563,6 +575,7 @@
 
       if (selfVideo) {
         selfVideo.srcObject = localStream;
+        selfVideo.play().catch(() => {});
       }
     }
 
@@ -571,7 +584,7 @@
     dockScreenBtn.style.background = '';
     selfTile.classList.remove('screenshare-active');
     broadcastMediaState();
-    showToast('Screen sharing stopped');
+    showToast('Screen sharing ended');
   }
 
   function toggleHandRaise() {
@@ -586,7 +599,7 @@
     if (socket) {
       socket.emit('toggle-hand', { handRaised: isHandRaised });
     }
-    showToast(isHandRaised ? 'Hand raised' : 'Hand lowered');
+    showToast(isHandRaised ? '✋ Hand raised' : 'Hand lowered');
   }
 
   function broadcastMediaState() {
@@ -600,7 +613,6 @@
   }
 
   function updateSelfMediaUI() {
-    // Update Dock Buttons
     if (dockMicBtn) {
       dockMicBtn.classList.toggle('muted', isMuted);
       dockMicBtn.innerHTML = `<span class="material-symbols-outlined">${isMuted ? 'mic_off' : 'mic'}</span>`;
@@ -613,7 +625,6 @@
       dockCamBtn.style.background = isVideoOff ? '#EF4444' : '';
     }
 
-    // Update Self Video Card
     if (selfAvatar) {
       selfAvatar.style.display = isVideoOff ? 'flex' : 'none';
     }
@@ -624,7 +635,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 5. UI GRID & PARTICIPANTS TILES
+  // 6. VIDEO TILES & MULTI-CAM GRID
   // ─────────────────────────────────────────────────────────────
   function createRemoteVideoTile(socketId, userData) {
     if (document.getElementById(`tile_${socketId}`)) return;
@@ -659,6 +670,18 @@
     `;
 
     videoGrid.appendChild(tile);
+
+    // If stream already exists, attach immediately
+    const existingStream = remoteStreams.get(socketId);
+    if (existingStream) {
+      const v = document.getElementById(`video_${socketId}`);
+      if (v) {
+        v.srcObject = existingStream;
+        v.muted = false;
+        v.play().catch(() => {});
+      }
+    }
+
     adjustGridLayout();
   }
 
@@ -717,7 +740,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 6. COLLABORATIVE WHITEBOARD
+  // 7. COLLABORATIVE WHITEBOARD
   // ─────────────────────────────────────────────────────────────
   function initWhiteboard() {
     wbCanvas = document.getElementById('whiteboardCanvas');
@@ -727,7 +750,7 @@
     resizeWhiteboard();
     window.addEventListener('resize', resizeWhiteboard);
 
-    // Mouse & Touch events
+    // Mouse & Touch drawing listeners
     wbCanvas.addEventListener('mousedown', startDrawing);
     wbCanvas.addEventListener('mousemove', draw);
     wbCanvas.addEventListener('mouseup', stopDrawing);
@@ -759,13 +782,12 @@
   }
 
   function resizeWhiteboard() {
-    if (!wbCanvas) return;
+    if (!wbCanvas || !wbCanvas.parentElement) return;
     const rect = wbCanvas.parentElement.getBoundingClientRect();
-    const tempImage = wbCtx ? wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height) : null;
-    wbCanvas.width = rect.width;
-    wbCanvas.height = rect.height - 56; // minus toolbar
-    if (tempImage && wbCtx) {
-      wbCtx.putImageData(tempImage, 0, 0);
+    if (rect.width > 0 && rect.height > 0) {
+      wbCanvas.width = rect.width;
+      wbCanvas.height = Math.max(300, rect.height - 56);
+      redrawWhiteboardHistory();
     }
   }
 
@@ -778,7 +800,9 @@
       dockWbBtn.classList.toggle('active', isWhiteboardOpen);
     }
     if (isWhiteboardOpen) {
-      resizeWhiteboard();
+      setTimeout(() => {
+        resizeWhiteboard();
+      }, 50);
     }
   }
 
@@ -790,24 +814,24 @@
   }
 
   function draw(e) {
-    if (!isDrawing || !wbCtx) return;
+    if (!isDrawing || !wbCtx || !wbCanvas) return;
     const rect = wbCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
     const strokeData = {
-      x0: lastX / wbCanvas.width,
-      y0: lastY / wbCanvas.height,
-      x1: x / wbCanvas.width,
-      y1: y / wbCanvas.height,
+      x0: lastX / (wbCanvas.width || 1),
+      y0: lastY / (wbCanvas.height || 1),
+      x1: x / (wbCanvas.width || 1),
+      y1: y / (wbCanvas.height || 1),
       color: currentTool === 'eraser' ? '#FFFFFF' : currentColor,
       width: currentTool === 'eraser' ? 24 : (currentTool === 'highlighter' ? 14 : currentLineWidth),
       tool: currentTool
     };
 
+    wbStrokesHistory.push(strokeData);
     renderStroke(strokeData);
 
-    // Broadcast stroke to peers in room
     if (socket) {
       socket.emit('wb-draw', strokeData);
     }
@@ -822,9 +846,12 @@
 
   function renderStroke(data) {
     if (!wbCtx || !wbCanvas) return;
+    const w = wbCanvas.width || 800;
+    const h = wbCanvas.height || 600;
+
     wbCtx.beginPath();
-    wbCtx.moveTo(data.x0 * wbCanvas.width, data.y0 * wbCanvas.height);
-    wbCtx.lineTo(data.x1 * wbCanvas.width, data.y1 * wbCanvas.height);
+    wbCtx.moveTo(data.x0 * w, data.y0 * h);
+    wbCtx.lineTo(data.x1 * w, data.y1 * h);
     wbCtx.strokeStyle = data.color;
     wbCtx.lineWidth = data.width;
     wbCtx.lineCap = 'round';
@@ -838,8 +865,11 @@
     wbCtx.globalAlpha = 1.0;
   }
 
-  function renderRemoteWhiteboardStroke(data) {
-    renderStroke(data);
+  function redrawWhiteboardHistory() {
+    clearWhiteboardCanvas();
+    if (wbStrokesHistory && wbStrokesHistory.length > 0) {
+      wbStrokesHistory.forEach(s => renderStroke(s));
+    }
   }
 
   function clearWhiteboardCanvas() {
@@ -848,6 +878,7 @@
   }
 
   function clearWhiteboard() {
+    wbStrokesHistory = [];
     clearWhiteboardCanvas();
     if (socket) {
       socket.emit('wb-clear');
@@ -877,7 +908,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 7. IN-CLASS CHAT & PARTICIPANTS PANEL
+  // 8. CHAT & PARTICIPANTS PANEL
   // ─────────────────────────────────────────────────────────────
   function toggleChatPanel() {
     isChatOpen = !isChatOpen;
@@ -990,9 +1021,6 @@
     participantsListEl.innerHTML = html;
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // 8. HOST MODERATION & MEETING LIFECYCLE
-  // ─────────────────────────────────────────────────────────────
   function hostMuteAll() {
     if (socket && window.ROOM_CONFIG.isHost) {
       socket.emit('host-mute-all');
@@ -1014,15 +1042,9 @@
   }
 
   function cleanupAndExit() {
-    if (localStream) {
-      localStream.getTracks().forEach(t => t.stop());
-    }
-    if (screenStream) {
-      screenStream.getTracks().forEach(t => t.stop());
-    }
-    if (socket) {
-      socket.disconnect();
-    }
+    if (localStream) localStream.getTracks().forEach(t => t.stop());
+    if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+    if (socket) socket.disconnect();
     window.location.href = window.ROOM_CONFIG.isHost ? '/studio' : '/student';
   }
 
@@ -1056,7 +1078,6 @@
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // Public API Exports for UI Onclick handlers
   window.LibrikaClassroom = {
     setTool: setWhiteboardTool,
     setColor: setWhiteboardColor,

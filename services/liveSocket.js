@@ -16,6 +16,8 @@ function initLiveSocket(httpServer, db) {
 
   // Active rooms state in memory: meetingId -> Map(socketId -> { userId, userName, role, isMuted, isVideoOff, handRaised, isScreenSharing })
   const rooms = new Map();
+  // Active whiteboard history in memory: meetingId -> Array of draw strokes
+  const whiteboardHistory = new Map();
 
   io.on('connection', (socket) => {
     let currentMeetingId = null;
@@ -45,13 +47,18 @@ function initLiveSocket(httpServer, db) {
       const roomUsers = rooms.get(meetingId);
       roomUsers.set(socket.id, currentUserData);
 
+      if (!whiteboardHistory.has(meetingId)) {
+        whiteboardHistory.set(meetingId, []);
+      }
+
       // Notify other participants in the room
       const existingParticipants = Array.from(roomUsers.values()).filter(u => u.socketId !== socket.id);
       
-      // Send existing users list to the newly joined peer
+      // Send existing users list and whiteboard history to the newly joined peer
       socket.emit('room-users', {
         users: existingParticipants,
-        self: currentUserData
+        self: currentUserData,
+        wbHistory: whiteboardHistory.get(meetingId) || []
       });
 
       // Broadcast new user to everyone else in room
@@ -146,15 +153,23 @@ function initLiveSocket(httpServer, db) {
       io.to(currentMeetingId).emit('receive-chat', payload);
     });
 
-    // 6. Collaborative Whiteboard Real-Time Sync
+    // 6. Collaborative Whiteboard Real-Time Sync & History
     socket.on('wb-draw', (drawData) => {
       if (currentMeetingId) {
+        if (!whiteboardHistory.has(currentMeetingId)) {
+          whiteboardHistory.set(currentMeetingId, []);
+        }
+        const history = whiteboardHistory.get(currentMeetingId);
+        history.push(drawData);
+        if (history.length > 5000) history.shift(); // keep last 5000 strokes
+
         socket.to(currentMeetingId).emit('wb-draw', drawData);
       }
     });
 
     socket.on('wb-clear', () => {
       if (currentMeetingId) {
+        whiteboardHistory.set(currentMeetingId, []);
         socket.to(currentMeetingId).emit('wb-clear');
       }
     });
@@ -179,6 +194,7 @@ function initLiveSocket(httpServer, db) {
         roomUsers.delete(socket.id);
         if (roomUsers.size === 0) {
           rooms.delete(currentMeetingId);
+          whiteboardHistory.delete(currentMeetingId);
         } else {
           socket.to(currentMeetingId).emit('user-left', {
             socketId: socket.id,
