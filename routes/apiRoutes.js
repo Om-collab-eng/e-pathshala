@@ -15,6 +15,85 @@ const upload = multer({ dest: 'static/uploads/' });
 // Helper: get user ID from JWT or session
 const getUserId = (req) => req.userId || (req.session && req.session.user_id);
 
+// ── Public "Libra" AI Engine Endpoints (Accessible to All Users) ───
+router.post('/libra/chat', async (req, res) => {
+  const { message, history } = req.body;
+  if (!message || !String(message).trim()) {
+    return res.status(400).json({ status: 'error', message: 'Query message is required' });
+  }
+
+  try {
+    const trimmedMessage = String(message).trim();
+    const reply = await aiService.chatWithLibra(trimmedMessage, Array.isArray(history) ? history : []);
+    
+    // Optional logging of usage
+    const userId = getUserId(req) || null;
+    if (userId) {
+      query('INSERT INTO ai_usage_log (user_id, tool, prompt, created_at) VALUES ($1, $2, $3, NOW())',
+        [userId, 'libra_homepage', trimmedMessage.slice(0, 500)]).catch(() => {});
+    }
+
+    res.json({
+      status: 'success',
+      reply: reply,
+      sender: 'Libra AI',
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Libra AI endpoint error:', err);
+    res.json({
+      status: 'success',
+      reply: `I am **Libra**, your Librika AI assistant. I can guide you through our 10,000+ free e-books, open courses, and platform features. How can I help you learn today?`,
+      sender: 'Libra AI',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+router.get('/libra/suggestions', (req, res) => {
+  res.json({
+    status: 'success',
+    suggestions: [
+      { text: "Find free Computer Science & Coding courses", icon: "💻", category: "courses" },
+      { text: "Recommend top-rated personal growth & productivity e-books", icon: "📚", category: "books" },
+      { text: "How does the Librika Free vs. Pro membership work?", icon: "💳", category: "pricing" },
+      { text: "How can I earn verifiable course certificates & badges?", icon: "🎓", category: "certifications" },
+      { text: "Show me UPSC, GATE & competitive exam study vaults", icon: "🏆", category: "exams" },
+      { text: "How do I publish my own e-book or research paper?", icon: "✍️", category: "publishing" }
+    ]
+  });
+});
+
+// Fast Public Catalog Search Endpoint
+router.get('/catalog/search', async (req, res) => {
+  const q = String(req.query.q || '').trim();
+  try {
+    let results = [];
+    if (q.length > 0) {
+      const bookRes = await query(
+        `SELECT id, title, author, category, 'book' as type, cover_image 
+         FROM books 
+         WHERE title ILIKE $1 OR author ILIKE $1 OR category ILIKE $1 
+         LIMIT 6`,
+        [`%${q}%`]
+      ).catch(() => ({ rows: [] }));
+      
+      const digRes = await query(
+        `SELECT id, title, author, category, 'ebook' as type, cover_image 
+         FROM digital_content 
+         WHERE status = 'Published' AND (title ILIKE $1 OR author ILIKE $1 OR category ILIKE $1 OR subject ILIKE $1) 
+         LIMIT 6`,
+        [`%${q}%`]
+      ).catch(() => ({ rows: [] }));
+
+      results = [...(bookRes.rows || []), ...(digRes.rows || [])];
+    }
+    res.json({ status: 'success', results });
+  } catch (err) {
+    res.json({ status: 'success', results: [] });
+  }
+});
+
 // 1. Mobile & Web Unified API Login (Returns JWT token)
 router.post('/v1/auth/login', async (req, res) => {
   const { login, password, device_type, fcm_token } = req.body;

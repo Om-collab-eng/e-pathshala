@@ -8,6 +8,8 @@ venv/
 firebase-key.json
 scratch/test_gemini.js
 .env
+PROJECT_CREDENTIALS_AND_CONFIG.md
+*credentials*.md
 
 # SQLite Databases
 *.db

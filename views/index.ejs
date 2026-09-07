@@ -1,468 +1,720 @@
-<style>
-    :root {
-        --bg-main: #f8fafc;
-        --bg-card: #ffffff;
-        --bg-input: #ffffff;
-        --border: #e5e7eb;
-        --text-high: #111827;
-        --text-mid: #475569;
-        --text-low: #94a3b8;
-        --accent-primary: #2563eb;
-    }
-    body {
-        background-color: #f8fafc !important;
-        color: var(--text-high);
-    }
-    .global-nav-container {
-        display: none !important;
-    }
-    @media (max-width: 600px) {
-        .saas-navbar {
-            padding: 1rem 1.25rem !important;
-        }
-        .desktop-only {
-            display: none !important;
-        }
-        .saas-hero h1 {
-            font-size: 2rem !important;
-            line-height: 1.25 !important;
-        }
-        .saas-hero .subtitle {
-            font-size: 1.05rem !important;
-        }
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 1rem !important;
-            margin-top: 2.5rem !important;
-        }
-        .stat-card {
-            padding: 1.25rem 1rem !important;
-        }
-        .stat-number {
-            font-size: 1.8rem !important;
-        }
-    }
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Librika - Online Courses, Free E-Books & Digital Library Platform' %></title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Coursera-Inspired Librika Stylesheet -->
+  <link rel="stylesheet" href="/coursera-librika.css">
+  <script src="/js/libra-ai.js" defer></script>
+</head>
+<body class="coursera-theme">
 
-<nav class="saas-navbar">
-    <div style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="window.scrollTo(0,0)">
-        <img src="/logo.png" alt="librika.in Logo" style="height: 40px; border-radius: 8px;">
-        <span style="font-weight: 800; font-size: 1.4rem; letter-spacing: 1px; color: #111827;">librika.in</span>
-    </div>
-    <div class="saas-nav-links desktop-only">
-        <a href="#features">Features</a>
-        <a href="#solutions">Solutions</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#publishers">Publishers</a>
-        <a href="#resources">Resources</a>
-    </div>
-    <div class="saas-nav-links" style="display: flex; gap: 1rem;">
-        <a href="/login" class="btn-neon" style="padding: 0.6rem 1.8rem; font-size: 0.95rem;">Sign Up</a>
-    </div>
-</nav>
+  <!-- =========================================================================
+       1. COURSERA TOP NAVBAR
+       ========================================================================= -->
+  <header class="cr-header">
+    <div class="cr-nav-container">
+      <div class="cr-nav-left">
+        <!-- Logo -->
+        <a href="/" class="cr-brand">
+          <img src="/logo.png" alt="Librika Logo" onerror="this.style.display='none'">
+          <span>librika</span>
+        </a>
 
-<section class="saas-hero">
-    <h1>The Ultimate Operating System<br>for Modern Digital Libraries</h1>
-    <p class="subtitle" style="font-size: 1.3rem;">
-        Unify physical inventory, digital E-Books, reader engagement, and publisher royalties into a single, intelligent SaaS platform.
-    </p>
+        <!-- Explore Mega-Menu Trigger -->
+        <div class="cr-explore-wrapper" style="position: relative;">
+          <button class="cr-explore-btn" type="button" aria-label="Explore categories">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <span>Explore</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
 
-    <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
-        <a href="/login" class="btn-neon" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Sign Up</a>
-        <a href="/demo-mode" class="btn-alt" style="padding: 1rem 2.5rem; font-size: 1.1rem;">See a Demo</a>
-    </div>
-
-    <div class="stats-grid" style="margin-top: 5rem; width: 100%; max-width: 1000px;">
-        <div class="stat-card">
-            <div class="stat-number">500+</div>
-            <div style="color: var(--text-mid); font-weight: 600; text-transform: uppercase;">Libraries</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">2M+</div>
-            <div style="color: var(--text-mid); font-weight: 600; text-transform: uppercase;">Readers</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">5M+</div>
-            <div style="color: var(--text-mid); font-weight: 600; text-transform: uppercase;">Books Issued</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">50K+</div>
-            <div style="color: var(--text-mid); font-weight: 600; text-transform: uppercase;">E-Books</div>
-        </div>
-    </div>
-</section>
-
-<section id="features" class="saas-section darker">
-    <h2>Everything You Need. All In One Place.</h2>
-    <p class="subtitle">A comprehensive suite designed for Librarians, Students, and Admins.</p>
-
-    <div class="feature-bento">
-        <div class="feature-card">
-            <h3>📚 Physical Library</h3>
-            <ul>
-                <li>Barcode & ISBN Management</li>
-                <li>One-Click Issue & Return</li>
-                <li>Fine & Penalty Tracking</li>
-                <li>Lost Book Tracking</li>
-                <li>Advanced Inventory Sync</li>
-            </ul>
-        </div>
-        <div class="feature-card">
-            <h3>💻 Digital E-Library</h3>
-            <ul>
-                <li>PDF, EPUB, & Audiobooks</li>
-                <li>Online Reading Hub</li>
-                <li>Offline Downloads</li>
-                <li>Reading History & Bookmarks</li>
-                <li>Progress Tracking</li>
-            </ul>
-        </div>
-        <div class="feature-card">
-            <h3>🎓 Student Hub</h3>
-            <ul>
-                <li>Personal Dashboard</li>
-                <li>Wishlists & Reading Goals</li>
-                <li>Reviews & Ratings</li>
-                <li>Achievement Badges</li>
-                <li>AI Recommendations</li>
-            </ul>
-        </div>
-        <div class="feature-card">
-            <h3>⚙️ Super Admin & Librarian</h3>
-            <ul>
-                <li>Multi-Library Management</li>
-                <li>Global Analytics Dashboard</li>
-                <li>Subscription & Revenue</li>
-                <li>Member Moderation</li>
-                <li>Automated Reports</li>
-            </ul>
-        </div>
-    </div>
-</section>
-
-<section id="publishers" class="saas-section">
-    <h2>E-Publishing Marketplace</h2>
-    <p class="subtitle">Empowering authors and publishers to distribute digital content directly to millions of readers worldwide.</p>
-
-    <div style="display: flex; justify-content: center;">
-        <div class="feature-card" style="border-color: #d946ef; max-width: 600px; width: 100%;">
-            <h3 style="color: #d946ef;">🏢 For Publishers & Organizations</h3>
-            <p style="color: var(--text-mid); margin-bottom: 1.5rem; line-height: 1.6;">Verify your organization, bulk upload your entire catalog, and securely distribute educational materials directly to institutional networks.</p>
-            <ul>
-                <li>Verified Publisher Badge</li>
-                <li>Bulk Book Uploads</li>
-                <li>Distribution Management</li>
-                <li>Institutional Licensing</li>
-            </ul>
-            <button class="btn-alt" style="margin-top: 2rem; width: 100%; border-color: #d946ef; color: #d946ef;" onclick="document.getElementById('orgModal').style.display='flex'">Apply for Organization</button>
-        </div>
-    </div>
-</section>
-
-<section class="saas-section darker">
-    <h2>Powered by Next-Gen AI</h2>
-    <p class="subtitle">We use advanced machine learning to personalize education and secure the ecosystem.</p>
-
-    <div class="feature-bento">
-        <div class="feature-card">
-            <h3>🤖 AI Intelligence</h3>
-            <ul>
-                <li>Smart Book Recommendations</li>
-                <li>OCR Cover Scanning</li>
-                <li>Automated Categorization</li>
-                <li>AI Content Moderation</li>
-                <li>Trending Analytics</li>
-            </ul>
-        </div>
-        <div class="feature-card">
-            <h3>🌍 Global Community</h3>
-            <ul>
-                <li>Global Book Reviews</li>
-                <li>Reading Clubs & Challenges</li>
-                <li>Student Discussions</li>
-                <li>Global Leaderboards</li>
-                <li>Monthly Awards</li>
-            </ul>
-        </div>
-    </div>
-</section>
-
-<section id="solutions" class="saas-section">
-    <h2>Why Libraries Choose librika.in</h2>
-    <div class="logo-cloud">
-        <div style="font-size: 2rem; font-weight: 800; color: var(--text-high);">Multi-Tenant</div>
-        <div style="font-size: 2rem; font-weight: 800; color: var(--text-high);">Data Isolated</div>
-        <div style="font-size: 2rem; font-weight: 800; color: var(--text-high);">100% Cloud</div>
-        <div style="font-size: 2rem; font-weight: 800; color: var(--text-high);">Mobile First</div>
-    </div>
-</section>
-
-<section id="pricing" class="saas-section darker">
-    <h2>Transparent, Scalable Pricing</h2>
-    <p class="subtitle">Plans designed for institutions of all sizes.</p>
-
-    <div class="pricing-grid">
-        <div class="pricing-card">
-            <h3>FREE</h3>
-            <div class="price">₹0<span style="font-size: 1rem; color: var(--text-mid);">/mo</span></div>
-            <ul style="text-align: left; margin: 1.5rem 0;">
-                <li>✓ 50 Students Limit</li>
-                <li>✓ 1 Admin, 1 Librarian</li>
-                <li>✓ 500 Books Inventory</li>
-                <li>✓ Basic Library Dashboard</li>
-                <li>✗ CSV Import / Export</li>
-                <li>✗ AI Scanner Features</li>
-                <li>✗ E-Library Publishing</li>
-                <li>✗ API Access & Multi-Branch</li>
-            </ul>
-            <a href="/login" class="btn-alt" style="padding: 0.8rem 1.5rem;">Get Started</a>
-        </div>
-
-        <div class="pricing-card popular">
-            <div class="popular-badge">MOST POPULAR</div>
-            <h3>BASIC</h3>
-            <div class="price">₹999<span style="font-size: 1rem; color: var(--text-mid);">/mo</span></div>
-            <ul style="text-align: left; margin: 1.5rem 0;">
-                <li>✓ 500 Students Limit</li>
-                <li>✓ 5 Admins, 5 Librarians</li>
-                <li>✓ 10,000 Books Inventory</li>
-                <li>✓ CSV Import / Export</li>
-                <li>✓ AI Book Scanner & ISBN</li>
-                <li>✓ Advanced Reports & Analytics</li>
-                <li>✗ E-Library Publishing</li>
-                <li>✗ API Access & Multi-Branch</li>
-            </ul>
-            <a href="/login" class="btn-neon" style="width: 100%; padding: 0.8rem 1.5rem;">Start Basic</a>
-        </div>
-
-        <div class="pricing-card" style="border: 1px solid var(--accent-primary);">
-            <div class="popular-badge" style="background: var(--accent-primary);">BEST VALUE</div>
-            <h3>PROFESSIONAL</h3>
-            <div class="price">₹2,999<span style="font-size: 1rem; color: var(--text-mid);">/mo</span></div>
-            <ul style="text-align: left; margin: 1.5rem 0;">
-                <li>✓ Unlimited Students</li>
-                <li>✓ Unlimited Admins & Librarians</li>
-                <li>✓ Unlimited Books Inventory</li>
-                <li>✓ Full AI Scanner Features</li>
-                <li>✓ E-Library Publishing</li>
-                <li>✓ API Access & Custom Branding</li>
-                <li>✓ Multi-Branch Support</li>
-                <li>✓ Priority Support & Dedicated Manager</li>
-            </ul>
-            <a href="/login" class="btn-alt" style="border-color: var(--accent-primary); color: var(--accent-primary); padding: 0.8rem 1.5rem;">Start Professional</a>
-        </div>
-    </div>
-</section>
-
-<section class="saas-section darker">
-    <h2>Trusted by Educators Worldwide</h2>
-    <p class="subtitle">See how librika.in is transforming institutions.</p>
-
-    <div class="testimonial-grid">
-        <div class="testimonial-card">
-            <p>"librika.in completely revolutionized how our library operates. The AI OCR scanning saved us hundreds of hours of manual entry."</p>
-            <div style="margin-top: 1rem; color: var(--text-high); font-weight: bold; font-style: normal;">— Dr. S. Sharma, Principal</div>
-        </div>
-        <div class="testimonial-card">
-            <p>"The digital marketplace allowed our students to access premium e-books instantly. The student engagement analytics are a game changer."</p>
-            <div style="margin-top: 1rem; color: var(--text-high); font-weight: bold; font-style: normal;">— M. Patel, Head Librarian</div>
-        </div>
-        <div class="testimonial-card">
-            <p>"As an independent author, the royalty tracking is seamless. I published my physics notes and reached 50,000 students in a month."</p>
-            <div style="margin-top: 1rem; color: var(--text-high); font-weight: bold; font-style: normal;">— R. Kumar, Verified Publisher</div>
-        </div>
-    </div>
-</section>
-
-<footer class="saas-footer" id="contact">
-    <div class="footer-grid">
-        <div class="footer-column">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;">
-                <img src="/logo.png" alt="Logo" style="height: 30px; border-radius: 6px;">
-                <span style="font-weight: 800; font-size: 1.2rem; color: var(--text-high);">librika.in</span>
+          <!-- Mega Menu Dropdown -->
+          <div class="cr-mega-menu">
+            <div class="cr-menu-col">
+              <h4>Top Subject Areas</h4>
+              <a href="#catalog" onclick="document.querySelector('[data-filter=courses]').click()">💻 Computer Science & Coding</a>
+              <a href="#catalog" onclick="document.querySelector('[data-filter=courses]').click()">📊 Data Science & AI</a>
+              <a href="#catalog" onclick="document.querySelector('[data-filter=degrees]').click()">📈 Business & Finance</a>
+              <a href="#catalog" onclick="document.querySelector('[data-filter=courses]').click()">🔬 STEM & Modern Physics</a>
+              <a href="#catalog" onclick="document.querySelector('[data-filter=exams]').click()">🏆 UPSC & Competitive Exams</a>
             </div>
-            <p style="color: var(--text-mid); font-size: 0.9rem; line-height: 1.6;">
-                The operating system for modern educational institutions. Bridging the gap between physical books and digital learning.
-            </p>
-            <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-mid);">
-                📧 support@epathshala.in<br>
-                📞 +91 9354713610
+            <div class="cr-menu-col">
+              <h4>Digital Library & Formats</h4>
+              <a href="#catalog" onclick="document.querySelector('[data-filter=books]').click()">📚 100% Free Public E-Books</a>
+              <a href="#catalog" onclick="document.querySelector('[data-filter=books]').click()">📑 Academic Research Papers</a>
+              <a href="#catalog" onclick="document.querySelector('[data-filter=degrees]').click()">🎓 Career Certifications</a>
+              <a href="#libra-ai">🤖 Ask Libra AI Tutor</a>
+              <a href="/login">🏛️ Institution Portal</a>
             </div>
+          </div>
         </div>
 
-        <div class="footer-column">
-            <h4>Product</h4>
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#solutions">Solutions</a>
-            <a href="/login">Student Portal</a>
-            <a href="/demo-mode">Try Demo</a>
+        <!-- Universal Search Bar -->
+        <div class="cr-search-form">
+          <div class="cr-search-wrapper">
+            <svg class="cr-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="crUniversalSearch" class="cr-search-input" placeholder="What do you want to learn or read today?">
+            <span class="cr-search-shortcut">⌘K</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav Links & Auth -->
+      <div class="cr-nav-right">
+        <a href="#catalog" class="cr-nav-link cr-nav-links">Courses & Books</a>
+        <a href="#pricing" class="cr-nav-link cr-nav-links">Plans</a>
+        
+        <!-- Libra AI Button in Nav -->
+        <a href="#libra-ai" class="cr-btn-ai-nav">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Ask Libra AI</span>
+        </a>
+
+        <% if (typeof session !== 'undefined' && session && session.user_id) { %>
+          <% if (session.role === 'student') { %>
+            <a href="/student" class="cr-btn-primary">My Student Portal</a>
+          <% } else if (session.role === 'personal') { %>
+            <a href="/personal" class="cr-btn-primary">My Personal Library</a>
+          <% } else if (session.role === 'admin' || session.role === 'super_admin') { %>
+            <a href="/admin" class="cr-btn-primary">Admin Console</a>
+          <% } else { %>
+            <a href="/student" class="cr-btn-primary">Dashboard</a>
+          <% } %>
+        <% } else { %>
+          <a href="/login" class="cr-btn-login">Log In</a>
+          <a href="/register" class="cr-btn-primary">Join for Free</a>
+        <% } %>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       2. COURSERA HERO SECTION
+       ========================================================================= -->
+  <section class="cr-hero">
+    <div class="cr-hero-grid">
+      <!-- Left Column: Copy & CTAs -->
+      <div>
+        <div class="cr-badge-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>100% Free Public Access Available</span>
         </div>
 
-        <div class="footer-column">
-            <h4>Ecosystem</h4>
-            <a href="#publishers">Publishers</a>
-            <a href="/api-docs">API Documentation</a>
-            <a href="/integrations">Integrations</a>
+        <h1 class="cr-hero-title">
+          Learn Without <br><span class="highlight">Limits & Boundaries.</span>
+        </h1>
+
+        <p class="cr-hero-subtitle">
+          Advance your knowledge with <strong>10,000+ free online courses</strong>, accredited curriculum modules, public e-books, and research papers from top global educators and open digital libraries.
+        </p>
+
+        <div class="cr-hero-actions">
+          <a href="/register" class="cr-btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
+            Join for Free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#catalog" class="cr-btn-secondary" style="padding: 0.85rem 1.8rem; font-size: 1.05rem;">
+            Explore Catalog
+          </a>
+          <button type="button" onclick="window.openLibraChat('What are the best free courses and books available on Librika?')" class="cr-btn-secondary" style="background:#EBF3FF;border-color:#bad3f7;">
+            💬 Ask Libra AI
+          </button>
         </div>
 
-        <div class="footer-column" id="resources">
-            <h4>Resources & Legal</h4>
-            <a href="/help-center">Help Center</a>
-            <a href="/blog">Blog & Case Studies</a>
-            <a href="/privacy">Privacy Policy</a>
-            <a href="/terms">Terms & Conditions</a>
-            <a href="/refund">Refund Policy</a>
+        <!-- Trust Stats -->
+        <div class="cr-hero-stats">
+          <div class="cr-stat-item">
+            <strong><%= (typeof stats !== 'undefined' && stats.books) ? (stats.books > 1000 ? (stats.books/1000).toFixed(1) + 'K+' : stats.books) : '12.5K+' %></strong>
+            <span>Curated Books</span>
+          </div>
+          <div class="cr-stat-item">
+            <strong><%= (typeof stats !== 'undefined' && stats.digital) ? (stats.digital > 1000 ? (stats.digital/1000).toFixed(1) + 'K+' : stats.digital) : '3.8K+' %></strong>
+            <span>Digital E-Books</span>
+          </div>
+          <div class="cr-stat-item">
+            <strong><%= (typeof stats !== 'undefined' && stats.learners) ? (stats.learners > 1000 ? (stats.learners/1000).toFixed(0) + 'K+' : stats.learners) : '45K+' %></strong>
+            <span>Active Learners</span>
+          </div>
+          <div class="cr-stat-item">
+            <strong><%= (typeof stats !== 'undefined' && stats.institutions) ? stats.institutions + '+' : '500+' %></strong>
+            <span>Partner Libraries</span>
+          </div>
         </div>
+      </div>
+
+      <!-- Right Column: Interactive Hero Card -->
+      <div>
+        <div class="cr-hero-card">
+          <div class="cr-hero-card-header">
+            <span style="font-weight: 700; font-size: 0.95rem; color: #00255D;">Featured Today</span>
+            <div class="cr-live-pill">
+              <span class="cr-live-dot"></span>
+              <span>Live Interactive</span>
+            </div>
+          </div>
+
+          <!-- Preview Course 1 -->
+          <div class="cr-preview-course">
+            <div class="cr-preview-tag">MIT OpenCourseWare · Computer Science</div>
+            <h3 class="cr-preview-title">Foundations of Modern AI & Deep Learning</h3>
+            <div class="cr-preview-meta">
+              <span>⭐ 4.9 (18.4k reviews)</span>
+              <span>•</span>
+              <span>Beginner · Free</span>
+            </div>
+          </div>
+
+          <!-- Preview Course 2 -->
+          <div class="cr-preview-course" style="margin-bottom: 1.25rem;">
+            <div class="cr-preview-tag" style="color: #6B46C1;">Digital Classic E-Book · Open Access</div>
+            <h3 class="cr-preview-title">Atomic Habits & Behavioral Mastery</h3>
+            <div class="cr-preview-meta">
+              <span>⭐ 4.95 (32.1k reads)</span>
+              <span>•</span>
+              <span>In-Browser Reader</span>
+            </div>
+          </div>
+
+          <!-- AI Assistant Banner inside Hero Card -->
+          <div class="cr-preview-ai-box">
+            <div class="cr-preview-ai-icon">✨</div>
+            <div>
+              <strong style="display:block;font-size:1rem;margin-bottom:2px;">Meet Libra AI</strong>
+              <span style="font-size:0.85rem;opacity:0.9;">Your 24/7 AI tutor for quizzes, book summaries & study plans.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       3. UNIVERSITY & GLOBAL PARTNERS BANNER
+       ========================================================================= -->
+  <section class="cr-partners">
+    <div class="cr-partners-title">Collaborating with 500+ Leading Universities, Open Archives & Libraries</div>
+    <div class="cr-partners-list">
+      <div class="cr-partner-logo">🏛️ MIT OpenCourseWare</div>
+      <div class="cr-partner-logo">🎓 Stanford Digital Archives</div>
+      <div class="cr-partner-logo">📚 Oxford Academic Commons</div>
+      <div class="cr-partner-logo">🌐 National Digital Library</div>
+      <div class="cr-partner-logo">📖 Project Gutenberg Open</div>
+      <div class="cr-partner-logo">🔬 CERN OpenLab Papers</div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       4. "LIBRA" AI ENGINE CONSOLE (Accessible to all visitors)
+       ========================================================================= -->
+  <section id="libra-ai" class="cr-libra-hero-section">
+    <div class="cr-libra-container">
+      <div class="cr-libra-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span>Librika AI Engine</span>
+      </div>
+
+      <h2 class="cr-libra-title">Meet "Libra" — Your Intelligent AI Tutor & Library Concierge</h2>
+      <p class="cr-libra-subtitle">
+        Ask anything about our free online courses, public e-books, study materials, exam vaults, or platform membership plans. Instant, intelligent answers powered by advanced AI.
+      </p>
+
+      <!-- Search / Query Form -->
+      <form id="libraInlineForm">
+        <div class="cr-libra-input-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0056D2" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input 
+            type="text" 
+            id="libraInlineInput" 
+            class="cr-libra-input" 
+            placeholder="e.g. Find me top free Python courses, or summarize the pricing plans..."
+            autocomplete="off"
+            required
+          >
+          <button type="submit" id="libraSubmitBtn" class="cr-libra-submit-btn">
+            <span>Ask Libra</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </form>
+
+      <!-- Suggested Prompt Chips -->
+      <div class="cr-libra-chips">
+        <button type="button" class="cr-chip-btn" data-query="What free Computer Science and Programming courses can I start right now?">
+          💻 Free CS & Coding Courses
+        </button>
+        <button type="button" class="cr-chip-btn" data-query="Recommend top-rated self-development, productivity and science e-books on Librika">
+          📚 Best Free E-Books
+        </button>
+        <button type="button" class="cr-chip-btn" data-query="Explain Librika membership pricing plans (Free vs. Student Pro vs. School Enterprise)">
+          💳 Membership & Pricing Plans
+        </button>
+        <button type="button" class="cr-chip-btn" data-query="How can I earn verified certificates and test my knowledge with chapter quizzes?">
+          🎓 Certificates & Quizzes
+        </button>
+        <button type="button" class="cr-chip-btn" data-query="What study materials and test series are available for UPSC, GATE and competitive exams?">
+          🏆 Competitive Exam Prep
+        </button>
+        <button type="button" class="cr-chip-btn" data-query="How can educators and authors publish their own digital e-books and study notes on Librika?">
+          ✍️ Author Publishing
+        </button>
+      </div>
+
+      <!-- Real-time Live Result Container -->
+      <div id="libraLiveResponse" class="cr-libra-live-response">
+        <div class="cr-libra-live-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span>✨ Libra AI Response</span>
+          </div>
+          <button type="button" onclick="document.getElementById('libraLiveResponse').classList.remove('visible')" style="background:transparent;border:none;color:white;cursor:pointer;font-size:1.1rem;">✕</button>
+        </div>
+        <div id="libraLiveBody" class="cr-libra-live-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       5. COURSERA TABBED CATALOG SHOWCASE
+       ========================================================================= -->
+  <section id="catalog" class="cr-catalog-section">
+    <div class="cr-section-header">
+      <h2 class="cr-section-title">Explore Courses, E-Books & Learning Paths</h2>
+      <p class="cr-section-subtitle">Start streaming courses or reading curated e-books for free today.</p>
     </div>
 
-    <div style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; color: var(--text-low); font-size: 0.85rem;">
-        &copy; 2026 librika.in Platform. All rights reserved. Built for global education.
+    <!-- Filter Tabs -->
+    <div class="cr-tabs">
+      <button class="cr-tab active" data-filter="all">🌟 All Public Resources</button>
+      <button class="cr-tab" data-filter="courses">💻 Most Popular Courses</button>
+      <button class="cr-tab" data-filter="books">📚 Free Public E-Books</button>
+      <button class="cr-tab" data-filter="degrees">🎓 Specializations & Degrees</button>
+      <button class="cr-tab" data-filter="exams">🏆 Competitive Exam Hub</button>
     </div>
-</footer>
 
-<div id="orgModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; /* blur removed */">
-    <div style="background: var(--bg-card); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border); width: 90%; max-width: 500px; color: var(--text-high); position: relative; text-align: center;">
-        <span onclick="document.getElementById('orgModal').style.display='none'" style="position: absolute; right: 20px; top: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-mid);">&times;</span>
-        <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem; background: linear-gradient(135deg, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Apply for Organization</h2>
-        <p style="color: var(--text-mid); margin-bottom: 2rem;">Fill out this form to register your digital library or publisher organization.</p>
+    <!-- Catalog Grid -->
+    <div class="cr-grid">
 
-        <form onsubmit="submitOrgRequest(event)">
-            <div style="margin-bottom: 1.2rem; text-align: left;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Organization Name</label>
-                <input type="text" id="orgName" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
-            </div>
-            <div style="margin-bottom: 1.2rem; text-align: left;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Contact Person</label>
-                <input type="text" id="contactPerson" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
-            </div>
-            <div style="margin-bottom: 1.2rem; text-align: left;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Email Address</label>
-                <input type="email" id="orgEmail" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
-            </div>
-            <div style="margin-bottom: 2rem; text-align: left;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Phone Number</label>
-                <input type="tel" id="orgPhone" required style="width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
-            </div>
-            <button type="submit" class="btn-neon" style="width: 100%; border-radius: 8px; padding: 1rem; font-size: 1rem;">Submit Request</button>
+      <!-- Course 1 -->
+      <div class="cr-card" data-category="courses">
+        <div class="cr-card-img-wrapper" style="background: linear-gradient(135deg, #00255D, #0056D2);">
+          <div class="cr-card-badge">Course</div>
+          <div class="cr-card-free-badge">100% Free</div>
+        </div>
+        <div class="cr-card-content">
+          <div class="cr-card-org">🏛️ MIT OpenCourseWare</div>
+          <h3 class="cr-card-title">Full-Stack Modern Web & Cloud Architecture</h3>
+          <div class="cr-card-skills"><strong>Skills:</strong> Node.js, React, Docker, Cloud APIs, SQL</div>
+          <div class="cr-card-rating">
+            <span class="cr-stars">★★★★★</span>
+            <span>4.9</span>
+            <span class="cr-review-count">(14.2k reviews)</span>
+          </div>
+          <div class="cr-card-footer-meta">
+            <span>Beginner · 6 Weeks</span>
+            <span style="color:#12824C;font-weight:700;">Certificate Included</span>
+          </div>
+          <div class="cr-card-actions">
+            <a href="/register" class="cr-btn-card">Enroll for Free</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course 2 -->
+      <div class="cr-card" data-category="courses">
+        <div class="cr-card-img-wrapper" style="background: linear-gradient(135deg, #1e3c72, #2a5298);">
+          <div class="cr-card-badge">Specialization</div>
+          <div class="cr-card-free-badge">Free Audit</div>
+        </div>
+        <div class="cr-card-content">
+          <div class="cr-card-org">🎓 Stanford Digital Lab</div>
+          <h3 class="cr-card-title">Artificial Intelligence & Prompt Engineering Masterclass</h3>
+          <div class="cr-card-skills"><strong>Skills:</strong> LLMs, Llama-3, RAG Systems, Python, NLP</div>
+          <div class="cr-card-rating">
+            <span class="cr-stars">★★★★★</span>
+            <span>4.95</span>
+            <span class="cr-review-count">(28.4k reviews)</span>
+          </div>
+          <div class="cr-card-footer-meta">
+            <span>Intermediate · 4 Weeks</span>
+            <span style="color:#12824C;font-weight:700;">Hands-on Labs</span>
+          </div>
+          <div class="cr-card-actions">
+            <a href="/register" class="cr-btn-card">Start Learning</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- E-Book 1 -->
+      <div class="cr-card" data-category="books">
+        <div class="cr-card-img-wrapper" style="background: linear-gradient(135deg, #373B44, #4286f4);">
+          <div class="cr-card-badge" style="background:#6B46C1;">Digital E-Book</div>
+          <div class="cr-card-free-badge">Open Access</div>
+        </div>
+        <div class="cr-card-content">
+          <div class="cr-card-org">📖 Librika Open Library</div>
+          <h3 class="cr-card-title">Atomic Habits: An Easy & Proven Way to Build Good Habits</h3>
+          <div class="cr-card-skills"><strong>Topics:</strong> Personal Mastery, Psychology, Daily Systems</div>
+          <div class="cr-card-rating">
+            <span class="cr-stars">★★★★★</span>
+            <span>4.98</span>
+            <span class="cr-review-count">(45.1k reads)</span>
+          </div>
+          <div class="cr-card-footer-meta">
+            <span>Full EPUB/PDF</span>
+            <span style="color:#0056D2;font-weight:700;">AI Summarizer Active</span>
+          </div>
+          <div class="cr-card-actions">
+            <a href="/register" class="cr-btn-card">Read Online Free</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- E-Book 2 -->
+      <div class="cr-card" data-category="books">
+        <div class="cr-card-img-wrapper" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+          <div class="cr-card-badge" style="background:#6B46C1;">E-Book & Notes</div>
+          <div class="cr-card-free-badge">Free PDF</div>
+        </div>
+        <div class="cr-card-content">
+          <div class="cr-card-org">📚 Oxford Academic</div>
+          <h3 class="cr-card-title">Data Structures & Algorithms: Visual Handbook</h3>
+          <div class="cr-card-skills"><strong>Topics:</strong> Trees, Graphs, Dynamic Programming, Big-O</div>
+          <div class="cr-card-rating">
+            <span class="cr-stars">★★★★★</span>
+            <span>4.88</span>
+            <span class="cr-review-count">(19.8k reads)</span>
+          </div>
+          <div class="cr-card-footer-meta">
+            <span>Chapter Quizzes</span>
+            <span style="color:#12824C;font-weight:700;">Includes Code Snippets</span>
+          </div>
+          <div class="cr-card-actions">
+            <a href="/register" class="cr-btn-card">Open Reader</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Degree / Specialization 1 -->
+      <div class="cr-card" data-category="degrees">
+        <div class="cr-card-img-wrapper" style="background: linear-gradient(135deg, #4b1248, #f0c27b);">
+          <div class="cr-card-badge" style="background:#B88E00;">Professional Certificate</div>
+          <div class="cr-card-free-badge">Accredited</div>
+        </div>
+        <div class="cr-card-content">
+          <div class="cr-card-org">🏛️ National Knowledge Council</div>
+          <h3 class="cr-card-title">Certified Digital Librarian & Knowledge Architect</h3>
+          <div class="cr-card-skills"><strong>Skills:</strong> DDC, MARC21, OCR Indexing, SaaS ERP, Metadata</div>
+          <div class="cr-card-rating">
+            <span class="cr-stars">★★★★★</span>
+            <span>4.92</span>
+            <span class="cr-review-count">(8.5k enrolled)</span>
+          </div>
+          <div class="cr-card-footer-meta">
+            <span>3 Months · Capstone</span>
+            <span style="color:#0056D2;font-weight:700;">Career Certificate</span>
+          </div>
+          <div class="cr-card-actions">
+            <a href="/register" class="cr-btn-card">Explore Curriculum</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Competitive Exam 1 -->
+      <div class="cr-card" data-category="exams">
+        <div class="cr-card-img-wrapper" style="background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);">
+          <div class="cr-card-badge" style="background:#d9381e;">Exam Vault</div>
+          <div class="cr-card-free-badge">Practice Series</div>
+        </div>
+        <div class="cr-card-content">
+          <div class="cr-card-org">🏆 Librika Exam Prep Hub</div>
+          <h3 class="cr-card-title">UPSC & State PSC General Studies Comprehensive Vault</h3>
+          <div class="cr-card-skills"><strong>Topics:</strong> Polity, Modern History, Economy, Current Affairs</div>
+          <div class="cr-card-rating">
+            <span class="cr-stars">★★★★★</span>
+            <span>4.96</span>
+            <span class="cr-review-count">(54.2k aspirants)</span>
+          </div>
+          <div class="cr-card-footer-meta">
+            <span>1,200+ Solved MCQs</span>
+            <span style="color:#12824C;font-weight:700;">Daily Tests</span>
+          </div>
+          <div class="cr-card-actions">
+            <a href="/register" class="cr-btn-card">Start Free Mock Test</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course 3 -->
+      <div class="cr-card" data-category="courses">
+        <div class="cr-card-img-wrapper" style="background: linear-gradient(135deg, #134E5E, #71B280);">
+          <div class="cr-card-badge">Course</div>
+          <div class="cr-card-free-badge">Free Access</div>
+        </div>
+        <div class="cr-card-content">
+          <div class="cr-card-org">🔬 Global Science Initiative</div>
+          <h3 class="cr-card-title">Quantum Mechanics & Information Theory for Everyone</h3>
+          <div class="cr-card-skills"><strong>Skills:</strong> Quantum Computing, Qubits, Linear Algebra, Physics</div>
+          <div class="cr-card-rating">
+            <span class="cr-stars">★★★★★</span>
+            <span>4.89</span>
+            <span class="cr-review-count">(11.7k reviews)</span>
+          </div>
+          <div class="cr-card-footer-meta">
+            <span>All Levels · 5 Weeks</span>
+            <span style="color:#0056D2;font-weight:700;">Interactive Visuals</span>
+          </div>
+          <div class="cr-card-actions">
+            <a href="/register" class="cr-btn-card">Enroll Now</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- E-Book 3 -->
+      <div class="cr-card" data-category="books">
+        <div class="cr-card-img-wrapper" style="background: linear-gradient(135deg, #2C3E50, #FD746C);">
+          <div class="cr-card-badge" style="background:#6B46C1;">Literature Classic</div>
+          <div class="cr-card-free-badge">Open Book</div>
+        </div>
+        <div class="cr-card-content">
+          <div class="cr-card-org">📖 Global Literary Vault</div>
+          <h3 class="cr-card-title">Meditations by Marcus Aurelius (Modern Annotated Translation)</h3>
+          <div class="cr-card-skills"><strong>Topics:</strong> Stoic Philosophy, Resilience, Leadership, Ethics</div>
+          <div class="cr-card-rating">
+            <span class="cr-stars">★★★★★</span>
+            <span>4.97</span>
+            <span class="cr-review-count">(62.3k reads)</span>
+          </div>
+          <div class="cr-card-footer-meta">
+            <span>Audiobook & Text</span>
+            <span style="color:#12824C;font-weight:700;">Free Forever</span>
+          </div>
+          <div class="cr-card-actions">
+            <a href="/register" class="cr-btn-card">Read Free</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       6. VALUE PROPOSITION & LEARNER OUTCOMES (Coursera Style)
+       ========================================================================= -->
+  <section class="cr-outcomes-section">
+    <div style="max-width: 1280px; margin: 0 auto 2.5rem; text-align: center;">
+      <h2 class="cr-section-title">Why Millions of Learners Choose Librika</h2>
+      <p class="cr-section-subtitle">World-class education and open library resources engineered for tangible career and academic success.</p>
+    </div>
+
+    <div class="cr-outcomes-grid">
+      <div class="cr-outcome-box">
+        <div class="cr-outcome-icon">📖</div>
+        <h3 class="cr-outcome-title">100% Free Public Library</h3>
+        <p class="cr-outcome-text">Enjoy unrestricted public access to thousands of classics, research papers, and educational modules with zero paywalls.</p>
+      </div>
+
+      <div class="cr-outcome-box">
+        <div class="cr-outcome-icon">🎓</div>
+        <h3 class="cr-outcome-title">Verifiable Certificates</h3>
+        <p class="cr-outcome-text">Complete milestone projects, pass quizzes, and earn verifiable digital badges and credentials shareable on LinkedIn.</p>
+      </div>
+
+      <div class="cr-outcome-box">
+        <div class="cr-outcome-icon">🤖</div>
+        <h3 class="cr-outcome-title">Libra AI Tutoring</h3>
+        <p class="cr-outcome-text">Instant 1-click chapter summaries, custom quiz generation, vocabulary explainers, and 24/7 academic query assistance.</p>
+      </div>
+
+      <div class="cr-outcome-box">
+        <div class="cr-outcome-icon">📱</div>
+        <h3 class="cr-outcome-title">Learn on Any Device</h3>
+        <p class="cr-outcome-text">Seamless synchronized reading across Web, Android mobile apps, and tablets with offline reading capability.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       7. PRICING & MEMBERSHIP PLANS
+       ========================================================================= -->
+  <section id="pricing" class="cr-pricing-section">
+    <h2 class="cr-section-title">Transparent & Accessible Pricing</h2>
+    <p class="cr-section-subtitle">Choose the plan tailored for your individual learning or institutional library management.</p>
+
+    <div class="cr-pricing-grid">
+      <!-- Free Plan -->
+      <div class="cr-price-card">
+        <h3 class="cr-price-title">Free Starter</h3>
+        <p class="cr-price-desc">Perfect for independent readers and self-paced students.</p>
+        <div class="cr-price-val">₹0 <span>/ forever</span></div>
+        <ul class="cr-feature-list">
+          <li><span class="check">✓</span> Access to 10,000+ public e-books</li>
+          <li><span class="check">✓</span> Free course auditing & video lectures</li>
+          <li><span class="check">✓</span> In-browser reader with bookmarks</li>
+          <li><span class="check">✓</span> Basic Libra AI assistant queries</li>
+          <li><span class="check">✓</span> Community discussions & reviews</li>
+        </ul>
+        <a href="/register" class="cr-btn-secondary" style="text-align:center;justify-content:center;">Join Free</a>
+      </div>
+
+      <!-- Student Pro Plan -->
+      <div class="cr-price-card popular">
+        <div class="cr-popular-badge">Most Popular</div>
+        <h3 class="cr-price-title" style="color:#0056D2;">Student Pro</h3>
+        <p class="cr-price-desc">For ambitious learners seeking certifications & AI depth.</p>
+        <div class="cr-price-val">₹199 <span>/ month</span></div>
+        <ul class="cr-feature-list">
+          <li><span class="check">✓</span> Everything in Free Starter</li>
+          <li><span class="check">✓</span> Unlimited offline book & PDF downloads</li>
+          <li><span class="check">✓</span> Verifiable course completion certificates</li>
+          <li><span class="check">✓</span> Unlimited Libra AI tutoring & summaries</li>
+          <li><span class="check">✓</span> Chapter-by-chapter quizzes & flashcards</li>
+          <li><span class="check">✓</span> Advanced reading speed & progress metrics</li>
+        </ul>
+        <a href="/register" class="cr-btn-primary" style="text-align:center;justify-content:center;">Get Started Pro</a>
+      </div>
+
+      <!-- Institution Plan -->
+      <div class="cr-price-card">
+        <h3 class="cr-price-title">Institution Enterprise</h3>
+        <p class="cr-price-desc">Complete library ERP & LMS for schools, colleges and campuses.</p>
+        <div class="cr-price-val">₹9,999 <span>/ campus / yr</span></div>
+        <ul class="cr-feature-list">
+          <li><span class="check">✓</span> Full multi-seat campus library ERP</li>
+          <li><span class="check">✓</span> AI camera OCR & barcode scanner system</li>
+          <li><span class="check">✓</span> Student homework & assignment portal</li>
+          <li><span class="check">✓</span> Custom syllabus & author publishing hub</li>
+          <li><span class="check">✓</span> Detailed attendance, issue & return logs</li>
+          <li><span class="check">✓</span> Dedicated institution support & onboarding</li>
+        </ul>
+        <a href="/login" class="cr-btn-secondary" style="text-align:center;justify-content:center;">Contact Sales</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       8. FLOATING "ASK LIBRA AI" TRIGGER & CONVERSATIONAL DRAWER
+       ========================================================================= -->
+  <button id="libraFloatBtn" class="cr-libra-float-btn" type="button" aria-label="Open Libra AI Chat">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span class="label">Ask Libra AI</span>
+  </button>
+
+  <!-- Modal Drawer -->
+  <div id="libraModal" class="cr-libra-modal-backdrop">
+    <div class="cr-libra-drawer">
+      <div class="cr-drawer-header">
+        <div class="cr-drawer-header-left">
+          <div class="cr-drawer-avatar">✨</div>
+          <div>
+            <strong style="display:block;font-size:1rem;line-height:1.2;">Libra AI Assistant</strong>
+            <span style="font-size:0.75rem;opacity:0.85;">Librika Intelligent Tutor</span>
+          </div>
+        </div>
+        <button id="libraCloseBtn" class="cr-drawer-close" type="button" aria-label="Close modal">✕</button>
+      </div>
+
+      <div id="libraChatBody" class="cr-drawer-body">
+        <div class="cr-msg cr-msg-libra">
+          Hello! 👋 I am <strong>Libra</strong>, your AI study mentor and library assistant. 
+          <br><br>
+          You can ask me about:
+          <ul style="margin:6px 0 6px 16px;padding:0;">
+            <li>Finding free courses and books</li>
+            <li>Creating personalized study plans</li>
+            <li>Explaining pricing & subscription plans</li>
+            <li>Publishing your own e-books</li>
+          </ul>
+          What would you like to explore?
+        </div>
+      </div>
+
+      <div class="cr-drawer-footer">
+        <form id="libraChatForm" class="cr-drawer-form">
+          <input 
+            type="text" 
+            id="libraChatInput" 
+            class="cr-drawer-input" 
+            placeholder="Type your question for Libra..." 
+            autocomplete="off"
+            required
+          >
+          <button type="submit" class="cr-drawer-send-btn" aria-label="Send message">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
         </form>
-        <script>
-        function submitOrgRequest(e) {
-            e.preventDefault();
-            const data = {
-                org_name: document.getElementById('orgName').value,
-                contact_person: document.getElementById('contactPerson').value,
-                email: document.getElementById('orgEmail').value,
-                phone: document.getElementById('orgPhone').value
-            };
-            fetch('/api/apply-organization', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            }).then(r => r.json()).then(res => {
-                if(res.status === 'success') {
-                    alert('Request sent successfully! Our team will contact you shortly.');
-                    document.getElementById('orgModal').style.display='none';
-                } else {
-                    alert('Error sending request: ' + res.message);
-                }
-            });
-        }
-        </script>
+      </div>
     </div>
-</div>
+  </div>
 
-<div id="helpDeskBtn" onclick="document.getElementById('helpDeskModal').style.display='flex'" style="position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; background: linear-gradient(135deg, var(--accent-primary), #a855f7); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5); z-index: 9999; transition: transform 0.3s ease;">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-    </svg>
-</div>
-
-<div id="helpDeskModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); /* blur removed */ z-index: 10000; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: var(--bg-card); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; position: relative;">
-        <span onclick="document.getElementById('helpDeskModal').style.display='none'" style="position: absolute; top: 1rem; right: 1.5rem; cursor: pointer; font-size: 1.5rem; color: var(--text-mid);">&times;</span>
-        <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; color: var(--text-high);">librika.in Help Desk</h2>
-
-        <div id="helpDeskMenu">
-            <button onclick="document.getElementById('orgModal').style.display='flex'; document.getElementById('helpDeskModal').style.display='none';" class="btn-neon" style="width: 100%; padding: 1rem; margin-bottom: 1rem; border-radius: 8px;">Request Library</button>
-            <button onclick="showOtpFlow()" class="btn-alt" style="width: 100%; padding: 1rem; border-radius: 8px;">Change Credentials</button>
+  <!-- =========================================================================
+       9. RICH COURSERA FOOTER
+       ========================================================================= -->
+  <footer class="cr-footer">
+    <div class="cr-footer-grid">
+      <div class="cr-footer-col">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+          <img src="/logo.png" alt="Librika Logo" style="height: 34px; border-radius: 6px;" onerror="this.style.display='none'">
+          <span style="font-weight: 800; font-size: 1.35rem; color: #0056D2;">librika</span>
         </div>
-
-        <div id="helpDeskOtpFlow" style="display: none; text-align: left;">
-            <p style="color: var(--text-mid); margin-bottom: 1rem; font-size: 0.9rem;">Enter your Phone Number (Login ID) to receive an OTP.</p>
-            <input type="text" id="resetPhone" placeholder="Phone Number" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
-            <button id="sendOtpBtn" onclick="sendOtp()" class="btn-neon" style="width: 100%; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;">Send OTP</button>
-
-            <div id="otpStep2" style="display: none;">
-                <input type="text" id="resetOtp" placeholder="6-Digit OTP" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
-                <input type="password" id="resetNewPassword" placeholder="New Password" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-high); box-sizing: border-box;">
-                <button onclick="verifyAndReset()" class="btn-alt" style="width: 100%; padding: 0.8rem; border-radius: 8px;">Reset Password</button>
-            </div>
-            <button onclick="document.getElementById('helpDeskOtpFlow').style.display='none'; document.getElementById('helpDeskMenu').style.display='block';" style="background: none; border: none; color: var(--text-mid); text-decoration: underline; cursor: pointer; width: 100%; margin-top: 1rem;">Back</button>
+        <p style="font-size: 0.9rem; color: #555; line-height: 1.6; margin-bottom: 1.5rem;">
+          The next-generation open SaaS EdTech and Digital Library platform. Connecting learners with world-class courses, accredited knowledge, and intelligent AI tutoring.
+        </p>
+        <div style="display:flex;gap:10px;">
+          <a href="/login" class="cr-btn-secondary" style="padding:0.45rem 1rem;font-size:0.85rem;">Android App (APK)</a>
+          <a href="/login" class="cr-btn-secondary" style="padding:0.45rem 1rem;font-size:0.85rem;">iOS App</a>
         </div>
+      </div>
+
+      <div class="cr-footer-col">
+        <h4>Popular Categories</h4>
+        <ul>
+          <li><a href="#catalog" onclick="document.querySelector('[data-filter=courses]').click()">Computer Science & Coding</a></li>
+          <li><a href="#catalog" onclick="document.querySelector('[data-filter=courses]').click()">Data Science & Machine Learning</a></li>
+          <li><a href="#catalog" onclick="document.querySelector('[data-filter=books]').click()">100% Free Public E-Books</a></li>
+          <li><a href="#catalog" onclick="document.querySelector('[data-filter=degrees]').click()">Business & Management</a></li>
+          <li><a href="#catalog" onclick="document.querySelector('[data-filter=exams]').click()">Competitive Exam Vaults</a></li>
+        </ul>
+      </div>
+
+      <div class="cr-footer-col">
+        <h4>Platform & Portals</h4>
+        <ul>
+          <li><a href="/login">Student Learning Portal</a></li>
+          <li><a href="/login">Personal Digital Library</a></li>
+          <li><a href="/login">School & Campus Admin</a></li>
+          <li><a href="#libra-ai">Libra AI Assistant</a></li>
+          <li><a href="/register">Join Free Community</a></li>
+        </ul>
+      </div>
+
+      <div class="cr-footer-col">
+        <h4>Legal & Support</h4>
+        <ul>
+          <li><a href="/login">Help Center & FAQ</a></li>
+          <li><a href="/login">Terms of Service</a></li>
+          <li><a href="/login">Privacy Policy</a></li>
+          <li><a href="/login">Publisher Guidelines</a></li>
+          <li><a href="/login">Contact Support</a></li>
+        </ul>
+      </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-    emailjs.init('gDSazAs0k6ID6ixQW');
-    let generatedOtp = "";
+    <div class="cr-footer-bottom">
+      <div>© 2026 Librika Inc. All rights reserved. Designed for global open education.</div>
+      <div style="display:flex;gap:1.5rem;">
+        <a href="/login" style="color:#888;text-decoration:none;">English (US)</a>
+        <a href="/login" style="color:#888;text-decoration:none;">Security</a>
+        <a href="/login" style="color:#888;text-decoration:none;">Status</a>
+      </div>
+    </div>
+  </footer>
 
-    function showOtpFlow() {
-        document.getElementById('helpDeskMenu').style.display = 'none';
-        document.getElementById('helpDeskOtpFlow').style.display = 'block';
-    }
-
-    function sendOtp() {
-        const phone = document.getElementById('resetPhone').value;
-        if(!phone) { alert('Please enter your phone number.'); return; }
-        fetch('/api/check-user', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({phone: phone})
-        }).then(r => r.json()).then(res => {
-            if(res.status === 'success') {
-                generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                const templateParams = {
-                    to_email: res.email,
-                    passcode: generatedOtp,
-                    time: new Date(new Date().getTime() + 15*60000).toLocaleTimeString()
-                };
-                emailjs.send('service_jv9t9j1', 'template_fflm2lr', templateParams)
-                .then(() => {
-                    alert('OTP sent to your registered email!');
-                    document.getElementById('sendOtpBtn').style.display = 'none';
-                    document.getElementById('otpStep2').style.display = 'block';
-                }).catch(err => {
-                    console.error(err);
-                    alert('Failed to send OTP email. Please check template ID.');
-                });
-            } else {
-                alert('User not found.');
-            }
-        });
-    }
-
-    function verifyAndReset() {
-        const otp = document.getElementById('resetOtp').value;
-        const newPassword = document.getElementById('resetNewPassword').value;
-        const phone = document.getElementById('resetPhone').value;
-        if(otp !== generatedOtp) {
-            alert('Invalid OTP!');
-            return;
-        }
-        fetch('/api/reset-password', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({phone: phone, new_password: newPassword})
-        }).then(r => r.json()).then(res => {
-            if(res.status === 'success') {
-                alert('Password reset successfully! You can now log in.');
-                document.getElementById('helpDeskModal').style.display = 'none';
-                window.location.href = '/login';
-            } else {
-                alert('Failed to reset password.');
-            }
-        });
-    }
-</script>
+</body>
+</html>

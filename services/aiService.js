@@ -63,8 +63,8 @@ async function callOpenRouter(prompt, options = {}) {
 
   const isVision = !!options.imageBase64;
   const modelsToTry = isVision
-    ? ["meta-llama/llama-3.2-11b-vision-instruct:free"]
-    : ["meta-llama/llama-3.3-70b-instruct:free", "google/gemma-2-9b-it:free", "mistralai/mistral-7b-instruct:free"];
+    ? ["meta-llama/llama-3.2-11b-vision-instruct:free", "google/gemini-flash-1.5"]
+    : ["openai/gpt-3.5-turbo", "google/gemini-2.0-flash-001", "meta-llama/llama-3-8b-instruct:free", "openrouter/auto"];
 
   let lastErr = null;
   for (const model of modelsToTry) {
@@ -83,14 +83,14 @@ async function callOpenRouter(prompt, options = {}) {
       const response = await axios.post("https://openrouter.ai/api/v1/chat/completions", {
         model: model,
         messages: [{ role: "user", content: content }],
-        temperature: options.temperature !== undefined ? options.temperature : 0.3,
+        temperature: options.temperature !== undefined ? options.temperature : 0.4,
         max_tokens: options.max_tokens || 1024
       }, {
         headers: {
           "Authorization": `Bearer ${openrouterKey}`,
           "Content-Type": "application/json"
         },
-        timeout: 8000
+        timeout: 10000
       });
 
       if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message) {
@@ -131,6 +131,14 @@ async function callGemini(prompt, options = {}) {
  * 4. Call Pollinations AI (Zero-Key Backup Provider)
  */
 async function callPollinationsAI(prompt, options = {}) {
+  try {
+    const encoded = encodeURIComponent(prompt.slice(0, 500));
+    const response = await axios.get(`https://text.pollinations.ai/${encoded}`, { timeout: 8000 });
+    if (typeof response.data === 'string' && response.data.trim()) {
+      return response.data.trim();
+    }
+  } catch (e) {}
+
   const response = await axios.post("https://text.pollinations.ai/", {
     messages: [{ role: "user", content: prompt }],
     model: "openai"
@@ -353,12 +361,74 @@ async function extractTextOCR(imageBase64) {
   }
 }
 
+async function chatWithLibra(userMessage, conversationHistory = []) {
+  try {
+    const systemPrompt = `You are "Libra", the intelligent AI tutor, library concierge, and academic guide for Librika (librika.in) — a modern, world-class EdTech and Digital Library platform modeled after Coursera and open knowledge repositories.
+
+Your mission is to help visitors and students discover knowledge, find free courses, explore e-books, understand platform features, and choose the right learning or subscription path.
+
+Here is your knowledge base about Librika:
+1. 📚 E-BOOKS & DIGITAL LIBRARY:
+   - Thousands of 100% Free public domain e-books, open textbooks, literature classics, and scientific papers.
+   - Built-in In-Browser Reader with instant page flipping, dark mode, font scaling, bookmarking, and chapter-by-chapter reading.
+   - Integrated AI Tools inside books: Instant 1-click chapter summaries, smart flashcard generation, vocabulary explanations, and comprehension quizzes.
+
+2. 🎓 COURSES & SPECIALIZATIONS:
+   - Free & Pro courses across Computer Science, AI & Machine Learning, Web Development, Data Science, Business, STEM, and Competitive Exams (UPSC, GATE, GRE).
+   - Self-paced interactive learning with milestone projects, quizzes, and verified digital certificates.
+
+3. 🤖 AI-POWERED STUDY FEATURES:
+   - AI Homework & Quiz Assistant, OCR Book Scanner (snap book covers or pages to automatically import text or generate notes), automated revision flashcards.
+
+4. 💳 PRICING & MEMBERSHIP PLANS:
+   - Free Starter Plan: Free forever! Public catalog access, free e-books, standard reader, and basic Libra AI.
+   - Student Pro Plan (₹199/mo or ₹1,499/yr): Unlimited book downloads, certified course completions, unlimited Libra AI tutoring, advanced learning analytics.
+   - Institution / School Enterprise Plan (₹9,999/yr per campus): Complete multi-seat library ERP, physical barcode & AI camera scanning, student homework manager, publisher royalty hub.
+
+5. 👥 USER ROLES & PORTALS:
+   - Student Portal: Reading progress, quizzes, earned badges, leaderboards, personal bookshelf.
+   - Personal Library: For book enthusiasts to catalog personal collections with mobile camera OCR.
+   - School Admin & Super Admin: Comprehensive institution oversight, inventory control, and analytics.
+
+Tone and Style Guidelines:
+- Be enthusiastic, helpful, knowledgeable, and concise.
+- Use clean Markdown formatting with clear bullet points, bold highlights, and relevant emojis.
+- When recommending courses or books, provide realistic titles and actionable suggestions.
+- If asked about signing up, direct them warmly to click "Join for Free" or "Sign Up" on the top navigation.`;
+
+    let prompt = `${systemPrompt}\n\n`;
+    if (conversationHistory && conversationHistory.length > 0) {
+      prompt += `Recent conversation context:\n`;
+      conversationHistory.slice(-4).forEach(msg => {
+        prompt += `${msg.role === 'user' ? 'User' : 'Libra'}: ${msg.content}\n`;
+      });
+      prompt += `\n`;
+    }
+    prompt += `User Question: ${userMessage}\n\nLibra AI Answer:`;
+
+    const response = await callAI(prompt, { temperature: 0.6, max_tokens: 1200 });
+    return response || "Hello! I am Libra, your AI learning assistant. How can I assist you with courses, e-books, or library memberships today?";
+  } catch (err) {
+    console.error("Libra AI Chat error:", err.message);
+    return `Hello! I am **Libra**, your Librika AI Assistant. 
+
+I can help you with:
+- 🌟 **Free Courses**: Programming, AI, Business, and Science.
+- 📚 **E-Books & Papers**: Thousands of free digital textbooks and classics.
+- 💳 **Plans & Pricing**: Free Starter vs. Student Pro and School Enterprise.
+- 🎓 **Certificates & Quizzes**: Earning badges and testing your knowledge.
+
+What would you like to explore today?`;
+  }
+}
+
 module.exports = {
   generateBookDescription,
   generateQuizFromText,
   gradeShortAnswer,
   processChapter,
   chatWithAssistant,
+  chatWithLibra,
   analyzeBookCover,
   extractTextOCR,
   callAI,
