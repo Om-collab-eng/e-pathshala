@@ -1,363 +1,1071 @@
 /**
- * Librika Live Video Classroom & Interactive Whiteboard Engine
- * Multi-speaker WebRTC Conference, Collaborative Drawing Canvas, Chat & Attendance
+ * Librika Meet - Native WebRTC Video Conferencing & Interactive Classroom Engine
+ * Pure In-House Architecture - Zero Third-Party Meeting Iframes (No Jitsi)
  */
 
-(function () {
+(function() {
   'use strict';
 
-  window.LibrikaClassroom = {
-    api: null,
-    whiteboardActive: false,
-    canvas: null,
-    ctx: null,
-    isDrawing: false,
-    drawColor: '#0056D2',
-    lineWidth: 3,
-    tool: 'pen',
-    handRaised: false,
+  // Config & State
+  const ICE_SERVERS = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' }
+    ]
+  };
 
-    init: function (config) {
-      this.config = config || {};
-      this.initJitsi();
-      this.initWhiteboard();
-      this.initControls();
-      this.initChat();
-      this.initTimer();
-    },
+  let socket = null;
+  let localStream = null;
+  let screenStream = null;
+  let isMuted = false;
+  let isVideoOff = false;
+  let isScreenSharing = false;
+  let isHandRaised = false;
+  let isWhiteboardOpen = false;
+  let isChatOpen = true;
+  let isParticipantsOpen = false;
+  let currentLayout = 'grid'; // 'grid' | 'spotlight'
+  let pinnedSocketId = null;
 
-    // ─────────────────────────────────────────────────────────────
-    // 1. JITSI WEBRTC VIDEO CONFERENCING
-    // ─────────────────────────────────────────────────────────────
-    initJitsi: function () {
-      const container = document.getElementById('jitsiContainer');
-      if (!container) return;
+  // Peer Connections: Map(socketId -> RTCPeerConnection)
+  const peerConnections = new Map();
+  // Remote Streams: Map(socketId -> MediaStream)
+  const remoteStreams = new Map();
+  // Remote User Meta: Map(socketId -> { userId, userName, role, isMuted, isVideoOff, handRaised })
+  const participants = new Map();
 
-      const domain = 'meet.jit.si';
-      const cleanRoomName = 'Librika_' + (this.config.meetingId || 'DEMO_ROOM').replace(/[^a-zA-Z0-9]/g, '_');
+  // Whiteboard State
+  let wbCanvas = null;
+  let wbCtx = null;
+  let isDrawing = false;
+  let currentTool = 'pen'; // 'pen' | 'highlighter' | 'eraser'
+  let currentColor = '#0056D2';
+  let currentLineWidth = 3;
+  let lastX = 0;
+  let lastY = 0;
 
-      const options = {
-        roomName: cleanRoomName,
-        width: '100%',
-        height: '100%',
-        parentNode: container,
-        userInfo: {
-          displayName: this.config.userName || 'Participant',
-          email: this.config.userEmail || 'student@librika.in'
-        },
-        configOverwrite: {
-          startWithAudioMuted: !this.config.isHost,
-          startWithVideoMuted: false,
-          enableWelcomePage: false,
-          prejoinPageEnabled: false,
-          disableDeepLinking: true,
-          toolbarButtons: [
-            'camera',
-            'chat',
-            'closedcaptions',
-            'desktop',
-            'download',
-            'embedmeeting',
-            'etherpad',
-            'feedback',
-            'filmstrip',
-            'fullscreen',
-            'hangup',
-            'help',
-            'highlight',
-            'invite',
-            'linktosalesforce',
-            'livestreaming',
-            'microphone',
-            'noisesuppression',
-            'participants-pane',
-            'profile',
-            'raisehand',
-            'recording',
-            'security',
-            'select-background',
-            'settings',
-            'shareaudio',
-            'sharedvideo',
-            'shortcuts',
-            'stats',
-            'tileview',
-            'toggle-camera',
-            'videoquality',
-            'whiteboard'
-          ]
-        },
-        interfaceConfigOverwrite: {
-          SHOW_JITSI_WATERMARK: false,
-          SHOW_WATERMARK_FOR_GUESTS: false,
-          DEFAULT_BACKGROUND: '#0A0F1D',
-          APP_NAME: 'Librika Live Classroom'
-        }
-      };
+  // Session Duration Timer
+  let timerInterval = null;
+  let sessionSeconds = 0;
 
-      if (window.JitsiMeetExternalAPI) {
+  // DOM Elements
+  let videoGrid, selfVideo, selfTile, selfAvatar, selfNameBadge, micStatusIcon, camStatusIcon;
+  let dockMicBtn, dockCamBtn, dockScreenBtn, dockHandBtn, dockWbBtn, dockChatBtn, dockParticipantsBtn, dockLeaveBtn;
+  let sidePanel, chatBody, chatInput, chatForm, participantsListEl, participantCountEl;
+  let whiteboardOverlay, timerEl;
+
+  // ─────────────────────────────────────────────────────────────
+  // 1. INITIALIZATION & SETUP
+  // ─────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    cacheElements();
+    initTimer();
+    initWhiteboard();
+    bindDockEvents();
+    
+    // Connect to Socket.io
+    initSocket();
+
+    // Start local media
+    await startLocalMedia();
+  });
+
+  function cacheElements() {
+    videoGrid = document.getElementById('videoGrid');
+    selfVideo = document.getElementById('selfVideo');
+    selfTile = document.getElementById('selfTile');
+    selfAvatar = document.getElementById('selfAvatar');
+    selfNameBadge = document.getElementById('selfNameBadge');
+    micStatusIcon = document.getElementById('micStatusIcon');
+    camStatusIcon = document.getElementById('camStatusIcon');
+
+    dockMicBtn = document.getElementById('dockMicBtn');
+    dockCamBtn = document.getElementById('dockCamBtn');
+    dockScreenBtn = document.getElementById('dockScreenBtn');
+    dockHandBtn = document.getElementById('dockHandBtn');
+    dockWbBtn = document.getElementById('dockWhiteboardBtn');
+    dockChatBtn = document.getElementById('dockChatBtn');
+    dockParticipantsBtn = document.getElementById('dockParticipantsBtn');
+    dockLeaveBtn = document.getElementById('dockLeaveBtn');
+
+    sidePanel = document.getElementById('sidePanel');
+    chatBody = document.getElementById('inClassChatBody');
+    chatInput = document.getElementById('inClassChatInput');
+    chatForm = document.getElementById('inClassChatForm');
+    participantsListEl = document.getElementById('participantsList');
+    participantCountEl = document.getElementById('participantCountBadge');
+
+    whiteboardOverlay = document.getElementById('whiteboardOverlay');
+    timerEl = document.getElementById('liveTimerDisplay');
+  }
+
+  function initTimer() {
+    timerInterval = setInterval(() => {
+      sessionSeconds++;
+      const hrs = String(Math.floor(sessionSeconds / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((sessionSeconds % 3600) / 60)).padStart(2, '0');
+      const secs = String(sessionSeconds % 60).padStart(2, '0');
+      if (timerEl) timerEl.textContent = `${hrs}:${mins}:${secs}`;
+    }, 1000);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 2. SOCKET.IO & SIGNALING
+  // ─────────────────────────────────────────────────────────────
+  function initSocket() {
+    if (typeof io === 'undefined') {
+      console.error('Socket.io script not found');
+      return;
+    }
+
+    socket = io();
+
+    socket.on('connect', () => {
+      console.log('Connected to Librika Live Signaling Engine:', socket.id);
+      
+      const meetingId = window.ROOM_CONFIG.meetingId;
+      const userId = window.ROOM_CONFIG.userId;
+      const userName = window.ROOM_CONFIG.userName;
+      const role = window.ROOM_CONFIG.isHost ? 'host' : 'student';
+
+      socket.emit('join-room', {
+        meetingId,
+        userId,
+        userName,
+        role
+      });
+    });
+
+    // Receive list of existing peers in the room
+    socket.on('room-users', async ({ users, self }) => {
+      console.log('Existing users in room:', users);
+      users.forEach(user => {
+        participants.set(user.socketId, user);
+        createRemoteVideoTile(user.socketId, user);
+        // We initiate call to each existing user
+        initiatePeerConnection(user.socketId, true);
+      });
+      updateParticipantsListUI();
+    });
+
+    // New participant joined
+    socket.on('user-joined', (user) => {
+      console.log('New participant joined:', user);
+      participants.set(user.socketId, user);
+      createRemoteVideoTile(user.socketId, user);
+      updateParticipantsListUI();
+      showToast(`${user.userName} joined the live classroom`);
+    });
+
+    // Handle incoming WebRTC Offer
+    socket.on('signal-offer', async ({ callerSocketId, callerData, offer }) => {
+      console.log('Received offer from:', callerSocketId);
+      if (callerData) {
+        participants.set(callerSocketId, callerData);
+        createRemoteVideoTile(callerSocketId, callerData);
+        updateParticipantsListUI();
+      }
+
+      let pc = peerConnections.get(callerSocketId);
+      if (!pc) {
+        pc = createPeerConnection(callerSocketId);
+      }
+
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        socket.emit('signal-answer', {
+          targetSocketId: callerSocketId,
+          answer
+        });
+      } catch (err) {
+        console.error('Error handling offer:', err);
+      }
+    });
+
+    // Handle incoming WebRTC Answer
+    socket.on('signal-answer', async ({ responderSocketId, answer }) => {
+      console.log('Received answer from:', responderSocketId);
+      const pc = peerConnections.get(responderSocketId);
+      if (pc) {
         try {
-          this.api = new window.JitsiMeetExternalAPI(domain, options);
-          
-          this.api.addEventListener('videoConferenceJoined', (e) => {
-            console.log('[CLASSROOM] Joined video conference:', e);
-          });
+          await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        } catch (err) {
+          console.error('Error handling answer:', err);
+        }
+      }
+    });
 
-          this.api.addEventListener('participantJoined', (p) => {
-            this.appendChatMessage('System', `${p.displayName || 'A student'} joined the live class.`);
-          });
+    // Handle incoming ICE Candidate
+    socket.on('ice-candidate', async ({ fromSocketId, candidate }) => {
+      const pc = peerConnections.get(fromSocketId);
+      if (pc && candidate) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (err) {
+          console.error('Error adding ice candidate:', err);
+        }
+      }
+    });
 
-          this.api.addEventListener('raiseHandUpdated', (e) => {
-            if (e.handRaised) {
-              this.showToast(`✋ Participant raised hand!`);
-            }
+    // Media State Changed by peer
+    socket.on('user-media-state-changed', ({ socketId, isMuted: peerMuted, isVideoOff: peerVideoOff, isScreenSharing: peerScreen }) => {
+      const u = participants.get(socketId);
+      if (u) {
+        u.isMuted = peerMuted;
+        u.isVideoOff = peerVideoOff;
+        u.isScreenSharing = peerScreen;
+        updatePeerTileMediaState(socketId, u);
+        updateParticipantsListUI();
+      }
+    });
+
+    // Hand Raised / Lowered
+    socket.on('user-hand-toggled', ({ socketId, userName, handRaised }) => {
+      const u = participants.get(socketId);
+      if (u) {
+        u.handRaised = handRaised;
+        updatePeerTileMediaState(socketId, u);
+        updateParticipantsListUI();
+      }
+      if (handRaised) {
+        showToast(`✋ ${userName} raised hand`);
+      }
+    });
+
+    // Live Chat Message
+    socket.on('receive-chat', (msg) => {
+      appendChatMessage(msg);
+      if (!isChatOpen) {
+        const badge = document.getElementById('chatUnreadBadge');
+        if (badge) badge.style.display = 'inline-flex';
+      }
+    });
+
+    // Collaborative Whiteboard Stroke
+    socket.on('wb-draw', (data) => {
+      renderRemoteWhiteboardStroke(data);
+    });
+
+    socket.on('wb-clear', () => {
+      clearWhiteboardCanvas();
+    });
+
+    // Host Force Mute
+    socket.on('force-mute', () => {
+      if (!window.ROOM_CONFIG.isHost) {
+        muteAudio();
+        showToast('The host has muted all participants');
+      }
+    });
+
+    // Meeting Ended by Host
+    socket.on('meeting-ended', () => {
+      showToast('The host has ended this live meeting.');
+      setTimeout(() => {
+        window.location.href = window.ROOM_CONFIG.isHost ? '/studio' : '/student';
+      }, 1500);
+    });
+
+    // Participant Left
+    socket.on('user-left', ({ socketId, userName }) => {
+      console.log('User left:', userName);
+      cleanupPeer(socketId);
+      participants.delete(socketId);
+      removeRemoteVideoTile(socketId);
+      updateParticipantsListUI();
+      showToast(`${userName} left the classroom`);
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 3. MEDIA CAPTURE & WEBRTC CONNECTIONS
+  // ─────────────────────────────────────────────────────────────
+  async function startLocalMedia() {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+      if (selfVideo) {
+        selfVideo.srcObject = localStream;
+        selfVideo.muted = true; // prevent local feedback
+      }
+    } catch (err) {
+      console.warn('Camera/Mic permission not granted or device not available:', err);
+      // Fallback: Create silent audio/black video canvas stream
+      localStream = createPlaceholderMediaStream();
+      if (selfVideo) selfVideo.srcObject = localStream;
+      isVideoOff = true;
+      isMuted = true;
+      updateSelfMediaUI();
+    }
+  }
+
+  function createPlaceholderMediaStream() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(0, 0, 640, 360);
+    const videoTrack = canvas.captureStream(10).getVideoTracks()[0];
+    
+    // Silent WebAudio track
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const dst = audioCtx.createMediaStreamDestination();
+    osc.connect(dst);
+    const audioTrack = dst.stream.getAudioTracks()[0];
+    audioTrack.enabled = false;
+
+    return new MediaStream([videoTrack, audioTrack]);
+  }
+
+  function initiatePeerConnection(targetSocketId, isCaller) {
+    let pc = createPeerConnection(targetSocketId);
+    
+    if (isCaller) {
+      pc.onnegotiationneeded = async () => {
+        try {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socket.emit('signal-offer', {
+            targetSocketId,
+            offer
           });
         } catch (err) {
-          console.error('[CLASSROOM] Jitsi init error:', err);
-        }
-      }
-    },
-
-    // ─────────────────────────────────────────────────────────────
-    // 2. INTERACTIVE DRAWING WHITEBOARD
-    // ─────────────────────────────────────────────────────────────
-    initWhiteboard: function () {
-      this.canvas = document.getElementById('whiteboardCanvas');
-      if (!this.canvas) return;
-
-      this.ctx = this.canvas.getContext('2d');
-      this.resizeCanvas();
-
-      window.addEventListener('resize', () => this.resizeCanvas());
-
-      const getPos = (e) => {
-        const rect = this.canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return {
-          x: clientX - rect.left,
-          y: clientY - rect.top
-        };
-      };
-
-      const startDrawing = (e) => {
-        this.isDrawing = true;
-        const pos = getPos(e);
-        this.ctx.beginPath();
-        this.ctx.moveTo(pos.x, pos.y);
-      };
-
-      const draw = (e) => {
-        if (!this.isDrawing) return;
-        const pos = getPos(e);
-        this.ctx.lineWidth = this.lineWidth;
-        this.ctx.lineCap = 'round';
-        this.ctx.lineJoin = 'round';
-
-        if (this.tool === 'eraser') {
-          this.ctx.strokeStyle = '#FFFFFF';
-          this.ctx.lineWidth = 20;
-        } else {
-          this.ctx.strokeStyle = this.drawColor;
-        }
-
-        this.ctx.lineTo(pos.x, pos.y);
-        this.ctx.stroke();
-      };
-
-      const stopDrawing = () => {
-        if (this.isDrawing) {
-          this.ctx.closePath();
-          this.isDrawing = false;
+          console.error('Error creating offer for peer:', err);
         }
       };
+    }
+  }
 
-      this.canvas.addEventListener('mousedown', startDrawing);
-      this.canvas.addEventListener('mousemove', draw);
-      this.canvas.addEventListener('mouseup', stopDrawing);
-      this.canvas.addEventListener('mouseleave', stopDrawing);
+  function createPeerConnection(targetSocketId) {
+    if (peerConnections.has(targetSocketId)) {
+      return peerConnections.get(targetSocketId);
+    }
 
-      this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, { passive: false });
-      this.canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
-      this.canvas.addEventListener('touchend', stopDrawing);
-    },
+    const pc = new RTCPeerConnection(ICE_SERVERS);
 
-    resizeCanvas: function () {
-      if (!this.canvas) return;
-      const rect = this.canvas.parentElement.getBoundingClientRect();
-      const tempImage = this.ctx ? this.canvas.toDataURL() : null;
+    // Add local media tracks to peer connection
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        pc.addTrack(track, localStream);
+      });
+    }
 
-      this.canvas.width = rect.width;
-      this.canvas.height = rect.height - 52;
-
-      if (tempImage) {
-        const img = new Image();
-        img.src = tempImage;
-        img.onload = () => this.ctx.drawImage(img, 0, 0);
-      }
-    },
-
-    setTool: function (toolName) {
-      this.tool = toolName;
-      document.querySelectorAll('.ls-wb-btn').forEach(b => b.classList.remove('active'));
-      const activeBtn = document.getElementById(`wb_${toolName}`);
-      if (activeBtn) activeBtn.classList.add('active');
-    },
-
-    setColor: function (hexColor) {
-      this.drawColor = hexColor;
-      this.setTool('pen');
-    },
-
-    clearWhiteboard: function () {
-      if (!this.ctx || !this.canvas) return;
-      if (confirm('Clear the entire whiteboard canvas?')) {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      }
-    },
-
-    saveWhiteboardPNG: function () {
-      if (!this.canvas) return;
-      const link = document.createElement('a');
-      link.download = `librika-whiteboard-${Date.now()}.png`;
-      link.href = this.canvas.toDataURL('image/png');
-      link.click();
-    },
-
-    toggleWhiteboard: function () {
-      const overlay = document.getElementById('whiteboardOverlay');
-      const btn = document.getElementById('dockWhiteboardBtn');
-      if (!overlay) return;
-
-      this.whiteboardActive = !this.whiteboardActive;
-      if (this.whiteboardActive) {
-        overlay.classList.add('active');
-        if (btn) btn.classList.add('active');
-        this.resizeCanvas();
-      } else {
-        overlay.classList.remove('active');
-        if (btn) btn.classList.remove('active');
-      }
-    },
-
-    // ─────────────────────────────────────────────────────────────
-    // 3. MEETING CONTROLS & DOCK
-    // ─────────────────────────────────────────────────────────────
-    initControls: function () {
-      // Toggle Chat Drawer
-      const chatBtn = document.getElementById('dockChatBtn');
-      const sidePanel = document.getElementById('sidePanel');
-      if (chatBtn && sidePanel) {
-        chatBtn.addEventListener('click', () => {
-          sidePanel.classList.toggle('collapsed');
-          chatBtn.classList.toggle('active');
+    // ICE Candidate generation
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit('ice-candidate', {
+          targetSocketId,
+          candidate: event.candidate
         });
       }
+    };
 
-      // Toggle Whiteboard
-      const wbBtn = document.getElementById('dockWhiteboardBtn');
-      if (wbBtn) {
-        wbBtn.addEventListener('click', () => this.toggleWhiteboard());
+    // Remote Track Handler
+    pc.ontrack = (event) => {
+      console.log('Received remote track from:', targetSocketId, event.streams[0]);
+      let stream = remoteStreams.get(targetSocketId);
+      if (!stream) {
+        stream = event.streams[0] || new MediaStream();
+        remoteStreams.set(targetSocketId, stream);
       }
+      
+      const remoteVideoEl = document.getElementById(`video_${targetSocketId}`);
+      if (remoteVideoEl) {
+        remoteVideoEl.srcObject = stream;
+      }
+    };
 
-      // Raise Hand
-      const handBtn = document.getElementById('dockHandBtn');
-      if (handBtn) {
-        handBtn.addEventListener('click', () => {
-          this.handRaised = !this.handRaised;
-          handBtn.classList.toggle('active', this.handRaised);
-          if (this.api) this.api.executeCommand('toggleRaiseHand');
-          this.showToast(this.handRaised ? '✋ Hand raised for the instructor' : 'Hand lowered');
+    pc.onconnectionstatechange = () => {
+      console.log(`Connection state with ${targetSocketId}:`, pc.connectionState);
+      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+        cleanupPeer(targetSocketId);
+      }
+    };
+
+    peerConnections.set(targetSocketId, pc);
+    return pc;
+  }
+
+  function cleanupPeer(socketId) {
+    const pc = peerConnections.get(socketId);
+    if (pc) {
+      pc.close();
+      peerConnections.delete(socketId);
+    }
+    remoteStreams.delete(socketId);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 4. DOCK CONTROLS & MEDIA ACTIONS
+  // ─────────────────────────────────────────────────────────────
+  function bindDockEvents() {
+    // Mic Toggle
+    if (dockMicBtn) {
+      dockMicBtn.addEventListener('click', toggleAudio);
+    }
+
+    // Video Cam Toggle
+    if (dockCamBtn) {
+      dockCamBtn.addEventListener('click', toggleVideo);
+    }
+
+    // Screen Sharing Toggle
+    if (dockScreenBtn) {
+      dockScreenBtn.addEventListener('click', toggleScreenShare);
+    }
+
+    // Raise Hand
+    if (dockHandBtn) {
+      dockHandBtn.addEventListener('click', toggleHandRaise);
+    }
+
+    // Whiteboard Toggle
+    if (dockWbBtn) {
+      dockWbBtn.addEventListener('click', toggleWhiteboard);
+    }
+
+    // Chat Toggle
+    if (dockChatBtn) {
+      dockChatBtn.addEventListener('click', toggleChatPanel);
+    }
+
+    // Participants List Toggle
+    if (dockParticipantsBtn) {
+      dockParticipantsBtn.addEventListener('click', toggleParticipantsPanel);
+    }
+
+    // Leave / End Meeting
+    if (dockLeaveBtn) {
+      dockLeaveBtn.addEventListener('click', leaveMeeting);
+    }
+
+    // Chat Form Submit
+    if (chatForm) {
+      chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendChatMessage();
+      });
+    }
+
+    // Copy Invite Button
+    const copyInviteBtn = document.getElementById('copyInviteBtn');
+    if (copyInviteBtn) {
+      copyInviteBtn.addEventListener('click', copyMeetingInvite);
+    }
+  }
+
+  function toggleAudio() {
+    if (!localStream) return;
+    const audioTrack = localStream.getAudioTracks()[0];
+    if (audioTrack) {
+      isMuted = !isMuted;
+      audioTrack.enabled = !isMuted;
+      updateSelfMediaUI();
+      broadcastMediaState();
+    }
+  }
+
+  function muteAudio() {
+    if (!localStream) return;
+    const audioTrack = localStream.getAudioTracks()[0];
+    if (audioTrack) {
+      isMuted = true;
+      audioTrack.enabled = false;
+      updateSelfMediaUI();
+      broadcastMediaState();
+    }
+  }
+
+  function toggleVideo() {
+    if (!localStream) return;
+    const videoTrack = localStream.getVideoTracks()[0];
+    if (videoTrack) {
+      isVideoOff = !isVideoOff;
+      videoTrack.enabled = !isVideoOff;
+      updateSelfMediaUI();
+      broadcastMediaState();
+    }
+  }
+
+  async function toggleScreenShare() {
+    if (isScreenSharing) {
+      stopScreenSharing();
+    } else {
+      try {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: 'always' },
+          audio: false
         });
-      }
 
-      // Share Link Copy
-      const copyBtn = document.getElementById('copyInviteBtn');
-      if (copyBtn) {
-        copyBtn.addEventListener('click', () => {
-          const url = window.location.origin + '/live/' + (this.config.meetingId || '');
-          navigator.clipboard.writeText(url).then(() => {
-            this.showToast('📋 Shareable Live Class Link copied to clipboard!');
-          });
-        });
-      }
-
-      // End / Leave Class
-      const leaveBtn = document.getElementById('dockLeaveBtn');
-      if (leaveBtn) {
-        leaveBtn.addEventListener('click', () => {
-          if (confirm('Leave this live classroom?')) {
-            if (this.api) this.api.dispose();
-            window.location.href = this.config.isHost ? '/studio' : '/student';
+        const screenTrack = screenStream.getVideoTracks()[0];
+        
+        // Replace video track across all peer connections
+        peerConnections.forEach((pc) => {
+          const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+          if (sender) {
+            sender.replaceTrack(screenTrack);
           }
         });
+
+        if (selfVideo) {
+          selfVideo.srcObject = screenStream;
+        }
+
+        isScreenSharing = true;
+        dockScreenBtn.classList.add('active');
+        dockScreenBtn.style.background = '#10B981';
+        selfTile.classList.add('screenshare-active');
+
+        screenTrack.onended = () => {
+          stopScreenSharing();
+        };
+
+        broadcastMediaState();
+        showToast('Screen sharing started');
+      } catch (err) {
+        console.warn('Screen share cancelled or failed:', err);
       }
-    },
-
-    // ─────────────────────────────────────────────────────────────
-    // 4. IN-CLASS CHAT
-    // ─────────────────────────────────────────────────────────────
-    initChat: function () {
-      const form = document.getElementById('inClassChatForm');
-      const input = document.getElementById('inClassChatInput');
-      if (!form || !input) return;
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const msg = input.value.trim();
-        if (!msg) return;
-
-        this.appendChatMessage(this.config.userName || 'You', msg);
-        input.value = '';
-      });
-    },
-
-    appendChatMessage: function (sender, text) {
-      const chatBody = document.getElementById('inClassChatBody');
-      if (!chatBody) return;
-
-      const div = document.createElement('div');
-      div.className = 'ls-chat-msg';
-      div.innerHTML = `<div class="ls-chat-sender">${sender}</div><div class="ls-chat-text">${text}</div>`;
-      chatBody.appendChild(div);
-      chatBody.scrollTop = chatBody.scrollHeight;
-    },
-
-    // ─────────────────────────────────────────────────────────────
-    // 5. LIVE RECORDING TIMER
-    // ─────────────────────────────────────────────────────────────
-    initTimer: function () {
-      const timerEl = document.getElementById('liveTimerDisplay');
-      if (!timerEl) return;
-
-      let seconds = 0;
-      setInterval(() => {
-        seconds++;
-        const hrs = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        timerEl.textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-      }, 1000);
-    },
-
-    showToast: function (msg) {
-      const toast = document.createElement('div');
-      toast.style.position = 'fixed';
-      toast.style.bottom = '90px';
-      toast.style.left = '50%';
-      toast.style.transform = 'translateX(-50%)';
-      toast.style.background = '#0056D2';
-      toast.style.color = '#FFFFFF';
-      toast.style.padding = '10px 20px';
-      toast.style.borderRadius = '9999px';
-      toast.style.fontWeight = '600';
-      toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
-      toast.style.zIndex = '100000';
-      toast.style.animation = 'fadeIn 0.2s ease';
-      toast.textContent = msg;
-
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
     }
+  }
+
+  function stopScreenSharing() {
+    if (screenStream) {
+      screenStream.getTracks().forEach(t => t.stop());
+      screenStream = null;
+    }
+
+    if (localStream) {
+      const camTrack = localStream.getVideoTracks()[0];
+      peerConnections.forEach((pc) => {
+        const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender && camTrack) {
+          sender.replaceTrack(camTrack);
+        }
+      });
+
+      if (selfVideo) {
+        selfVideo.srcObject = localStream;
+      }
+    }
+
+    isScreenSharing = false;
+    dockScreenBtn.classList.remove('active');
+    dockScreenBtn.style.background = '';
+    selfTile.classList.remove('screenshare-active');
+    broadcastMediaState();
+    showToast('Screen sharing stopped');
+  }
+
+  function toggleHandRaise() {
+    isHandRaised = !isHandRaised;
+    dockHandBtn.classList.toggle('active', isHandRaised);
+    
+    const selfHandIcon = document.getElementById('selfHandIcon');
+    if (selfHandIcon) {
+      selfHandIcon.style.display = isHandRaised ? 'inline-flex' : 'none';
+    }
+
+    if (socket) {
+      socket.emit('toggle-hand', { handRaised: isHandRaised });
+    }
+    showToast(isHandRaised ? 'Hand raised' : 'Hand lowered');
+  }
+
+  function broadcastMediaState() {
+    if (socket) {
+      socket.emit('media-state-change', {
+        isMuted,
+        isVideoOff,
+        isScreenSharing
+      });
+    }
+  }
+
+  function updateSelfMediaUI() {
+    // Update Dock Buttons
+    if (dockMicBtn) {
+      dockMicBtn.classList.toggle('muted', isMuted);
+      dockMicBtn.innerHTML = `<span class="material-symbols-outlined">${isMuted ? 'mic_off' : 'mic'}</span>`;
+      dockMicBtn.style.background = isMuted ? '#EF4444' : '';
+    }
+
+    if (dockCamBtn) {
+      dockCamBtn.classList.toggle('muted', isVideoOff);
+      dockCamBtn.innerHTML = `<span class="material-symbols-outlined">${isVideoOff ? 'videocam_off' : 'videocam'}</span>`;
+      dockCamBtn.style.background = isVideoOff ? '#EF4444' : '';
+    }
+
+    // Update Self Video Card
+    if (selfAvatar) {
+      selfAvatar.style.display = isVideoOff ? 'flex' : 'none';
+    }
+    if (micStatusIcon) {
+      micStatusIcon.textContent = isMuted ? 'mic_off' : 'mic';
+      micStatusIcon.style.color = isMuted ? '#EF4444' : '#10B981';
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 5. UI GRID & PARTICIPANTS TILES
+  // ─────────────────────────────────────────────────────────────
+  function createRemoteVideoTile(socketId, userData) {
+    if (document.getElementById(`tile_${socketId}`)) return;
+
+    const tile = document.createElement('div');
+    tile.className = 'ls-video-tile';
+    tile.id = `tile_${socketId}`;
+    tile.onclick = () => pinTile(socketId);
+
+    const initialLetter = (userData.userName || 'P').charAt(0).toUpperCase();
+
+    tile.innerHTML = `
+      <video id="video_${socketId}" class="ls-video-stream" autoplay playsinline></video>
+      
+      <div id="avatar_${socketId}" class="ls-video-avatar" style="display:${userData.isVideoOff ? 'flex' : 'none'};">
+        <span>${initialLetter}</span>
+      </div>
+
+      <div class="ls-tile-overlay-top">
+        <span id="hand_${socketId}" class="ls-tile-hand" style="display:${userData.handRaised ? 'inline-flex' : 'none'};">✋</span>
+        <span class="ls-badge ${userData.role === 'host' ? 'live' : 'scheduled'}" style="font-size:0.68rem;padding:2px 6px;">
+          ${userData.role === 'host' ? 'HOST' : 'STUDENT'}
+        </span>
+      </div>
+
+      <div class="ls-tile-overlay-bottom">
+        <span class="ls-tile-name">${escapeHtml(userData.userName)}</span>
+        <span id="mic_${socketId}" class="material-symbols-outlined text-[16px]" style="color:${userData.isMuted ? '#EF4444' : '#10B981'};">
+          ${userData.isMuted ? 'mic_off' : 'mic'}
+        </span>
+      </div>
+    `;
+
+    videoGrid.appendChild(tile);
+    adjustGridLayout();
+  }
+
+  function removeRemoteVideoTile(socketId) {
+    const tile = document.getElementById(`tile_${socketId}`);
+    if (tile) tile.remove();
+    if (pinnedSocketId === socketId) {
+      pinnedSocketId = null;
+      videoGrid.classList.remove('spotlight-layout');
+    }
+    adjustGridLayout();
+  }
+
+  function updatePeerTileMediaState(socketId, u) {
+    const avatar = document.getElementById(`avatar_${socketId}`);
+    const micIcon = document.getElementById(`mic_${socketId}`);
+    const handIcon = document.getElementById(`hand_${socketId}`);
+
+    if (avatar) avatar.style.display = u.isVideoOff ? 'flex' : 'none';
+    if (micIcon) {
+      micIcon.textContent = u.isMuted ? 'mic_off' : 'mic';
+      micIcon.style.color = u.isMuted ? '#EF4444' : '#10B981';
+    }
+    if (handIcon) {
+      handIcon.style.display = u.handRaised ? 'inline-flex' : 'none';
+    }
+  }
+
+  function pinTile(socketId) {
+    if (pinnedSocketId === socketId) {
+      pinnedSocketId = null;
+      videoGrid.classList.remove('spotlight-layout');
+      document.querySelectorAll('.ls-video-tile').forEach(t => t.classList.remove('pinned'));
+    } else {
+      pinnedSocketId = socketId;
+      videoGrid.classList.add('spotlight-layout');
+      document.querySelectorAll('.ls-video-tile').forEach(t => t.classList.remove('pinned'));
+      const target = socketId === 'self' ? selfTile : document.getElementById(`tile_${socketId}`);
+      if (target) target.classList.add('pinned');
+    }
+  }
+
+  function adjustGridLayout() {
+    const totalTiles = videoGrid.children.length;
+    if (totalTiles <= 1) {
+      videoGrid.style.gridTemplateColumns = '1fr';
+    } else if (totalTiles === 2) {
+      videoGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    } else if (totalTiles <= 4) {
+      videoGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    } else if (totalTiles <= 6) {
+      videoGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    } else {
+      videoGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 6. COLLABORATIVE WHITEBOARD
+  // ─────────────────────────────────────────────────────────────
+  function initWhiteboard() {
+    wbCanvas = document.getElementById('whiteboardCanvas');
+    if (!wbCanvas) return;
+    wbCtx = wbCanvas.getContext('2d');
+
+    resizeWhiteboard();
+    window.addEventListener('resize', resizeWhiteboard);
+
+    // Mouse & Touch events
+    wbCanvas.addEventListener('mousedown', startDrawing);
+    wbCanvas.addEventListener('mousemove', draw);
+    wbCanvas.addEventListener('mouseup', stopDrawing);
+    wbCanvas.addEventListener('mouseout', stopDrawing);
+
+    wbCanvas.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      wbCanvas.dispatchEvent(mouseEvent);
+    });
+
+    wbCanvas.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      wbCanvas.dispatchEvent(mouseEvent);
+      e.preventDefault();
+    });
+
+    wbCanvas.addEventListener('touchend', () => {
+      const mouseEvent = new MouseEvent('mouseup', {});
+      wbCanvas.dispatchEvent(mouseEvent);
+    });
+  }
+
+  function resizeWhiteboard() {
+    if (!wbCanvas) return;
+    const rect = wbCanvas.parentElement.getBoundingClientRect();
+    const tempImage = wbCtx ? wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height) : null;
+    wbCanvas.width = rect.width;
+    wbCanvas.height = rect.height - 56; // minus toolbar
+    if (tempImage && wbCtx) {
+      wbCtx.putImageData(tempImage, 0, 0);
+    }
+  }
+
+  function toggleWhiteboard() {
+    isWhiteboardOpen = !isWhiteboardOpen;
+    if (whiteboardOverlay) {
+      whiteboardOverlay.style.display = isWhiteboardOpen ? 'flex' : 'none';
+    }
+    if (dockWbBtn) {
+      dockWbBtn.classList.toggle('active', isWhiteboardOpen);
+    }
+    if (isWhiteboardOpen) {
+      resizeWhiteboard();
+    }
+  }
+
+  function startDrawing(e) {
+    isDrawing = true;
+    const rect = wbCanvas.getBoundingClientRect();
+    lastX = e.clientX - rect.left;
+    lastY = e.clientY - rect.top;
+  }
+
+  function draw(e) {
+    if (!isDrawing || !wbCtx) return;
+    const rect = wbCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const strokeData = {
+      x0: lastX / wbCanvas.width,
+      y0: lastY / wbCanvas.height,
+      x1: x / wbCanvas.width,
+      y1: y / wbCanvas.height,
+      color: currentTool === 'eraser' ? '#FFFFFF' : currentColor,
+      width: currentTool === 'eraser' ? 24 : (currentTool === 'highlighter' ? 14 : currentLineWidth),
+      tool: currentTool
+    };
+
+    renderStroke(strokeData);
+
+    // Broadcast stroke to peers in room
+    if (socket) {
+      socket.emit('wb-draw', strokeData);
+    }
+
+    lastX = x;
+    lastY = y;
+  }
+
+  function stopDrawing() {
+    isDrawing = false;
+  }
+
+  function renderStroke(data) {
+    if (!wbCtx || !wbCanvas) return;
+    wbCtx.beginPath();
+    wbCtx.moveTo(data.x0 * wbCanvas.width, data.y0 * wbCanvas.height);
+    wbCtx.lineTo(data.x1 * wbCanvas.width, data.y1 * wbCanvas.height);
+    wbCtx.strokeStyle = data.color;
+    wbCtx.lineWidth = data.width;
+    wbCtx.lineCap = 'round';
+    wbCtx.lineJoin = 'round';
+    if (data.tool === 'highlighter') {
+      wbCtx.globalAlpha = 0.35;
+    } else {
+      wbCtx.globalAlpha = 1.0;
+    }
+    wbCtx.stroke();
+    wbCtx.globalAlpha = 1.0;
+  }
+
+  function renderRemoteWhiteboardStroke(data) {
+    renderStroke(data);
+  }
+
+  function clearWhiteboardCanvas() {
+    if (!wbCtx || !wbCanvas) return;
+    wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
+  }
+
+  function clearWhiteboard() {
+    clearWhiteboardCanvas();
+    if (socket) {
+      socket.emit('wb-clear');
+    }
+    showToast('Whiteboard cleared');
+  }
+
+  function setWhiteboardTool(tool) {
+    currentTool = tool;
+    document.querySelectorAll('.ls-wb-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`wb_${tool}`);
+    if (btn) btn.classList.add('active');
+  }
+
+  function setWhiteboardColor(color) {
+    currentColor = color;
+    currentTool = 'pen';
+    setWhiteboardTool('pen');
+  }
+
+  function saveWhiteboardPNG() {
+    if (!wbCanvas) return;
+    const link = document.createElement('a');
+    link.download = `Librika-Whiteboard-${Date.now()}.png`;
+    link.href = wbCanvas.toDataURL('image/png');
+    link.click();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 7. IN-CLASS CHAT & PARTICIPANTS PANEL
+  // ─────────────────────────────────────────────────────────────
+  function toggleChatPanel() {
+    isChatOpen = !isChatOpen;
+    sidePanel.style.display = (isChatOpen || isParticipantsOpen) ? 'flex' : 'none';
+    dockChatBtn.classList.toggle('active', isChatOpen);
+
+    const chatSection = document.getElementById('chatSection');
+    const participantsSection = document.getElementById('participantsSection');
+    if (chatSection) chatSection.style.display = isChatOpen ? 'flex' : 'none';
+    if (participantsSection && !isParticipantsOpen) participantsSection.style.display = 'none';
+
+    if (isChatOpen) {
+      const badge = document.getElementById('chatUnreadBadge');
+      if (badge) badge.style.display = 'none';
+    }
+  }
+
+  function toggleParticipantsPanel() {
+    isParticipantsOpen = !isParticipantsOpen;
+    sidePanel.style.display = (isChatOpen || isParticipantsOpen) ? 'flex' : 'none';
+    dockParticipantsBtn.classList.toggle('active', isParticipantsOpen);
+
+    const chatSection = document.getElementById('chatSection');
+    const participantsSection = document.getElementById('participantsSection');
+    
+    if (participantsSection) participantsSection.style.display = isParticipantsOpen ? 'flex' : 'none';
+    if (chatSection && !isChatOpen) chatSection.style.display = 'none';
+  }
+
+  function sendChatMessage() {
+    if (!chatInput) return;
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    if (socket) {
+      socket.emit('send-chat', { message: text });
+    }
+    chatInput.value = '';
+  }
+
+  function appendChatMessage(msg) {
+    if (!chatBody) return;
+    const msgEl = document.createElement('div');
+    const isSelf = socket && msg.socketId === socket.id;
+    msgEl.className = `ls-chat-msg ${isSelf ? 'self' : ''}`;
+    
+    msgEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <span class="ls-chat-sender" style="color:${msg.senderRole === 'host' ? '#60A5FA' : '#E2E8F0'};font-weight:600;">
+          ${escapeHtml(msg.senderName)} ${msg.senderRole === 'host' ? '(Host)' : ''}
+        </span>
+        <span style="font-size:0.7rem;color:#64748B;">${msg.timestamp}</span>
+      </div>
+      <div class="ls-chat-text">${escapeHtml(msg.text)}</div>
+    `;
+
+    chatBody.appendChild(msgEl);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function updateParticipantsListUI() {
+    if (!participantsListEl) return;
+    
+    const count = participants.size + 1; // +1 for self
+    if (participantCountEl) participantCountEl.textContent = count;
+
+    let html = `
+      <div class="ls-participant-row self">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="ls-avatar-xs">${(window.ROOM_CONFIG.userName || 'U').charAt(0).toUpperCase()}</div>
+          <div>
+            <div style="font-size:0.88rem;font-weight:600;color:#FFFFFF;">${escapeHtml(window.ROOM_CONFIG.userName)} (You)</div>
+            <div style="font-size:0.72rem;color:#94A3B8;">${window.ROOM_CONFIG.isHost ? 'Meeting Host' : 'Student'}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="material-symbols-outlined text-[16px]" style="color:${isMuted ? '#EF4444' : '#10B981'};">
+            ${isMuted ? 'mic_off' : 'mic'}
+          </span>
+          <span class="material-symbols-outlined text-[16px]" style="color:${isVideoOff ? '#EF4444' : '#10B981'};">
+            ${isVideoOff ? 'videocam_off' : 'videocam'}
+          </span>
+        </div>
+      </div>
+    `;
+
+    participants.forEach((u) => {
+      html += `
+        <div class="ls-participant-row">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="ls-avatar-xs">${(u.userName || 'P').charAt(0).toUpperCase()}</div>
+            <div>
+              <div style="font-size:0.88rem;font-weight:600;color:#FFFFFF;">${escapeHtml(u.userName)}</div>
+              <div style="font-size:0.72rem;color:#94A3B8;">${u.role === 'host' ? 'Host' : 'Participant'}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${u.handRaised ? '<span style="font-size:14px;">✋</span>' : ''}
+            <span class="material-symbols-outlined text-[16px]" style="color:${u.isMuted ? '#EF4444' : '#10B981'};">
+              ${u.isMuted ? 'mic_off' : 'mic'}
+            </span>
+            <span class="material-symbols-outlined text-[16px]" style="color:${u.isVideoOff ? '#EF4444' : '#10B981'};">
+              ${u.isVideoOff ? 'videocam_off' : 'videocam'}
+            </span>
+          </div>
+        </div>
+      `;
+    });
+
+    participantsListEl.innerHTML = html;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 8. HOST MODERATION & MEETING LIFECYCLE
+  // ─────────────────────────────────────────────────────────────
+  function hostMuteAll() {
+    if (socket && window.ROOM_CONFIG.isHost) {
+      socket.emit('host-mute-all');
+      showToast('Muted all participants');
+    }
+  }
+
+  function leaveMeeting() {
+    if (window.ROOM_CONFIG.isHost) {
+      if (confirm('Are you sure you want to end this meeting for all participants?')) {
+        if (socket) socket.emit('host-end-meeting');
+        cleanupAndExit();
+      }
+    } else {
+      if (confirm('Leave classroom?')) {
+        cleanupAndExit();
+      }
+    }
+  }
+
+  function cleanupAndExit() {
+    if (localStream) {
+      localStream.getTracks().forEach(t => t.stop());
+    }
+    if (screenStream) {
+      screenStream.getTracks().forEach(t => t.stop());
+    }
+    if (socket) {
+      socket.disconnect();
+    }
+    window.location.href = window.ROOM_CONFIG.isHost ? '/studio' : '/student';
+  }
+
+  function copyMeetingInvite() {
+    const meetingUrl = window.location.href;
+    const text = `Join Librika Live Classroom:\nCourse: ${window.ROOM_CONFIG.sessionTitle}\nMeeting ID: ${window.ROOM_CONFIG.meetingId}\nJoin Link: ${meetingUrl}`;
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Meeting link copied to clipboard!');
+    }).catch(() => {
+      prompt('Copy meeting link:', meetingUrl);
+    });
+  }
+
+  function showToast(msg) {
+    let toast = document.getElementById('lsClassroomToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'lsClassroomToast';
+      toast.className = 'ls-classroom-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3000);
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Public API Exports for UI Onclick handlers
+  window.LibrikaClassroom = {
+    setTool: setWhiteboardTool,
+    setColor: setWhiteboardColor,
+    clearWhiteboard: clearWhiteboard,
+    saveWhiteboardPNG: saveWhiteboardPNG,
+    toggleWhiteboard: toggleWhiteboard,
+    hostMuteAll: hostMuteAll,
+    copyInvite: copyMeetingInvite,
+    pinTile: pinTile
   };
+
 })();

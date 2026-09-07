@@ -17,8 +17,8 @@
 
   <link rel="stylesheet" href="/live-studio.css">
 
-  <!-- Jitsi Meet WebRTC External API -->
-  <script src="https://meet.jit.si/external_api.js"></script>
+  <!-- Socket.IO & Native WebRTC Meet Engine (Zero Jitsi) -->
+  <script src="/socket.io/socket.io.js"></script>
   <script src="/js/live-classroom.js" defer></script>
 </head>
 <body class="ls-body ls-body-dark">
@@ -64,62 +64,113 @@
     </header>
 
     <!-- =========================================================================
-         2. STAGE & WHITEBOARD CANVAS
+         2. STAGE & VIDEO GRID + WHITEBOARD
          ========================================================================= -->
     <div class="ls-room-main">
       
       <div class="ls-stage-area">
-        <!-- Video Conferencing iFrame Container -->
-        <div id="jitsiContainer"></div>
+        
+        <!-- Native WebRTC Multi-Cam Responsive Video Grid -->
+        <div id="videoGrid" class="ls-video-grid">
+          
+          <!-- Self Video Card -->
+          <div id="selfTile" class="ls-video-tile" onclick="LibrikaClassroom.pinTile('self')">
+            <video id="selfVideo" class="ls-video-stream" autoplay playsinline muted></video>
+            
+            <div id="selfAvatar" class="ls-video-avatar" style="display:none;">
+              <span><%= (user.name || 'U').charAt(0).toUpperCase() %></span>
+            </div>
 
-        <!-- Interactive Whiteboard Overlay -->
+            <div class="ls-tile-overlay-top">
+              <span id="selfHandIcon" class="ls-tile-hand" style="display:none;">✋</span>
+              <span class="ls-badge <%= isHost ? 'live' : 'scheduled' %>" style="font-size:0.68rem;padding:2px 6px;">
+                <%= isHost ? 'YOU (HOST)' : 'YOU (STUDENT)' %>
+              </span>
+            </div>
+
+            <div class="ls-tile-overlay-bottom">
+              <span id="selfNameBadge" class="ls-tile-name"><%= user.name %> (You)</span>
+              <span id="micStatusIcon" class="material-symbols-outlined text-[16px]" style="color:#10B981;">mic</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Interactive Collaborative Whiteboard Overlay -->
         <div id="whiteboardOverlay" class="ls-whiteboard-overlay">
           <div class="ls-whiteboard-toolbar">
             <div class="ls-wb-tools">
               <button class="ls-wb-btn active" id="wb_pen" onclick="LibrikaClassroom.setTool('pen')">✏️ Pen</button>
+              <button class="ls-wb-btn" id="wb_highlighter" onclick="LibrikaClassroom.setTool('highlighter')">🖍️ Highlight</button>
               <button class="ls-wb-btn" id="wb_eraser" onclick="LibrikaClassroom.setTool('eraser')">🧹 Eraser</button>
               
-              <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
-                <button onclick="LibrikaClassroom.setColor('#0056D2')" style="width:20px;height:20px;background:#0056D2;border:none;border-radius:50%;cursor:pointer;"></button>
-                <button onclick="LibrikaClassroom.setColor('#EF4444')" style="width:20px;height:20px;background:#EF4444;border:none;border-radius:50%;cursor:pointer;"></button>
-                <button onclick="LibrikaClassroom.setColor('#10B981')" style="width:20px;height:20px;background:#10B981;border:none;border-radius:50%;cursor:pointer;"></button>
-                <button onclick="LibrikaClassroom.setColor('#0F172A')" style="width:20px;height:20px;background:#0F172A;border:none;border-radius:50%;cursor:pointer;"></button>
+              <div style="display:flex;align-items:center;gap:6px;margin-left:12px;">
+                <button onclick="LibrikaClassroom.setColor('#0056D2')" style="width:20px;height:20px;background:#0056D2;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
+                <button onclick="LibrikaClassroom.setColor('#EF4444')" style="width:20px;height:20px;background:#EF4444;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
+                <button onclick="LibrikaClassroom.setColor('#10B981')" style="width:20px;height:20px;background:#10B981;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
+                <button onclick="LibrikaClassroom.setColor('#F59E0B')" style="width:20px;height:20px;background:#F59E0B;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
+                <button onclick="LibrikaClassroom.setColor('#0F172A')" style="width:20px;height:20px;background:#0F172A;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
               </div>
             </div>
 
             <div class="ls-wb-tools">
-              <button class="ls-wb-btn" onclick="LibrikaClassroom.clearWhiteboard()">Clear All</button>
-              <button class="ls-wb-btn" onclick="LibrikaClassroom.saveWhiteboardPNG()">💾 Save Image</button>
+              <button class="ls-wb-btn" onclick="LibrikaClassroom.clearWhiteboard()">Clear Canvas</button>
+              <button class="ls-wb-btn" onclick="LibrikaClassroom.saveWhiteboardPNG()">💾 Save Snapshot</button>
               <button class="ls-wb-btn" style="background:#EF4444;" onclick="LibrikaClassroom.toggleWhiteboard()">✖ Close Board</button>
             </div>
           </div>
           <canvas id="whiteboardCanvas"></canvas>
         </div>
+
       </div>
 
-      <!-- Right Side Panel: Live Chat & Q&A -->
+      <!-- Right Side Panel: Live Chat & Attendees Drawer -->
       <aside id="sidePanel" class="ls-side-panel">
-        <div class="ls-panel-head">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span class="material-symbols-outlined text-[18px]">chat</span>
-            <span>Live Class Chat</span>
+        
+        <!-- Live Chat Section -->
+        <div id="chatSection" style="display:flex;flex-direction:column;height:100%;">
+          <div class="ls-panel-head">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="material-symbols-outlined text-[18px]">chat</span>
+              <span>Live Class Chat</span>
+            </div>
+            <span style="font-size:0.75rem;background:#10B981;color:white;padding:2px 8px;border-radius:9999px;">Active</span>
           </div>
-          <span style="font-size:0.75rem;background:#10B981;color:white;padding:2px 6px;border-radius:9999px;">Online</span>
+
+          <div id="inClassChatBody" class="ls-panel-body">
+            <div class="ls-chat-msg" style="background:rgba(0,86,210,0.15);border-color:#0056D2;">
+              <div class="ls-chat-sender" style="color:#60A5FA;">Librika Live Engine</div>
+              <div class="ls-chat-text">Welcome to the native interactive live room. Chat messages and collaborative whiteboard sync in real-time.</div>
+            </div>
+          </div>
+
+          <form id="inClassChatForm" class="ls-panel-footer">
+            <input type="text" id="inClassChatInput" class="ls-chat-input" placeholder="Type a message or doubt..." autocomplete="off">
+            <button type="submit" class="ls-btn ls-btn-primary" style="padding:0.5rem 0.85rem;">
+              <span class="material-symbols-outlined text-[18px]">send</span>
+            </button>
+          </form>
         </div>
 
-        <div id="inClassChatBody" class="ls-panel-body">
-          <div class="ls-chat-msg" style="background:rgba(0,86,210,0.15);border-color:#0056D2;">
-            <div class="ls-chat-sender" style="color:#60A5FA;">System Concierge</div>
-            <div class="ls-chat-text">Welcome to the live interactive classroom! Feel free to ask questions or raise your hand.</div>
+        <!-- Participants List Section -->
+        <div id="participantsSection" style="display:none;flex-direction:column;height:100%;">
+          <div class="ls-panel-head">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="material-symbols-outlined text-[18px]">group</span>
+              <span>Participants (<span id="participantCountBadge">1</span>)</span>
+            </div>
+            <% if (isHost) { %>
+              <button onclick="LibrikaClassroom.hostMuteAll()" class="ls-btn ls-btn-outline" style="font-size:0.75rem;padding:3px 8px;color:#EF4444;border-color:#EF4444;">
+                Mute All
+              </button>
+            <% } %>
+          </div>
+
+          <div id="participantsList" class="ls-panel-body" style="gap:8px;">
+            <!-- Rendered dynamically by live-classroom.js -->
           </div>
         </div>
 
-        <form id="inClassChatForm" class="ls-panel-footer">
-          <input type="text" id="inClassChatInput" class="ls-chat-input" placeholder="Type a message or question..." autocomplete="off">
-          <button type="submit" class="ls-btn ls-btn-primary" style="padding:0.5rem 0.85rem;">
-            <span class="material-symbols-outlined text-[18px]">send</span>
-          </button>
-        </form>
       </aside>
 
     </div>
@@ -129,23 +180,44 @@
          ========================================================================= -->
     <footer class="ls-room-dock">
       
+      <!-- Microphone Toggle -->
+      <button id="dockMicBtn" class="ls-dock-btn" title="Toggle Microphone (Mute/Unmute)">
+        <span class="material-symbols-outlined">mic</span>
+      </button>
+
+      <!-- Camera Toggle -->
+      <button id="dockCamBtn" class="ls-dock-btn" title="Toggle Camera (On/Off)">
+        <span class="material-symbols-outlined">videocam</span>
+      </button>
+
+      <!-- Screen Share -->
+      <button id="dockScreenBtn" class="ls-dock-btn" title="Share Screen">
+        <span class="material-symbols-outlined">present_to_all</span>
+      </button>
+
       <!-- Interactive Whiteboard Toggle -->
-      <button id="dockWhiteboardBtn" class="ls-dock-btn" title="Toggle Collaborative Whiteboard">
+      <button id="dockWhiteboardBtn" class="ls-dock-btn" title="Collaborative Whiteboard">
         <span class="material-symbols-outlined">draw</span>
+      </button>
+
+      <!-- Raise Hand (Student Interaction) -->
+      <button id="dockHandBtn" class="ls-dock-btn" title="Raise Hand">
+        <span class="material-symbols-outlined">front_hand</span>
       </button>
 
       <!-- In-Class Chat Drawer Toggle -->
       <button id="dockChatBtn" class="ls-dock-btn active" title="Toggle Live Chat">
         <span class="material-symbols-outlined">chat</span>
+        <span id="chatUnreadBadge" style="display:none;position:absolute;top:6px;right:6px;width:8px;height:8px;background:#EF4444;border-radius:50%;"></span>
       </button>
 
-      <!-- Raise Hand (Student Interaction) -->
-      <button id="dockHandBtn" class="ls-dock-btn" title="Raise Hand to Speak">
-        <span class="material-symbols-outlined">front_hand</span>
+      <!-- Participants List Toggle -->
+      <button id="dockParticipantsBtn" class="ls-dock-btn" title="View Participants">
+        <span class="material-symbols-outlined">group</span>
       </button>
 
       <!-- Leave / End Meeting -->
-      <button id="dockLeaveBtn" class="ls-dock-btn danger" title="Leave Classroom">
+      <button id="dockLeaveBtn" class="ls-dock-btn danger" title="Leave or End Meeting">
         <span class="material-symbols-outlined">call_end</span>
       </button>
 
@@ -153,15 +225,16 @@
 
   </div>
 
+  <!-- Room Config for In-House WebRTC Engine -->
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      LibrikaClassroom.init({
-        meetingId: '<%= session.meeting_id %>',
-        userName: '<%= user.name %>',
-        userEmail: '<%= user.email %>',
-        isHost: <%= isHost ? 'true' : 'false' %>
-      });
-    });
+    window.ROOM_CONFIG = {
+      meetingId: '<%= session.meeting_id %>',
+      sessionTitle: '<%= session.title %>',
+      userId: '<%= user.id || session.host_id || "" %>',
+      userName: '<%= user.name %>',
+      userEmail: '<%= user.email %>',
+      isHost: <%= isHost ? 'true' : 'false' %>
+    };
   </script>
 </body>
 </html>

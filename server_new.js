@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const path = require('path');
@@ -11,8 +12,10 @@ const ejsMate = require('ejs-mate');
 const flash = require('connect-flash');
 const expressLayouts = require('express-ejs-layouts');
 const db = require('./db');
+const { initLiveSocket } = require('./services/liveSocket');
 
 const app = express();
+const server = http.createServer(app);
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5001;
 
@@ -456,10 +459,12 @@ app.use((err, req, res, next) => {
   }
 });
 
-// ── Server Startup ──────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`Librika server running on http://localhost:${PORT}`);
+// ── Server Startup & WebRTC Signaling ─────────────────────────────
+initLiveSocket(server, db);
+
+server.listen(PORT, () => {
+  console.log(`Librika server & Live Meeting WebRTC engine running on http://localhost:${PORT}`);
   startJobs();
 });
 
-module.exports = app;
+module.exports = { app, server };
