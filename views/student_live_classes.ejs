@@ -12,279 +12,352 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/coursera-librika.css">
-  <link rel="stylesheet" href="/live-studio.css">
-
   <style>
+    :root {
+      --sp-bg: #f8fafc;
+      --sp-card-bg: #ffffff;
+      --sp-text-dark: #0f172a;
+      --sp-text-mid: #475569;
+      --sp-muted: #94a3b8;
+      --sp-border: #e2e8f0;
+      --sp-accent: #6366f1;
+      --sp-accent-2: #a855f7;
+    }
+
+    *, *::before, *::after { box-sizing: border-box !important; }
+
     body {
-      background: #F8FAFC;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      margin: 0;
-      padding: 0;
+      background: #f8fafc !important;
+      color: #0f172a !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
-    .sl-shell {
-      display: flex;
-      min-height: 100vh;
+
+    .st-shell {
+      display: flex !important;
+      min-height: 100vh !important;
+      background: #f8fafc !important;
+      width: 100% !important;
+      position: relative !important;
     }
-    .sl-main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      margin-left: 240px;
-      width: calc(100% - 240px);
-      padding-bottom: 40px;
+
+    .st-main {
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 100vh !important;
+      margin-left: 240px !important;
+      width: calc(100% - 240px) !important;
+      background: #f8fafc !important;
+      padding-bottom: 40px !important;
     }
-    @media (max-width: 600px) {
-      .sl-main {
-        margin-left: 0;
-        width: 100%;
-      }
+    @media (max-width: 599px) {
+      .st-main { margin-left: 0 !important; width: 100vw !important; }
     }
-    .sl-topbar {
-      background: #FFFFFF;
-      border-bottom: 1px solid #E2E8F0;
-      padding: 0.85rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 50;
+
+    .st-topbar {
+      background: #ffffff !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+      padding: 0.85rem 1.5rem !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 100 !important;
+      gap: 12px !important;
     }
-    .sl-hero {
-      background: linear-gradient(135deg, #00255D, #0056D2);
-      color: #FFFFFF;
-      padding: 2.25rem 2rem;
-      border-radius: 16px;
-      margin: 1.5rem 1.5rem 2rem 1.5rem;
-      box-shadow: 0 10px 25px rgba(0, 86, 210, 0.15);
-      position: relative;
-      overflow: hidden;
+
+    .st-brand-title {
+      font-family: 'Outfit', sans-serif !important;
+      font-size: 1.15rem !important;
+      font-weight: 800 !important;
+      color: #0f172a !important;
     }
-    .sl-hero-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.85rem;
-      font-weight: 800;
-      margin: 0 0 8px 0;
+
+    .st-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      padding: 8px 16px !important;
+      border-radius: 12px !important;
+      font-size: 0.85rem !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      text-decoration: none !important;
+      border: none !important;
+      transition: all 0.2s ease !important;
     }
-    .sl-hero-desc {
-      font-size: 0.95rem;
-      color: #E2E8F0;
-      max-width: 650px;
-      margin: 0;
-      line-height: 1.5;
+    .st-btn-primary {
+      background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25) !important;
     }
-    .sl-section {
-      padding: 0 1.5rem;
-      margin-bottom: 2.5rem;
+    .st-btn-live {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
     }
-    .sl-section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.25rem;
+    .st-btn-live:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4) !important;
     }
-    .sl-section-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #0F172A;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+
+    .st-content {
+      padding: 1.5rem !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 1.5rem !important;
     }
-    .sl-batch-card {
-      background: #FFFFFF;
-      border: 1px solid #E2E8F0;
-      border-radius: 14px;
-      padding: 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.25rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-      margin-bottom: 1rem;
+
+    /* Hero Banner */
+    .st-hero-banner {
+      background: linear-gradient(135deg, #1e1b4b, #4338ca) !important;
+      color: #ffffff !important;
+      border-radius: 18px !important;
+      padding: 1.75rem !important;
+      box-shadow: 0 4px 20px rgba(67, 56, 202, 0.2) !important;
+      position: relative !important;
+      overflow: hidden !important;
     }
-    .sl-batch-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-      border-color: #0056D2;
+    .st-hero-banner h1 {
+      font-family: 'Outfit', sans-serif !important;
+      font-size: 1.6rem !important;
+      font-weight: 800 !important;
+      margin: 0 0 6px 0 !important;
     }
-    .sl-batch-info {
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
-      flex-grow: 1;
+    .st-hero-banner p {
+      margin: 0 !important;
+      font-size: 0.92rem !important;
+      color: #c7d2fe !important;
+      max-width: 650px !important;
+      line-height: 1.45 !important;
     }
-    .sl-batch-date-pill {
-      background: #EBF3FF;
-      color: #0056D2;
-      border-radius: 12px;
-      padding: 10px 14px;
-      text-align: center;
-      min-width: 70px;
-      font-weight: 700;
+
+    /* Live Batch Cards */
+    .st-live-card {
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 16px !important;
+      padding: 1.25rem !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 1rem !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
     }
-    .sl-batch-date-pill .day {
-      font-size: 1.35rem;
-      display: block;
-      line-height: 1;
+    .st-live-card:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06) !important;
+      border-color: #6366f1 !important;
     }
-    .sl-batch-date-pill .month {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-top: 2px;
-      display: block;
+    .st-date-badge {
+      background: #eef2ff !important;
+      color: #4f46e5 !important;
+      border-radius: 12px !important;
+      padding: 10px 14px !important;
+      text-align: center !important;
+      min-width: 65px !important;
+      font-weight: 800 !important;
     }
-    .sl-batch-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #0F172A;
-      margin: 0 0 4px 0;
+    .st-date-badge .day {
+      font-size: 1.4rem !important;
+      line-height: 1 !important;
+      display: block !important;
     }
-    .sl-batch-meta {
-      font-size: 0.82rem;
-      color: #64748B;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+    .st-date-badge .month {
+      font-size: 0.72rem !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      display: block !important;
+      margin-top: 2px !important;
+    }
+
+    /* Course Cards Grid */
+    .st-course-grid {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 1.25rem !important;
+    }
+    @media (min-width: 650px) {
+      .st-course-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+    @media (min-width: 1050px) {
+      .st-course-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    }
+
+    .st-course-item {
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    .st-course-item:hover {
+      transform: translateY(-3px) !important;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+    }
+    .st-course-thumb {
+      width: 100% !important;
+      aspect-ratio: 16 / 9 !important;
+      object-fit: cover !important;
+      background: #1e293b !important;
+    }
+    .st-course-body {
+      padding: 1.25rem !important;
+      display: flex !important;
+      flex-direction: column !important;
+      flex-grow: 1 !important;
     }
   </style>
 </head>
 <body>
 
-  <div class="sl-shell">
-    <!-- Student Navigation Sidebar -->
+  <div class="st-shell">
+    
+    <!-- Sidebar Navigation -->
     <%- include('partials/student_sidebar', { active: 'live_classes', session: session }) %>
 
-    <main class="sl-main">
+    <main class="st-main">
       
-      <!-- Top Bar -->
-      <header class="sl-topbar">
+      <!-- Topbar -->
+      <header class="st-topbar">
         <div style="display:flex;align-items:center;gap:12px;">
-          <button class="st-menu-btn" onclick="spOpenSidebar()" style="background:#F1F5F9;border:1px solid #E2E8F0;border-radius:8px;padding:6px;cursor:pointer;">
+          <button class="st-menu-btn" onclick="spOpenSidebar()" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:6px;cursor:pointer;display:flex;align-items:center;">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <span style="font-family:'Outfit', sans-serif;font-weight:800;font-size:1.15rem;color:#0F172A;">Online Learning &amp; Live Classes</span>
+          <span class="st-brand-title">📹 Online Live Classes &amp; Courses</span>
         </div>
 
-        <div style="display:flex;align-items:center;gap:12px;">
-          <a href="/student" class="ls-btn ls-btn-outline" style="padding:6px 12px;font-size:0.85rem;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <a href="/student" class="st-btn" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:6px 12px;font-size:0.82rem;">
             &larr; Dashboard
           </a>
         </div>
       </header>
 
-      <!-- Hero Banner -->
-      <div class="sl-hero">
-        <div style="position:relative;z-index:2;">
-          <h1 class="sl-hero-title">Interactive Live Classes &amp; Online Courses</h1>
-          <p class="sl-hero-desc">
-            Attend live interactive webinars, join teacher classrooms with HD audio/video and collaborative whiteboards, and learn course modules at your own pace.
-          </p>
-        </div>
-      </div>
+      <!-- Content Area -->
+      <div class="st-content">
 
-      <!-- Section 1: Upcoming Live Class Batches -->
-      <section class="sl-section">
-        <div class="sl-section-header">
-          <h2 class="sl-section-title">
-            <span style="color:#EF4444;">🔴</span> Upcoming &amp; Live Batches
-          </h2>
-          <span style="font-size:0.85rem;color:#64748B;"><%= sessions.length %> Scheduled Classes</span>
+        <!-- Hero Header -->
+        <div class="st-hero-banner">
+          <h1>Interactive Live Classes &amp; Video Courses</h1>
+          <p>Attend live webinars and video lectures with teacher audio/video, real-time whiteboards, and lesson materials.</p>
         </div>
 
+        <!-- Section 1: Upcoming Live Classes -->
         <div>
-          <% if (sessions && sessions.length > 0) { %>
-            <% sessions.forEach(s => { 
-                const sDate = s.scheduled_start ? new Date(s.scheduled_start) : new Date();
-                const dayNum = sDate.getDate();
-                const monthStr = sDate.toLocaleString('default', { month: 'short' });
-                const timeStr = sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            %>
-              <div class="sl-batch-card">
-                <div class="sl-batch-info">
-                  <div class="sl-batch-date-pill">
-                    <span class="day"><%= dayNum %></span>
-                    <span class="month"><%= monthStr %></span>
-                  </div>
-                  <div>
-                    <h3 class="sl-batch-title"><%= s.title %></h3>
-                    <div class="sl-batch-meta">
-                      <span>📚 <strong><%= s.course_title || 'General Masterclass' %></strong></span>
-                      <span>👨‍🏫 Host: <strong><%= s.instructor_name || s.host_name || 'Faculty Instructor' %></strong></span>
-                      <span>⏰ <strong><%= timeStr %></strong> (<%= s.duration_minutes || 60 %> mins)</span>
-                      <span class="ls-meeting-id-pill" style="font-size:0.75rem;">ID: <%= s.meeting_id %></span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <h2 style="font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:8px;">
+              <span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;box-shadow:0 0 8px #ef4444;"></span>
+              Upcoming &amp; Live Batches
+            </h2>
+            <span style="font-size:0.82rem;font-weight:700;color:#64748b;"><%= sessions.length %> Scheduled</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <% if (sessions && sessions.length > 0) { %>
+              <% sessions.forEach(s => { 
+                  const sDate = s.scheduled_start ? new Date(s.scheduled_start) : new Date();
+                  const dayNum = sDate.getDate();
+                  const monthStr = sDate.toLocaleString('default', { month: 'short' });
+                  const timeStr = sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              %>
+                <div class="st-live-card">
+                  <div style="display:flex;align-items:center;gap:14px;flex-grow:1;">
+                    <div class="st-date-badge">
+                      <span class="day"><%= dayNum %></span>
+                      <span class="month"><%= monthStr %></span>
+                    </div>
+                    <div>
+                      <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 4px 0;"><%= s.title %></h3>
+                      <div style="font-size:0.8rem;color:#64748b;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <span>📚 <strong><%= s.course_title || 'Live Masterclass' %></strong></span>
+                        <span>👨‍🏫 Host: <strong><%= s.instructor_name || s.host_name || 'Faculty' %></strong></span>
+                        <span>⏰ <strong><%= timeStr %></strong> (<%= s.duration_minutes || 60 %> mins)</span>
+                        <span style="background:#f1f5f9;color:#334155;padding:2px 6px;border-radius:6px;font-size:0.75rem;font-weight:700;">ID: <%= s.meeting_id %></span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <a href="/live/<%= s.meeting_id %>" class="ls-btn ls-btn-live" style="padding:8px 18px;font-size:0.9rem;border-radius:9999px;">
-                    <span class="material-symbols-outlined text-[18px]">videocam</span> Join Live Class
-                  </a>
-                </div>
-              </div>
-            <% }); %>
-          <% } else { %>
-            <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:3rem 1.5rem;text-align:center;color:#64748B;">
-              <span class="material-symbols-outlined text-[44px]" style="color:#94A3B8;margin-bottom:8px;display:block;">event_available</span>
-              No live classes scheduled for today. Check back soon or browse self-paced video courses below.
-            </div>
-          <% } %>
-        </div>
-      </section>
-
-      <!-- Section 2: Course Catalog & Video Lectures (Teachable / Classplus Style) -->
-      <section class="sl-section">
-        <div class="sl-section-header">
-          <h2 class="sl-section-title">
-            <span>📚</span> Available Video Courses &amp; Modules
-          </h2>
-          <span style="font-size:0.85rem;color:#64748B;"><%= courses.length %> Total Courses</span>
-        </div>
-
-        <div class="ls-course-grid">
-          <% if (courses && courses.length > 0) { %>
-            <% courses.forEach(c => { %>
-              <div class="ls-course-card" style="background:#FFFFFF;border:1px solid #E2E8F0;">
-                <div class="ls-course-thumb-wrap">
-                  <img src="<%= c.cover_image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60' %>" class="ls-course-thumb" alt="<%= c.title %>">
-                  <span class="ls-course-badge" style="background:rgba(0,86,210,0.9);"><%= c.level || 'All Levels' %></span>
-                </div>
-                <div class="ls-course-body">
-                  <div class="ls-course-category" style="color:#0056D2;"><%= c.category || 'Technology' %></div>
-                  <h3 class="ls-course-title" style="color:#0F172A;"><%= c.title %></h3>
-                  <p class="ls-course-desc" style="color:#64748B;"><%= c.subtitle || c.description || 'Comprehensive curriculum with video lectures and interactive study materials.' %></p>
-                  
-                  <div class="ls-course-meta" style="color:#64748B;border-top-color:#E2E8F0;">
-                    <span>📖 <strong><%= c.module_count || 1 %></strong> Modules</span>
-                    <span>👨‍🏫 <strong><%= c.instructor_name || 'Faculty' %></strong></span>
+                  <div>
+                    <a href="/live/<%= s.meeting_id %>" class="st-btn st-btn-live" style="border-radius:9999px;padding:8px 18px;white-space:nowrap;">
+                      <span class="material-symbols-outlined text-[18px]">videocam</span> Join Live Class
+                    </a>
                   </div>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:3rem 1.5rem;text-align:center;color:#64748b;">
+                <span class="material-symbols-outlined text-[44px]" style="color:#94a3b8;margin-bottom:8px;display:block;">event_available</span>
+                No live classes scheduled at this moment. Browse courses below to start learning.
+              </div>
+            <% } %>
+          </div>
+        </div>
 
-                  <div class="ls-course-actions" style="margin-top:1rem;">
-                    <a href="/courses/<%= c.id %>/learn" class="ls-btn ls-btn-primary" style="width:100%;padding:0.65rem;border-radius:10px;text-align:center;">
+        <!-- Section 2: Online Video Courses & Modules -->
+        <div style="margin-top:1rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <h2 style="font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:8px;">
+              <span>📚</span> Published Online Courses
+            </h2>
+            <span style="font-size:0.82rem;font-weight:700;color:#64748b;"><%= courses.length %> Courses Available</span>
+          </div>
+
+          <div class="st-course-grid">
+            <% if (courses && courses.length > 0) { %>
+              <% courses.forEach(c => { %>
+                <div class="st-course-item">
+                  <div style="position:relative;">
+                    <img src="<%= c.cover_image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60' %>" class="st-course-thumb" alt="<%= c.title %>">
+                    <span style="position:absolute;top:10px;right:10px;background:rgba(15,23,42,0.85);color:#ffffff;font-size:0.72rem;font-weight:700;padding:3px 8px;border-radius:6px;backdrop-filter:blur(4px);">
+                      <%= c.level || 'All Levels' %>
+                    </span>
+                  </div>
+                  
+                  <div class="st-course-body">
+                    <div style="font-size:0.75rem;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">
+                      <%= c.category || 'Technology' %>
+                    </div>
+                    <h3 style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:800;color:#0f172a;margin:0 0 6px 0;line-height:1.3;">
+                      <%= c.title %>
+                    </h3>
+                    <p style="font-size:0.84rem;color:#64748b;margin:0 0 12px 0;line-height:1.45;flex-grow:1;">
+                      <%= c.subtitle || c.description || 'Comprehensive curriculum with video lectures and interactive study materials.' %>
+                    </p>
+
+                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;color:#64748b;padding-top:10px;border-top:1px solid #f1f5f9;margin-bottom:12px;">
+                      <span>📖 <strong><%= c.module_count || 1 %></strong> Modules</span>
+                      <span>👨‍🏫 <strong><%= c.instructor_name || 'Faculty' %></strong></span>
+                    </div>
+
+                    <a href="/courses/<%= c.id %>/learn" class="st-btn st-btn-primary" style="width:100%;border-radius:10px;">
                       <span class="material-symbols-outlined text-[18px]">play_circle</span> Take Online Course
                     </a>
                   </div>
                 </div>
+              <% }); %>
+            <% } else { %>
+              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:3rem 1.5rem;text-align:center;color:#64748b;grid-column:1/-1;">
+                <span class="material-symbols-outlined text-[44px]" style="color:#94a3b8;margin-bottom:8px;display:block;">school</span>
+                No online courses published yet. Check back soon!
               </div>
-            <% }); %>
-          <% } else { %>
-            <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:3rem 1.5rem;text-align:center;color:#64748B;grid-column:1/-1;">
-              <span class="material-symbols-outlined text-[44px]" style="color:#94A3B8;margin-bottom:8px;display:block;">school</span>
-              No online courses published yet. Check back soon!
-            </div>
-          <% } %>
+            <% } %>
+          </div>
         </div>
-      </section>
+
+      </div>
 
     </main>
   </div>

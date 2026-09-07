@@ -225,6 +225,14 @@ router.get('/', studentOnly, async (req, res) => {
     const schoolName = req.session.school_name || 'E-Pathshala Network';
     const demoMode = req.session.demo_mode;
 
+    const liveSessionsRes = await pool.query(
+      `SELECT s.*, c.title as course_title, c.instructor_name, c.category as course_category 
+       FROM live_sessions s 
+       LEFT JOIN live_courses c ON s.course_id = c.id 
+       ORDER BY s.scheduled_start ASC LIMIT 3`
+    ).catch(() => ({ rows: [] }));
+    const liveSessions = liveSessionsRes.rows || [];
+
     res.render('student', {
       title: 'Student Portal - E-Pathshala Network',
       transactions,
@@ -235,6 +243,7 @@ router.get('/', studentOnly, async (req, res) => {
       school_name: schoolName,
       returned_transactions: returnedTxs,
       digital_progress: digitalProgress,
+      live_sessions: liveSessions,
       school_perms: {},
     });
   } catch (err) {
