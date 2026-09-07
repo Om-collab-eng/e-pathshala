@@ -23,6 +23,8 @@ router.get('/join/:token', (req, res) => {
 });
 
 // ── 4. Student Course Learning Player & Hub (Teachable / Classplus) ───────────
+router.get('/student/live-classes', liveController.getStudentLiveClasses);
+router.get('/student/courses', liveController.getStudentLiveClasses);
 router.get('/courses/:id/learn', liveController.getCoursePlayer);
 router.post('/courses/:id/enroll', liveController.postEnrollStudent);
 

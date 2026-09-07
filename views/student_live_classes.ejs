@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/coursera-librika.css">
+  <link rel="stylesheet" href="/live-studio.css">
+
+  <style>
+    body {
+      background: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .sl-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sl-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-left: 240px;
+      width: calc(100% - 240px);
+      padding-bottom: 40px;
+    }
+    @media (max-width: 600px) {
+      .sl-main {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+    .sl-topbar {
+      background: #FFFFFF;
+      border-bottom: 1px solid #E2E8F0;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .sl-hero {
+      background: linear-gradient(135deg, #00255D, #0056D2);
+      color: #FFFFFF;
+      padding: 2.25rem 2rem;
+      border-radius: 16px;
+      margin: 1.5rem 1.5rem 2rem 1.5rem;
+      box-shadow: 0 10px 25px rgba(0, 86, 210, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .sl-hero-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+    }
+    .sl-hero-desc {
+      font-size: 0.95rem;
+      color: #E2E8F0;
+      max-width: 650px;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .sl-section {
+      padding: 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .sl-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .sl-section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sl-batch-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      margin-bottom: 1rem;
+    }
+    .sl-batch-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      border-color: #0056D2;
+    }
+    .sl-batch-info {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-grow: 1;
+    }
+    .sl-batch-date-pill {
+      background: #EBF3FF;
+      color: #0056D2;
+      border-radius: 12px;
+      padding: 10px 14px;
+      text-align: center;
+      min-width: 70px;
+      font-weight: 700;
+    }
+    .sl-batch-date-pill .day {
+      font-size: 1.35rem;
+      display: block;
+      line-height: 1;
+    }
+    .sl-batch-date-pill .month {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+      display: block;
+    }
+    .sl-batch-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin: 0 0 4px 0;
+    }
+    .sl-batch-meta {
+      font-size: 0.82rem;
+      color: #64748B;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sl-shell">
+    <!-- Student Navigation Sidebar -->
+    <%- include('partials/student_sidebar', { active: 'live_classes', session: session }) %>
+
+    <main class="sl-main">
+      
+      <!-- Top Bar -->
+      <header class="sl-topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="st-menu-btn" onclick="spOpenSidebar()" style="background:#F1F5F9;border:1px solid #E2E8F0;border-radius:8px;padding:6px;cursor:pointer;">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <span style="font-family:'Outfit', sans-serif;font-weight:800;font-size:1.15rem;color:#0F172A;">Online Learning &amp; Live Classes</span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;">
+          <a href="/student" class="ls-btn ls-btn-outline" style="padding:6px 12px;font-size:0.85rem;">
+            &larr; Dashboard
+          </a>
+        </div>
+      </header>
+
+      <!-- Hero Banner -->
+      <div class="sl-hero">
+        <div style="position:relative;z-index:2;">
+          <h1 class="sl-hero-title">Interactive Live Classes &amp; Online Courses</h1>
+          <p class="sl-hero-desc">
+            Attend live interactive webinars, join teacher classrooms with HD audio/video and collaborative whiteboards, and learn course modules at your own pace.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section 1: Upcoming Live Class Batches -->
+      <section class="sl-section">
+        <div class="sl-section-header">
+          <h2 class="sl-section-title">
+            <span style="color:#EF4444;">🔴</span> Upcoming &amp; Live Batches
+          </h2>
+          <span style="font-size:0.85rem;color:#64748B;"><%= sessions.length %> Scheduled Classes</span>
+        </div>
+
+        <div>
+          <% if (sessions && sessions.length > 0) { %>
+            <% sessions.forEach(s => { 
+                const sDate = s.scheduled_start ? new Date(s.scheduled_start) : new Date();
+                const dayNum = sDate.getDate();
+                const monthStr = sDate.toLocaleString('default', { month: 'short' });
+                const timeStr = sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            %>
+              <div class="sl-batch-card">
+                <div class="sl-batch-info">
+                  <div class="sl-batch-date-pill">
+                    <span class="day"><%= dayNum %></span>
+                    <span class="month"><%= monthStr %></span>
+                  </div>
+                  <div>
+                    <h3 class="sl-batch-title"><%= s.title %></h3>
+                    <div class="sl-batch-meta">
+                      <span>📚 <strong><%= s.course_title || 'General Masterclass' %></strong></span>
+                      <span>👨‍🏫 Host: <strong><%= s.instructor_name || s.host_name || 'Faculty Instructor' %></strong></span>
+                      <span>⏰ <strong><%= timeStr %></strong> (<%= s.duration_minutes || 60 %> mins)</span>
+                      <span class="ls-meeting-id-pill" style="font-size:0.75rem;">ID: <%= s.meeting_id %></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <a href="/live/<%= s.meeting_id %>" class="ls-btn ls-btn-live" style="padding:8px 18px;font-size:0.9rem;border-radius:9999px;">
+                    <span class="material-symbols-outlined text-[18px]">videocam</span> Join Live Class
+                  </a>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:3rem 1.5rem;text-align:center;color:#64748B;">
+              <span class="material-symbols-outlined text-[44px]" style="color:#94A3B8;margin-bottom:8px;display:block;">event_available</span>
+              No live classes scheduled for today. Check back soon or browse self-paced video courses below.
+            </div>
+          <% } %>
+        </div>
+      </section>
+
+      <!-- Section 2: Course Catalog & Video Lectures (Teachable / Classplus Style) -->
+      <section class="sl-section">
+        <div class="sl-section-header">
+          <h2 class="sl-section-title">
+            <span>📚</span> Available Video Courses &amp; Modules
+          </h2>
+          <span style="font-size:0.85rem;color:#64748B;"><%= courses.length %> Total Courses</span>
+        </div>
+
+        <div class="ls-course-grid">
+          <% if (courses && courses.length > 0) { %>
+            <% courses.forEach(c => { %>
+              <div class="ls-course-card" style="background:#FFFFFF;border:1px solid #E2E8F0;">
+                <div class="ls-course-thumb-wrap">
+                  <img src="<%= c.cover_image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60' %>" class="ls-course-thumb" alt="<%= c.title %>">
+                  <span class="ls-course-badge" style="background:rgba(0,86,210,0.9);"><%= c.level || 'All Levels' %></span>
+                </div>
+                <div class="ls-course-body">
+                  <div class="ls-course-category" style="color:#0056D2;"><%= c.category || 'Technology' %></div>
+                  <h3 class="ls-course-title" style="color:#0F172A;"><%= c.title %></h3>
+                  <p class="ls-course-desc" style="color:#64748B;"><%= c.subtitle || c.description || 'Comprehensive curriculum with video lectures and interactive study materials.' %></p>
+                  
+                  <div class="ls-course-meta" style="color:#64748B;border-top-color:#E2E8F0;">
+                    <span>📖 <strong><%= c.module_count || 1 %></strong> Modules</span>
+                    <span>👨‍🏫 <strong><%= c.instructor_name || 'Faculty' %></strong></span>
+                  </div>
+
+                  <div class="ls-course-actions" style="margin-top:1rem;">
+                    <a href="/courses/<%= c.id %>/learn" class="ls-btn ls-btn-primary" style="width:100%;padding:0.65rem;border-radius:10px;text-align:center;">
+                      <span class="material-symbols-outlined text-[18px]">play_circle</span> Take Online Course
+                    </a>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:3rem 1.5rem;text-align:center;color:#64748B;grid-column:1/-1;">
+              <span class="material-symbols-outlined text-[44px]" style="color:#94A3B8;margin-bottom:8px;display:block;">school</span>
+              No online courses published yet. Check back soon!
+            </div>
+          <% } %>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>

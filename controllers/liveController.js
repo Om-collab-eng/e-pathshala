@@ -16,6 +16,11 @@ function generateMeetingId(prefix = 'LIB') {
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getStudioDashboard = async (req, res) => {
   try {
+    // If student accesses studio, redirect to student-facing live classes hub
+    if (req.session && req.session.role === 'student') {
+      return res.redirect('/student/live-classes');
+    }
+
     const schoolCode = req.session.school_code || 'DPS123';
     const userId = req.session.user_id || 23;
     const userName = req.session.name || 'Instructor';
@@ -87,6 +92,10 @@ exports.getStudioDashboard = async (req, res) => {
 // 2. COURSE BUILDER & CURRICULUM MANAGER
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getNewCourse = (req, res) => {
+  if (req.session && req.session.role === 'student') {
+    return res.redirect('/student/live-classes');
+  }
+
   res.render('live_course_edit', {
     layout: false,
     title: 'Create New Course - Live Studio',
@@ -100,6 +109,9 @@ exports.getNewCourse = (req, res) => {
 };
 
 exports.postCreateCourse = async (req, res) => {
+  if (req.session && req.session.role === 'student') {
+    return res.redirect('/student/live-classes');
+  }
   try {
     const { title, subtitle, description, category, level, price, cover_image, status } = req.body;
     const instructorId = req.session.user_id || 23;
@@ -520,5 +532,51 @@ exports.postEnrollStudent = async (req, res) => {
     res.redirect(`/courses/${courseId}/learn`);
   } catch (err) {
     res.redirect(`/courses/${req.params.id}/learn`);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. STUDENT-FACING LIVE CLASSES & COURSES (LEARNER-ONLY INTERFACE)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getStudentLiveClasses = async (req, res) => {
+  try {
+    const userId = (req.session && req.session.user_id) || 0;
+    const schoolCode = (req.session && req.session.school_code) || 'DPS123';
+
+    // 1. Fetch upcoming / active live sessions
+    const sessionsRes = await query(
+      `SELECT s.*, c.title as course_title, c.cover_image as course_cover, c.category as course_category, c.instructor_name
+       FROM live_sessions s
+       LEFT JOIN live_courses c ON s.course_id = c.id
+       ORDER BY s.scheduled_start ASC
+       LIMIT 20`
+    ).catch(() => ({ rows: [] }));
+    const sessions = sessionsRes.rows || [];
+
+    // 2. Fetch published courses with module & lesson counts
+    const coursesRes = await query(
+      `SELECT c.*,
+        (SELECT COUNT(*) FROM course_modules m WHERE m.course_id = c.id) as module_count,
+        (SELECT COUNT(*) FROM course_lessons l WHERE l.course_id = c.id) as lesson_count,
+        (SELECT COUNT(*) FROM course_enrollments e WHERE e.course_id = c.id) as student_count,
+        (SELECT COUNT(*) FROM course_enrollments e WHERE e.course_id = c.id AND e.user_id = $1) as is_enrolled
+       FROM live_courses c
+       WHERE c.status = 'Published' OR c.status IS NULL
+       ORDER BY c.created_at DESC`,
+      [userId]
+    ).catch(() => ({ rows: [] }));
+    const courses = coursesRes.rows || [];
+
+    res.render('student_live_classes', {
+      layout: false,
+      title: 'Live Online Classes & Courses - Librika Student Portal',
+      active: 'live_classes',
+      sessions,
+      courses,
+      session: req.session || {}
+    });
+  } catch (err) {
+    console.error('Student live classes error:', err);
+    res.redirect('/student');
   }
 };
