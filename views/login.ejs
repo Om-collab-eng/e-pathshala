@@ -206,6 +206,82 @@
             </button>
         </div>
 
+        <!-- 1-Click Demo Accounts (Same School: DPS123) -->
+        <div class="mb-8 p-4 rounded-xl bg-blue-50 border border-blue-200">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600 text-[20px]">bolt</span>
+                    <span class="font-label-bold text-xs uppercase tracking-wider text-blue-900">Demo Accounts (DPS123)</span>
+                </div>
+                <span class="text-[11px] bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">Click to Auto-Login</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <!-- 1. Super Admin -->
+                <button type="button" onclick="fillDemoCredentials('DPS123', 'superadmin', 'admin123', true)" 
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">
+                            👑 Super Admin
+                        </span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Master Admin</div>
+                        <div class="text-[11px] text-gray-500 font-mono">User: superadmin</div>
+                    </div>
+                </button>
+
+                <!-- 2. Librarian (School Admin) -->
+                <button type="button" onclick="fillDemoCredentials('DPS123', '9898989898', 'libpassword', true)" 
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                            📖 Librarian
+                        </span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Mrs. Sharma</div>
+                        <div class="text-[11px] text-gray-500 font-mono">User: 9898989898</div>
+                    </div>
+                </button>
+
+                <!-- 3. Student 1 -->
+                <button type="button" onclick="fillDemoCredentials('DPS123', '9797979797', 'studentpass1', true)" 
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            🎓 Student 1
+                        </span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Aarav Patel (Gr 10)</div>
+                        <div class="text-[11px] text-gray-500 font-mono">User: 9797979797</div>
+                    </div>
+                </button>
+
+                <!-- 4. Student 2 -->
+                <button type="button" onclick="fillDemoCredentials('DPS123', '9898989696', 'studentpass2', true)" 
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            🎓 Student 2
+                        </span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Diya Sharma (Gr 12)</div>
+                        <div class="text-[11px] text-gray-500 font-mono">User: 9898989696</div>
+                    </div>
+                </button>
+            </div>
+            <div class="mt-2 text-center text-[11px] text-gray-500">
+                School Code: <span class="font-bold text-gray-700">DPS123</span> &bull; All 4 accounts belong to the same school
+            </div>
+        </div>
+
         <% if (typeof error !== 'undefined' && error) { %>
         <div class="mb-6 p-4 rounded-xl bg-error/15 border border-error/30 text-error-container text-sm font-medium text-center">
             <%= error %>
@@ -323,6 +399,29 @@
             if (schoolCodeGroup) schoolCodeGroup.style.display = 'block';
             if (lnkRegisterSchool) lnkRegisterSchool.style.display = 'flex';
             if (lnkRegisterPersonal) lnkRegisterPersonal.style.display = 'none';
+        }
+    }
+
+    function fillDemoCredentials(schoolCode, username, password, autoSubmit) {
+        selectWorkspace('school');
+        const schoolInput = document.getElementById('school_code');
+        const userInput = document.getElementById('username');
+        const passInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const form = document.getElementById('loginForm');
+
+        if (schoolInput) schoolInput.value = schoolCode || '';
+        if (userInput) userInput.value = username || '';
+        if (passInput) passInput.value = password || '';
+
+        if (autoSubmit && form) {
+            if (loginBtn) {
+                loginBtn.innerHTML = '<span class="font-label-bold text-white">Logging in as demo account...</span>';
+                loginBtn.style.opacity = '0.85';
+            }
+            setTimeout(() => {
+                form.submit();
+            }, 250);
         }
     }
 
