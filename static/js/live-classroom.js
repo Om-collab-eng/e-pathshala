@@ -6,14 +6,28 @@
 (function() {
   'use strict';
 
-  // Reliable Public WebRTC STUN & Turn Servers
+  // Robust STUN & Free Public OpenRelay TURN Servers for 100% NAT/Firewall Traversal
   const ICE_SERVERS = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' }
+      { urls: 'stun:stun.relay.metered.ca:80' },
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
     ]
   };
 
@@ -67,6 +81,7 @@
     initTimer();
     initWhiteboard();
     bindDockEvents();
+    initGlobalAudioUnlock();
     
     // 1. Capture local audio/video media FIRST so tracks are ready before signaling
     await startLocalMedia();
@@ -114,6 +129,53 @@
     }, 1000);
   }
 
+  function initGlobalAudioUnlock() {
+    const unlock = () => {
+      document.querySelectorAll('audio').forEach(a => {
+        if (a.paused && a.srcObject) {
+          a.play().catch(() => {});
+        }
+      });
+      const prompt = document.getElementById('lsAudioUnlockBanner');
+      if (prompt) prompt.remove();
+    };
+
+    window.addEventListener('click', unlock, { passive: true });
+    window.addEventListener('keydown', unlock, { passive: true });
+    window.addEventListener('touchstart', unlock, { passive: true });
+  }
+
+  function showAudioUnlockPrompt() {
+    if (document.getElementById('lsAudioUnlockBanner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'lsAudioUnlockBanner';
+    banner.style.cssText = `
+      position: fixed;
+      top: 65px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0056D2;
+      color: #FFFFFF;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,86,210,0.5);
+      z-index: 10000;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: bounce 1s infinite alternate;
+    `;
+    banner.innerHTML = `<span>🔊 Click anywhere to unmute classroom audio</span>`;
+    banner.onclick = () => {
+      document.querySelectorAll('audio').forEach(a => a.play().catch(() => {}));
+      banner.remove();
+    };
+    document.body.appendChild(banner);
+  }
+
   // ─────────────────────────────────────────────────────────────
   // 2. LOCAL MEDIA CAPTURE
   // ─────────────────────────────────────────────────────────────
@@ -134,7 +196,7 @@
 
       if (selfVideo) {
         selfVideo.srcObject = localStream;
-        selfVideo.muted = true; // prevent local audio feedback echo
+        selfVideo.muted = true; // prevent local feedback echo
         selfVideo.play().catch(() => {});
       }
     } catch (err) {
@@ -171,6 +233,24 @@
     } catch (e) {
       return new MediaStream([videoTrack]);
     }
+  }
+
+  function getActiveVideoTrack() {
+    if (isScreenSharing && screenStream) {
+      const st = screenStream.getVideoTracks()[0];
+      if (st) return st;
+    }
+    if (localStream) {
+      return localStream.getVideoTracks()[0] || null;
+    }
+    return null;
+  }
+
+  function getActiveAudioTrack() {
+    if (localStream) {
+      return localStream.getAudioTracks()[0] || null;
+    }
+    return null;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -333,6 +413,16 @@
       clearWhiteboardCanvas();
     });
 
+    // Collaborative Whiteboard Opened/Closed by Host
+    socket.on('wb-toggle', ({ isOpen, senderName, senderRole }) => {
+      if (isOpen && !isWhiteboardOpen) {
+        openWhiteboardOverlay();
+        showToast(`✏️ ${senderName} opened the Whiteboard`);
+      } else if (!isOpen && isWhiteboardOpen && senderRole === 'host') {
+        closeWhiteboardOverlay();
+      }
+    });
+
     // Host Force Mute
     socket.on('force-mute', () => {
       if (!window.ROOM_CONFIG.isHost) {
@@ -388,11 +478,16 @@
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
 
-    // Add local tracks (Audio & Video)
-    if (localStream) {
-      localStream.getTracks().forEach(track => {
-        pc.addTrack(track, localStream);
-      });
+    // Add active local tracks (Audio & Camera or Screen)
+    const audioTrack = getActiveAudioTrack();
+    if (audioTrack && localStream) {
+      pc.addTrack(audioTrack, localStream);
+    }
+
+    const videoTrack = getActiveVideoTrack();
+    if (videoTrack) {
+      const srcStream = (isScreenSharing && screenStream) ? screenStream : localStream;
+      if (srcStream) pc.addTrack(videoTrack, srcStream);
     }
 
     // ICE Candidate Handler
@@ -405,22 +500,41 @@
       }
     };
 
-    // Remote Track Arrival (Video / Audio stream)
+    // Remote Track Arrival (Audio / Video streams)
     pc.ontrack = (event) => {
       console.log('Received remote track from:', targetSocketId, event.track.kind);
-      let stream = remoteStreams.get(targetSocketId);
+      
+      // 1. Get or create unified MediaStream
+      let stream = (event.streams && event.streams[0]) ? event.streams[0] : remoteStreams.get(targetSocketId);
       if (!stream) {
         stream = new MediaStream();
-        remoteStreams.set(targetSocketId, stream);
       }
-      
-      stream.addTrack(event.track);
+      if (!stream.getTracks().includes(event.track)) {
+        stream.addTrack(event.track);
+      }
+      remoteStreams.set(targetSocketId, stream);
 
+      // 2. Dedicated Audio Element (Unmuted playback with autoplay fallback)
+      let remoteAudioEl = document.getElementById(`audio_${targetSocketId}`);
+      if (!remoteAudioEl) {
+        remoteAudioEl = document.createElement('audio');
+        remoteAudioEl.id = `audio_${targetSocketId}`;
+        remoteAudioEl.autoplay = true;
+        remoteAudioEl.playsInline = true;
+        document.body.appendChild(remoteAudioEl);
+      }
+      remoteAudioEl.srcObject = stream;
+      remoteAudioEl.play().catch(err => {
+        console.warn('Audio play policy caught:', err);
+        showAudioUnlockPrompt();
+      });
+
+      // 3. Attach to Remote Video Element (Muted so video is never blocked by audio policy)
       const remoteVideoEl = document.getElementById(`video_${targetSocketId}`);
       if (remoteVideoEl) {
         remoteVideoEl.srcObject = stream;
-        remoteVideoEl.muted = false; // UNMUTED so audio is heard clearly
-        remoteVideoEl.play().catch(e => console.warn('Autoplay error:', e));
+        remoteVideoEl.muted = true; // Video element is muted so it decodes video immediately
+        remoteVideoEl.play().catch(e => console.warn('Remote video play error:', e));
       }
     };
 
@@ -457,6 +571,9 @@
     }
     remoteStreams.delete(socketId);
     pendingIceCandidates.delete(socketId);
+
+    const audioEl = document.getElementById(`audio_${socketId}`);
+    if (audioEl) audioEl.remove();
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -491,6 +608,7 @@
       audioTrack.enabled = !isMuted;
       updateSelfMediaUI();
       broadcastMediaState();
+      showToast(isMuted ? 'Microphone muted' : 'Microphone unmuted');
     }
   }
 
@@ -513,6 +631,7 @@
       videoTrack.enabled = !isVideoOff;
       updateSelfMediaUI();
       broadcastMediaState();
+      showToast(isVideoOff ? 'Camera turned off' : 'Camera turned on');
     }
   }
 
@@ -522,7 +641,7 @@
     } else {
       try {
         screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: { cursor: 'always' },
+          video: { cursor: 'always', frameRate: { ideal: 30 } },
           audio: true
         });
 
@@ -538,6 +657,7 @@
 
         if (selfVideo) {
           selfVideo.srcObject = screenStream;
+          selfVideo.style.objectFit = 'contain';
           selfVideo.play().catch(() => {});
         }
 
@@ -551,7 +671,7 @@
         };
 
         broadcastMediaState();
-        showToast('Screen sharing active');
+        showToast('Screen sharing started');
       } catch (err) {
         console.warn('Screen share cancelled:', err);
       }
@@ -575,6 +695,7 @@
 
       if (selfVideo) {
         selfVideo.srcObject = localStream;
+        selfVideo.style.objectFit = 'cover';
         selfVideo.play().catch(() => {});
       }
     }
@@ -584,7 +705,7 @@
     dockScreenBtn.style.background = '';
     selfTile.classList.remove('screenshare-active');
     broadcastMediaState();
-    showToast('Screen sharing ended');
+    showToast('Screen sharing stopped');
   }
 
   function toggleHandRaise() {
@@ -648,7 +769,7 @@
     const initialLetter = (userData.userName || 'P').charAt(0).toUpperCase();
 
     tile.innerHTML = `
-      <video id="video_${socketId}" class="ls-video-stream" autoplay playsinline></video>
+      <video id="video_${socketId}" class="ls-video-stream" autoplay playsinline muted></video>
       
       <div id="avatar_${socketId}" class="ls-video-avatar" style="display:${userData.isVideoOff ? 'flex' : 'none'};">
         <span>${initialLetter}</span>
@@ -677,9 +798,20 @@
       const v = document.getElementById(`video_${socketId}`);
       if (v) {
         v.srcObject = existingStream;
-        v.muted = false;
+        v.muted = true;
         v.play().catch(() => {});
       }
+
+      let a = document.getElementById(`audio_${socketId}`);
+      if (!a) {
+        a = document.createElement('audio');
+        a.id = `audio_${socketId}`;
+        a.autoplay = true;
+        a.playsInline = true;
+        document.body.appendChild(a);
+      }
+      a.srcObject = existingStream;
+      a.play().catch(() => showAudioUnlockPrompt());
     }
 
     adjustGridLayout();
@@ -696,6 +828,8 @@
   }
 
   function updatePeerTileMediaState(socketId, u) {
+    const tile = document.getElementById(`tile_${socketId}`);
+    const video = document.getElementById(`video_${socketId}`);
     const avatar = document.getElementById(`avatar_${socketId}`);
     const micIcon = document.getElementById(`mic_${socketId}`);
     const handIcon = document.getElementById(`hand_${socketId}`);
@@ -707,6 +841,12 @@
     }
     if (handIcon) {
       handIcon.style.display = u.handRaised ? 'inline-flex' : 'none';
+    }
+    if (tile) {
+      tile.classList.toggle('screenshare-active', !!u.isScreenSharing);
+    }
+    if (video) {
+      video.style.objectFit = u.isScreenSharing ? 'contain' : 'cover';
     }
   }
 
@@ -792,17 +932,35 @@
   }
 
   function toggleWhiteboard() {
-    isWhiteboardOpen = !isWhiteboardOpen;
+    if (isWhiteboardOpen) {
+      closeWhiteboardOverlay();
+      if (socket) socket.emit('wb-toggle', { isOpen: false });
+    } else {
+      openWhiteboardOverlay();
+      if (socket) socket.emit('wb-toggle', { isOpen: true });
+    }
+  }
+
+  function openWhiteboardOverlay() {
+    isWhiteboardOpen = true;
     if (whiteboardOverlay) {
-      whiteboardOverlay.style.display = isWhiteboardOpen ? 'flex' : 'none';
+      whiteboardOverlay.style.display = 'flex';
     }
     if (dockWbBtn) {
-      dockWbBtn.classList.toggle('active', isWhiteboardOpen);
+      dockWbBtn.classList.add('active');
     }
-    if (isWhiteboardOpen) {
-      setTimeout(() => {
-        resizeWhiteboard();
-      }, 50);
+    setTimeout(() => {
+      resizeWhiteboard();
+    }, 60);
+  }
+
+  function closeWhiteboardOverlay() {
+    isWhiteboardOpen = false;
+    if (whiteboardOverlay) {
+      whiteboardOverlay.style.display = 'none';
+    }
+    if (dockWbBtn) {
+      dockWbBtn.classList.remove('active');
     }
   }
 

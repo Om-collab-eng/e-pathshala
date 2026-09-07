@@ -174,6 +174,16 @@ function initLiveSocket(httpServer, db) {
       }
     });
 
+    socket.on('wb-toggle', ({ isOpen }) => {
+      if (currentMeetingId) {
+        socket.to(currentMeetingId).emit('wb-toggle', {
+          isOpen,
+          senderName: currentUserData ? currentUserData.userName : 'Host',
+          senderRole: currentUserData ? currentUserData.role : 'student'
+        });
+      }
+    });
+
     // 7. Host Moderation Controls
     socket.on('host-mute-all', () => {
       if (currentUserData && (currentUserData.role === 'host' || currentUserData.role === 'admin' || currentUserData.role === 'teacher')) {
