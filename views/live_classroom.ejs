@@ -57,9 +57,18 @@
           <span class="material-symbols-outlined text-[16px]">share</span> Copy Link
         </button>
 
-        <span class="ls-badge <%= isHost ? 'live' : 'scheduled' %>">
-          <%= isHost ? 'HOST' : 'STUDENT' %>
-        </span>
+        <% if (isHost) { %>
+          <span class="ls-badge live" style="background:#10B981;font-weight:700;letter-spacing:0.5px;">
+            👑 HOST (ORGANIZER)
+          </span>
+        <% } else { %>
+          <a href="?role=host" class="ls-btn ls-btn-outline" style="color:#60A5FA;border-color:#3B82F6;background:#1E293B;padding:4px 10px;font-size:0.75rem;" title="Are you the instructor? Click to join as Host">
+            👑 Switch to Host
+          </a>
+          <span class="ls-badge scheduled">
+            STUDENT
+          </span>
+        <% } %>
       </div>
     </header>
 

@@ -100,8 +100,8 @@
                       <button onclick="copyJoinLink('<%= s.meeting_id %>')" class="ls-btn ls-btn-outline" style="padding:4px 8px;font-size:0.8rem;" title="Copy Shareable Link">
                         📋 Copy
                       </button>
-                      <a href="/live/<%= s.meeting_id %>" class="ls-btn ls-btn-primary" style="padding:4px 10px;font-size:0.82rem;">
-                        Launch &rarr;
+                      <a href="/live/<%= s.meeting_id %>?role=host" class="ls-btn ls-btn-primary" style="padding:4px 10px;font-size:0.82rem;">
+                        Launch as Host &rarr;
                       </a>
                     </div>
                   </td>
@@ -219,7 +219,7 @@
         code += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       const randomId = 'LIB-' + code.slice(0, 3) + '-' + code.slice(3);
-      window.location.href = '/live/' + randomId;
+      window.location.href = '/live/' + randomId + '?role=host';
     }
   </script>
 </body>

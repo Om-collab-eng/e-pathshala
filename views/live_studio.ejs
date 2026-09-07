@@ -193,8 +193,8 @@
                     </button>
                   </td>
                   <td style="text-align:right;">
-                    <a href="/live/<%= s.meeting_id %>" class="ls-btn ls-btn-primary" style="padding:6px 14px;font-size:0.85rem;">
-                      <span class="material-symbols-outlined text-[16px]">videocam</span> Join Class
+                    <a href="/live/<%= s.meeting_id %>?role=host" class="ls-btn ls-btn-primary" style="padding:6px 14px;font-size:0.85rem;">
+                      <span class="material-symbols-outlined text-[16px]">videocam</span> Start as Host
                     </a>
                   </td>
                 </tr>
@@ -274,7 +274,7 @@
         code += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       const randomId = 'LIB-' + code.slice(0, 3) + '-' + code.slice(3);
-      window.location.href = '/live/' + randomId;
+      window.location.href = '/live/' + randomId + '?role=host';
     }
   </script>
 </body>

@@ -400,9 +400,19 @@ exports.getLiveClassroom = async (req, res) => {
       };
     }
 
+    const referer = req.headers.referer || '';
+    const fromStudio = referer.includes('/studio');
+
     const currentUserId = (req.session && req.session.user_id) || Math.floor(Math.random() * 8000 + 1000);
-    const currentUserName = (req.session && req.session.name) || req.query.guest_name || 'Student Participant';
-    const isHost = req.session && (req.session.role === 'admin' || req.session.role === 'librarian' || req.session.role === 'super_admin' || session.host_user_id === req.session.user_id);
+    const currentUserName = (req.session && (req.session.name || req.session.user_name)) || req.query.guest_name || (fromStudio ? (session.host_name || 'Host Instructor') : 'Participant');
+
+    const sessionRole = (req.session && req.session.role) || '';
+    const isInstructorRole = ['admin', 'librarian', 'super_admin', 'teacher', 'instructor', 'faculty', 'staff', 'personal'].includes(sessionRole);
+    const isSessionOwner = req.session && req.session.user_id && (session.host_user_id === req.session.user_id || session.host_id === req.session.user_id);
+
+    const isExplicitHostQuery = req.query.role === 'host' || req.query.host === '1' || req.query.isHost === 'true' || (req.query.passcode && req.query.passcode === session.passcode);
+
+    const isHost = Boolean(isInstructorRole || isSessionOwner || isExplicitHostQuery || fromStudio);
 
     // Record attendance if user is logged in
     if (session.id && req.session && req.session.user_id) {
