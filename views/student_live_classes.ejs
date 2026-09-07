@@ -1,366 +1,571 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %></title>
+<%- layout('base') %>
 
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="shortcut icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   LIBRIKA STUDENT LIVE CLASSES & COURSES
+   Pristine Unified Student Portal UI
+═══════════════════════════════════════════════ */
+*, *::before, *::after {
+    box-sizing: border-box !important;
+}
 
-  <style>
-    :root {
-      --sp-bg: #f8fafc;
-      --sp-card-bg: #ffffff;
-      --sp-text-dark: #0f172a;
-      --sp-text-mid: #475569;
-      --sp-muted: #94a3b8;
-      --sp-border: #e2e8f0;
-      --sp-accent: #6366f1;
-      --sp-accent-2: #a855f7;
-    }
+html, body {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
 
-    *, *::before, *::after { box-sizing: border-box !important; }
+:root {
+    --sp-purple: #818cf8;
+    --sp-purple-mid: #6366f1;
+    --sp-purple-light: rgba(99, 102, 241, 0.15);
+    --sp-green: #34d399;
+    --sp-orange: #fb923c;
+    --sp-red: #f87171;
+    --sp-bg: #f1f5f9;
+    --sp-card-bg: #ffffff;
+    --sp-sidebar-bg: #ffffff;
+    --sp-border: #e2e8f0;
+    --sp-text: #0f172a;
+    --sp-muted: #64748b;
+}
 
-    body {
-      background: #f8fafc !important;
-      color: #0f172a !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      font-family: 'Plus Jakarta Sans', sans-serif !important;
-    }
+/* ── LAYOUT SHELL ── */
+.st-shell {
+    display: flex !important;
+    min-height: 100vh !important;
+    background: var(--sp-bg) !important;
+    width: 100% !important;
+    position: relative !important;
+    overflow-x: hidden !important;
+}
 
-    .st-shell {
-      display: flex !important;
-      min-height: 100vh !important;
-      background: #f8fafc !important;
-      width: 100% !important;
-      position: relative !important;
-    }
+.st-main {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+    margin-left: 280px !important;
+    width: calc(100% - 280px) !important;
+    background: var(--sp-bg) !important;
+    padding-bottom: 40px !important;
+}
+@media (max-width: 600px) {
+    .st-main { margin-left: 0 !important; width: 100vw !important; }
+}
 
-    .st-main {
-      flex: 1 !important;
-      display: flex !important;
-      flex-direction: column !important;
-      min-height: 100vh !important;
-      margin-left: 240px !important;
-      width: calc(100% - 240px) !important;
-      background: #f8fafc !important;
-      padding-bottom: 40px !important;
-    }
-    @media (max-width: 599px) {
-      .st-main { margin-left: 0 !important; width: 100vw !important; }
-    }
+/* ── TOPBAR ── */
+.st-topbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--sp-border) !important;
+    padding: 0.85rem 1.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    gap: 12px !important;
+}
+.st-topbar-left { display: flex !important; align-items: center !important; gap: 12px !important; }
+.st-menu-btn {
+    background: rgba(99, 102, 241, 0.06) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    width: 38px !important; height: 38px !important; border-radius: 10px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 1.1rem !important; cursor: pointer !important;
+}
+@media (min-width: 601px) { .st-menu-btn { display: none !important; } }
 
-    .st-topbar {
-      background: #ffffff !important;
-      border-bottom: 1px solid #e2e8f0 !important;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
-      padding: 0.85rem 1.5rem !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 100 !important;
-      gap: 12px !important;
-    }
+.st-brand-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+}
 
-    .st-brand-title {
-      font-family: 'Outfit', sans-serif !important;
-      font-size: 1.15rem !important;
-      font-weight: 800 !important;
-      color: #0f172a !important;
-    }
+.st-topbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
 
-    .st-btn {
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-      padding: 8px 16px !important;
-      border-radius: 12px !important;
-      font-size: 0.85rem !important;
-      font-weight: 700 !important;
-      cursor: pointer !important;
-      text-decoration: none !important;
-      border: none !important;
-      transition: all 0.2s ease !important;
-    }
-    .st-btn-primary {
-      background: linear-gradient(135deg, #6366f1, #a855f7) !important;
-      color: #ffffff !important;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25) !important;
-    }
-    .st-btn-live {
-      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-      color: #ffffff !important;
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
-    }
-    .st-btn-live:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4) !important;
-    }
+/* ── SIDEBAR DRAWER ── */
+.st-sidebar {
+    width: 280px !important;
+    max-width: 82vw !important;
+    background: var(--sp-sidebar-bg) !important;
+    border-right: 1px solid var(--sp-border) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    height: 100vh !important; height: 100dvh !important;
+    z-index: 9999 !important;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 10px 0 40px rgba(15, 23, 42, 0.08) !important;
+    transform: translateX(-105%) !important;
+}
+@media (max-width: 600px) {
+    .st-sidebar.open { transform: translateX(0) !important; }
+}
+@media (min-width: 601px) {
+    .st-sidebar { transform: translateX(0) !important; position: sticky !important; }
+}
 
-    .st-content {
-      padding: 1.5rem !important;
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 1.5rem !important;
-    }
+.st-sidebar-header {
+    padding: 1.1rem 1rem !important;
+    border-bottom: 1px solid var(--sp-border) !important;
+    display: flex !important; align-items: center !important; justify-content: space-between !important;
+    gap: 10px !important; flex-shrink: 0 !important; background: var(--sp-sidebar-bg) !important;
+}
+.st-sidebar-user { display: flex !important; align-items: center !important; gap: 10px !important; flex: 1 !important; min-width: 0 !important; }
+.st-avatar-lg {
+    width: 40px !important; height: 40px !important; border-radius: 50% !important;
+    background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important;
+    font-weight: 800 !important; font-size: 1.05rem !important; display: flex !important;
+    align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;
+}
+.st-user-meta { min-width: 0 !important; flex: 1 !important; }
+.st-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: var(--sp-text) !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.st-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: var(--sp-muted) !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
-    /* Hero Banner */
-    .st-hero-banner {
-      background: linear-gradient(135deg, #1e1b4b, #4338ca) !important;
-      color: #ffffff !important;
-      border-radius: 18px !important;
-      padding: 1.75rem !important;
-      box-shadow: 0 4px 20px rgba(67, 56, 202, 0.2) !important;
-      position: relative !important;
-      overflow: hidden !important;
-    }
-    .st-hero-banner h1 {
-      font-family: 'Outfit', sans-serif !important;
-      font-size: 1.6rem !important;
-      font-weight: 800 !important;
-      margin: 0 0 6px 0 !important;
-    }
-    .st-hero-banner p {
-      margin: 0 !important;
-      font-size: 0.92rem !important;
-      color: #c7d2fe !important;
-      max-width: 650px !important;
-      line-height: 1.45 !important;
-    }
+.st-sidebar-close {
+    background: rgba(99, 102, 241, 0.08) !important; border: 1px solid #e2e8f0 !important;
+    color: #6366f1 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 0.95rem !important; cursor: pointer !important; flex-shrink: 0 !important;
+}
+@media (min-width: 601px) { .st-sidebar-close { display: none !important; } }
 
-    /* Live Batch Cards */
-    .st-live-card {
-      background: #ffffff !important;
-      border: 1px solid #e2e8f0 !important;
-      border-radius: 16px !important;
-      padding: 1.25rem !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-      gap: 1rem !important;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
-    }
-    .st-live-card:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.06) !important;
-      border-color: #6366f1 !important;
-    }
-    .st-date-badge {
-      background: #eef2ff !important;
-      color: #4f46e5 !important;
-      border-radius: 12px !important;
-      padding: 10px 14px !important;
-      text-align: center !important;
-      min-width: 65px !important;
-      font-weight: 800 !important;
-    }
-    .st-date-badge .day {
-      font-size: 1.4rem !important;
-      line-height: 1 !important;
-      display: block !important;
-    }
-    .st-date-badge .month {
-      font-size: 0.72rem !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.5px !important;
-      display: block !important;
-      margin-top: 2px !important;
-    }
+.st-sidebar-nav {
+    flex: 1 !important; overflow-y: auto !important; padding: 0.85rem 0.75rem !important;
+    display: flex !important; flex-direction: column !important; gap: 4px !important;
+}
+.st-nav-item {
+    display: flex !important; align-items: center !important; height: 44px !important; min-height: 44px !important;
+    padding: 0 12px !important; border-radius: 10px !important; color: #475569 !important;
+    font-size: 0.85rem !important; font-weight: 600 !important; text-decoration: none !important;
+    background: transparent !important; border: none !important; border-left: 3.5px solid transparent !important;
+    width: 100% !important; cursor: pointer !important; transition: all 0.2s ease !important;
+    box-sizing: border-box !important; white-space: nowrap !important;
+}
+.st-nav-item:hover { background: rgba(99, 102, 241, 0.06) !important; color: #6366f1 !important; }
+.st-nav-item.active { background: rgba(99, 102, 241, 0.1) !important; color: #6366f1 !important; border-left: 4px solid #6366f1 !important; font-weight: 700 !important; }
+.st-nav-icon { width: 24px !important; height: 24px !important; font-size: 1.1rem !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; margin-right: 10px !important; }
+.st-nav-text { flex: 1 !important; text-align: left !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
-    /* Course Cards Grid */
-    .st-course-grid {
-      display: grid !important;
-      grid-template-columns: 1fr !important;
-      gap: 1.25rem !important;
-    }
-    @media (min-width: 650px) {
-      .st-course-grid { grid-template-columns: repeat(2, 1fr) !important; }
-    }
-    @media (min-width: 1050px) {
-      .st-course-grid { grid-template-columns: repeat(3, 1fr) !important; }
-    }
+.st-sidebar-footer {
+    padding: 0.85rem 0.75rem !important; border-top: 1px solid var(--sp-border) !important;
+    flex-shrink: 0 !important; background: var(--sp-sidebar-bg) !important; display: flex !important; flex-direction: column !important; gap: 6px !important;
+}
+.st-footer-btn {
+    display: flex !important; align-items: center !important; height: 40px !important; min-height: 40px !important;
+    padding: 0 12px !important; border-radius: 8px !important; font-size: 0.82rem !important; font-weight: 700 !important;
+    color: #475569 !important; text-decoration: none !important; background: #f8fafc !important;
+    border: 1px solid var(--sp-border) !important; transition: all 0.2s ease !important; width: 100% !important; cursor: pointer !important;
+}
+.st-footer-btn:hover { background: rgba(99, 102, 241, 0.08) !important; color: #6366f1 !important; }
+.st-footer-btn.danger { background: rgba(239, 68, 68, 0.08) !important; color: #ef4444 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
 
-    .st-course-item {
-      background: #ffffff !important;
-      border: 1px solid #e2e8f0 !important;
-      border-radius: 16px !important;
-      overflow: hidden !important;
-      display: flex !important;
-      flex-direction: column !important;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
-      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-    }
-    .st-course-item:hover {
-      transform: translateY(-3px) !important;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
-    }
-    .st-course-thumb {
-      width: 100% !important;
-      aspect-ratio: 16 / 9 !important;
-      object-fit: cover !important;
-      background: #1e293b !important;
-    }
-    .st-course-body {
-      padding: 1.25rem !important;
-      display: flex !important;
-      flex-direction: column !important;
-      flex-grow: 1 !important;
-    }
-  </style>
-</head>
-<body>
+/* ── OVERLAY DIM ── */
+.st-overlay-dim {
+    position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.25) !important;
+    z-index: 100000 !important; opacity: 0 !important; pointer-events: none !important; transition: opacity 0.28s ease !important;
+}
+.st-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
+@media (min-width: 601px) { .st-overlay-dim, .st-overlay-dim.active { display: none !important; } }
 
-  <div class="st-shell">
-    
-    <!-- Sidebar Navigation -->
-    <%- include('partials/student_sidebar', { active: 'live_classes', session: session }) %>
+/* ── CONTENT AREA ── */
+.st-content {
+    padding: 1.25rem 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+}
 
+/* Hero Banner */
+.st-hero-box {
+    background: linear-gradient(135deg, #312e81, #4f46e5) !important;
+    color: #ffffff !important;
+    border-radius: 18px !important;
+    padding: 1.5rem 1.75rem !important;
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.2) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+.st-hero-box h1 {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+    margin: 0 0 6px 0 !important;
+    color: #ffffff !important;
+}
+.st-hero-box p {
+    margin: 0 !important;
+    font-size: 0.9rem !important;
+    color: #e0e7ff !important;
+    max-width: 650px !important;
+    line-height: 1.45 !important;
+}
+
+/* Section Card */
+.st-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 18px !important;
+    padding: 1.25rem !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+}
+
+/* Live Batch Cards */
+.st-batch-row {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    padding: 1rem 1.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    transition: all 0.2s ease !important;
+    margin-bottom: 0.75rem !important;
+}
+.st-batch-row:last-child { margin-bottom: 0 !important; }
+.st-batch-row:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06) !important;
+    border-color: #6366f1 !important;
+}
+
+.st-date-box {
+    background: #eef2ff !important;
+    color: #4f46e5 !important;
+    border-radius: 12px !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    min-width: 60px !important;
+    font-weight: 800 !important;
+}
+.st-date-box .day {
+    font-size: 1.35rem !important;
+    line-height: 1 !important;
+    display: block !important;
+}
+.st-date-box .month {
+    font-size: 0.7rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: block !important;
+    margin-top: 2px !important;
+}
+
+/* Buttons */
+.st-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 8px 16px !important;
+    border-radius: 10px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+}
+.st-btn-live {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+    border-radius: 9999px !important;
+    padding: 8px 18px !important;
+    white-space: nowrap !important;
+}
+.st-btn-live:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4) !important;
+}
+
+.st-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25) !important;
+}
+.st-btn-xs {
+    padding: 4px 12px !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+}
+
+/* Course Grid */
+.st-courses-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+}
+@media (min-width: 600px) {
+    .st-courses-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (min-width: 1000px) {
+    .st-courses-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+.st-course-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+.st-course-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.07) !important;
+    border-color: #cbd5e1 !important;
+}
+.st-course-cover {
+    width: 100% !important;
+    height: 160px !important;
+    object-fit: cover !important;
+    background: #1e293b !important;
+}
+.st-course-content {
+    padding: 1.1rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+}
+</style>
+
+<div class="st-overlay-dim" id="studentDim" onclick="toggleStudentSidebar()"></div>
+
+<div class="st-shell">
+    <!-- ══ SIDEBAR DRAWER ══ -->
+    <aside class="st-sidebar" id="studentSidebar">
+        <!-- Header -->
+        <div class="st-sidebar-header">
+            <div class="st-sidebar-user">
+                <% const stuName = (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Student'; %>
+                <% const stuInitial = stuName.trim()[0].toUpperCase(); %>
+                <div class="st-avatar-lg">
+                    <%= stuInitial %>
+                </div>
+                <div class="st-user-meta">
+                    <h4 class="st-user-name"><%= stuName %></h4>
+                    <p class="st-user-school"><%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'E-Pathshala Network' %></p>
+                </div>
+            </div>
+            <button class="st-sidebar-close" onclick="toggleStudentSidebar()" aria-label="Close sidebar">✕</button>
+        </div>
+
+        <!-- Navigation List -->
+        <nav class="st-sidebar-nav">
+            <a href="/student" class="st-nav-item">
+                <span class="st-nav-icon">🏠</span>
+                <span class="st-nav-text">Dashboard</span>
+            </a>
+            <a href="/student/live-classes" class="st-nav-item active">
+                <span class="st-nav-icon">📹</span>
+                <span class="st-nav-text">Live Classes &amp; Courses</span>
+            </a>
+            <a href="/student/browse" class="st-nav-item">
+                <span class="st-nav-icon">📚</span>
+                <span class="st-nav-text">Digital Library</span>
+            </a>
+            <a href="/digital-library" class="st-nav-item">
+                <span class="st-nav-icon">🌐</span>
+                <span class="st-nav-text">Community Library</span>
+            </a>
+            <a href="/student/my-publications" class="st-nav-item">
+                <span class="st-nav-icon">📖</span>
+                <span class="st-nav-text">My Books</span>
+            </a>
+            <a href="/student/assignments" class="st-nav-item">
+                <span class="st-nav-icon">📝</span>
+                <span class="st-nav-text">Assignments</span>
+            </a>
+            <a href="/student/requests" class="st-nav-item">
+                <span class="st-nav-icon">📋</span>
+                <span class="st-nav-text">Book Requests</span>
+            </a>
+            <a href="/student/calendar" class="st-nav-item">
+                <span class="st-nav-icon">📅</span>
+                <span class="st-nav-text">Calendar</span>
+            </a>
+            <a href="/student/goals" class="st-nav-item">
+                <span class="st-nav-icon">🎯</span>
+                <span class="st-nav-text">Reading Goals</span>
+            </a>
+            <a href="/student/ai" class="st-nav-item">
+                <span class="st-nav-icon">🤖</span>
+                <span class="st-nav-text">AI Assistant</span>
+            </a>
+            <a href="/student/notifications" class="st-nav-item">
+                <span class="st-nav-icon">🔔</span>
+                <span class="st-nav-text">Notifications</span>
+            </a>
+            <a href="/student/profile" class="st-nav-item">
+                <span class="st-nav-icon">👤</span>
+                <span class="st-nav-text">My Profile</span>
+            </a>
+            <a href="/student/settings" class="st-nav-item">
+                <span class="st-nav-icon">⚙️</span>
+                <span class="st-nav-text">Settings</span>
+            </a>
+        </nav>
+
+        <!-- Sticky Footer -->
+        <div class="st-sidebar-footer">
+            <a href="/logout" class="st-footer-btn danger">
+                <span class="st-nav-icon">🚪</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- ══ MAIN CONTENT ══ -->
     <main class="st-main">
-      
-      <!-- Topbar -->
-      <header class="st-topbar">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <button class="st-menu-btn" onclick="spOpenSidebar()" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:6px;cursor:pointer;display:flex;align-items:center;">
-            <span class="material-symbols-outlined">menu</span>
-          </button>
-          <span class="st-brand-title">📹 Online Live Classes &amp; Courses</span>
+        <!-- Topbar -->
+        <div class="st-topbar">
+            <div class="st-topbar-left">
+                <button class="st-menu-btn" onclick="toggleStudentSidebar()" aria-label="Menu">☰</button>
+                <span class="st-brand-title">📹 Online Live Classes &amp; Courses</span>
+            </div>
+            <div class="st-topbar-right">
+                <a href="/student" class="st-btn st-btn-xs" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">&larr; Dashboard</a>
+                <a href="/student/browse" class="st-btn st-btn-primary st-btn-xs">📚 Library</a>
+            </div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:10px;">
-          <a href="/student" class="st-btn" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:6px 12px;font-size:0.82rem;">
-            &larr; Dashboard
-          </a>
-        </div>
-      </header>
+        <!-- Content Body -->
+        <div class="st-content">
+            
+            <!-- Hero Header -->
+            <div class="st-hero-box">
+                <h1>Interactive Live Classes &amp; Video Courses</h1>
+                <p>Attend live webinars and video lectures with teacher audio/video, real-time whiteboards, and lesson materials.</p>
+            </div>
 
-      <!-- Content Area -->
-      <div class="st-content">
-
-        <!-- Hero Header -->
-        <div class="st-hero-banner">
-          <h1>Interactive Live Classes &amp; Video Courses</h1>
-          <p>Attend live webinars and video lectures with teacher audio/video, real-time whiteboards, and lesson materials.</p>
-        </div>
-
-        <!-- Section 1: Upcoming Live Classes -->
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <h2 style="font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:8px;">
-              <span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;box-shadow:0 0 8px #ef4444;"></span>
-              Upcoming &amp; Live Batches
-            </h2>
-            <span style="font-size:0.82rem;font-weight:700;color:#64748b;"><%= sessions.length %> Scheduled</span>
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            <% if (sessions && sessions.length > 0) { %>
-              <% sessions.forEach(s => { 
-                  const sDate = s.scheduled_start ? new Date(s.scheduled_start) : new Date();
-                  const dayNum = sDate.getDate();
-                  const monthStr = sDate.toLocaleString('default', { month: 'short' });
-                  const timeStr = sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-              %>
-                <div class="st-live-card">
-                  <div style="display:flex;align-items:center;gap:14px;flex-grow:1;">
-                    <div class="st-date-badge">
-                      <span class="day"><%= dayNum %></span>
-                      <span class="month"><%= monthStr %></span>
-                    </div>
-                    <div>
-                      <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 4px 0;"><%= s.title %></h3>
-                      <div style="font-size:0.8rem;color:#64748b;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                        <span>📚 <strong><%= s.course_title || 'Live Masterclass' %></strong></span>
-                        <span>👨‍🏫 Host: <strong><%= s.instructor_name || s.host_name || 'Faculty' %></strong></span>
-                        <span>⏰ <strong><%= timeStr %></strong> (<%= s.duration_minutes || 60 %> mins)</span>
-                        <span style="background:#f1f5f9;color:#334155;padding:2px 6px;border-radius:6px;font-size:0.75rem;font-weight:700;">ID: <%= s.meeting_id %></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <a href="/live/<%= s.meeting_id %>" class="st-btn st-btn-live" style="border-radius:9999px;padding:8px 18px;white-space:nowrap;">
-                      <span class="material-symbols-outlined text-[18px]">videocam</span> Join Live Class
-                    </a>
-                  </div>
-                </div>
-              <% }); %>
-            <% } else { %>
-              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:3rem 1.5rem;text-align:center;color:#64748b;">
-                <span class="material-symbols-outlined text-[44px]" style="color:#94a3b8;margin-bottom:8px;display:block;">event_available</span>
-                No live classes scheduled at this moment. Browse courses below to start learning.
-              </div>
-            <% } %>
-          </div>
-        </div>
-
-        <!-- Section 2: Online Video Courses & Modules -->
-        <div style="margin-top:1rem;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <h2 style="font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:8px;">
-              <span>📚</span> Published Online Courses
-            </h2>
-            <span style="font-size:0.82rem;font-weight:700;color:#64748b;"><%= courses.length %> Courses Available</span>
-          </div>
-
-          <div class="st-course-grid">
-            <% if (courses && courses.length > 0) { %>
-              <% courses.forEach(c => { %>
-                <div class="st-course-item">
-                  <div style="position:relative;">
-                    <img src="<%= c.cover_image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60' %>" class="st-course-thumb" alt="<%= c.title %>">
-                    <span style="position:absolute;top:10px;right:10px;background:rgba(15,23,42,0.85);color:#ffffff;font-size:0.72rem;font-weight:700;padding:3px 8px;border-radius:6px;backdrop-filter:blur(4px);">
-                      <%= c.level || 'All Levels' %>
-                    </span>
-                  </div>
-                  
-                  <div class="st-course-body">
-                    <div style="font-size:0.75rem;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">
-                      <%= c.category || 'Technology' %>
-                    </div>
-                    <h3 style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:800;color:#0f172a;margin:0 0 6px 0;line-height:1.3;">
-                      <%= c.title %>
+            <!-- Section 1: Upcoming Live Classes -->
+            <div class="st-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <h3 style="font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:8px;">
+                        <span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;box-shadow:0 0 8px #ef4444;"></span>
+                        Upcoming &amp; Live Batches
                     </h3>
-                    <p style="font-size:0.84rem;color:#64748b;margin:0 0 12px 0;line-height:1.45;flex-grow:1;">
-                      <%= c.subtitle || c.description || 'Comprehensive curriculum with video lectures and interactive study materials.' %>
-                    </p>
-
-                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;color:#64748b;padding-top:10px;border-top:1px solid #f1f5f9;margin-bottom:12px;">
-                      <span>📖 <strong><%= c.module_count || 1 %></strong> Modules</span>
-                      <span>👨‍🏫 <strong><%= c.instructor_name || 'Faculty' %></strong></span>
-                    </div>
-
-                    <a href="/courses/<%= c.id %>/learn" class="st-btn st-btn-primary" style="width:100%;border-radius:10px;">
-                      <span class="material-symbols-outlined text-[18px]">play_circle</span> Take Online Course
-                    </a>
-                  </div>
+                    <span style="font-size:0.8rem;font-weight:700;color:#64748b;"><%= sessions.length %> Scheduled</span>
                 </div>
-              <% }); %>
-            <% } else { %>
-              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:3rem 1.5rem;text-align:center;color:#64748b;grid-column:1/-1;">
-                <span class="material-symbols-outlined text-[44px]" style="color:#94a3b8;margin-bottom:8px;display:block;">school</span>
-                No online courses published yet. Check back soon!
-              </div>
-            <% } %>
-          </div>
+
+                <div>
+                    <% if (sessions && sessions.length > 0) { %>
+                        <% sessions.forEach(s => { 
+                            const sDate = s.scheduled_start ? new Date(s.scheduled_start) : new Date();
+                            const dayNum = sDate.getDate();
+                            const monthStr = sDate.toLocaleString('default', { month: 'short' });
+                            const timeStr = sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        %>
+                            <div class="st-batch-row">
+                                <div style="display:flex;align-items:center;gap:12px;flex-grow:1;">
+                                    <div class="st-date-box">
+                                        <span class="day"><%= dayNum %></span>
+                                        <span class="month"><%= monthStr %></span>
+                                    </div>
+                                    <div>
+                                        <h4 style="font-size:0.95rem;font-weight:800;color:#0f172a;margin:0 0 4px 0;"><%= s.title %></h4>
+                                        <div style="font-size:0.78rem;color:#64748b;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                                            <span>📚 <strong><%= s.course_title || 'Live Masterclass' %></strong></span>
+                                            <span>👨‍🏫 Host: <strong><%= s.instructor_name || s.host_name || 'Faculty' %></strong></span>
+                                            <span>⏰ <strong><%= timeStr %></strong> (<%= s.duration_minutes || 60 %> mins)</span>
+                                            <span style="background:#f1f5f9;color:#334155;padding:2px 6px;border-radius:6px;font-size:0.72rem;font-weight:700;">ID: <%= s.meeting_id %></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <a href="/live/<%= s.meeting_id %>" class="st-btn st-btn-live">
+                                        🎥 Join Live Class
+                                    </a>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div style="padding:2.5rem 1rem;text-align:center;color:#64748b;">
+                            <span style="font-size:2rem;display:block;margin-bottom:6px;">📅</span>
+                            No live classes scheduled right now. Check back soon or explore courses below.
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Section 2: Course Catalog -->
+            <div class="st-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <h3 style="font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:8px;">
+                        <span>📚</span> Published Online Courses
+                    </h3>
+                    <span style="font-size:0.8rem;font-weight:700;color:#64748b;"><%= courses.length %> Available</span>
+                </div>
+
+                <div class="st-courses-grid">
+                    <% if (courses && courses.length > 0) { %>
+                        <% courses.forEach(c => { %>
+                            <div class="st-course-card">
+                                <div style="position:relative;">
+                                    <img src="<%= c.cover_image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60' %>" class="st-course-cover" alt="<%= c.title %>">
+                                    <span style="position:absolute;top:10px;right:10px;background:rgba(15,23,42,0.85);color:#ffffff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:6px;backdrop-filter:blur(4px);">
+                                        <%= c.level || 'All Levels' %>
+                                    </span>
+                                </div>
+                                
+                                <div class="st-course-content">
+                                    <div style="font-size:0.72rem;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">
+                                        <%= c.category || 'Technology' %>
+                                    </div>
+                                    <h4 style="font-family:'Outfit',sans-serif;font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 6px 0;line-height:1.3;">
+                                        <%= c.title %>
+                                    </h4>
+                                    <p style="font-size:0.82rem;color:#64748b;margin:0 0 12px 0;line-height:1.4;flex-grow:1;">
+                                        <%= c.subtitle || c.description || 'Comprehensive curriculum with video lectures and interactive study materials.' %>
+                                    </p>
+
+                                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;color:#64748b;padding-top:10px;border-top:1px solid #f1f5f9;margin-bottom:12px;">
+                                        <span>📖 <strong><%= c.module_count || 1 %></strong> Modules</span>
+                                        <span>👨‍🏫 <strong><%= c.instructor_name || 'Faculty' %></strong></span>
+                                    </div>
+
+                                    <a href="/courses/<%= c.id %>/learn" class="st-btn st-btn-primary" style="width:100%;border-radius:10px;padding:9px;">
+                                        ▶️ Take Online Course
+                                    </a>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div style="padding:2.5rem 1rem;text-align:center;color:#64748b;grid-column:1/-1;">
+                            <span style="font-size:2rem;display:block;margin-bottom:6px;">🎓</span>
+                            No online courses published yet. Check back soon!
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
         </div>
-
-      </div>
-
     </main>
-  </div>
+</div>
 
-</body>
-</html>
+<script>
+    function toggleStudentSidebar() {
+        const sb = document.getElementById('studentSidebar');
+        const dim = document.getElementById('studentDim');
+        if (sb) sb.classList.toggle('open');
+        if (dim) dim.classList.toggle('active');
+    }
+</script>
