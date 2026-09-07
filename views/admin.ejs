@@ -2,40 +2,45 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+<link rel="stylesheet" href="/coursera-librika.css">
+
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   LIBRIKA LIBRARIAN DASHBOARD — FLEXIBLE RESIZING LAPTOP & DESKTOP UI
-   Uses flex: 1; min-width: 0; for fluid 100% responsive resizing
+   LIBRIKA ADMIN CONSOLE — COURSERA THEME DESIGN SYSTEM
+   Professional Enterprise & Campus Management Portal
    ═══════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
     box-sizing: border-box !important;
 }
 
 html, body {
-    background: #f8fafc !important;
-    background-color: #f8fafc !important;
-    color: #0f172a !important;
+    background: #F5F7FA !important;
+    background-color: #F5F7FA !important;
+    color: #1F1F1F !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden !important;
     width: 100% !important;
     max-width: 100vw !important;
     min-height: 100vh !important;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
 :root {
-    --bg: #f8fafc;
-    --sidebar-bg: #ffffff;
-    --border: #e2e8f0;
-    --text: #0f172a;
-    --muted: #64748b;
+    --bg: #F5F7FA;
+    --sidebar-bg: #FFFFFF;
+    --border: #E1E6EB;
+    --text: #1F1F1F;
+    --muted: #5B6770;
+    --cr-blue: #0056D2;
+    --cr-blue-hover: #00419e;
+    --cr-blue-light: #EBF3FF;
 }
 
 .ld-shell {
     display: flex !important;
     min-height: 100vh !important;
-    background: #f8fafc !important;
+    background: #F5F7FA !important;
     width: 100% !important;
     max-width: 100vw !important;
     position: relative !important;
@@ -43,19 +48,19 @@ html, body {
 
 .ld-main {
     flex: 1 !important;
-    min-width: 0 !important; /* CRITICAL FOR FLUID RESIZING */
+    min-width: 0 !important;
     display: flex !important;
     flex-direction: column !important;
     min-height: 100vh !important;
-    margin-left: 230px !important;
-    width: calc(100% - 230px) !important;
+    margin-left: 250px !important;
+    width: calc(100% - 250px) !important;
     max-width: 100vw !important;
-    background: #f8fafc !important;
-    padding-bottom: 30px !important;
+    background: #F5F7FA !important;
+    padding-bottom: 40px !important;
     transition: margin-left 0.2s ease, width 0.2s ease !important;
 }
 
-@media (max-width: 599px) {
+@media (max-width: 899px) {
     .ld-main {
         margin-left: 0 !important;
         width: 100% !important;
@@ -63,234 +68,595 @@ html, body {
     }
 }
 
+/* ── TOPBAR ── */
 .ld-topbar {
-    background: #ffffff !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
-    padding: 0.85rem 1.5rem !important;
+    background: #FFFFFF !important;
+    border-bottom: 1px solid #E1E6EB !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    padding: 0.85rem 1.75rem !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     position: sticky !important;
     top: 0 !important;
     z-index: 100 !important;
-    gap: 12px !important;
+    gap: 16px !important;
 }
-.ld-topbar-left { display: flex !important; align-items: center !important; gap: 12px !important; }
+
+.ld-topbar-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+
 .ld-menu-btn {
-    background: rgba(99, 102, 241, 0.08) !important;
-    border: 1px solid #e2e8f0 !important;
-    color: #4338ca !important;
-    width: 38px !important; height: 38px !important; border-radius: 10px !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 1.1rem !important; cursor: pointer !important; font-weight: 700 !important;
+    background: var(--cr-blue-light) !important;
+    border: 1px solid rgba(0, 86, 210, 0.2) !important;
+    color: var(--cr-blue) !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.1rem !important;
+    cursor: pointer !important;
+    font-weight: 700 !important;
 }
-@media (min-width: 600px) { .ld-menu-btn { display: none !important; } }
+
+@media (min-width: 900px) {
+    .ld-menu-btn { display: none !important; }
+}
 
 .ld-brand-title {
-    font-family: 'Outfit', sans-serif !important;
-    font-size: 1.2rem !important;
+    font-size: 1.25rem !important;
     font-weight: 800 !important;
-    color: #0f172a !important;
+    color: #00255D !important;
     white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    letter-spacing: -0.3px;
 }
 
-.ld-topbar-right { display: flex !important; align-items: center !important; gap: 8px !important; flex-wrap: wrap !important; }
+.ld-brand-pill {
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    background: var(--cr-blue-light) !important;
+    color: var(--cr-blue) !important;
+    padding: 2px 8px !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(0, 86, 210, 0.2) !important;
+}
+
+.ld-topbar-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
 .ld-notif-btn {
-    background: rgba(99, 102, 241, 0.06) !important;
-    border: 1px solid #e2e8f0 !important;
+    background: #F5F7FA !important;
+    border: 1px solid #E1E6EB !important;
     color: #475569 !important;
-    width: 38px !important; height: 38px !important; border-radius: 50% !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 1.05rem !important; cursor: pointer !important; position: relative !important;
-}
-.ld-notif-badge {
-    position: absolute !important; top: -2px !important; right: -2px !important;
-    background: #ef4444 !important; color: white !important; font-size: 0.65rem !important;
-    font-weight: 800 !important; padding: 2px 6px !important; border-radius: 10px !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
 }
 
+.ld-notif-btn:hover {
+    background: var(--cr-blue-light) !important;
+    color: var(--cr-blue) !important;
+    border-color: var(--cr-blue) !important;
+}
+
+.ld-notif-badge {
+    position: absolute !important;
+    top: -2px !important;
+    right: -2px !important;
+    background: #D9381E !important;
+    color: white !important;
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    padding: 2px 6px !important;
+    border-radius: 10px !important;
+}
+
+/* ── SIDEBAR ── */
 .ld-sidebar {
-    width: 230px !important;
-    max-width: 82vw !important;
-    background: #ffffff !important;
-    border-right: 1px solid #e2e8f0 !important;
+    width: 250px !important;
+    max-width: 85vw !important;
+    background: #FFFFFF !important;
+    border-right: 1px solid #E1E6EB !important;
     display: flex !important;
     flex-direction: column !important;
     position: fixed !important;
-    top: 0 !important; left: 0 !important;
-    height: 100vh !important; height: 100dvh !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
     z-index: 100001 !important;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 2px 0 12px rgba(15, 23, 42, 0.04) !important;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03) !important;
     transform: translateX(-105%) !important;
 }
 
-@media (max-width: 599px) {
-    .ld-sidebar.open { transform: translateX(0) !important; box-shadow: 8px 0 32px rgba(15, 23, 42, 0.15) !important; }
+@media (max-width: 899px) {
+    .ld-sidebar.open {
+        transform: translateX(0) !important;
+        box-shadow: 8px 0 32px rgba(0, 0, 0, 0.15) !important;
+    }
 }
 
-@media (min-width: 600px) {
-    .ld-sidebar { transform: translateX(0) !important; position: sticky !important; }
+@media (min-width: 900px) {
+    .ld-sidebar {
+        transform: translateX(0) !important;
+        position: fixed !important;
+    }
 }
 
 .ld-sidebar-header {
-    padding: 1.1rem 1rem !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-    display: flex !important; align-items: center !important; justify-content: space-between !important;
-    gap: 10px !important; flex-shrink: 0 !important; background: #ffffff !important;
+    padding: 1.25rem 1.25rem !important;
+    border-bottom: 1px solid #E1E6EB !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+    background: #FFFFFF !important;
 }
-.ld-sidebar-user { display: flex !important; align-items: center !important; gap: 10px !important; flex: 1 !important; min-width: 0 !important; }
+
+.ld-sidebar-user {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
 .ld-avatar-lg {
-    width: 38px !important; height: 38px !important; border-radius: 50% !important;
-    background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important;
-    font-weight: 800 !important; font-size: 1.05rem !important; display: flex !important;
-    align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #00255D, #0056D2) !important;
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    font-size: 1.1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 4px 10px rgba(0, 86, 210, 0.2) !important;
 }
+
 .ld-user-meta { min-width: 0 !important; flex: 1 !important; }
-.ld-user-name { margin: 0 !important; font-size: 0.88rem !important; font-weight: 800 !important; color: #0f172a !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.ld-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: #64748b !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.ld-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #1F1F1F !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.ld-user-school { margin: 1px 0 0 !important; font-size: 0.74rem !important; color: #5B6770 !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
 .ld-sidebar-close {
-    background: rgba(99, 102, 241, 0.08) !important; border: 1px solid #e2e8f0 !important;
-    color: #6366f1 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 0.95rem !important; cursor: pointer !important; flex-shrink: 0 !important;
+    background: var(--cr-blue-light) !important;
+    border: 1px solid #E1E6EB !important;
+    color: var(--cr-blue) !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
 }
-@media (min-width: 600px) { .ld-sidebar-close { display: none !important; } }
+
+@media (min-width: 900px) {
+    .ld-sidebar-close { display: none !important; }
+}
 
 .ld-sidebar-nav {
-    flex: 1 !important; overflow-y: auto !important; padding: 0.75rem 0.6rem !important;
-    display: flex !important; flex-direction: column !important; gap: 3px !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 0.85rem 0.75rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
 }
 
 .ld-nav-item {
-    display: flex !important; align-items: center !important; height: 44px !important; min-height: 44px !important;
-    padding: 0 12px !important; border-radius: 10px !important; color: #475569 !important;
-    font-size: 0.85rem !important; font-weight: 600 !important; text-decoration: none !important;
-    background: transparent !important; border: none !important; border-left: 3.5px solid transparent !important;
-    width: 100% !important; cursor: pointer !important; transition: all 0.18s ease !important;
-    box-sizing: border-box !important; white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    color: #475569 !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    border-left: 3.5px solid transparent !important;
+    width: 100% !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
 }
-.ld-nav-item:hover { background: rgba(99, 102, 241, 0.06) !important; color: #6366f1 !important; }
-.ld-nav-item.active { background: rgba(99, 102, 241, 0.1) !important; color: #6366f1 !important; border-left: 3.5px solid #6366f1 !important; font-weight: 700 !important; }
 
-.ld-nav-icon { width: 22px !important; height: 22px !important; font-size: 1.1rem !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; margin-right: 10px !important; }
-.ld-nav-text { flex: 1 !important; text-align: left !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.ld-nav-badge { margin-left: auto !important; font-size: 0.64rem !important; font-weight: 800 !important; padding: 2px 7px !important; border-radius: 20px !important; color: white !important; flex-shrink: 0 !important; }
-.ld-nav-badge.red { background: #ef4444 !important; }
-.ld-nav-badge.orange { background: #f59e0b !important; }
+.ld-nav-item:hover {
+    background: #F5F7FA !important;
+    color: var(--cr-blue) !important;
+}
+
+.ld-nav-item.active {
+    background: var(--cr-blue-light) !important;
+    color: var(--cr-blue) !important;
+    border-left: 3.5px solid var(--cr-blue) !important;
+    font-weight: 700 !important;
+}
+
+.ld-nav-icon {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 1.1rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    margin-right: 10px !important;
+}
+
+.ld-nav-text {
+    flex: 1 !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.ld-nav-badge {
+    margin-left: auto !important;
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    padding: 2px 7px !important;
+    border-radius: 20px !important;
+    background: #E1E6EB !important;
+    color: #333333 !important;
+    flex-shrink: 0 !important;
+}
+
+.ld-nav-badge.red { background: #D9381E !important; color: white !important; }
+.ld-nav-badge.orange { background: #B88E00 !important; color: white !important; }
 
 .ld-sidebar-footer {
-    padding: 0.75rem !important; border-top: 1px solid #e2e8f0 !important;
-    flex-shrink: 0 !important; background: #ffffff !important; display: flex !important; flex-direction: column !important; gap: 6px !important;
+    padding: 0.85rem !important;
+    border-top: 1px solid #E1E6EB !important;
+    flex-shrink: 0 !important;
+    background: #FFFFFF !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
 }
+
 .ld-footer-btn {
-    display: flex !important; align-items: center !important; height: 42px !important; min-height: 42px !important;
-    padding: 0 12px !important; border-radius: 10px !important; font-size: 0.84rem !important; font-weight: 700 !important;
-    color: #475569 !important; text-decoration: none !important; background: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important; transition: all 0.18s ease !important; width: 100% !important;
-}
-.ld-footer-btn:hover { background: rgba(99, 102, 241, 0.08) !important; color: #6366f1 !important; }
-.ld-footer-btn.danger { background: rgba(239, 68, 68, 0.08) !important; color: #ef4444 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
-
-.ld-overlay-dim {
-    position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.25) !important;
-    z-index: 100000 !important; opacity: 0 !important; pointer-events: none !important; transition: opacity 0.25s ease !important;
-    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
-}
-.ld-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
-@media (min-width: 600px) {
-    .ld-overlay-dim, .ld-overlay-dim.active { display: none !important; opacity: 0 !important; pointer-events: none !important; visibility: hidden !important; }
-}
-
-.ld-content { padding: 1.5rem 1.75rem !important; display: flex !important; flex-direction: column !important; gap: 1.5rem !important; background: #f8fafc !important; width: 100% !important; min-width: 0 !important; }
-
-/* ── UNIVERSAL 4-COLUMN STAT GRID ON ALL LAPTOPS (>= 600px) ── */
-.ld-stats-grid {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    text-decoration: none !important;
+    background: #F5F7FA !important;
+    border: 1px solid #E1E6EB !important;
+    transition: all 0.15s ease !important;
     width: 100% !important;
 }
 
-@media (max-width: 600px) {
+.ld-footer-btn:hover {
+    background: var(--cr-blue-light) !important;
+    color: var(--cr-blue) !important;
+    border-color: rgba(0, 86, 210, 0.3) !important;
+}
+
+.ld-footer-btn.danger {
+    background: #ffebe6 !important;
+    color: #D9381E !important;
+    border-color: rgba(217, 56, 30, 0.25) !important;
+}
+
+.ld-overlay-dim {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.35) !important;
+    z-index: 100000 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.25s ease !important;
+}
+
+.ld-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
+
+@media (min-width: 900px) {
+    .ld-overlay-dim, .ld-overlay-dim.active { display: none !important; }
+}
+
+.ld-content {
+    padding: 1.75rem 2rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.75rem !important;
+    background: #F5F7FA !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 1440px !important;
+}
+
+/* ── STATS / KPI GRID ── */
+.ld-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+    width: 100% !important;
+}
+
+@media (max-width: 900px) {
     .ld-stats-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
+@media (max-width: 480px) {
+    .ld-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 .ld-stat-card {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important; border-radius: 16px !important;
-    padding: 1rem 1.2rem !important; display: flex !important; flex-direction: row !important;
-    align-items: center !important; text-align: left !important; gap: 12px !important; min-height: 95px !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
-    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E1E6EB !important;
+    border-radius: 12px !important;
+    padding: 1.25rem 1.35rem !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    text-align: left !important;
+    gap: 14px !important;
+    min-height: 95px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
     min-width: 0 !important;
 }
-.ld-stat-card:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(0,0,0,0.06) !important; }
-.ld-stat-icon {
-    width: 44px !important; height: 44px !important; border-radius: 12px !important;
-    background: rgba(99, 102, 241, 0.08) !important; color: #6366f1 !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 1.35rem !important; margin: 0 !important; flex-shrink: 0 !important;
-}
-.ld-stat-val { font-family: 'Outfit', sans-serif !important; font-size: 1.55rem !important; font-weight: 900 !important; color: #0f172a !important; line-height: 1.1 !important; }
-.ld-stat-lbl { font-size: 0.72rem !important; color: #64748b !important; font-weight: 700 !important; margin-top: 2px !important; text-transform: uppercase; letter-spacing: 0.04em; }
 
+.ld-stat-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(0, 86, 210, 0.08) !important;
+    border-color: #bad3f7 !important;
+}
+
+.ld-stat-icon {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    background: var(--cr-blue-light) !important;
+    color: var(--cr-blue) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.35rem !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.ld-stat-val {
+    font-size: 1.8rem !important;
+    font-weight: 800 !important;
+    color: #1F1F1F !important;
+    line-height: 1.1 !important;
+}
+
+.ld-stat-lbl {
+    font-size: 0.74rem !important;
+    color: #5B6770 !important;
+    font-weight: 700 !important;
+    margin-top: 3px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── CARDS & TABLES ── */
 .ld-card {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important; border-radius: 18px !important;
-    padding: 1.5rem !important; color: #0f172a !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important; min-width: 0 !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E1E6EB !important;
+    border-radius: 14px !important;
+    padding: 1.5rem 1.75rem !important;
+    color: #1F1F1F !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    min-width: 0 !important;
 }
 
 .ld-table-container {
-    width: 100% !important; max-width: 100% !important;
-    overflow-x: auto !important; -webkit-overflow-scrolling: touch !important;
-    margin-top: 12px !important; border-radius: 14px !important;
-    scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-top: 14px !important;
+    border: 1px solid #E1E6EB !important;
+    border-radius: 10px !important;
+    scrollbar-width: thin;
 }
 
-table.ld-table { width: 100% !important; border-collapse: collapse !important; text-align: left !important; font-size: 0.88rem !important; }
-table.ld-table th { background: #f8fafc !important; color: #475569 !important; font-weight: 800 !important; padding: 13px 16px !important; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap !important; }
-table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f5f9 !important; color: #334155 !important; vertical-align: middle !important; word-break: break-word !important; }
+table.ld-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    text-align: left !important;
+    font-size: 0.9rem !important;
+}
 
-.ld-btn {
-    display: inline-flex !important; align-items: center !important; justify-content: center !important;
-    gap: 6px !important; padding: 8px 16px !important; min-height: 40px !important; border-radius: 10px !important;
-    font-size: 0.85rem !important; font-weight: 700 !important; cursor: pointer !important;
-    transition: all 0.18s ease !important; text-decoration: none !important; border: none !important;
-    background: rgba(99, 102, 241, 0.08) !important; color: #4338ca !important; box-sizing: border-box !important;
+table.ld-table th {
+    background: #F8FAFC !important;
+    color: #5B6770 !important;
+    font-weight: 800 !important;
+    font-size: 0.76rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #E1E6EB !important;
     white-space: nowrap !important;
 }
-.ld-btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25) !important; }
-.ld-btn-danger  { background: rgba(239, 68, 68, 0.08) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.25) !important; }
-.ld-btn-success { background: rgba(16, 185, 129, 0.08) !important; color: #10b981 !important; border: 1px solid rgba(16, 185, 129, 0.25) !important; }
-.ld-btn-xs      { padding: 5px 12px !important; min-height: 34px !important; font-size: 0.78rem !important; border-radius: 8px !important; }
 
+table.ld-table td {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+    color: #1F1F1F !important;
+    vertical-align: middle !important;
+}
+
+table.ld-table tbody tr:hover {
+    background-color: #F8FAFC !important;
+}
+
+/* ── BUTTONS ── */
+.ld-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 8px 16px !important;
+    min-height: 38px !important;
+    border-radius: 8px !important;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    text-decoration: none !important;
+    border: none !important;
+    background: var(--cr-blue-light) !important;
+    color: var(--cr-blue) !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
+
+.ld-btn-primary {
+    background: var(--cr-blue) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 6px rgba(0, 86, 210, 0.25) !important;
+}
+
+.ld-btn-primary:hover {
+    background: var(--cr-blue-hover) !important;
+}
+
+.ld-btn-danger {
+    background: #ffebe6 !important;
+    color: #D9381E !important;
+    border: 1px solid rgba(217, 56, 30, 0.25) !important;
+}
+
+.ld-btn-success {
+    background: #e8f5e9 !important;
+    color: #12824C !important;
+    border: 1px solid #b7eb8f !important;
+}
+
+.ld-btn-xs {
+    padding: 5px 12px !important;
+    min-height: 32px !important;
+    font-size: 0.78rem !important;
+    border-radius: 6px !important;
+}
+
+/* ── MODALS & FORMS ── */
 .ld-modal-overlay {
-    position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.3) !important;
-    z-index: 100000 !important; display: none; align-items: center !important; justify-content: center !important;
-    padding: 1rem !important; overflow-y: auto !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(3px) !important;
+    z-index: 100000 !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1rem !important;
+    overflow-y: auto !important;
 }
+
 .ld-modal-overlay.active { display: flex !important; }
+
 .ld-modal-content {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important; border-radius: 20px !important;
-    padding: 1.5rem !important; width: 92vw !important; max-width: 540px !important;
-    max-height: 88vh !important; overflow-y: auto !important; position: relative !important;
-    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15) !important; color: #0f172a !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E1E6EB !important;
+    border-radius: 16px !important;
+    padding: 1.75rem !important;
+    width: 92vw !important;
+    max-width: 560px !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+    position: relative !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18) !important;
+    color: #1F1F1F !important;
 }
-.ld-modal-close { position: absolute !important; top: 14px !important; right: 14px !important; background: rgba(99, 102, 241, 0.08) !important; border: 1px solid #e2e8f0 !important; color: #475569 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; }
 
-.ld-form-group { display: flex !important; flex-direction: column !important; gap: 4px !important; width: 100% !important; margin-bottom: 12px !important; }
-.ld-form-group label { font-size: 0.78rem !important; font-weight: 700 !important; color: #4f46e5 !important; margin-bottom: 2px !important; }
-.ld-input, .ld-select, .ld-textarea { width: 100% !important; background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; border-radius: 12px !important; padding: 9px 12px !important; font-size: 0.88rem !important; min-height: 42px !important; outline: none !important; }
+.ld-modal-close {
+    position: absolute !important;
+    top: 14px !important;
+    right: 14px !important;
+    background: #F5F7FA !important;
+    border: 1px solid #E1E6EB !important;
+    color: #475569 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+}
 
-[style*="color: #ffffff"] { color: #0f172a !important; }
+.ld-form-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    width: 100% !important;
+    margin-bottom: 12px !important;
+}
+
+.ld-form-group label {
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    color: #00255D !important;
+    margin-bottom: 2px !important;
+}
+
+.ld-input, .ld-select, .ld-textarea {
+    width: 100% !important;
+    background: #FFFFFF !important;
+    border: 1px solid #C2C9D1 !important;
+    color: #1F1F1F !important;
+    border-radius: 8px !important;
+    padding: 9px 12px !important;
+    font-size: 0.9rem !important;
+    min-height: 40px !important;
+    outline: none !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+.ld-input:focus, .ld-select:focus, .ld-textarea:focus {
+    border-color: var(--cr-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 86, 210, 0.15) !important;
+}
 </style>
 
 <div class="ld-overlay-dim" id="adminDim" onclick="toggleAdminSidebar()"></div>
@@ -462,7 +828,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
 
                 <!-- Recent Transactions Table -->
                 <div class="ld-card" style="margin-top: 1rem;">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 10px 0;">🔄 Recent Transactions</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 10px 0;">🔄 Recent Transactions</h3>
                     <div class="ld-table-container">
                         <table class="ld-table">
                             <thead>
@@ -479,7 +845,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                                 <% if (transactions && transactions.length > 0) { %>
                                     <% transactions.slice(0, 10).forEach(t => { %>
                                         <tr>
-                                            <td style="font-weight: 700; color: #ffffff;"><%= t.title %></td>
+                                            <td style="font-weight: 700; color: #1F1F1F;"><%= t.title %></td>
                                             <td><%= t.user_name || t.student_name || 'Member' %></td>
                                             <td><%= t.issue_date %></td>
                                             <td><%= t.due_date %></td>
@@ -515,7 +881,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <section id="tab-books" class="tab-content" style="display: none;">
                 <div class="ld-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
-                        <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0;">📚 Books Catalog</h3>
+                        <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0;">📚 Books Catalog</h3>
                         <button class="ld-btn ld-btn-primary" onclick="openModal('addBookModal')">+ Add New Book</button>
                     </div>
 
@@ -539,7 +905,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                                                 <img src="<%= b.cover_url || '/static/placeholder-cover.jpg' %>" alt="Cover" style="width: 36px; height: 50px; object-fit: cover; border-radius: 6px;">
                                             </td>
                                             <td>
-                                                <div style="font-weight: 700; color: #ffffff;"><%= b.title %></div>
+                                                <div style="font-weight: 700; color: #1F1F1F;"><%= b.title %></div>
                                                 <div style="font-size: 0.75rem; color: var(--muted);"><%= b.author %></div>
                                             </td>
                                             <td><%= b.genre || 'General' %></td>
@@ -570,7 +936,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <section id="tab-members" class="tab-content" style="display: none;">
                 <div class="ld-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
-                        <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0;">👥 Registered Members</h3>
+                        <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0;">👥 Registered Members</h3>
                         <button class="ld-btn ld-btn-success" onclick="openModal('addUserModal')">+ Add Member</button>
                     </div>
 
@@ -590,7 +956,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                                 <% if (students && students.length > 0) { %>
                                     <% students.forEach(s => { %>
                                         <tr>
-                                            <td style="font-weight: 700; color: #ffffff;"><%= s.name || s.user_name %></td>
+                                            <td style="font-weight: 700; color: #1F1F1F;"><%= s.name || s.user_name %></td>
                                             <td><span style="text-transform: capitalize;"><%= s.role || 'Student' %></span></td>
                                             <td><%= s.class || '-' %> <%= s.section ? '(' + s.section + ')' : '' %></td>
                                             <td><%= s.admission_no || s.user_id || '-' %></td>
@@ -622,7 +988,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: TRANSACTIONS ── -->
             <section id="tab-transactions" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">🔄 Active Issued Loans</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">🔄 Active Issued Loans</h3>
                     <div class="ld-table-container">
                         <table class="ld-table">
                             <thead>
@@ -639,7 +1005,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                                 <% if (transactions && transactions.length > 0) { %>
                                     <% transactions.filter(t => !t.return_date).forEach(t => { %>
                                         <tr>
-                                            <td style="font-weight: 700; color: #ffffff;"><%= t.title %></td>
+                                            <td style="font-weight: 700; color: #1F1F1F;"><%= t.title %></td>
                                             <td><%= t.user_name || t.student_name || 'Member' %></td>
                                             <td><%= t.issue_date %></td>
                                             <td><%= t.due_date %></td>
@@ -680,7 +1046,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                                 <% if (transactions && transactions.filter(t => t.is_overdue).length > 0) { %>
                                     <% transactions.filter(t => t.is_overdue).forEach(t => { %>
                                         <tr>
-                                            <td style="font-weight: 700; color: #ffffff;"><%= t.title %></td>
+                                            <td style="font-weight: 700; color: #1F1F1F;"><%= t.title %></td>
                                             <td><%= t.user_name || t.student_name || 'Member' %></td>
                                             <td style="color: #f87171; font-weight: 700;"><%= t.due_date %></td>
                                             <td style="color: #f87171; font-weight: 800;">₹<%= t.calculated_fine || 0 %></td>
@@ -704,7 +1070,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: RESERVATIONS / BOOK REQUESTS ── -->
             <section id="tab-reservations" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📖 Student Book Requests</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">📖 Student Book Requests</h3>
                     <div class="ld-table-container">
                         <table class="ld-table">
                             <thead>
@@ -719,7 +1085,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                                 <% if (reservations && reservations.length > 0) { %>
                                     <% reservations.forEach(r => { %>
                                         <tr>
-                                            <td style="font-weight: 700; color: #ffffff;"><%= r.title %></td>
+                                            <td style="font-weight: 700; color: #1F1F1F;"><%= r.title %></td>
                                             <td><%= r.student_name || 'Student' %></td>
                                             <td><%= r.created_at ? r.created_at.slice(0, 10) : 'Recent' %></td>
                                             <td>
@@ -748,7 +1114,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: REVIEWS ── -->
             <section id="tab-reviews" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">⭐ Book Reviews Moderation</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">⭐ Book Reviews Moderation</h3>
                     <div class="ld-table-container">
                         <table class="ld-table">
                             <thead>
@@ -763,7 +1129,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                                 <% if (pending_reviews && pending_reviews.length > 0) { %>
                                     <% pending_reviews.forEach(rv => { %>
                                         <tr>
-                                            <td style="font-weight: 700; color: #ffffff;"><%= rv.book_title %></td>
+                                            <td style="font-weight: 700; color: #1F1F1F;"><%= rv.book_title %></td>
                                             <td><%= rv.student_name %></td>
                                             <td><%= rv.learned %></td>
                                             <td>
@@ -792,12 +1158,12 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: REPORTS & DATA HUB ── -->
             <section id="tab-reports" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📈 Reports & Data Hub</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">📈 Reports & Data Hub</h3>
                     <p style="color: var(--muted); font-size: 0.85rem;">Export or import catalog and member records using CSV/Excel formats.</p>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 1rem;">
                         <div style="background: rgba(99, 102, 241, 0.08); padding: 1rem; border-radius: 14px; border: 1px solid var(--border);">
-                            <h4 style="margin: 0 0 8px 0; color: #ffffff;">📥 Import Data</h4>
+                            <h4 style="margin: 0 0 8px 0; color: #1F1F1F;">📥 Import Data</h4>
                             <div class="ld-form-group">
                                 <label>Target Module</label>
                                 <select id="importModule" class="ld-select">
@@ -814,7 +1180,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
                         </div>
 
                         <div style="background: rgba(16, 185, 129, 0.08); padding: 1rem; border-radius: 14px; border: 1px solid var(--border);">
-                            <h4 style="margin: 0 0 8px 0; color: #ffffff;">📤 Export Data</h4>
+                            <h4 style="margin: 0 0 8px 0; color: #1F1F1F;">📤 Export Data</h4>
                             <div class="ld-form-group">
                                 <label>Export Module</label>
                                 <select id="exportModule" class="ld-select">
@@ -839,7 +1205,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: LIBRARIAN ANALYTICS ── -->
             <section id="tab-analytics" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📊 Library Analytics & Performance</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">📊 Library Analytics & Performance</h3>
                     <div class="ld-stats-grid" style="margin-bottom: 1rem;">
                         <div class="ld-stat-card">
                             <div class="ld-stat-icon">📖</div>
@@ -868,7 +1234,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: CALENDAR ── -->
             <section id="tab-calendar" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">📅 Library Operations Calendar</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">📅 Library Operations Calendar</h3>
                     <p style="color: var(--muted); font-size: 0.85rem;">Track book return due dates, upcoming library events, and operational schedules.</p>
                     <div style="background: #f8fafc; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); margin-top: 1rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -883,7 +1249,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: MY PROFILE ── -->
             <section id="tab-profile" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">👤 Librarian Profile</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">👤 Librarian Profile</h3>
                     <form action="/admin/settings" method="POST">
                         <div class="ld-form-group">
                             <label>Full Name</label>
@@ -905,7 +1271,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: SETTINGS ── -->
             <section id="tab-settings" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">⚙️ Library System Settings</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">⚙️ Library System Settings</h3>
                     <form action="/admin/settings" method="POST">
                         <div class="ld-form-group">
                             <label>Overdue Fine Rate per Day (₹)</label>
@@ -1020,10 +1386,10 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
             <!-- ── TAB: HELP & SUPPORT ── -->
             <section id="tab-support" class="tab-content" style="display: none;">
                 <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff; margin: 0 0 1rem 0;">❓ Help & Technical Support</h3>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">❓ Help & Technical Support</h3>
                     <p style="color: var(--muted); font-size: 0.85rem;">Contact Librika technical team or review automated support guides.</p>
                     <div style="background: rgba(99, 102, 241, 0.08); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); margin-top: 1rem;">
-                        <h4 style="margin: 0 0 6px 0; color: #ffffff;">📞 Support Contact</h4>
+                        <h4 style="margin: 0 0 6px 0; color: #1F1F1F;">📞 Support Contact</h4>
                         <p style="margin: 0; font-size: 0.85rem; color: #4f46e5;">Email: support@librika.in | Helpline: +91 (800) LIBRIKA</p>
                     </div>
                 </div>
@@ -1198,7 +1564,7 @@ table.ld-table td { padding: 13px 16px !important; border-bottom: 1px solid #f1f
 <div class="ld-modal-overlay" id="addUserModal">
     <div class="ld-modal-content">
         <button class="ld-modal-close" onclick="closeModal('addUserModal')">✕</button>
-        <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: #ffffff; margin: 0 0 1rem 0;">+ Add New Member</h3>
+        <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: #1F1F1F; margin: 0 0 1rem 0;">+ Add New Member</h3>
         <form action="/admin/student/add" method="POST">
             <div class="ld-form-group">
                 <label>Full Name *</label>
