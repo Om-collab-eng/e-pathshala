@@ -28,15 +28,17 @@ cd public_html
 unzip -o librika_upload.zip
 rm -f librika_upload.zip
 
-# Restart node app via process kill (MilesWeb container supervisor auto-spawns) & PM2 / Passenger
-if command -v pm2 &> /dev/null; then
-    pm2 restart all || pm2 restart app || pm2 restart server_new || true
-fi
+# Ensure Node & NVM environment
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# Kill old running node instance so container supervisor respawns fresh server
+# Install any new dependencies
+npm install --silent || true
+
+# Kill running node instance so supervisor cleanly restarts server
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
 
-# Touch passenger/cPanel restart if applicable
+# Touch passenger/restart if applicable
 mkdir -p tmp
 touch tmp/restart.txt
 
