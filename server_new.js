@@ -321,6 +321,14 @@ app.get('/exit-demo', (req, res) => {
 const maintenanceMiddleware = require('./middleware/maintenanceMiddleware');
 app.use(maintenanceMiddleware);
 
+// Live Video Classroom, Course Studio & LMS routes
+const liveRoutes = require('./routes/liveRoutes');
+app.use('/', liveRoutes);
+
+// Initialize Live Studio Tables & Sample Batches
+const { initLiveTables } = require('./db/initLiveTables');
+initLiveTables().catch(err => console.warn('[LIVE STUDIO] Init warning:', err.message));
+
 // Auth routes
 app.use('/', require('./routes/authRoutes'));
 

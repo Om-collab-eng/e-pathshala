@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/coursera-librika.css">
+  <link rel="stylesheet" href="/live-studio.css">
+</head>
+<body class="ls-body" style="background:#0F172A;color:#FFFFFF;">
+
+  <div class="ls-player-shell">
+    
+    <!-- =========================================================================
+         1. LEFT SIDEBAR: SYLLABUS ACCORDION & PROGRESS
+         ========================================================================= -->
+    <aside class="ls-player-sidebar">
+      
+      <!-- Top Course Info -->
+      <div class="ls-player-syllabus-head">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <a href="/student" style="color:#94A3B8;text-decoration:none;font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:4px;">
+            &larr; Student Portal
+          </a>
+          <span style="font-size:0.75rem;background:#0056D2;color:white;font-weight:700;padding:2px 8px;border-radius:9999px;">
+            <%= course.level || 'All Levels' %>
+          </span>
+        </div>
+
+        <h2 style="font-size:1.1rem;font-weight:800;margin:0 0 10px 0;line-height:1.3;"><%= course.title %></h2>
+        
+        <!-- Progress Bar -->
+        <div style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#94A3B8;margin-bottom:4px;">
+            <span>Course Progress</span>
+            <span style="font-weight:700;color:#10B981;"><%= enrollment.progress_percent || 0 %>% Completed</span>
+          </div>
+          <div style="height:6px;background:#334155;border-radius:9999px;overflow:hidden;">
+            <div style="height:100%;background:#10B981;width:<%= enrollment.progress_percent || 0 %>%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modules List -->
+      <div style="flex-grow:1;overflow-y:auto;">
+        <% if (modules && modules.length > 0) { %>
+          <% modules.forEach((m, mIdx) => { %>
+            <div class="ls-module-item">
+              <div class="ls-module-title">
+                <%= m.title %>
+              </div>
+              
+              <% if (m.lessons && m.lessons.length > 0) { %>
+                <% m.lessons.forEach((l, lIdx) => { %>
+                  <a href="/courses/<%= course.id %>/learn?lesson=<%= l.id %>" class="ls-lesson-link <%= (activeLesson && activeLesson.id === l.id) ? 'active' : '' %>">
+                    <span class="material-symbols-outlined text-[18px]" style="color:<%= l.content_type === 'live_class' ? '#EF4444' : '#60A5FA' %>;">
+                      <%= l.content_type === 'live_class' ? 'videocam' : (l.content_type === 'video' ? 'play_circle' : 'description') %>
+                    </span>
+                    <span style="flex-grow:1;line-height:1.3;"><%= l.title %></span>
+                    <span style="font-size:0.75rem;color:#64748B;"><%= l.duration_minutes || 45 %>m</span>
+                  </a>
+                <% }); %>
+              <% } %>
+            </div>
+          <% }); %>
+        <% } %>
+      </div>
+
+    </aside>
+
+    <!-- =========================================================================
+         2. MAIN STAGE: LESSON CONTENT & LIVE CLASS LAUNCHER
+         ========================================================================= -->
+    <main class="ls-player-main">
+      
+      <!-- Top Bar -->
+      <div style="height:60px;background:#1E293B;border-bottom:1px solid #334155;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:0.85rem;color:#94A3B8;">Current Lecture:</span>
+          <strong style="color:#FFFFFF;font-size:0.95rem;"><%= (activeLesson && activeLesson.title) || 'Course Overview' %></strong>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;">
+          <a href="/studio" class="ls-btn ls-btn-outline" style="color:#FFFFFF;border-color:#475569;padding:6px 12px;font-size:0.82rem;">
+            Faculty Studio
+          </a>
+        </div>
+      </div>
+
+      <div style="padding:2.5rem;max-width:1040px;margin:0 auto;width:100%;box-sizing:border-box;">
+        
+        <% if (activeLesson && activeLesson.content_type === 'live_class') { %>
+          <!-- LIVE CLASSROOM EMBED CARD -->
+          <div class="ls-live-countdown-card">
+            <span class="ls-badge live" style="font-size:0.8rem;padding:4px 12px;margin-bottom:1rem;">
+              <span class="ls-rec-dot"></span> LIVE CLASSROOM ACTIVE
+            </span>
+
+            <h2 style="font-size:1.8rem;font-weight:800;margin:0 0 0.75rem 0;">
+              <%= activeLesson.title %>
+            </h2>
+            <p style="color:#D1E2FF;font-size:1rem;margin:0 0 2rem 0;line-height:1.5;">
+              Join the live high-definition lecture with interactive drawing whiteboard, in-class student chat, screen sharing, and faculty Q&amp;A.
+            </p>
+
+            <% const currentMeeting = (liveSessions && liveSessions.length > 0) ? liveSessions[0] : { meeting_id: 'LIB-MERN-101' }; %>
+            <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+              <a href="/live/<%= currentMeeting.meeting_id %>" class="ls-btn ls-btn-live" style="padding:1rem 2.5rem;font-size:1.1rem;font-weight:800;border-radius:9999px;">
+                <span class="material-symbols-outlined text-[24px]">videocam</span> Join Live Classroom Now &rarr;
+              </a>
+            </div>
+
+            <div style="margin-top:1.5rem;font-size:0.85rem;color:#94A3B8;">
+              Meeting Room ID: <strong style="color:#FFFFFF;"><%= currentMeeting.meeting_id %></strong> &bull; Free instant access for enrolled students
+            </div>
+          </div>
+        <% } else { %>
+          <!-- RECORDED VIDEO / STANDARD LECTURE -->
+          <div class="ls-player-video-box" style="border-radius:var(--ls-radius-lg);overflow:hidden;box-shadow:0 15px 35px rgba(0,0,0,0.5);">
+            <iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Course Lecture Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;height:100%;"></iframe>
+          </div>
+        <% } %>
+
+        <!-- Lecture Details & Tabs -->
+        <div style="margin-top:2.5rem;background:#1E293B;border-radius:var(--ls-radius-lg);border:1px solid #334155;padding:2rem;">
+          <h3 style="font-size:1.3rem;font-weight:800;margin:0 0 0.5rem 0;"><%= (activeLesson && activeLesson.title) || course.title %></h3>
+          <p style="color:#94A3B8;font-size:0.95rem;line-height:1.6;margin:0 0 1.5rem 0;">
+            <%= course.description || 'Welcome to this masterclass module. Make sure to take notes, download reference code sheets, and participate actively in the live Q&A sessions.' %>
+          </p>
+
+          <div style="display:flex;gap:1rem;border-top:1px solid #334155;padding-top:1.25rem;">
+            <button class="ls-btn ls-btn-outline" style="color:#FFFFFF;border-color:#475569;">
+              📄 Download Lecture Notes (PDF)
+            </button>
+            <button class="ls-btn ls-btn-outline" style="color:#FFFFFF;border-color:#475569;">
+              💾 Source Code &amp; Repos
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+</body>
+</html>

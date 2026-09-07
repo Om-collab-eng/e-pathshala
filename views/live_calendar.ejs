@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/coursera-librika.css">
+  <link rel="stylesheet" href="/live-studio.css">
+</head>
+<body class="ls-body">
+
+  <!-- Header Navigation -->
+  <header class="ls-header">
+    <div style="display:flex;align-items:center;gap:1.5rem;">
+      <a href="/studio" class="ls-brand">
+        <img src="/logo.png" alt="Librika" style="height:32px;" onerror="this.style.display='none'">
+        <span>librika</span>
+        <span class="ls-brand-badge">Live Calendar</span>
+      </a>
+
+      <nav class="ls-nav-links">
+        <a href="/studio" class="ls-nav-link">
+          <span class="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
+        </a>
+        <a href="/studio/calendar" class="ls-nav-link active">
+          <span class="material-symbols-outlined text-[18px]">calendar_month</span> Live Schedule
+        </a>
+      </nav>
+    </div>
+
+    <div class="ls-header-actions">
+      <button onclick="document.getElementById('modalScheduleSession').style.display='flex'" class="ls-btn ls-btn-live">
+        <span class="material-symbols-outlined text-[18px]">videocam</span> + Schedule New Class
+      </button>
+      <a href="/studio" class="ls-btn ls-btn-outline">
+        &larr; Studio Dashboard
+      </a>
+    </div>
+  </header>
+
+  <main class="ls-container">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:800;color:#0F172A;margin:0 0 4px 0;">Interactive Live Class Calendar</h1>
+        <p style="margin:0;color:#64748B;font-size:0.92rem;">View scheduled video lectures, generate shareable guest tokens, and manage live batches.</p>
+      </div>
+
+      <button onclick="document.getElementById('modalScheduleSession').style.display='flex'" class="ls-btn ls-btn-primary">
+        <span class="material-symbols-outlined text-[18px]">add</span> Add Live Event
+      </button>
+    </div>
+
+    <!-- Calendar Grid / Scheduled Batches List -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:2rem;align-items:start;">
+      
+      <!-- Left Column: Batches Stream -->
+      <div class="ls-sessions-table-wrap">
+        <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
+          <h3 style="margin:0;font-size:1.1rem;font-weight:800;color:#0F172A;">All Scheduled Live Sessions</h3>
+          <span style="font-size:0.85rem;color:#64748B;font-weight:600;"><%= sessions ? sessions.length : 0 %> Sessions</span>
+        </div>
+
+        <table class="ls-table">
+          <thead>
+            <tr>
+              <th>Live Class Topic</th>
+              <th>Date &amp; Time</th>
+              <th>Meeting Room</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (sessions && sessions.length > 0) { %>
+              <% sessions.forEach(s => { %>
+                <tr>
+                  <td>
+                    <div style="font-weight:700;color:#0F172A;"><%= s.title %></div>
+                    <div style="font-size:0.82rem;color:#0056D2;font-weight:600;"><%= s.course_title || 'Standalone Live Masterclass' %></div>
+                  </td>
+                  <td>
+                    <div style="font-weight:600;"><%= new Date(s.scheduled_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></div>
+                    <div style="font-size:0.82rem;color:#64748B;"><%= new Date(s.scheduled_start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></div>
+                  </td>
+                  <td>
+                    <span class="ls-meeting-id-pill"><%= s.meeting_id %></span>
+                  </td>
+                  <td style="text-align:right;">
+                    <div style="display:flex;justify-content:flex-end;gap:6px;">
+                      <button onclick="copyJoinLink('<%= s.meeting_id %>')" class="ls-btn ls-btn-outline" style="padding:4px 8px;font-size:0.8rem;" title="Copy Shareable Link">
+                        📋 Copy
+                      </button>
+                      <a href="/live/<%= s.meeting_id %>" class="ls-btn ls-btn-primary" style="padding:4px 10px;font-size:0.82rem;">
+                        Launch &rarr;
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="4" style="text-align:center;padding:3rem;color:#64748B;">
+                  No live sessions scheduled yet.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Right Column: Quick Launcher & Tips -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        
+        <!-- Quick Meeting Card -->
+        <div style="background:linear-gradient(135deg, #00255D, #0056D2);color:white;border-radius:var(--ls-radius-lg);padding:1.75rem;box-shadow:0 10px 25px rgba(0,86,210,0.2);">
+          <div style="font-size:1.4rem;font-weight:800;margin-bottom:6px;">Instant Classroom</div>
+          <p style="font-size:0.88rem;color:#D1E2FF;margin:0 0 1.25rem 0;">Start an ad-hoc video conference and whiteboard room in 1 click.</p>
+          <button onclick="launchInstantMeeting()" class="ls-btn ls-btn-live" style="width:100%;padding:0.75rem;">
+            ⚡ Start Instant Live Room
+          </button>
+        </div>
+
+        <!-- Class Scheduling Tips -->
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:var(--ls-radius-lg);padding:1.5rem;">
+          <h4 style="margin:0 0 0.75rem 0;font-size:0.95rem;font-weight:800;color:#0F172A;display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined text-[18px]" style="color:#0056D2;">tips_and_updates</span> Instructor Tips
+          </h4>
+          <ul style="margin:0;padding-left:1.2rem;font-size:0.85rem;color:#475569;line-height:1.6;">
+            <li>All meeting links are encrypted and include digital whiteboard tools.</li>
+            <li>Students can join via web browser on desktop or mobile without downloading software.</li>
+            <li>Attendance is automatically logged as students enter the room.</li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL: SCHEDULE LIVE SESSION -->
+  <div id="modalScheduleSession" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:#FFFFFF;border-radius:var(--ls-radius-lg);max-width:560px;width:100%;padding:2rem;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.5rem;">
+        <span class="material-symbols-outlined text-[24px]" style="color:#EF4444;">videocam</span>
+        <h3 style="margin:0;font-size:1.25rem;font-weight:800;color:#0F172A;">Schedule Live Class Batch</h3>
+      </div>
+      <p style="margin:0 0 1.25rem 0;color:#64748B;font-size:0.85rem;">Creates an encrypted Zoom-style video room with shareable join links.</p>
+      
+      <form method="POST" action="/studio/sessions/schedule">
+        <div class="ls-form-group">
+          <label style="display:block;font-size:0.85rem;font-weight:700;color:#334155;margin-bottom:6px;">Select Associated Course</label>
+          <select name="course_id" style="width:100%;padding:0.75rem;border:1px solid #CBD5E1;border-radius:var(--ls-radius);">
+            <option value="">-- Standalone Live Masterclass --</option>
+            <% if (courses && courses.length > 0) { %>
+              <% courses.forEach(c => { %>
+                <option value="<%= c.id %>"><%= c.title %></option>
+              <% }); %>
+            <% } %>
+          </select>
+        </div>
+
+        <div class="ls-form-group" style="margin-top:1rem;">
+          <label style="display:block;font-size:0.85rem;font-weight:700;color:#334155;margin-bottom:6px;">Live Class Topic / Agenda *</label>
+          <input type="text" name="title" style="width:100%;box-sizing:border-box;padding:0.75rem;border:1px solid #CBD5E1;border-radius:var(--ls-radius);" placeholder="e.g. Graph Algorithms &amp; Live Whiteboard Coding" required>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+          <div>
+            <label style="display:block;font-size:0.85rem;font-weight:700;color:#334155;margin-bottom:6px;">Class Date *</label>
+            <input type="date" name="date" style="width:100%;box-sizing:border-box;padding:0.75rem;border:1px solid #CBD5E1;border-radius:var(--ls-radius);" required>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;font-weight:700;color:#334155;margin-bottom:6px;">Start Time *</label>
+            <input type="time" name="start_time" style="width:100%;box-sizing:border-box;padding:0.75rem;border:1px solid #CBD5E1;border-radius:var(--ls-radius);" required>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+          <div>
+            <label style="display:block;font-size:0.85rem;font-weight:700;color:#334155;margin-bottom:6px;">Duration (Mins)</label>
+            <input type="number" name="duration_minutes" style="width:100%;box-sizing:border-box;padding:0.75rem;border:1px solid #CBD5E1;border-radius:var(--ls-radius);" value="60" min="15" max="240">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;font-weight:700;color:#334155;margin-bottom:6px;">Room Passcode</label>
+            <input type="text" name="passcode" style="width:100%;box-sizing:border-box;padding:0.75rem;border:1px solid #CBD5E1;border-radius:var(--ls-radius);" value="123456">
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:1.75rem;">
+          <button type="button" onclick="document.getElementById('modalScheduleSession').style.display='none'" class="ls-btn ls-btn-outline">Cancel</button>
+          <button type="submit" class="ls-btn ls-btn-live">Schedule Live Batch</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function copyJoinLink(meetingId) {
+      const url = window.location.origin + '/live/' + meetingId;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('📋 Shareable Live Class link copied to clipboard:\n' + url);
+      });
+    }
+
+    function launchInstantMeeting() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const randomId = 'LIB-' + code.slice(0, 3) + '-' + code.slice(3);
+      window.location.href = '/live/' + randomId;
+    }
+  </script>
+</body>
+</html>

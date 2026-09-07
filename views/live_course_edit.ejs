@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/coursera-librika.css">
+  <link rel="stylesheet" href="/live-studio.css">
+  <style>
+    .ls-tab-btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #64748B;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ls-tab-btn.active {
+      color: var(--ls-primary);
+      border-bottom-color: var(--ls-primary);
+    }
+    .ls-form-group {
+      margin-bottom: 1.25rem;
+    }
+    .ls-form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .ls-form-input, .ls-form-select, .ls-form-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.75rem 1rem;
+      border: 1px solid #CBD5E1;
+      border-radius: var(--ls-radius);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      background: #FFFFFF;
+    }
+    .ls-form-input:focus, .ls-form-select:focus, .ls-form-textarea:focus {
+      border-color: var(--ls-primary);
+      box-shadow: 0 0 0 3px rgba(0, 86, 210, 0.15);
+    }
+    .ls-card-module {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--ls-radius);
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+    }
+    .ls-card-module-head {
+      background: #F8FAFC;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body class="ls-body">
+
+  <!-- Header Navigation -->
+  <header class="ls-header">
+    <div style="display:flex;align-items:center;gap:1.5rem;">
+      <a href="/studio" class="ls-brand">
+        <img src="/logo.png" alt="Librika" style="height:32px;" onerror="this.style.display='none'">
+        <span>librika</span>
+        <span class="ls-brand-badge">Studio Course Builder</span>
+      </a>
+
+      <span style="color:#CBD5E1;">|</span>
+      <span style="font-weight:700;color:#0F172A;font-size:0.95rem;">
+        <%= isNew ? 'Create New Course' : course.title %>
+      </span>
+    </div>
+
+    <div class="ls-header-actions">
+      <a href="/studio" class="ls-btn ls-btn-outline">
+        &larr; Back to Studio
+      </a>
+      <% if (!isNew) { %>
+        <a href="/courses/<%= course.id %>/learn" class="ls-btn ls-btn-primary" target="_blank">
+          👁️ Preview Student LMS &rarr;
+        </a>
+      <% } %>
+    </div>
+  </header>
+
+  <main class="ls-container" style="max-width:1140px;">
+    
+    <!-- Course Title Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:800;color:#0F172A;margin:0 0 4px 0;">
+          <%= isNew ? 'Course Creation Wizard' : course.title %>
+        </h1>
+        <p style="margin:0;color:#64748B;font-size:0.92rem;">
+          <%= isNew ? 'Define your course overview, syllabus structure, and live scheduling preferences.' : 'Manage modular lessons, schedule live lecture rooms, and monitor student progress.' %>
+        </p>
+      </div>
+
+      <% if (!isNew) { %>
+        <div style="display:flex;gap:8px;">
+          <button onclick="document.getElementById('modalScheduleSession').style.display='flex'" class="ls-btn ls-btn-live">
+            <span class="material-symbols-outlined text-[18px]">videocam</span> + Schedule Live Class
+          </button>
+        </div>
+      <% } %>
+    </div>
+
+    <% if (!isNew) { %>
+      <!-- Tabs Navigation -->
+      <div style="display:flex;border-bottom:1px solid #CBD5E1;margin-bottom:2rem;gap:8px;">
+        <button class="ls-tab-btn active" onclick="switchCourseTab('curriculum', this)">
+          <span class="material-symbols-outlined text-[18px]">view_list</span> Curriculum &amp; Modules (<%= modules ? modules.length : 0 %>)
+        </button>
+        <button class="ls-tab-btn" onclick="switchCourseTab('sessions', this)">
+          <span class="material-symbols-outlined text-[18px]">videocam</span> Live Batches (<%= sessions ? sessions.length : 0 %>)
+        </button>
+        <button class="ls-tab-btn" onclick="switchCourseTab('students', this)">
+          <span class="material-symbols-outlined text-[18px]">group</span> Enrolled Roster (<%= enrollments ? enrollments.length : 0 %>)
+        </button>
+        <button class="ls-tab-btn" onclick="switchCourseTab('settings', this)">
+          <span class="material-symbols-outlined text-[18px]">settings</span> Course Details &amp; Metadata
+        </button>
+      </div>
+    <% } %>
+
+    <!-- TAB 1: CURRICULUM SYLLABUS -->
+    <div id="tab-curriculum" class="course-tab-pane" style="<%= isNew ? 'display:none;' : 'display:block;' %>">
+      
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0F172A;">Course Modules &amp; Chapters</h3>
+        <button onclick="document.getElementById('modalAddModule').style.display='flex'" class="ls-btn ls-btn-primary" style="font-size:0.85rem;padding:0.45rem 1rem;">
+          + Add New Chapter / Module
+        </button>
+      </div>
+
+      <% if (modules && modules.length > 0) { %>
+        <% modules.forEach((m, idx) => { %>
+          <div class="ls-card-module">
+            <div class="ls-card-module-head">
+              <div style="font-weight:700;color:#0F172A;font-size:1rem;display:flex;align-items:center;gap:8px;">
+                <span class="material-symbols-outlined" style="color:#0056D2;">folder_open</span>
+                <%= m.title %>
+              </div>
+              <button onclick="openAddLessonModal(<%= m.id %>, '<%= m.title.replace(/'/g, "\\'") %>')" class="ls-btn ls-btn-outline" style="padding:4px 10px;font-size:0.8rem;">
+                + Add Lesson / Live Class
+              </button>
+            </div>
+            
+            <div style="padding:0.75rem 1.25rem;">
+              <% if (m.lessons && m.lessons.length > 0) { %>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <% m.lessons.forEach((l, lIdx) => { %>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.85rem;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;">
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-weight:700;color:#64748B;font-size:0.85rem;"><%= idx + 1 %>.<%= lIdx + 1 %></span>
+                        <% if (l.content_type === 'live_class') { %>
+                          <span class="ls-badge live" style="font-size:0.7rem;">LIVE CLASS</span>
+                        <% } else if (l.content_type === 'video') { %>
+                          <span class="ls-badge scheduled" style="font-size:0.7rem;">VIDEO</span>
+                        <% } else { %>
+                          <span class="ls-badge completed" style="font-size:0.7rem;">NOTES</span>
+                        <% } %>
+                        <span style="font-weight:600;color:#0F172A;font-size:0.92rem;"><%= l.title %></span>
+                      </div>
+                      <span style="font-size:0.82rem;color:#64748B;font-weight:500;">⏱️ <%= l.duration_minutes || 45 %> mins</span>
+                    </div>
+                  <% }); %>
+                </div>
+              <% } else { %>
+                <div style="padding:1.5rem;text-align:center;color:#64748B;font-size:0.88rem;">
+                  No lessons attached to this module yet. Click <strong>"+ Add Lesson"</strong> above.
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div style="background:#FFFFFF;border:1px dashed #CBD5E1;border-radius:var(--ls-radius);padding:3rem;text-align:center;">
+          <p style="color:#64748B;margin-bottom:1rem;">Start building your syllabus by adding your first module.</p>
+          <button onclick="document.getElementById('modalAddModule').style.display='flex'" class="ls-btn ls-btn-primary">
+            + Add First Module
+          </button>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- TAB 2: LIVE SCHEDULED BATCHES -->
+    <div id="tab-sessions" class="course-tab-pane" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0F172A;">Scheduled Live Batches</h3>
+        <button onclick="document.getElementById('modalScheduleSession').style.display='flex'" class="ls-btn ls-btn-live">
+          + Schedule New Batch
+        </button>
+      </div>
+
+      <div class="ls-sessions-table-wrap">
+        <table class="ls-table">
+          <thead>
+            <tr>
+              <th>Batch Topic</th>
+              <th>Date &amp; Time</th>
+              <th>Meeting ID</th>
+              <th>Passcode</th>
+              <th>Status</th>
+              <th>Share Link</th>
+              <th style="text-align:right;">Host Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (sessions && sessions.length > 0) { %>
+              <% sessions.forEach(s => { %>
+                <tr>
+                  <td><strong><%= s.title %></strong></td>
+                  <td><%= new Date(s.scheduled_start).toLocaleString() %></td>
+                  <td><span class="ls-meeting-id-pill"><%= s.meeting_id %></span></td>
+                  <td><code><%= s.passcode %></code></td>
+                  <td><span class="ls-badge <%= s.status %>"><%= s.status %></span></td>
+                  <td>
+                    <button onclick="copyJoinLink('<%= s.meeting_id %>')" class="ls-btn ls-btn-outline" style="padding:4px 10px;font-size:0.8rem;">
+                      Copy Link
+                    </button>
+                  </td>
+                  <td style="text-align:right;">
+                    <a href="/live/<%= s.meeting_id %>" class="ls-btn ls-btn-primary" style="padding:6px 12px;font-size:0.85rem;">
+                      Join Class
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" style="text-align:center;padding:2.5rem;color:#64748B;">
+                  No live batches scheduled for this course yet.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: ENROLLED STUDENTS ROSTER -->
+    <div id="tab-students" class="course-tab-pane" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+        <div>
+          <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0F172A;">Student Roster &amp; Progress</h3>
+          <p style="margin:4px 0 0 0;font-size:0.85rem;color:#64748B;">Track attendance, milestone completion, and participation.</p>
+        </div>
+      </div>
+
+      <div class="ls-sessions-table-wrap">
+        <table class="ls-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Email Address</th>
+              <th>Enrollment Date</th>
+              <th>Syllabus Progress</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (enrollments && enrollments.length > 0) { %>
+              <% enrollments.forEach(e => { %>
+                <tr>
+                  <td><strong><%= e.user_name || 'Student' %></strong></td>
+                  <td><%= e.user_email || 'student@librika.in' %></td>
+                  <td><%= new Date(e.enrolled_at).toLocaleDateString() %></td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <div style="flex-grow:1;height:8px;background:#E2E8F0;border-radius:9999px;overflow:hidden;width:120px;">
+                        <div style="height:100%;background:#10B981;width:<%= e.progress_percent || 0 %>%;"></div>
+                      </div>
+                      <span style="font-weight:700;font-size:0.85rem;color:#0F172A;"><%= e.progress_percent || 0 %>%</span>
+                    </div>
+                  </td>
+                  <td><span class="ls-badge completed"><%= e.status %></span></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" style="text-align:center;padding:2.5rem;color:#64748B;">
+                  No students enrolled in this course yet.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: COURSE DETAILS & METADATA -->
+    <div id="tab-settings" class="course-tab-pane" style="<%= isNew ? 'display:block;' : 'display:none;' %>">
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:var(--ls-radius-lg);padding:2rem;">
+        <form method="POST" action="<%= isNew ? '/studio/courses' : '/studio/courses/' + course.id %>">
+          
+          <div class="ls-form-group">
+            <label class="ls-form-label">Course Title *</label>
+            <input type="text" name="title" class="ls-form-input" value="<%= course.title || '' %>" placeholder="e.g. Full-Stack Web Development Bootcamp (MERN & Next.js)" required>
+          </div>
+
+          <div class="ls-form-group">
+            <label class="ls-form-label">Subtitle / Tagline</label>
+            <input type="text" name="subtitle" class="ls-form-input" value="<%= course.subtitle || '' %>" placeholder="e.g. Master React, Node.js, Express & Next.js with live coding sessions">
+          </div>
+
+          <div class="ls-form-group">
+            <label class="ls-form-label">Course Description &amp; Learning Outcomes</label>
+            <textarea name="description" rows="4" class="ls-form-textarea" placeholder="Detailed syllabus breakdown, requirements, and target audience..."><%= course.description || '' %></textarea>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:1rem;">
+            <div class="ls-form-group">
+              <label class="ls-form-label">Category</label>
+              <select name="category" class="ls-form-select">
+                <option value="Computer Science" <%= course.category === 'Computer Science' ? 'selected' : '' %>>Computer Science &amp; Coding</option>
+                <option value="AI & Data Science" <%= course.category === 'AI & Data Science' ? 'selected' : '' %>>AI &amp; Data Science</option>
+                <option value="Science & Academics" <%= course.category === 'Science & Academics' ? 'selected' : '' %>>Science &amp; Academics</option>
+                <option value="Business & Finance" <%= course.category === 'Business & Finance' ? 'selected' : '' %>>Business &amp; Finance</option>
+                <option value="Competitive Exams" <%= course.category === 'Competitive Exams' ? 'selected' : '' %>>Competitive Exams (UPSC/GATE)</option>
+              </select>
+            </div>
+
+            <div class="ls-form-group">
+              <label class="ls-form-label">Difficulty Level</label>
+              <select name="level" class="ls-form-select">
+                <option value="All Levels" <%= course.level === 'All Levels' ? 'selected' : '' %>>All Levels</option>
+                <option value="Beginner" <%= course.level === 'Beginner' ? 'selected' : '' %>>Beginner</option>
+                <option value="Intermediate" <%= course.level === 'Intermediate' ? 'selected' : '' %>>Intermediate</option>
+                <option value="Advanced" <%= course.level === 'Advanced' ? 'selected' : '' %>>Advanced</option>
+              </select>
+            </div>
+
+            <div class="ls-form-group">
+              <label class="ls-form-label">Publication Status</label>
+              <select name="status" class="ls-form-select">
+                <option value="Published" <%= course.status === 'Published' ? 'selected' : '' %>>Published (Open for Enrollment)</option>
+                <option value="Draft" <%= course.status === 'Draft' ? 'selected' : '' %>>Draft (Private)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="ls-form-group">
+            <label class="ls-form-label">Cover Image URL</label>
+            <input type="url" name="cover_image" class="ls-form-input" value="<%= course.cover_image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60' %>">
+          </div>
+
+          <div style="margin-top:2rem;display:flex;justify-content:flex-end;gap:12px;">
+            <a href="/studio" class="ls-btn ls-btn-outline">Cancel</a>
+            <button type="submit" class="ls-btn ls-btn-primary">
+              <%= isNew ? 'Create Course & Build Syllabus' : 'Save Course Changes' %>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: ADD MODULE -->
+  <% if (!isNew) { %>
+    <div id="modalAddModule" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:1rem;">
+      <div style="background:#FFFFFF;border-radius:var(--ls-radius-lg);max-width:500px;width:100%;padding:2rem;">
+        <h3 style="margin:0 0 1rem 0;font-size:1.25rem;font-weight:800;color:#0F172A;">Add New Chapter / Module</h3>
+        <form method="POST" action="/studio/courses/<%= course.id %>/modules">
+          <div class="ls-form-group">
+            <label class="ls-form-label">Module Title *</label>
+            <input type="text" name="title" class="ls-form-input" placeholder="e.g. Module 2: REST API Architecture & PostgreSQL" required>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:1.5rem;">
+            <button type="button" onclick="document.getElementById('modalAddModule').style.display='none'" class="ls-btn ls-btn-outline">Cancel</button>
+            <button type="submit" class="ls-btn ls-btn-primary">Add Module</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: ADD LESSON -->
+    <div id="modalAddLesson" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:1rem;">
+      <div style="background:#FFFFFF;border-radius:var(--ls-radius-lg);max-width:520px;width:100%;padding:2rem;">
+        <h3 style="margin:0 0 0.5rem 0;font-size:1.25rem;font-weight:800;color:#0F172A;">Add Lesson</h3>
+        <p id="modalLessonModuleTitle" style="margin:0 0 1.25rem 0;color:#64748B;font-size:0.85rem;font-weight:600;"></p>
+        <form method="POST" action="/studio/courses/<%= course.id %>/lessons">
+          <input type="hidden" name="module_id" id="modalLessonModuleId">
+          
+          <div class="ls-form-group">
+            <label class="ls-form-label">Lesson Title *</label>
+            <input type="text" name="title" class="ls-form-input" placeholder="e.g. Interactive Live Masterclass: React State & Custom Hooks" required>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="ls-form-group">
+              <label class="ls-form-label">Content Type</label>
+              <select name="content_type" class="ls-form-select">
+                <option value="live_class">🎥 Live Video Session</option>
+                <option value="video">▶️ Recorded Video</option>
+                <option value="pdf">📄 PDF Notes / Lecture Slides</option>
+              </select>
+            </div>
+            <div class="ls-form-group">
+              <label class="ls-form-label">Duration (Minutes)</label>
+              <input type="number" name="duration_minutes" class="ls-form-input" value="60" min="5" max="300">
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:1.5rem;">
+            <button type="button" onclick="document.getElementById('modalAddLesson').style.display='none'" class="ls-btn ls-btn-outline">Cancel</button>
+            <button type="submit" class="ls-btn ls-btn-primary">Save Lesson</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: SCHEDULE LIVE SESSION -->
+    <div id="modalScheduleSession" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:1rem;">
+      <div style="background:#FFFFFF;border-radius:var(--ls-radius-lg);max-width:560px;width:100%;padding:2rem;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.5rem;">
+          <span class="material-symbols-outlined text-[24px]" style="color:#EF4444;">videocam</span>
+          <h3 style="margin:0;font-size:1.25rem;font-weight:800;color:#0F172A;">Schedule Live Class Batch</h3>
+        </div>
+        <p style="margin:0 0 1.25rem 0;color:#64748B;font-size:0.85rem;">Creates an encrypted Zoom-style video room with shareable join links.</p>
+        
+        <form method="POST" action="/studio/sessions/schedule">
+          <input type="hidden" name="course_id" value="<%= course.id %>">
+          <input type="hidden" name="redirect_to" value="/studio/courses/<%= course.id %>">
+
+          <div class="ls-form-group">
+            <label class="ls-form-label">Live Class Topic / Agenda *</label>
+            <input type="text" name="title" class="ls-form-input" placeholder="e.g. Live Q&amp;A and Capstone Code Walkthrough" required>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="ls-form-group">
+              <label class="ls-form-label">Class Date *</label>
+              <input type="date" name="date" class="ls-form-input" required>
+            </div>
+            <div class="ls-form-group">
+              <label class="ls-form-label">Start Time *</label>
+              <input type="time" name="start_time" class="ls-form-input" required>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="ls-form-group">
+              <label class="ls-form-label">Duration (Mins)</label>
+              <input type="number" name="duration_minutes" class="ls-form-input" value="60" min="15" max="240">
+            </div>
+            <div class="ls-form-group">
+              <label class="ls-form-label">Room Passcode</label>
+              <input type="text" name="passcode" class="ls-form-input" value="123456">
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:1.5rem;">
+            <button type="button" onclick="document.getElementById('modalScheduleSession').style.display='none'" class="ls-btn ls-btn-outline">Cancel</button>
+            <button type="submit" class="ls-btn ls-btn-live">Schedule Live Batch</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+  <script>
+    function switchCourseTab(tabName, btn) {
+      document.querySelectorAll('.ls-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.course-tab-pane').forEach(p => p.style.display = 'none');
+      
+      btn.classList.add('active');
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.style.display = 'block';
+    }
+
+    function openAddLessonModal(moduleId, moduleTitle) {
+      document.getElementById('modalLessonModuleId').value = moduleId;
+      document.getElementById('modalLessonModuleTitle').textContent = 'Module: ' + moduleTitle;
+      document.getElementById('modalAddLesson').style.display = 'flex';
+    }
+
+    function copyJoinLink(meetingId) {
+      const url = window.location.origin + '/live/' + meetingId;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('📋 Shareable Live Class link copied to clipboard:\n' + url);
+      });
+    }
+  </script>
+</body>
+</html>

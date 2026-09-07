@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/coursera-librika.css">
+  <link rel="stylesheet" href="/live-studio.css">
+</head>
+<body class="ls-body">
+
+  <!-- =========================================================================
+       1. STUDIO HEADER NAVIGATION
+       ========================================================================= -->
+  <header class="ls-header">
+    <div style="display:flex;align-items:center;gap:1.5rem;">
+      <a href="/studio" class="ls-brand">
+        <img src="/logo.png" alt="Librika" style="height:32px;" onerror="this.style.display='none'">
+        <span>librika</span>
+        <span class="ls-brand-badge">Live Studio</span>
+      </a>
+
+      <nav class="ls-nav-links">
+        <a href="/studio" class="ls-nav-link active">
+          <span class="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
+        </a>
+        <a href="/studio/calendar" class="ls-nav-link">
+          <span class="material-symbols-outlined text-[18px]">calendar_month</span> Live Schedule
+        </a>
+        <a href="/admin" class="ls-nav-link">
+          <span class="material-symbols-outlined text-[18px]">corporate_fare</span> Campus Admin
+        </a>
+        <a href="/" class="ls-nav-link">
+          <span class="material-symbols-outlined text-[18px]">public</span> Public Catalog
+        </a>
+      </nav>
+    </div>
+
+    <div class="ls-header-actions">
+      <!-- Quick Schedule Live Class -->
+      <a href="/studio/calendar" class="ls-btn ls-btn-outline">
+        <span class="material-symbols-outlined text-[18px]">event</span> Schedule Class
+      </a>
+      
+      <!-- New Course Button -->
+      <a href="/studio/courses/new" class="ls-btn ls-btn-primary">
+        <span class="material-symbols-outlined text-[18px]">add_circle</span> Create Course
+      </a>
+
+      <!-- Instant Live Meeting Launch -->
+      <button onclick="launchInstantMeeting()" class="ls-btn ls-btn-live">
+        <span class="material-symbols-outlined text-[18px]">videocam</span> Go Live Now
+      </button>
+
+      <div style="display:flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid #E2E8F0;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#0056D2;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;">
+          <%= user.name.charAt(0) %>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       2. STUDIO MAIN CONTAINER
+       ========================================================================= -->
+  <main class="ls-container">
+    
+    <!-- Hero Banner -->
+    <div class="ls-hero-banner">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);padding:4px 10px;border-radius:9999px;font-size:0.8rem;font-weight:700;margin-bottom:0.75rem;">
+          <span>⚡</span> Teachable &amp; Classplus LMS Architecture
+        </div>
+        <h1 class="ls-hero-title">Welcome to Live Class Studio, <%= user.name %>!</h1>
+        <p class="ls-hero-subtitle">
+          Create structured curriculum batches, schedule calendar lectures, broadcast HD live video classes, and track student attendance seamlessly.
+        </p>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-shrink:0;">
+        <a href="/studio/courses/new" class="ls-btn" style="background:#FFFFFF;color:#0056D2;font-weight:700;box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+          + New Course
+        </a>
+      </div>
+    </div>
+
+    <!-- KPI Metrics Grid -->
+    <div class="ls-stats-grid">
+      <div class="ls-stat-card">
+        <div class="ls-stat-icon blue">
+          <span class="material-symbols-outlined">school</span>
+        </div>
+        <div>
+          <div class="ls-stat-value"><%= stats.totalCourses %></div>
+          <div class="ls-stat-label">Active Courses</div>
+        </div>
+      </div>
+
+      <div class="ls-stat-card">
+        <div class="ls-stat-icon purple">
+          <span class="material-symbols-outlined">group</span>
+        </div>
+        <div>
+          <div class="ls-stat-value"><%= stats.totalStudents %></div>
+          <div class="ls-stat-label">Total Learners</div>
+        </div>
+      </div>
+
+      <div class="ls-stat-card">
+        <div class="ls-stat-icon gold">
+          <span class="material-symbols-outlined">video_camera_front</span>
+        </div>
+        <div>
+          <div class="ls-stat-value"><%= stats.totalSessions %></div>
+          <div class="ls-stat-label">Scheduled Batches</div>
+        </div>
+      </div>
+
+      <div class="ls-stat-card">
+        <div class="ls-stat-icon green">
+          <span class="material-symbols-outlined">verified</span>
+        </div>
+        <div>
+          <div class="ls-stat-value"><%= stats.totalEnrollments %></div>
+          <div class="ls-stat-label">Batch Enrollments</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 1: Upcoming Live Scheduled Batches -->
+    <section style="margin-bottom: 3.5rem;">
+      <div class="ls-section-head">
+        <div>
+          <h2 class="ls-section-title">Live &amp; Upcoming Class Batches</h2>
+          <p style="margin:4px 0 0 0;font-size:0.88rem;color:#64748B;">Zoom-grade encrypted meeting rooms with 1-click shareable join links.</p>
+        </div>
+        <a href="/studio/calendar" class="ls-btn ls-btn-outline" style="font-size:0.85rem;padding:0.45rem 1rem;">
+          View Full Calendar &rarr;
+        </a>
+      </div>
+
+      <div class="ls-sessions-table-wrap">
+        <table class="ls-table">
+          <thead>
+            <tr>
+              <th>Class Topic &amp; Course</th>
+              <th>Date &amp; Scheduled Time</th>
+              <th>Meeting ID</th>
+              <th>Passcode</th>
+              <th>Status</th>
+              <th>Shareable Link</th>
+              <th style="text-align:right;">Host Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (sessions && sessions.length > 0) { %>
+              <% sessions.forEach(s => { %>
+                <tr>
+                  <td>
+                    <div style="font-weight:700;color:#0F172A;"><%= s.title %></div>
+                    <div style="font-size:0.82rem;color:#0056D2;font-weight:600;"><%= s.course_title || 'Standalone Live Masterclass' %></div>
+                  </td>
+                  <td>
+                    <div style="font-weight:600;"><%= new Date(s.scheduled_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></div>
+                    <div style="font-size:0.82rem;color:#64748B;"><%= new Date(s.scheduled_start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %> (<%= s.duration_minutes %> mins)</div>
+                  </td>
+                  <td>
+                    <span class="ls-meeting-id-pill"><%= s.meeting_id %></span>
+                  </td>
+                  <td>
+                    <span style="font-family:monospace;font-weight:600;color:#475569;"><%= s.passcode %></span>
+                  </td>
+                  <td>
+                    <span class="ls-badge <%= s.status %>">
+                      <% if (s.status === 'live') { %><span class="ls-rec-dot"></span><% } %>
+                      <%= s.status %>
+                    </span>
+                  </td>
+                  <td>
+                    <button onclick="copyJoinLink('<%= s.meeting_id %>')" class="ls-btn ls-btn-outline" style="padding:4px 10px;font-size:0.8rem;">
+                      📋 Copy Link
+                    </button>
+                  </td>
+                  <td style="text-align:right;">
+                    <a href="/live/<%= s.meeting_id %>" class="ls-btn ls-btn-primary" style="padding:6px 14px;font-size:0.85rem;">
+                      <span class="material-symbols-outlined text-[16px]">videocam</span> Join Class
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" style="text-align:center;padding:3rem 1rem;color:#64748B;">
+                  <span class="material-symbols-outlined text-[40px]" style="color:#94A3B8;margin-bottom:8px;display:block;">event_busy</span>
+                  No live batches scheduled yet. Click <strong>"Schedule Class"</strong> to set up your first online lecture!
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 2: Course Creator & Management (Teachable/Classplus Style) -->
+    <section>
+      <div class="ls-section-head">
+        <div>
+          <h2 class="ls-section-title">Your Course Catalog &amp; Curriculum</h2>
+          <p style="margin:4px 0 0 0;font-size:0.88rem;color:#64748B;">Manage modular chapters, video lessons, live classrooms, and student enrollments.</p>
+        </div>
+        <a href="/studio/courses/new" class="ls-btn ls-btn-primary">
+          + Add Course
+        </a>
+      </div>
+
+      <div class="ls-course-grid">
+        <% if (courses && courses.length > 0) { %>
+          <% courses.forEach(c => { %>
+            <div class="ls-course-card">
+              <div class="ls-course-thumb-wrap">
+                <img src="<%= c.cover_image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60' %>" class="ls-course-thumb" alt="<%= c.title %>">
+                <span class="ls-course-badge"><%= c.level || 'All Levels' %></span>
+              </div>
+              <div class="ls-course-body">
+                <div class="ls-course-category"><%= c.category || 'Technology' %></div>
+                <h3 class="ls-course-title"><%= c.title %></h3>
+                <p class="ls-course-desc"><%= c.subtitle || c.description || 'Comprehensive curriculum with live interactive lectures and project certifications.' %></p>
+                
+                <div class="ls-course-meta">
+                  <span>👥 <strong><%= c.enrollment_count || 0 %></strong> Learners</span>
+                  <span>🎥 <strong><%= c.session_count || 0 %></strong> Live Batches</span>
+                </div>
+
+                <div class="ls-course-actions">
+                  <a href="/studio/courses/<%= c.id %>" class="ls-btn ls-btn-primary" style="flex-grow:1;padding:0.5rem;">
+                    ⚙️ Manage Syllabus
+                  </a>
+                  <a href="/courses/<%= c.id %>/learn" class="ls-btn ls-btn-outline" style="padding:0.5rem 0.85rem;" title="Preview Student Learning View">
+                    👁️ Preview
+                  </a>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } %>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function copyJoinLink(meetingId) {
+      const url = window.location.origin + '/live/' + meetingId;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('📋 Shareable Live Class link copied to clipboard:\n' + url);
+      });
+    }
+
+    function launchInstantMeeting() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const randomId = 'LIB-' + code.slice(0, 3) + '-' + code.slice(3);
+      window.location.href = '/live/' + randomId;
+    }
+  </script>
+</body>
+</html>
