@@ -279,6 +279,19 @@ async function fetchStudentPortalData(userId, sCode) {
     quizzesCompleted: quizzes.filter(q => q.my_status === 'COMPLETED').length
   };
 
+  // 12. Student's own published content
+  const myPubsRes = await pool.query(
+    `SELECT d.*, 
+            (SELECT COUNT(*) FROM reading_progress rp WHERE rp.content_id = d.id) as bookmarks_count,
+            COALESCE(d.views, 0) as views,
+            COALESCE(d.downloads, 0) as downloads
+     FROM digital_content d
+     WHERE d.student_id = $1
+     ORDER BY d.created_at DESC`,
+    [userId]
+  ).catch(() => ({ rows: [] }));
+  const myPublications = myPubsRes.rows || [];
+
   return {
     student,
     stats,
@@ -287,6 +300,7 @@ async function fetchStudentPortalData(userId, sCode) {
     catalogBooks,
     continueReading,
     elibraryItems,
+    myPublications,
     studioSessions,
     quizzes,
     assignments,
@@ -661,14 +675,7 @@ router.get('/studio/meeting/:id', studentOnly, (req, res) => {
 });
 
 // ── Digital Publishing & Author Studio (Max 27MB per book) ─────────────────
-router.get('/publish', studentOnly, async (req, res) => {
-  const draftId = req.query.draft_id;
-  let draft = null;
-  if (draftId) {
-    draft = (await pool.query('SELECT * FROM digital_content WHERE id = $1 AND student_id = $2', [draftId, req.session.user_id])).rows[0];
-  }
-  res.render('student_publish', { title: 'Publish Content - librika.in', draft });
-});
+router.get('/publish', studentOnly, (req, res) => renderStudentPortal(req, res, 'publish'));
 
 router.post('/publish', studentOnly, upload.fields([{ name: 'cover', maxCount: 1 }, { name: 'document', maxCount: 1 }]), async (req, res) => {
   const sCode = req.session.school_code || 'GLOBAL';
@@ -760,23 +767,7 @@ router.post('/api/publish-finalize/:pubId', studentOnly, async (req, res) => {
   }
 });
 
-router.get('/my-publications', studentOnly, async (req, res) => {
-  try {
-    const userId = req.session.user_id;
-    const pubs = await pool.query(
-      `SELECT d.*, 
-              (SELECT COUNT(*) FROM reading_progress rp WHERE rp.content_id = d.id) as bookmarks_count,
-              COALESCE(d.views, 0) as views,
-              COALESCE(d.downloads, 0) as downloads
-       FROM digital_content d
-       WHERE d.student_id = $1
-       ORDER BY d.id DESC`, [userId]);
-    res.render('student_my_publications', { title: 'My Publications - librika.in', publications: pubs.rows || [] });
-  } catch (err) {
-    console.error('My publications error:', err);
-    res.redirect('/student');
-  }
-});
+router.get('/my-publications', studentOnly, (req, res) => renderStudentPortal(req, res, 'my-publications'));
 
 router.post('/api/publication-delete/:pubId', studentOnly, async (req, res) => {
   const { pubId } = req.params;

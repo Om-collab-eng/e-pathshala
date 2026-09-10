@@ -777,16 +777,19 @@
           </button>
         </li>
         <li>
-          <a href="/student/publish" class="sp-nav-btn" style="text-decoration:none;">
+          <button class="sp-nav-btn <%= currentModule === 'publish' ? 'active' : '' %>" onclick="switchStudentModule('publish', this)">
             <span class="sp-nav-icon">✏️</span>
             <span>Publish Content</span>
-          </a>
+          </button>
         </li>
         <li>
-          <a href="/student/my-publications" class="sp-nav-btn" style="text-decoration:none;">
+          <button class="sp-nav-btn <%= currentModule === 'my-publications' ? 'active' : '' %>" onclick="switchStudentModule('my-publications', this)">
             <span class="sp-nav-icon">📄</span>
             <span>My Publications</span>
-          </a>
+            <% if (typeof myPublications !== 'undefined' && myPublications.length > 0) { %>
+              <span class="sp-nav-badge"><%= myPublications.length %></span>
+            <% } %>
+          </button>
         </li>
         <li>
           <button class="sp-nav-btn <%= currentModule === 'learn' ? 'active' : '' %>" onclick="switchStudentModule('learn', this)">
@@ -1308,9 +1311,9 @@
                 <span style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">
                   <%= elibraryItems.length %> Resources
                 </span>
-                <a href="/student/publish" class="btn-primary" style="padding:7px 14px;font-size:0.82rem;text-decoration:none;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
+                <button type="button" class="btn-primary" onclick="switchStudentModule('publish')" style="padding:7px 14px;font-size:0.82rem;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
                   ➕ Publish Book
-                </a>
+                </button>
               </div>
             </div>
 
@@ -1321,9 +1324,9 @@
                   <div style="font-size:2.4rem;margin-bottom:12px;">📖</div>
                   <h4 style="margin:0 0 6px 0;font-weight:800;color:var(--text-primary);">Digital Vault is Empty</h4>
                   <p style="margin:0 0 16px 0;font-size:0.85rem;color:var(--text-secondary);">No digital textbooks or e-resources uploaded yet. You can publish your own books up to 27MB per book.</p>
-                  <a href="/student/publish" class="btn-primary" style="display:inline-flex;padding:8px 18px;font-size:0.85rem;text-decoration:none;border-radius:8px;">
+                  <button type="button" class="btn-primary" onclick="switchStudentModule('publish')" style="display:inline-flex;padding:8px 18px;font-size:0.85rem;border-radius:8px;">
                     ✍️ Publish First Book (Max 27MB)
-                  </a>
+                  </button>
                 </div>
               <% } %>
               <% elibraryItems.forEach(doc => { %>
@@ -1354,6 +1357,158 @@
             </div>
           </div>
 
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 04B — PUBLISH CONTENT (UPLOAD BOOKS & NOTES - MAX 27MB)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-publish" class="sp-module-view <%= currentModule === 'publish' ? 'active' : '' %>">
+          <div class="sp-card">
+            <div class="sp-card-header">
+              <div>
+                <h3 class="sp-card-title">✏️ Publish Content to E-Library</h3>
+                <p class="sp-card-sub">Share course notes, digital textbooks, question banks, or study papers. Max file size: 27MB per document.</p>
+              </div>
+              <button type="button" class="btn-secondary" onclick="switchStudentModule('my-publications')">
+                📄 View My Publications (<%= (typeof myPublications !== 'undefined' ? myPublications.length : 0) %>)
+              </button>
+            </div>
+
+            <form id="spPublishForm" action="/student/publish" method="POST" enctype="multipart/form-data" onsubmit="handlePublishSubmit(event)">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin-bottom:20px;">
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Book / Document Title <span style="color:var(--danger);">*</span></label>
+                  <input type="text" name="title" id="pubTitle" required placeholder="e.g. NCERT Mathematics Class 10 Notes" style="width:100%;height:42px;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-primary);font-size:0.88rem;outline:none;">
+                </div>
+
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Subject / Category <span style="color:var(--danger);">*</span></label>
+                  <select name="category" id="pubCategory" required style="width:100%;height:42px;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-primary);font-size:0.88rem;outline:none;">
+                    <option value="Course Notes">Course Notes</option>
+                    <option value="Digital Textbook">Digital Textbook</option>
+                    <option value="Research Paper">Research Paper</option>
+                    <option value="Solved Question Bank">Solved Question Bank</option>
+                    <option value="Science & Mathematics">Science & Mathematics</option>
+                    <option value="Computer Science & Coding">Computer Science & Coding</option>
+                    <option value="Literature & Languages">Literature & Languages</option>
+                    <option value="Social Studies & History">Social Studies & History</option>
+                    <option value="Other Study Material">Other Study Material</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin-bottom:20px;">
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Class / Grade (Optional)</label>
+                  <input type="text" name="class" id="pubClass" placeholder="e.g. Class 10, Grade 12, B.Tech" style="width:100%;height:42px;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-primary);font-size:0.88rem;outline:none;">
+                </div>
+
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Tags (Optional, comma separated)</label>
+                  <input type="text" name="tags" id="pubTags" placeholder="e.g. calculus, formulas, exam prep" style="width:100%;height:42px;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-primary);font-size:0.88rem;outline:none;">
+                </div>
+              </div>
+
+              <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:0.82rem;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Short Description / Summary <span style="color:var(--danger);">*</span></label>
+                <textarea name="description" id="pubDesc" rows="3" required placeholder="Brief summary of what this document covers and key learning outcomes..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-primary);font-size:0.88rem;outline:none;resize:vertical;"></textarea>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin-bottom:24px;">
+                <!-- Cover Image -->
+                <div style="border:1px dashed var(--border);border-radius:12px;padding:16px;background:var(--surface-sub);text-align:center;">
+                  <div style="font-size:1.8rem;margin-bottom:6px;">🖼️</div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Cover Image (Optional)</label>
+                  <p style="font-size:0.72rem;color:var(--text-secondary);margin:0 0 10px 0;">PNG, JPG, WEBP (Max 5MB)</p>
+                  <input type="file" name="cover" id="pubCoverInput" accept="image/*" style="font-size:0.78rem;width:100%;">
+                </div>
+
+                <!-- Document File -->
+                <div style="border:2px dashed #93C5FD;border-radius:12px;padding:16px;background:#EFF6FF;text-align:center;">
+                  <div style="font-size:1.8rem;margin-bottom:6px;">📁</div>
+                  <label style="display:block;font-size:0.82rem;font-weight:800;color:#1E40AF;margin-bottom:4px;">Book Document File <span style="color:var(--danger);">*</span></label>
+                  <p style="font-size:0.72rem;color:#3B82F6;margin:0 0 10px 0;">Supports PDF or EPUB (<strong>Strict 27MB Limit</strong>)</p>
+                  <input type="file" name="document" id="pubDocInput" required accept=".pdf,.epub" style="font-size:0.78rem;width:100%;" onchange="validatePubDocSize(this)">
+                  <div id="pubSizeAlert" style="display:none;color:var(--danger);font-size:0.75rem;font-weight:700;margin-top:6px;">⚠️ File exceeds 27MB! Please select a smaller document.</div>
+                </div>
+              </div>
+
+              <!-- Upload Progress Indicator -->
+              <div id="pubUploadProgress" style="display:none;margin-bottom:20px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.8rem;font-weight:700;margin-bottom:4px;">
+                  <span id="pubProgressStatus">Uploading document (0%)...</span>
+                  <span id="pubProgressPct">0%</span>
+                </div>
+                <div style="width:100%;height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+                  <div id="pubProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg, #0B5ED7, #6366F1);transition:width 0.2s ease;"></div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--border);padding-top:16px;">
+                <button type="button" class="btn-secondary" onclick="switchStudentModule('e-library')">Cancel</button>
+                <button type="submit" id="btnSubmitPub" class="btn-primary" style="padding:10px 24px;font-size:0.9rem;">
+                  🚀 Publish to E-Library
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 04C — MY PUBLICATIONS
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-my-publications" class="sp-module-view <%= currentModule === 'my-publications' ? 'active' : '' %>">
+          <div class="sp-card">
+            <div class="sp-card-header">
+              <div>
+                <h3 class="sp-card-title">📄 My Published Digital Content</h3>
+                <p class="sp-card-sub">Manage, track readers, and monitor all digital books you have published on the platform</p>
+              </div>
+              <button type="button" class="btn-primary" onclick="switchStudentModule('publish')">
+                ➕ Publish New Book (Max 27MB)
+              </button>
+            </div>
+
+            <% if (typeof myPublications === 'undefined' || myPublications.length === 0) { %>
+              <div style="text-align:center;padding:50px 20px;background:var(--surface-sub);border-radius:var(--radius-md);border:1px dashed var(--border);">
+                <div style="font-size:2.5rem;margin-bottom:12px;">📚</div>
+                <h4 style="margin:0 0 6px 0;font-weight:800;color:var(--text-primary);">No Published Content Yet</h4>
+                <p style="margin:0 0 16px 0;font-size:0.85rem;color:var(--text-secondary);max-width:400px;margin-left:auto;margin-right:auto;">You haven't contributed any digital notes or books yet. Publish materials to help your peers and earn reading badges!</p>
+                <button type="button" class="btn-primary" onclick="switchStudentModule('publish')">
+                  ✍️ Publish First Document (Max 27MB)
+                </button>
+              </div>
+            <% } else { %>
+              <div class="sp-grid-3">
+                <% myPublications.forEach(pub => { %>
+                  <div class="sp-book-card" style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface);">
+                    <div class="sp-book-cover-wrap" style="background:#1E293B;height:160px;">
+                      <img src="<%= pub.cover_url || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&q=80' %>" class="sp-book-cover" alt="<%= pub.title %>">
+                      <span class="sp-book-badge" style="background:<%= pub.status === 'Published' ? '#16A34A' : '#D97706' %>;color:white;">
+                        <%= pub.status || 'Published' %>
+                      </span>
+                    </div>
+                    <div class="sp-book-info" style="padding:14px;">
+                      <h4 class="sp-book-title" style="margin:0 0 4px 0;font-size:0.95rem;"><%= pub.title %></h4>
+                      <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:10px;"><%= pub.category %> · <%= pub.subject || 'Academic' %></div>
+                      
+                      <div style="display:flex;align-items:center;gap:12px;font-size:0.75rem;color:var(--text-secondary);margin-bottom:12px;background:var(--surface-sub);padding:6px 10px;border-radius:8px;">
+                        <span>👁️ <%= pub.views || 0 %> views</span>
+                        <span>⬇️ <%= pub.downloads || 0 %> downloads</span>
+                        <span>🔖 <%= pub.bookmarks_count || 0 %> saved</span>
+                      </div>
+
+                      <div class="sp-book-actions" style="display:flex;gap:8px;">
+                        <a href="/read/<%= pub.id %>" class="btn-primary" style="flex:1;justify-content:center;padding:7px;font-size:0.8rem;text-decoration:none;">
+                          📖 Read Document
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
         </section>
 
         <!-- ─────────────────────────────────────────────────────────────
@@ -1989,6 +2144,86 @@
     }
     function openBookRequestModal() {
       openModal('bookRequestModal');
+    }
+
+    // Publishing Handlers (Max 27MB document validation & progress)
+    function validatePubDocSize(input) {
+      const alertEl = document.getElementById('pubSizeAlert');
+      const submitBtn = document.getElementById('btnSubmitPub');
+      if (input.files && input.files[0]) {
+        const size = input.files[0].size;
+        const max = 27 * 1024 * 1024; // 27MB
+        if (size > max) {
+          if (alertEl) alertEl.style.display = 'block';
+          if (submitBtn) submitBtn.disabled = true;
+        } else {
+          if (alertEl) alertEl.style.display = 'none';
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      }
+    }
+
+    function handlePublishSubmit(e) {
+      e.preventDefault();
+      const form = document.getElementById('spPublishForm');
+      const docInput = document.getElementById('pubDocInput');
+      if (docInput.files && docInput.files[0] && docInput.files[0].size > 27 * 1024 * 1024) {
+        alert('File size exceeds 27MB limit. Please choose a smaller file.');
+        return;
+      }
+      
+      const formData = new FormData(form);
+      const progContainer = document.getElementById('pubUploadProgress');
+      const progBar = document.getElementById('pubProgressBar');
+      const progStatus = document.getElementById('pubProgressStatus');
+      const progPct = document.getElementById('pubProgressPct');
+      const submitBtn = document.getElementById('btnSubmitPub');
+
+      progContainer.style.display = 'block';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Uploading Document...';
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/student/publish');
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+      xhr.upload.onprogress = function(event) {
+        if (event.lengthComputable) {
+          const pct = Math.round((event.loaded / event.total) * 100);
+          progBar.style.width = pct + '%';
+          progPct.innerText = pct + '%';
+          progStatus.innerText = `Uploading document (${pct}%)...`;
+        }
+      };
+
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          progStatus.innerText = '✅ Upload & Publishing Complete!';
+          progBar.style.background = '#16A34A';
+          setTimeout(() => {
+            window.location.href = '/student?module=my-publications';
+          }, 800);
+        } else {
+          try {
+            const err = JSON.parse(xhr.responseText);
+            alert('Publishing error: ' + (err.message || 'Upload failed'));
+          } catch(e) {
+            alert('Upload failed with status ' + xhr.status);
+          }
+          submitBtn.disabled = false;
+          submitBtn.innerText = '🚀 Publish to E-Library';
+          progContainer.style.display = 'none';
+        }
+      };
+
+      xhr.onerror = function() {
+        alert('Network error while uploading book.');
+        submitBtn.disabled = false;
+        submitBtn.innerText = '🚀 Publish to E-Library';
+        progContainer.style.display = 'none';
+      };
+
+      xhr.send(formData);
     }
 
     // Actions
