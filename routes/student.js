@@ -69,7 +69,10 @@ async function fetchStudentPortalData(userId, sCode) {
 
   // 2. Active Loans, Due Dates & Fines
   const loansRes = await pool.query(
-    `SELECT t.*, b.title, b.author, b.cover_url, b.genre, b.isbn, b.rack_location, b.shelf_no
+    `SELECT t.*, b.title, b.author, b.cover_url, b.genre, b.isbn, 
+            COALESCE(b.shelf_location, '') as shelf_location,
+            COALESCE(b.shelf_location, '') as rack_location,
+            COALESCE(b.shelf_location, '') as shelf_no
      FROM transactions t
      JOIN books b ON b.id = t.book_id
      WHERE t.user_id = $1
@@ -110,6 +113,7 @@ async function fetchStudentPortalData(userId, sCode) {
   // 3. Physical Book Catalog
   const catalogRes = await pool.query(
     `SELECT b.*, 
+            COALESCE(b.shelf_location, '') as rack_location,
             (SELECT COUNT(*) FROM student_saved_books sb WHERE sb.user_id = $1 AND sb.book_id = b.id) as is_saved,
             (SELECT COUNT(*) FROM student_wishlist sw WHERE sw.user_id = $1 AND sw.book_id = b.id) as in_wishlist,
             (SELECT COUNT(*) FROM reservations r WHERE r.user_id = $1 AND r.book_id = b.id AND r.status = 'PENDING') as is_reserved
@@ -123,7 +127,9 @@ async function fetchStudentPortalData(userId, sCode) {
 
   // 4. Continue Reading (Digital Progress)
   const readingRes = await pool.query(
-    `SELECT rp.*, dc.title, dc.cover_url, dc.author, dc.category, dc.file_url
+    `SELECT rp.*, dc.title, dc.cover_url, 
+            COALESCE(dc.subject, 'Librika') as author, 
+            dc.category, dc.file_url
      FROM reading_progress rp
      JOIN digital_content dc ON dc.id = rp.content_id
      WHERE rp.student_id = $1
@@ -135,6 +141,7 @@ async function fetchStudentPortalData(userId, sCode) {
   // 5. E-Library Digital Resources
   const elibRes = await pool.query(
     `SELECT dc.*,
+            COALESCE(dc.subject, 'Academic Resource') as author,
             (SELECT COUNT(*) FROM student_saved_documents sd WHERE sd.user_id = $1 AND sd.document_id = dc.id) as is_saved
      FROM digital_content dc
      WHERE (dc.school_code = $2 OR dc.school_code = 'GLOBAL' OR dc.school_code = 'DPS123')
@@ -157,8 +164,8 @@ async function fetchStudentPortalData(userId, sCode) {
   // 7. Learn: Quizzes, Assignments & Certificates
   const quizzesRes = await pool.query(
     `SELECT q.*, 
-            (SELECT score FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.user_id = $1 ORDER BY qa.id DESC LIMIT 1) as my_score,
-            (SELECT status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.user_id = $1 ORDER BY qa.id DESC LIMIT 1) as my_status
+            (SELECT score FROM quiz_attempts qa WHERE (qa.quiz_id = q.id OR qa.book_id = q.id) AND qa.user_id = $1 ORDER BY qa.id DESC LIMIT 1) as my_score,
+            (SELECT CASE WHEN qa.passed = 1 THEN 'PASSED' ELSE 'COMPLETED' END FROM quiz_attempts qa WHERE (qa.quiz_id = q.id OR qa.book_id = q.id) AND qa.user_id = $1 ORDER BY qa.id DESC LIMIT 1) as my_status
      FROM quizzes q
      WHERE q.published = 1
      ORDER BY q.id DESC`,
@@ -168,11 +175,13 @@ async function fetchStudentPortalData(userId, sCode) {
 
   const assignRes = await pool.query(
     `SELECT a.*,
-            asub.submission_url, asub.submission_text, asub.submitted_at, asub.score, asub.feedback, asub.status as sub_status
+            COALESCE(a.due_at, a.due_date) as due_at,
+            asub.file_url as submission_url, asub.submission_text, asub.submitted_at, 
+            asub.grade as score, 'Graded' as feedback, 'SUBMITTED' as sub_status
      FROM assignments a
      LEFT JOIN assignment_submissions asub ON asub.assignment_id = a.id AND asub.user_id = $1
      WHERE a.school_code = $2 OR a.school_code = 'GLOBAL' OR a.school_code = 'DPS123'
-     ORDER BY a.due_at ASC`,
+     ORDER BY COALESCE(a.due_at, a.due_date) ASC`,
     [userId, sCode]
   ).catch(() => ({ rows: [] }));
   const assignments = assignRes.rows || [];
@@ -185,7 +194,7 @@ async function fetchStudentPortalData(userId, sCode) {
   const savedBooks = savedBooksRes.rows || [];
 
   const savedDocsRes = await pool.query(
-    `SELECT dc.* FROM student_saved_documents sd JOIN digital_content dc ON dc.id = sd.document_id WHERE sd.user_id = $1`,
+    `SELECT dc.*, COALESCE(dc.subject, '') as author FROM student_saved_documents sd JOIN digital_content dc ON dc.id = sd.document_id WHERE sd.user_id = $1`,
     [userId]
   ).catch(() => ({ rows: [] }));
   const savedDocs = savedDocsRes.rows || [];
@@ -197,7 +206,7 @@ async function fetchStudentPortalData(userId, sCode) {
   const wishlistBooks = wishlistRes.rows || [];
 
   const bookmarksRes = await pool.query(
-    `SELECT bm.*, dc.title as doc_title, dc.cover_url as doc_cover, dc.author as doc_author
+    `SELECT bm.*, dc.title as doc_title, dc.cover_url as doc_cover, COALESCE(dc.subject, '') as doc_author
      FROM student_bookmarks bm
      JOIN digital_content dc ON dc.id = bm.document_id
      WHERE bm.user_id = $1
