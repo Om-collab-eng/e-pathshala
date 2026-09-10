@@ -12,7 +12,7 @@ const jwt = require('jsonwebtoken');
 // Retrieve and normalize JaaS configuration from environment
 function getJaasConfig() {
   const appId = process.env.JAAS_APP_ID || 'vpaas-magic-cookie-d9c01d21634f4fb793f4a3b0cd859fab';
-  let apiKeyId = process.env.JAAS_API_KEY_ID || 'LIBRIKA';
+  let apiKeyId = process.env.JAAS_API_KEY_ID || 'vpaas-magic-cookie-d9c01d21634f4fb793f4a3b0cd859fab/c983ac';
   const privateKeyRaw = process.env.JAAS_PRIVATE_KEY || '';
   const domain = process.env.JAAS_DOMAIN || '8x8.vc';
 
