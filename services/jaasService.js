@@ -240,9 +240,9 @@ function generateParticipantToken({ user, session, durationMinutes = 30, isModer
     aud: 'jitsi',
     iss: 'chat',
     sub: config.appId,
-    room: rawRoomName,
-    iat: now - 5,
-    nbf: now - 5,
+    room: '*',
+    iat: now - 30,
+    nbf: now - 30,
     exp: expiresAt,
     context: {
       user: {
@@ -250,7 +250,7 @@ function generateParticipantToken({ user, session, durationMinutes = 30, isModer
         name: user.name || user.user_name || 'Participant',
         email: user.email || '',
         avatar: user.profile_photo || user.avatar || '',
-        moderator: isModerator
+        moderator: Boolean(isModerator)
       },
       features: {
         recording: false,
