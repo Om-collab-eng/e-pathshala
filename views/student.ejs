@@ -2708,9 +2708,17 @@
     async function trackAdClick(id, event) {
       if (!id) return;
       try {
-        navigator.sendBeacon ? 
-          navigator.sendBeacon(`/api/elibrary/advertisements/${id}/click`) :
-          fetch(`/api/elibrary/advertisements/${id}/click`, { method: 'POST', keepalive: true });
+        if (navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify({ clicked: true })], { type: 'application/json' });
+          navigator.sendBeacon(`/api/elibrary/advertisements/${id}/click`, blob);
+        } else {
+          fetch(`/api/elibrary/advertisements/${id}/click`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clicked: true }),
+            keepalive: true
+          });
+        }
       } catch (e) {}
     }
 
