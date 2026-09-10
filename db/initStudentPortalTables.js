@@ -186,6 +186,12 @@ async function initStudentPortalTables() {
   await query(`ALTER TABLE quiz_attempts ADD COLUMN quiz_id INT DEFAULT NULL`).catch(() => {});
   await query(`ALTER TABLE quiz_attempts ADD COLUMN total_marks INT DEFAULT 10`).catch(() => {});
   await query(`ALTER TABLE quiz_attempts ADD COLUMN status VARCHAR(50) DEFAULT 'COMPLETED'`).catch(() => {});
+  await query(`ALTER TABLE quiz_attempts ADD COLUMN started_at DATETIME`).catch(() => {});
+  await query(`ALTER TABLE quiz_attempts ADD COLUMN completed_at DATETIME`).catch(() => {});
+  await query(`ALTER TABLE quiz_attempts ADD COLUMN score DECIMAL(6,2) DEFAULT 0`).catch(() => {});
+  await query(`ALTER TABLE quiz_attempts ADD COLUMN passed TINYINT DEFAULT 1`).catch(() => {});
+  await query(`ALTER TABLE quiz_attempts ADD COLUMN attempted_at DATETIME DEFAULT CURRENT_TIMESTAMP`).catch(() => {});
+
 
   // 8. assignments
   await query(`

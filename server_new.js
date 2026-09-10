@@ -40,10 +40,14 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'base');
 
+app.use('/static', express.static(path.join(__dirname, 'static')));
+app.use('/uploads', express.static(path.join(__dirname, 'static', 'uploads')));
+app.use('/digital_content', express.static(path.join(__dirname, 'static', 'digital_content')));
 app.use(express.static(path.join(__dirname, 'static')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(expressLayouts);
+
 
 let MySQLStore;
 try {

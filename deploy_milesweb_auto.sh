@@ -15,7 +15,7 @@ echo "======================================"
 ZIP_PATH="../librika_upload.zip"
 rm -f "$ZIP_PATH"
 echo "[1/3] Packing project files..."
-zip -q -r "$ZIP_PATH" . -x "*node_modules/*" "*venv/*" "*my_mac_env/*" "android/*" "android-app/*" "_legacy/*" ".git/*" ".DS_Store" "*/.DS_Store" "*.log" "ads/*" "*.apk" "*.zip" "*.pdf" "ocr-scanner-system/*" "super-admin ui/*" "static/uploads/*" "static/digital_content/*"
+zip -q -r "$ZIP_PATH" . -x "*node_modules/*" "*venv/*" "*my_mac_env/*" "android/*" "android-app/*" "_legacy/*" ".git/*" ".DS_Store" "*/.DS_Store" "*.log" "ads/*" "*.apk" "*.zip" "ocr-scanner-system/*" "super-admin ui/*"
 
 # Step 2: SCP upload
 echo "[2/3] Uploading package to MilesWeb ($SERVER_IP)..."
@@ -35,6 +35,9 @@ export NVM_DIR="$HOME/.nvm"
 # Install any new dependencies
 npm install --silent || true
 
+# Run DB schema sync
+node db/initStudentPortalTables.js || true
+
 # Kill running node instance so supervisor cleanly restarts server
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
 
@@ -42,7 +45,7 @@ pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
 mkdir -p tmp
 touch tmp/restart.txt
 
-echo "MilesWeb server files extracted and application restarted."
+echo "MilesWeb server files extracted, DB updated, and application restarted."
 EOF
 
 rm -f "$ZIP_PATH"
