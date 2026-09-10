@@ -41,11 +41,11 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'base');
 
 // Serve static assets at root (e.g. /coursera-librika.css, /logo.png, /student.css) and under /static
-app.use(express.static(path.join(__dirname, 'static')));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/static', express.static(path.join(__dirname, 'static')));
-app.use('/uploads', express.static(path.join(__dirname, 'static', 'uploads')));
-app.use('/digital_content', express.static(path.join(__dirname, 'static', 'digital_content')));
+app.use(express.static(path.join(__dirname, 'static'), { index: false }));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+app.use('/static', express.static(path.join(__dirname, 'static'), { index: false }));
+app.use('/uploads', express.static(path.join(__dirname, 'static', 'uploads'), { index: false }));
+app.use('/digital_content', express.static(path.join(__dirname, 'static', 'digital_content'), { index: false }));
 app.use(express.json({ limit: '35mb' }));
 app.use(express.urlencoded({ extended: true, limit: '35mb' }));
 app.use(expressLayouts);
