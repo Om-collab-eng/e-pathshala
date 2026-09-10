@@ -39,6 +39,22 @@
   --shadow-drawer: -10px 0 35px rgba(0, 0, 0, 0.15);
 }
 
+[data-theme="dark"] {
+  --background: #0F172A;
+  --surface: #1E293B;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --border: #334155;
+  --primary-light: rgba(11, 94, 215, 0.18);
+  --indigo-light: rgba(91, 75, 219, 0.18);
+  --success-light: rgba(25, 135, 84, 0.18);
+  --warning-light: rgba(245, 158, 11, 0.18);
+  --danger-light: rgba(220, 53, 69, 0.18);
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 14px 35px rgba(0, 0, 0, 0.45);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -87,8 +103,54 @@ body.lp-body {
   }
 }
 
+/* Sidebar Top Utility Navigation Bar */
+.lp-sidebar-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.lp-top-nav-btn {
+  background: #F1F5F9;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+[data-theme="dark"] .lp-top-nav-btn {
+  background: #334155;
+  color: #E2E8F0;
+  border-color: #475569;
+}
+
+.lp-top-nav-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.lp-top-nav-btn.icon-only {
+  padding: 6px 9px;
+  font-size: 0.95rem;
+}
+
 .lp-sidebar-header {
-  padding: 1.5rem 1.25rem 1.25rem;
+  padding: 1.25rem 1.25rem 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -546,24 +608,24 @@ body.lp-body {
   flex-wrap: wrap;
 }
 
-/* Today Card */
+/* Today Card - Pure Clean White */
 .lp-today-card {
-  background: linear-gradient(145deg, #0A192F 0%, #172A45 100%);
-  color: #FFFFFF;
-  border-radius: 24px;
-  padding: 28px;
+  background: var(--surface);
+  color: var(--text-primary);
+  border-radius: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 12px 35px rgba(10, 25, 47, 0.25);
-  border: 1px solid #233554;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .lp-today-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 12px;
 }
 
@@ -572,9 +634,9 @@ body.lp-body {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #64FFDA;
-  background: rgba(100, 255, 218, 0.1);
-  padding: 3px 8px;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 4px 10px;
   border-radius: 6px;
 }
 
@@ -582,32 +644,36 @@ body.lp-body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin: 20px 0;
+  margin: 18px 0;
 }
 
 .lp-today-stat {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 14px;
+  background: #F8FAFC;
+  border-radius: 12px;
   padding: 14px 10px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .lp-today-stat {
+  background: #0F172A;
 }
 
 .lp-today-stat-val {
   font-size: 1.85rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--text-primary);
   line-height: 1;
   margin-bottom: 4px;
 }
 
-.lp-today-stat-val.active { color: #60A5FA; }
-.lp-today-stat-val.overdue { color: #F87171; }
-.lp-today-stat-val.due { color: #FBBF24; }
+.lp-today-stat-val.active { color: #0B5ED7; }
+.lp-today-stat-val.overdue { color: #DC3545; }
+.lp-today-stat-val.due { color: #D97706; }
 
 .lp-today-stat-lbl {
   font-size: 0.72rem;
-  color: #94A3B8;
+  color: var(--text-secondary);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -618,9 +684,9 @@ body.lp-body {
   align-items: center;
   justify-content: space-between;
   font-size: 0.82rem;
-  color: #CBD5E1;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 /* ─────────────────────────────────────────────────────────────────

@@ -17,6 +17,18 @@
 
   <link rel="stylesheet" href="/live-studio.css">
 
+  <!-- Room Config for In-House WebRTC Engine -->
+  <script>
+    window.ROOM_CONFIG = {
+      meetingId: '<%= session.meeting_id %>',
+      sessionTitle: '<%= session.title %>',
+      userId: '<%= user.id || session.host_id || "" %>',
+      userName: '<%= user.name %>',
+      userEmail: '<%= user.email %>',
+      isHost: <%= isHost ? 'true' : 'false' %>
+    };
+  </script>
+
   <!-- Socket.IO & Native WebRTC Meet Engine (Zero Jitsi) -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/live-classroom.js" defer></script>
@@ -233,17 +245,5 @@
     </footer>
 
   </div>
-
-  <!-- Room Config for In-House WebRTC Engine -->
-  <script>
-    window.ROOM_CONFIG = {
-      meetingId: '<%= session.meeting_id %>',
-      sessionTitle: '<%= session.title %>',
-      userId: '<%= user.id || session.host_id || "" %>',
-      userName: '<%= user.name %>',
-      userEmail: '<%= user.email %>',
-      isHost: <%= isHost ? 'true' : 'false' %>
-    };
-  </script>
 </body>
 </html>

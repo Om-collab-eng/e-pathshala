@@ -372,7 +372,7 @@
             if (nav) {
                 const themeToggle = document.getElementById('themeToggle');
                 if (themeToggle) themeToggle.style.removeProperty('display');
-                const hasSidebar = !!(document.querySelector('.desktop-sidebar') || document.querySelector('.sa-bottom-nav') || document.getElementById('portalSidebar'));
+                const hasSidebar = !!(document.querySelector('.desktop-sidebar') || document.querySelector('.sa-bottom-nav') || document.getElementById('portalSidebar') || document.getElementById('lpSidebar'));
                 if (hasSidebar) {
                     nav.style.setProperty('display', 'none', 'important');
                 } else {
@@ -783,28 +783,7 @@
         };
     </script>
 
-    <% if (typeof session !== 'undefined' && session && (session.user_id || session.user || session.role || session.user_name)) { %>
-    <div id="aiChatWidget" class="ai-chat-widget-container">
-        <div id="aiChatWindow" style="display: none; width: 90vw; max-width: 350px; height: 70vh; max-height: 450px; background: var(--bg-card); border-radius: 12px; box-shadow: var(--shadow-premium); backdrop-filter: var(--glass-blur); flex-direction: column; overflow: hidden; border: 1px solid var(--border-light); margin-bottom: 10px;">
-            <div style="background: var(--primary-color); padding: 10px 15px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-                <span>AI Assistant</span>
-                <button onclick="toggleAiChat()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">x</button>
-            </div>
-            <div id="aiChatHistory" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem;">
-                <div style="align-self: flex-start; background: var(--bg-lighter); padding: 8px 12px; border-radius: 12px 12px 12px 0;">Hello! I am your Library AI Assistant. How can I help you today?</div>
-            </div>
-            <div style="padding: 10px; border-top: 1px solid var(--border-light); display: flex; gap: 5px;">
-                <input type="text" id="aiChatInput" placeholder="Ask me anything..." style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-main); color: var(--text-main);" onkeypress="if(event.key === 'Enter') sendAiMessage()">
-                <button onclick="sendAiMessage()" class="btn-primary" style="padding: 8px 15px; border-radius: 6px;">Send</button>
-            </div>
-        </div>
-        <button onclick="toggleAiChat()" class="ai-chat-toggle-btn" aria-label="Toggle AI Chat">
-            <svg viewBox="0 0 24 24">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-        </button>
-    </div>
-    <% } %>
+    <!-- Legacy floating chat widget removed per user request -->
 
     <script>
         let aiChatContextFetched = false;

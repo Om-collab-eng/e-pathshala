@@ -22,6 +22,19 @@
          ═══════════════════════════════════════════════════════════════ -->
     <aside class="lp-sidebar" id="lpSidebar">
       
+      <!-- Top Utility Controls (Back, Home, Night Toggle) Above Logo -->
+      <div class="lp-sidebar-top-bar">
+        <button onclick="window.history.back()" class="lp-top-nav-btn" title="Go Back">
+          ← <span>Back</span>
+        </button>
+        <a href="/" class="lp-top-nav-btn" title="Go Home">
+          🏠 <span>Home</span>
+        </a>
+        <button onclick="toggleTheme()" class="lp-top-nav-btn icon-only" id="lpThemeBtn" title="Toggle Theme">
+          <span id="lpThemeIcon">🌙</span>
+        </button>
+      </div>
+
       <!-- Brand Header -->
       <div class="lp-sidebar-header">
         <a href="/admin" class="lp-brand-badge">
@@ -192,7 +205,7 @@
             <div class="lp-today-card">
               <div class="lp-today-head">
                 <span class="lp-today-badge">TODAY'S PULSE</span>
-                <span style="font-size:0.8rem;color:#94A3B8;"><%= new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                <span style="font-size:0.8rem;color:var(--text-secondary);font-weight:600;"><%= new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
               </div>
 
               <div class="lp-today-metrics">
@@ -212,7 +225,7 @@
 
               <div class="lp-today-footer">
                 <span>Total Catalog: <strong><%= stats.total_books %> Titles</strong></span>
-                <button onclick="navigateToModule('circulation')" style="background:transparent;border:none;color:#64FFDA;font-weight:700;cursor:pointer;">
+                <button onclick="navigateToModule('circulation')" style="background:transparent;border:none;color:var(--primary);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
                   Circulation Desk &rarr;
                 </button>
               </div>
@@ -1667,6 +1680,29 @@
         // Automatically switch to Catalog or Members if search matches
       }
     }
+
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      updateThemeIcon(next);
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById('lpThemeIcon');
+      if (icon) {
+        icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      }
+    }
+
+    (function initTheme() {
+      const saved = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeIcon(saved);
+    })();
   </script>
 </body>
 </html>
