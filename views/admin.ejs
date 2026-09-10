@@ -619,8 +619,9 @@
                       <div style="font-size:0.72rem;color:#94A3B8;"><%= u.email || '' %></div>
                     </td>
                     <td>
-                      <span class="lp-status-pill <%= u.is_banned ? 'overdue' : 'available' %>">
-                        <%= u.is_banned ? 'Suspended' : 'Active' %>
+                      <% const isBanned = (u.is_banned === 1 || u.is_banned === '1' || u.is_banned === true || u.is_banned === 'true'); %>
+                      <span class="lp-status-pill <%= isBanned ? 'overdue' : 'available' %>">
+                        <%= isBanned ? 'Suspended' : 'Active' %>
                       </span>
                     </td>
                     <td>

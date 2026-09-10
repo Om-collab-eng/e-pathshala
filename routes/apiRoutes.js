@@ -128,7 +128,8 @@ router.post('/v1/auth/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    if (user.is_banned) {
+    const isBanned = user.is_banned === 1 || user.is_banned === '1' || user.is_banned === true || user.is_banned === 'true';
+    if (isBanned) {
       return res.status(403).json({ success: false, message: 'Account has been banned' });
     }
 
