@@ -209,6 +209,13 @@ async function initStudentPortalTables() {
     `).catch(() => {});
   });
 
+  // Ensure assignments table columns exist
+  await query(`ALTER TABLE assignments ADD COLUMN subject VARCHAR(100)`).catch(() => {});
+  await query(`ALTER TABLE assignments ADD COLUMN class_name VARCHAR(50)`).catch(() => {});
+  await query(`ALTER TABLE assignments ADD COLUMN due_at DATETIME`).catch(() => {});
+  await query(`ALTER TABLE assignments ADD COLUMN school_code VARCHAR(50) DEFAULT 'DPS123'`).catch(() => {});
+
+
   // 9. assignment_submissions
   await query(`
     CREATE TABLE IF NOT EXISTS assignment_submissions (
