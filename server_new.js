@@ -40,6 +40,9 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'base');
 
+// Serve static assets at root (e.g. /coursera-librika.css, /logo.png, /student.css) and under /static
+app.use(express.static(path.join(__dirname, 'static')));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/static', express.static(path.join(__dirname, 'static')));
 app.use('/uploads', express.static(path.join(__dirname, 'static', 'uploads')));
 app.use('/digital_content', express.static(path.join(__dirname, 'static', 'digital_content')));
