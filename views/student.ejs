@@ -1,480 +1,2055 @@
-<%- layout('base') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Student Portal - Librika' %></title>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
-<style>
-/* ── Student Portal — Light Theme ── */
-:root {
-    --sp-bg:           #f8fafc;
-    --sp-sidebar-bg:   #ffffff;
-    --sp-card-bg:      #ffffff;
-    --sp-topbar-bg:    #ffffff;
-    --sp-text-dark:    #0f172a;
-    --sp-text-mid:     #475569;
-    --sp-muted:        #94a3b8;
-    --sp-border:       #e2e8f0;
-    --sp-accent:       #6366f1;
-    --sp-accent-2:     #a855f7;
-    --sp-accent-soft:  rgba(99,102,241,0.1);
-    --sp-shadow:       0 1px 3px rgba(0,0,0,0.05);
-    --sp-shadow-lg:    0 4px 24px rgba(0,0,0,0.08);
-    --sp-green:        #10b981;
-    --sp-red:          #ef4444;
-    --sp-orange:       #f59e0b;
-    --sp-purple:       #8b5cf6;
-}
+  <style>
+    /* ═════════════════════════════════════════════════════════════════
+       LIBRIKA STUDENT PORTAL DESIGN SYSTEM
+       Modern Education Platform + Digital Library + Gamification
+       ═════════════════════════════════════════════════════════════════ */
+    :root {
+      --primary: #0B5ED7;
+      --primary-dark: #084298;
+      --primary-light: #EAF3FF;
+      --indigo: #5B4BDB;
+      --indigo-light: #EEF2FF;
+      --success: #198754;
+      --warning: #F59E0B;
+      --danger: #DC3545;
+      --background: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-sub: #F1F5F9;
+      --text-primary: #111827;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --border-focus: #0B5ED7;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+      --shadow-lg: 0 12px 30px rgba(16, 24, 40, 0.08);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+    }
 
-*, *::before, *::after { box-sizing: border-box !important; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      background: var(--background);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
 
-html, body {
-    background: #f8fafc !important;
-    background-color: #f8fafc !important;
-    color: #0f172a !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif !important;
-}
+    /* ── App Shell Layout ── */
+    .sp-app-layout {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      position: relative;
+    }
 
-/* ── LAYOUT SHELL (st-shell) ── */
-.st-shell {
-    display: flex !important;
-    min-height: 100vh !important;
-    background: #f8fafc !important;
-    width: 100% !important;
-    position: relative !important;
-}
+    /* ── Fixed Sidebar Navigation (EXACTLY 10 ITEMS) ── */
+    .sp-sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      transition: transform 0.25s ease;
+    }
 
-.st-main {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 100vh !important;
-    margin-left: 240px !important;
-    width: calc(100% - 240px) !important;
-    background: #f8fafc !important;
-    padding-bottom: 30px !important;
-}
-@media (max-width: 599px) {
-    .st-main { margin-left: 0 !important; width: 100vw !important; }
-}
+    .sp-brand {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+    }
+    .sp-brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--indigo));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(11, 94, 215, 0.25);
+    }
+    .sp-brand-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+    .sp-brand-badge {
+      font-size: 0.68rem;
+      font-weight: 800;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
 
-/* ── TOPBAR ── */
-.st-topbar {
-    background: #ffffff !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
-    padding: 0.85rem 1.5rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 100 !important;
-    gap: 12px !important;
-}
-.st-topbar-left { display: flex !important; align-items: center !important; gap: 12px !important; }
-.st-menu-btn {
-    background: #f1f5f9 !important;
-    border: 1px solid #e2e8f0 !important;
-    color: #0f172a !important;
-    width: 38px !important; height: 38px !important; border-radius: 10px !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 1.1rem !important; cursor: pointer !important;
-}
-@media (min-width: 600px) { .st-menu-btn { display: none !important; } }
+    .sp-nav-list {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+      list-style: none;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
-.st-brand-title {
-    font-family: 'Outfit', sans-serif !important;
-    font-size: 1.1rem !important;
-    font-weight: 800 !important;
-    color: #0f172a !important;
-}
+    .sp-nav-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .sp-nav-btn:hover {
+      background: var(--surface-sub);
+      color: var(--text-primary);
+    }
+    .sp-nav-btn.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: rgba(11, 94, 215, 0.15);
+      font-weight: 700;
+    }
+    .sp-nav-icon {
+      font-size: 1.15rem;
+      width: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sp-nav-badge {
+      margin-left: auto;
+      background: var(--border);
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 8px;
+    }
+    .sp-nav-btn.active .sp-nav-badge {
+      background: var(--primary);
+      color: white;
+    }
 
-.st-topbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
-.st-notif-btn {
-    background: #f1f5f9 !important;
-    border: 1px solid #e2e8f0 !important;
-    color: #475569 !important;
-    width: 38px !important; height: 38px !important; border-radius: 50% !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 1.1rem !important; cursor: pointer !important; position: relative !important;
-}
-.st-notif-badge {
-    position: absolute !important; top: -2px !important; right: -2px !important;
-    background: #ef4444 !important; color: white !important; font-size: 0.65rem !important;
-    font-weight: 800 !important; padding: 2px 6px !important; border-radius: 10px !important;
-}
+    /* Sidebar Footer User Card */
+    .sp-sidebar-footer {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--surface);
+    }
+    .sp-user-compact {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex: 1;
+      overflow: hidden;
+    }
+    .sp-avatar-sm {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3B82F6, #6366F1);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      position: relative;
+    }
+    .sp-online-dot {
+      position: absolute;
+      bottom: -1px;
+      right: -1px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #10B981;
+      border: 2px solid white;
+    }
+    .sp-user-info {
+      overflow: hidden;
+    }
+    .sp-user-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sp-user-sub {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+    .sp-logout-btn {
+      color: var(--danger);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .sp-logout-btn:hover { background: rgba(220, 53, 69, 0.08); }
 
-/* ── SIDEBAR DRAWER ── */
-.st-sidebar {
-    width: 240px !important;
-    max-width: 82vw !important;
-    background: #ffffff !important;
-    border-right: 1px solid #e2e8f0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    position: fixed !important;
-    top: 0 !important; left: 0 !important;
-    height: 100vh !important; height: 100dvh !important;
-    z-index: 100001 !important;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05) !important;
-    transform: translateX(-105%) !important;
-}
-@media (max-width: 599px) {
-    .st-sidebar.open { transform: translateX(0) !important; box-shadow: 8px 0 30px rgba(0, 0, 0, 0.12) !important; }
-}
-@media (min-width: 600px) {
-    .st-sidebar { transform: translateX(0) !important; position: sticky !important; }
-}
+    /* ── Main Content Area ── */
+    .sp-main {
+      flex: 1;
+      margin-left: 260px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-.st-sidebar-header {
-    padding: 1.1rem 1rem !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-    display: flex !important; align-items: center !important; justify-content: space-between !important;
-    gap: 10px !important; flex-shrink: 0 !important; background: #ffffff !important;
-}
-.st-sidebar-user { display: flex !important; align-items: center !important; gap: 10px !important; flex: 1 !important; min-width: 0 !important; }
-.st-avatar-lg {
-    width: 40px !important; height: 40px !important; border-radius: 50% !important;
-    background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important;
-    font-weight: 800 !important; font-size: 1.05rem !important; display: flex !important;
-    align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
-}
-.st-user-meta { min-width: 0 !important; flex: 1 !important; }
-.st-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #0f172a !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.st-user-school { margin: 1px 0 0 !important; font-size: 0.72rem !important; color: #64748b !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    /* ── Topbar ── */
+    .sp-topbar {
+      height: 64px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+    .sp-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      max-width: 500px;
+    }
+    .sp-mobile-toggle {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .sp-global-search {
+      width: 100%;
+      position: relative;
+    }
+    .sp-global-search input {
+      width: 100%;
+      height: 38px;
+      padding: 0 14px 0 38px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-sub);
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+    .sp-global-search input:focus {
+      background: white;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.12);
+    }
+    .sp-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
 
-.st-sidebar-close {
-    background: rgba(99, 102, 241, 0.08) !important; border: 1px solid #e2e8f0 !important;
-    color: #6366f1 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 0.95rem !important; cursor: pointer !important; flex-shrink: 0 !important;
-}
+    .sp-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sp-streak-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFF7ED;
+      border: 1px solid #FED7AA;
+      color: #C2410C;
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    .sp-top-btn {
+      background: var(--surface-sub);
+      border: 1px solid var(--border);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.05rem;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+    .sp-top-btn:hover { background: var(--border); color: var(--text-primary); }
+    .sp-notif-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+      border: 2px solid white;
+    }
 
-.st-sidebar-nav {
-    flex: 1 !important; overflow-y: auto !important; padding: 0.85rem 0.75rem !important;
-    display: flex !important; flex-direction: column !important; gap: 4px !important;
-}
+    /* ── Content Body & Module Panes ── */
+    .sp-content-body {
+      padding: 28px;
+      flex: 1;
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+    }
 
-.st-nav-item {
-    display: flex !important; align-items: center !important; height: 48px !important; min-height: 48px !important;
-    padding: 0 12px !important; border-radius: 12px !important; color: #475569 !important;
-    font-size: 0.88rem !important; font-weight: 600 !important; text-decoration: none !important;
-    background: transparent !important; border: none !important; border-left: 3.5px solid transparent !important;
-    width: 100% !important; cursor: pointer !important; transition: all 0.2s ease !important;
-    box-sizing: border-box !important; white-space: nowrap !important;
-}
-.st-nav-item:hover { background: rgba(99, 102, 241, 0.06) !important; color: #6366f1 !important; }
-.st-nav-item.active { background: rgba(99, 102, 241, 0.1) !important; color: #6366f1 !important; border-left: 4px solid #6366f1 !important; font-weight: 700 !important; }
+    .sp-module-view {
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    .sp-module-view.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-.st-nav-icon { width: 24px !important; height: 24px !important; font-size: 1.15rem !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; margin-right: 12px !important; }
-.st-nav-text { flex: 1 !important; text-align: left !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    /* ── Common Cards & Components ── */
+    .sp-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+    .sp-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .sp-card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sp-card-sub {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 2px 0 0 0;
+    }
 
-.st-sidebar-footer {
-    padding: 0.85rem 0.75rem !important; border-top: 1px solid #e2e8f0 !important;
-    flex-shrink: 0 !important; background: #ffffff !important; display: flex !important; flex-direction: column !important; gap: 6px !important;
-}
-.st-footer-btn {
-    display: flex !important; align-items: center !important; height: 44px !important; min-height: 44px !important;
-    padding: 0 12px !important; border-radius: 10px !important; font-size: 0.85rem !important; font-weight: 700 !important;
-    color: #475569 !important; text-decoration: none !important; background: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important; transition: all 0.2s ease !important; width: 100% !important; cursor: pointer !important;
-}
-.st-footer-btn:hover { background: rgba(99, 102, 241, 0.08) !important; color: #6366f1 !important; }
-.st-footer-btn.danger { background: rgba(239, 68, 68, 0.08) !important; color: #ef4444 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+    /* ── Button Styles ── */
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 9px 18px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(11, 94, 215, 0.2);
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--surface-sub);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-secondary:hover { background: var(--border); }
 
-/* ── OVERLAY DIM (FIX BLURRING BUG!) ── */
-.st-overlay-dim {
-    position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.25) !important;
-    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
-    z-index: 100000 !important; opacity: 0 !important; pointer-events: none !important; transition: opacity 0.28s ease !important;
-}
-.st-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
+    .btn-ai-gradient {
+      background: linear-gradient(135deg, var(--primary), var(--indigo));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(91, 75, 219, 0.3);
+      transition: all 0.2s ease;
+    }
+    .btn-ai-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(91, 75, 219, 0.4);
+    }
 
-@media (min-width: 600px) {
-    .st-overlay-dim, .st-overlay-dim.active { display: none !important; opacity: 0 !important; pointer-events: none !important; visibility: hidden !important; }
-}
+    /* ── Sub-Tabs Bar ── */
+    .sp-tabs-bar {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .sp-tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .sp-tab-btn:hover { color: var(--text-primary); }
+    .sp-tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
 
+    /* ── Grid Layouts ── */
+    .sp-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .sp-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
 
-/* ── CONTENT AREA ── */
-.st-content { padding: 1.25rem !important; display: flex !important; flex-direction: column !important; gap: 1.25rem !important; background: #f8fafc !important; }
+    /* ── Book Card Styles ── */
+    .sp-book-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .sp-book-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: #CBD5E1;
+    }
+    .sp-book-cover-wrap {
+      height: 180px;
+      background: #0F172A;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sp-book-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .sp-book-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      backdrop-filter: blur(4px);
+    }
+    .sp-book-badge.available { background: rgba(16, 185, 129, 0.9); color: white; }
+    .sp-book-badge.reserved { background: rgba(245, 158, 11, 0.9); color: white; }
+    .sp-book-badge.out { background: rgba(239, 68, 68, 0.9); color: white; }
 
-/* ── STATS GRID ── */
-.st-stats-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; width: 100% !important; }
-@media (min-width: 600px) { .st-stats-grid { grid-template-columns: repeat(4, 1fr) !important; } }
+    .sp-book-info {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .sp-book-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0 0 4px 0;
+      line-height: 1.3;
+    }
+    .sp-book-author {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .sp-book-location {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+    .sp-book-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
 
-.st-stat-card {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important; border-radius: 18px !important;
-    padding: 14px 12px !important; display: flex !important; flex-direction: column !important;
-    align-items: center !important; text-align: center !important; justify-content: center !important; min-height: 105px !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
-}
-.st-stat-icon { font-size: 1.4rem !important; margin-bottom: 4px !important; }
-.st-stat-val { font-family: 'Outfit', sans-serif !important; font-size: 1.4rem !important; font-weight: 900 !important; color: #0f172a !important; line-height: 1.1 !important; }
-.st-stat-lbl { font-size: 0.72rem !important; color: #64748b !important; font-weight: 700 !important; margin-top: 2px !important; }
+    /* ── Progress Bar ── */
+    .sp-progress-bar-bg {
+      height: 8px;
+      background: var(--surface-sub);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .sp-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--indigo));
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
 
-/* ── CARDS & TABLES ── */
-.st-card {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important; border-radius: 20px !important;
-    padding: 1.25rem !important; color: #0f172a !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
-}
+    /* ── Status Pills ── */
+    .sp-pill {
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sp-pill.green { background: #DCFCE7; color: #15803D; }
+    .sp-pill.red { background: #FEE2E2; color: #B91C1C; }
+    .sp-pill.yellow { background: #FEF3C7; color: #B45309; }
+    .sp-pill.indigo { background: #EEF2FF; color: #4338CA; }
 
-.st-table-container { width: 100% !important; max-width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; margin-top: 10px !important; border-radius: 14px !important; }
-table.st-table { width: 100% !important; border-collapse: collapse !important; text-align: left !important; font-size: 0.85rem !important; }
-table.st-table th { background: #f1f5f9 !important; color: #475569 !important; font-weight: 800 !important; padding: 12px 14px !important; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap !important; }
-table.st-table td { padding: 12px 14px !important; border-bottom: 1px solid #f1f5f9 !important; color: #334155 !important; vertical-align: middle !important; word-break: break-word !important; }
+    /* ── Global Floating AI Button & Drawer ── */
+    .sp-floating-ai-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 999;
+      background: linear-gradient(135deg, var(--primary), var(--indigo));
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 22px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.95rem;
+      box-shadow: 0 8px 24px rgba(91, 75, 219, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sp-floating-ai-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(91, 75, 219, 0.5);
+    }
 
-/* ── BUTTONS ── */
-.st-btn {
-    display: inline-flex !important; align-items: center !important; justify-content: center !important;
-    gap: 8px !important; padding: 9px 16px !important; min-height: 40px !important; border-radius: 12px !important;
-    font-size: 0.85rem !important; font-weight: 700 !important; cursor: pointer !important;
-    transition: all 0.2s ease !important; text-decoration: none !important; border: none !important;
-    background: rgba(99, 102, 241, 0.1) !important; color: #6366f1 !important; box-sizing: border-box !important;
-}
-.st-btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7) !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25) !important; }
-.st-btn-danger { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.2) !important; }
-.st-btn-success { background: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important; border: 1px solid rgba(16, 185, 129, 0.2) !important; }
-.st-btn-xs { padding: 4px 10px !important; min-height: 32px !important; font-size: 0.75rem !important; border-radius: 8px !important; }
+    .sp-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.15s ease;
+    }
+    .sp-modal-content {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 560px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      position: relative;
+    }
 
-/* REMOVE BOTTOM NAVS */
-.bottom-nav, .portal-bottom-nav, nav.bottom-nav, .sp-bottom-nav, .ld-bottom-nav { display: none !important; height: 0 !important; visibility: hidden !important; }
-</style>
+    @media (max-width: 800px) {
+      .sp-sidebar { transform: translateX(-100%); }
+      .sp-sidebar.open { transform: translateX(0); }
+      .sp-main { margin-left: 0; }
+      .sp-mobile-toggle { display: block; }
+      .sp-topbar { padding: 0 16px; }
+      .sp-content-body { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
 
-<div class="st-overlay-dim" id="studentDim" onclick="toggleStudentSidebar()"></div>
+  <div class="sp-app-layout">
 
-<div class="st-shell">
-    <!-- ══ SIDEBAR DRAWER ══ -->
-    <aside class="st-sidebar" id="studentSidebar">
-        <!-- Header -->
-        <div class="st-sidebar-header">
-            <div class="st-sidebar-user">
-                <% const stuName = (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : (typeof user_name !== 'undefined' ? user_name : 'Student'); %>
-                <% const stuInitial = stuName.trim()[0].toUpperCase(); %>
-                <div class="st-avatar-lg">
-                    <%= stuInitial %>
-                </div>
-                <div class="st-user-meta">
-                    <h4 class="st-user-name"><%= stuName %></h4>
-                    <p class="st-user-school"><%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'E-Pathshala Network' %></p>
-                </div>
-            </div>
-            <button class="st-sidebar-close" onclick="toggleStudentSidebar()" aria-label="Close sidebar">✕</button>
+    <!-- ═════════════════════════════════════════════════════════════════
+         1. SIDEBAR NAVIGATION — EXACTLY 10 CORE MODULES
+         ═════════════════════════════════════════════════════════════════ -->
+    <aside class="sp-sidebar" id="studentSidebar">
+      <a href="/student" class="sp-brand">
+        <div class="sp-brand-icon">📚</div>
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="sp-brand-text">Librika</span>
+            <span class="sp-brand-badge">Student</span>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-secondary);"><%= (typeof school_name !== 'undefined' ? school_name : 'Digital Campus') %></div>
         </div>
+      </a>
 
-        <!-- Navigation List -->
-        <nav class="st-sidebar-nav">
-            <a href="/student" class="st-nav-item active">
-                <span class="st-nav-icon">🏠</span>
-                <span class="st-nav-text">Dashboard</span>
-            </a>
-            <a href="/student/live-classes" class="st-nav-item">
-                <span class="st-nav-icon">📹</span>
-                <span class="st-nav-text">Live Classes &amp; Courses</span>
-            </a>
-            <a href="/student/browse" class="st-nav-item">
-                <span class="st-nav-icon">📚</span>
-                <span class="st-nav-text">Digital Library</span>
-            </a>
-            <a href="/digital-library" class="st-nav-item">
-                <span class="st-nav-icon">🌐</span>
-                <span class="st-nav-text">Community Library</span>
-            </a>
-            <a href="/student/my-publications" class="st-nav-item">
-                <span class="st-nav-icon">📖</span>
-                <span class="st-nav-text">My Books</span>
-            </a>
-            <a href="/student/assignments" class="st-nav-item">
-                <span class="st-nav-icon">📝</span>
-                <span class="st-nav-text">Assignments</span>
-            </a>
-            <a href="/student/requests" class="st-nav-item">
-                <span class="st-nav-icon">📋</span>
-                <span class="st-nav-text">Book Requests</span>
-            </a>
-            <a href="/student/calendar" class="st-nav-item">
-                <span class="st-nav-icon">📅</span>
-                <span class="st-nav-text">Calendar</span>
-            </a>
-            <a href="/student/goals" class="st-nav-item">
-                <span class="st-nav-icon">🎯</span>
-                <span class="st-nav-text">Reading Goals</span>
-            </a>
-            <a href="/student/ai" class="st-nav-item">
-                <span class="st-nav-icon">🔍</span>
-                <span class="st-nav-text">AI Chat</span>
-            </a>
-            <a href="/student/notifications" class="st-nav-item">
-                <span class="st-nav-icon">🔔</span>
-                <span class="st-nav-text">Notifications</span>
-            </a>
-            <a href="/student/profile" class="st-nav-item">
-                <span class="st-nav-icon">👤</span>
-                <span class="st-nav-text">My Profile</span>
-            </a>
-            <a href="/student/settings" class="st-nav-item">
-                <span class="st-nav-icon">⚙️</span>
-                <span class="st-nav-text">Settings</span>
-            </a>
-            <a href="/student/help" class="st-nav-item">
-                <span class="st-nav-icon">❓</span>
-                <span class="st-nav-text">Help & Support</span>
-            </a>
-        </nav>
+      <ul class="sp-nav-list">
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'dashboard' ? 'active' : '' %>" onclick="switchStudentModule('dashboard', this)">
+            <span class="sp-nav-icon">🏠</span>
+            <span>Dashboard</span>
+          </button>
+        </li>
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'catalog' ? 'active' : '' %>" onclick="switchStudentModule('catalog', this)">
+            <span class="sp-nav-icon">📚</span>
+            <span>Catalog</span>
+            <span class="sp-nav-badge"><%= catalogBooks.length %></span>
+          </button>
+        </li>
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'borrowings' ? 'active' : '' %>" onclick="switchStudentModule('borrowings', this)">
+            <span class="sp-nav-icon">🔄</span>
+            <span>My Borrowings</span>
+            <% if (stats.activeBooksCount > 0) { %>
+              <span class="sp-nav-badge" style="background:#DCFCE7;color:#15803D;"><%= stats.activeBooksCount %></span>
+            <% } %>
+          </button>
+        </li>
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'e-library' ? 'active' : '' %>" onclick="switchStudentModule('e-library', this)">
+            <span class="sp-nav-icon">📖</span>
+            <span>E-Library</span>
+            <span class="sp-nav-badge"><%= elibraryItems.length %></span>
+          </button>
+        </li>
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'studio' ? 'active' : '' %>" onclick="switchStudentModule('studio', this)">
+            <span class="sp-nav-icon">🎥</span>
+            <span>Studio</span>
+            <% 
+              const liveNowCount = studioSessions.filter(s => s.status === 'LIVE' || s.status === 'live').length;
+              if (liveNowCount > 0) { 
+            %>
+              <span class="sp-nav-badge" style="background:#FEE2E2;color:#B91C1C;animation:pulse 1.5s infinite;">🔴 Live</span>
+            <% } %>
+          </button>
+        </li>
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'learn' ? 'active' : '' %>" onclick="switchStudentModule('learn', this)">
+            <span class="sp-nav-icon">📝</span>
+            <span>Learn</span>
+            <span class="sp-nav-badge"><%= quizzes.length + assignments.length %></span>
+          </button>
+        </li>
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'saved' ? 'active' : '' %>" onclick="switchStudentModule('saved', this)">
+            <span class="sp-nav-icon">🔖</span>
+            <span>Saved</span>
+            <span class="sp-nav-badge"><%= savedBooks.length + savedDocs.length + wishlistBooks.length %></span>
+          </button>
+        </li>
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'achievements' ? 'active' : '' %>" onclick="switchStudentModule('achievements', this)">
+            <span class="sp-nav-icon">🏆</span>
+            <span>Achievements</span>
+          </button>
+        </li>
+        <li>
+          <button class="sp-nav-btn <%= currentModule === 'ai' ? 'active' : '' %>" onclick="switchStudentModule('ai', this)">
+            <span class="sp-nav-icon">✨</span>
+            <span>AI Assistant</span>
+          </button>
+        </li>
+        <li style="margin-top:auto;">
+          <button class="sp-nav-btn <%= currentModule === 'profile' ? 'active' : '' %>" onclick="switchStudentModule('profile', this)">
+            <span class="sp-nav-icon">👤</span>
+            <span>Profile & ID</span>
+          </button>
+        </li>
+      </ul>
 
-        <!-- Sticky Footer -->
-        <div class="st-sidebar-footer">
-            <a href="/logout" class="st-footer-btn danger">
-                <span class="st-nav-icon">🚪</span>
-                <span>Logout</span>
-            </a>
-        </div>
+      <!-- Sidebar User Footer -->
+      <div class="sp-sidebar-footer">
+        <a href="javascript:void(0)" onclick="switchStudentModule('profile')" class="sp-user-compact">
+          <div class="sp-avatar-sm">
+            <%= (student.name || 'S')[0].toUpperCase() %>
+            <span class="sp-online-dot"></span>
+          </div>
+          <div class="sp-user-info">
+            <div class="sp-user-name"><%= student.name %></div>
+            <div class="sp-user-sub"><%= student.class || 'Student' %> · <%= student.admission_no || 'ID' %></div>
+          </div>
+        </a>
+        <a href="/logout" class="sp-logout-btn" title="Sign Out">🚪</a>
+      </div>
     </aside>
 
-    <!-- ══ MAIN CONTENT ══ -->
-    <main class="st-main">
-        <!-- Topbar -->
-        <div class="st-topbar">
-            <div class="st-topbar-left">
-                <button class="st-menu-btn" onclick="toggleStudentSidebar()" aria-label="Menu">☰</button>
-                <span class="st-brand-title">🎓 Student Portal</span>
-            </div>
-            <div class="st-topbar-right">
-                <a href="/student/browse" class="st-btn st-btn-primary st-btn-xs">📚 Catalog</a>
-                <a href="/student/notifications" class="st-notif-btn">
-                    🔔
-                    <% const notifBadgeCount = (typeof stats !== 'undefined' && stats) ? ((stats.due_soon_count || 0) + (stats.overdue_count || 0)) : 0; %>
-                    <% if (notifBadgeCount > 0) { %><span class="st-notif-badge"><%= notifBadgeCount %></span><% } %>
-                </a>
-            </div>
+    <!-- ═════════════════════════════════════════════════════════════════
+         2. MAIN APPLICATION CONTENT
+         ═════════════════════════════════════════════════════════════════ -->
+    <main class="sp-main">
+
+      <!-- Topbar Header -->
+      <header class="sp-topbar">
+        <div class="sp-topbar-left">
+          <button class="sp-mobile-toggle" onclick="toggleStudentSidebar()">☰</button>
+          <div class="sp-global-search">
+            <span class="sp-search-icon">🔍</span>
+            <input type="text" id="globalStudentSearch" placeholder="Search books, e-library, assignments, classes..." onkeyup="handleStudentSearch(this.value)">
+          </div>
         </div>
 
-        <div class="st-content">
-            <!-- Hero Welcome Card -->
-            <div class="st-card" style="background: linear-gradient(135deg, #eef2ff, #f5f3ff) !important; border: 1px solid #c7d2fe !important;">
-                <h2 style="font-family: 'Outfit'; font-size: 1.4rem; color: #3730a3; margin: 0 0 6px 0;">Hello, <%= (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Student' %>! 👋</h2>
-                <p style="margin: 0; color: #6366f1; font-size: 0.88rem;">Welcome back to your Digital Library. Track your reading goals & explore community books!</p>
+        <div class="sp-topbar-right">
+          <div class="sp-streak-pill" title="Consecutive Reading Days">
+            🔥 <strong><%= stats.readingStreak %></strong> Day Streak
+          </div>
+          <button class="sp-top-btn" onclick="openDigitalPassModal()" title="View Digital Library Pass">
+            🪪
+          </button>
+          <button class="sp-top-btn" onclick="switchStudentModule('profile', null, 'notifications')" title="Notifications">
+            🔔
+          </button>
+        </div>
+      </header>
+
+      <!-- Central Content Modules Container -->
+      <div class="sp-content-body">
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 01 — DASHBOARD
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-dashboard" class="sp-module-view <%= currentModule === 'dashboard' ? 'active' : '' %>">
+          
+          <!-- Hero Banner -->
+          <div class="sp-card" style="background:linear-gradient(135deg, #0B5ED7 0%, #4338CA 100%);color:white;padding:32px;position:relative;overflow:hidden;">
+            <div style="position:relative;z-index:2;max-width:650px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;margin-bottom:12px;backdrop-filter:blur(4px);">
+                ⭐ Welcome to Librika Digital Campus
+              </div>
+              <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;margin:0 0 8px 0;letter-spacing:-0.03em;">
+                Good morning, <%= student.name.split(' ')[0] %> 👋
+              </h1>
+              <p style="font-size:0.95rem;color:rgba(255,255,255,0.85);margin:0 0 20px 0;line-height:1.5;">
+                Keep learning. Keep reading. You're on a <strong><%= stats.readingStreak %>-day streak</strong> and have <strong><%= stats.activeBooksCount %> books</strong> currently borrowed.
+              </p>
+              
+              <!-- Quick Action Pills -->
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn-primary" style="background:white;color:var(--primary);box-shadow:none;" onclick="switchStudentModule('e-library')">
+                  📖 Continue Reading
+                </button>
+                <button class="btn-primary" style="background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.3);box-shadow:none;" onclick="switchStudentModule('catalog')">
+                  📚 Browse Books
+                </button>
+                <button class="btn-primary" style="background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.3);box-shadow:none;" onclick="switchStudentModule('studio')">
+                  🎥 Join Live Class
+                </button>
+                <button class="btn-primary" style="background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.3);box-shadow:none;" onclick="switchStudentModule('ai')">
+                  ✨ Ask AI
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 Stats Quick Summary Grid -->
+          <div class="sp-grid-3" style="margin-bottom:24px;">
+            <div class="sp-card" style="margin-bottom:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">Reading Streak</span>
+                <span style="font-size:1.4rem;">🔥</span>
+              </div>
+              <div style="font-size:1.8rem;font-weight:900;color:var(--text-primary);"><%= stats.readingStreak %> Days</div>
+              <div style="font-size:0.75rem;color:var(--success);font-weight:700;margin-top:4px;">Keep it going tomorrow!</div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="st-stats-grid">
-                <div class="st-stat-card">
-                    <div class="st-stat-icon">📚</div>
-                    <div class="st-stat-val"><%= (typeof stats !== 'undefined' && stats && stats.borrowed_count) ? stats.borrowed_count : (typeof issued_count !== 'undefined' ? issued_count : 0) %></div>
-                    <div class="st-stat-lbl">Active Loans</div>
-                </div>
-                <div class="st-stat-card">
-                    <div class="st-stat-icon">🎯</div>
-                    <div class="st-stat-val"><%= (typeof stats !== 'undefined' && stats && stats.goal_pages) ? stats.goal_pages : 20 %></div>
-                    <div class="st-stat-lbl">Daily Goal Pages</div>
-                </div>
-                <div class="st-stat-card">
-                    <div class="st-stat-icon">🏆</div>
-                    <div class="st-stat-val"><%= (typeof stats !== 'undefined' && stats && stats.reader_score) ? stats.reader_score : 100 %></div>
-                    <div class="st-stat-lbl">Reader Score</div>
-                </div>
-                <div class="st-stat-card">
-                    <div class="st-stat-icon">🔥</div>
-                    <div class="st-stat-val" style="color: #fb923c;"><%= (typeof stats !== 'undefined' && stats && stats.streak) ? stats.streak : 1 %> Day</div>
-                    <div class="st-stat-lbl">Reading Streak</div>
-                </div>
+            <div class="sp-card" style="margin-bottom:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">Active Borrowings</span>
+                <span style="font-size:1.4rem;">📚</span>
+              </div>
+              <div style="font-size:1.8rem;font-weight:900;color:var(--text-primary);"><%= stats.activeBooksCount %> Books</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;"><%= overdueAlerts.length > 0 ? (overdueAlerts.length + ' need attention') : 'All loans in good standing' %></div>
             </div>
 
-            <!-- 🔴 Live Classes & Scheduled Batches Card -->
-            <% if (typeof live_sessions !== 'undefined' && live_sessions && live_sessions.length > 0) { %>
-            <div class="st-card" style="border-left: 4px solid #ef4444;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                    <h3 style="font-family:'Outfit';font-size:1.1rem;color:#0f172a;margin:0;display:flex;align-items:center;gap:8px;">
-                        <span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;box-shadow:0 0 8px #ef4444;"></span>
-                        Live Online Classes Today
-                    </h3>
-                    <a href="/student/live-classes" style="font-size:0.82rem;font-weight:700;color:#6366f1;text-decoration:none;">View All &rarr;</a>
+            <div class="sp-card" style="margin-bottom:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">Annual Reading Goal</span>
+                <span style="font-size:1.4rem;">🎯</span>
+              </div>
+              <div style="font-size:1.8rem;font-weight:900;color:var(--text-primary);"><%= stats.weeklyGoalPercent %>%</div>
+              <div class="sp-progress-bar-bg" style="margin:6px 0;">
+                <div class="sp-progress-bar-fill" style="width:<%= stats.weeklyGoalPercent %>%;"></div>
+              </div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);"><%= stats.pastBooksCount %> of <%= activeGoal.target_value || 20 %> books completed</div>
+            </div>
+          </div>
+
+          <!-- Needs Attention Alerts Banner (if any) -->
+          <% if (overdueAlerts.length > 0) { %>
+            <div class="sp-card" style="background:#FEF2F2;border-color:#FCA5A5;margin-bottom:24px;padding:16px 20px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:1.4rem;">⚠️</span>
+                <div style="flex:1;">
+                  <h4 style="margin:0;font-size:0.95rem;font-weight:800;color:#991B1B;">Loans Requiring Attention</h4>
+                  <div style="font-size:0.82rem;color:#7F1D1D;margin-top:2px;">
+                    <% overdueAlerts.forEach(a => { %>
+                      <span>"<%= a.title %>" <%= a.type === 'overdue' ? ('is ' + a.days + ' days overdue') : ('is due in ' + a.days + ' days') %>. </span>
+                    <% }) %>
+                  </div>
+                </div>
+                <button class="btn-primary" style="background:#DC2626;box-shadow:none;padding:6px 12px;font-size:0.8rem;" onclick="switchStudentModule('borrowings')">
+                  View Loans
+                </button>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- 2-Column Dashboard Layout: Continue Reading & Recommended -->
+          <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:24px;margin-bottom:24px;">
+            
+            <!-- Left: Continue Reading & Recommended Books -->
+            <div>
+              <div class="sp-card">
+                <div class="sp-card-header">
+                  <div>
+                    <h3 class="sp-card-title">📖 Continue Reading</h3>
+                    <p class="sp-card-sub">Jump right back into your digital books & study notes</p>
+                  </div>
+                  <button class="btn-secondary" style="font-size:0.78rem;padding:5px 10px;" onclick="switchStudentModule('e-library')">View All</button>
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                    <% live_sessions.forEach(s => { 
-                        const sTime = s.scheduled_start ? new Date(s.scheduled_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live Now';
+                <% if (continueReading.length === 0) { %>
+                  <div style="padding:24px;text-align:center;color:var(--text-muted);background:var(--surface-sub);border-radius:14px;">
+                    <span style="font-size:1.8rem;display:block;margin-bottom:6px;">📚</span>
+                    You haven't opened any digital books yet. Explore the E-Library to start reading!
+                  </div>
+                <% } else { %>
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <% continueReading.forEach(cr => { 
+                         const percent = Math.min(100, Math.round(((cr.last_page || 1) / Math.max(1, cr.total_pages || 100)) * 100));
                     %>
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;flex-wrap:wrap;gap:10px;">
-                        <div>
-                            <div style="font-weight:700;font-size:0.92rem;color:#0f172a;"><%= s.title %></div>
-                            <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">
-                                📚 <%= s.course_title || 'Live Class' %> &bull; 👨‍🏫 <%= s.instructor_name || 'Faculty' %> &bull; ⏰ <%= sTime %>
-                            </div>
+                      <div style="display:flex;align-items:center;gap:16px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface);">
+                        <img src="<%= cr.cover_url || '/placeholder_cover.png' %>" style="width:48px;height:64px;object-fit:cover;border-radius:8px;background:#1E293B;" alt="<%= cr.title %>">
+                        <div style="flex:1;">
+                          <h4 style="margin:0 0 2px 0;font-size:0.92rem;font-weight:800;color:var(--text-primary);"><%= cr.title %></h4>
+                          <div style="font-size:0.75rem;color:var(--text-secondary);"><%= cr.author || 'Academic Material' %> · <%= percent %>% completed</div>
+                          <div class="sp-progress-bar-bg" style="margin:6px 0 0 0;">
+                            <div class="sp-progress-bar-fill" style="width:<%= percent %>%;"></div>
+                          </div>
                         </div>
-                        <a href="/live/<%= s.meeting_id %>" class="st-btn st-btn-primary st-btn-xs" style="background:linear-gradient(135deg, #ef4444, #dc2626) !important;box-shadow:0 2px 8px rgba(239,68,68,0.3) !important;">
-                            🎥 Join Class
+                        <a href="/read/<%= cr.content_id %>" class="btn-primary" style="padding:6px 14px;font-size:0.8rem;text-decoration:none;">
+                          Continue
                         </a>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } %>
+              </div>
+
+              <!-- Recommended For You -->
+              <div class="sp-card">
+                <div class="sp-card-header">
+                  <div>
+                    <h3 class="sp-card-title">✨ Recommended For You</h3>
+                    <p class="sp-card-sub">Curated based on your grade, subjects & reading interests</p>
+                  </div>
+                  <button class="btn-secondary" style="font-size:0.78rem;padding:5px 10px;" onclick="switchStudentModule('catalog')">View Catalog</button>
+                </div>
+
+                <div class="sp-grid-3">
+                  <% catalogBooks.slice(0, 3).forEach(b => { %>
+                    <div class="sp-book-card">
+                      <div class="sp-book-cover-wrap">
+                        <img src="<%= b.cover_url || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&auto=format&fit=crop&q=60' %>" class="sp-book-cover" alt="<%= b.title %>">
+                        <span class="sp-book-badge <%= (b.available_copies > 0) ? 'available' : 'out' %>">
+                          <%= (b.available_copies > 0) ? 'Available' : 'Issued Out' %>
+                        </span>
+                      </div>
+                      <div class="sp-book-info">
+                        <h4 class="sp-book-title"><%= b.title %></h4>
+                        <div class="sp-book-author"><%= b.author %></div>
+                        <div class="sp-book-location">
+                          📍 Rack <%= b.rack_location || 'A-1' %> · Shelf <%= b.shelf_no || '2' %>
+                        </div>
+                        <div class="sp-book-actions">
+                          <button class="btn-primary" style="flex:1;justify-content:center;padding:6px;font-size:0.78rem;" onclick="reserveBook('<%= b.id %>')">
+                            Reserve
+                          </button>
+                          <button class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;" onclick="toggleSaveBook('<%= b.id %>', this)" title="Save to Wishlist">
+                            ⭐
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <% }); %>
+                  <% }) %>
                 </div>
+              </div>
             </div>
+
+            <!-- Right Column: Upcoming Live Classes & AI Quick Box -->
+            <div>
+              <!-- Upcoming Live Masterclass -->
+              <div class="sp-card">
+                <div class="sp-card-header">
+                  <h3 class="sp-card-title">🎥 Next Live Class</h3>
+                  <button class="btn-secondary" style="font-size:0.78rem;padding:5px 10px;" onclick="switchStudentModule('studio')">Studio</button>
+                </div>
+
+                <% 
+                  const nextSession = studioSessions.find(s => s.status === 'LIVE' || s.status === 'live' || s.status === 'SCHEDULED');
+                  if (!nextSession) {
+                %>
+                  <div style="padding:24px;text-align:center;color:var(--text-muted);background:var(--surface-sub);border-radius:14px;">
+                    <span style="font-size:1.8rem;display:block;margin-bottom:6px;">📅</span>
+                    No upcoming live classes scheduled today. Check back soon!
+                  </div>
+                <% } else { 
+                     const isLive = nextSession.status === 'LIVE' || nextSession.status === 'live';
+                %>
+                  <div style="padding:16px;border:1px solid <%= isLive ? '#FCA5A5' : 'var(--border)' %>;background:<%= isLive ? '#FEF2F2' : 'var(--surface-sub)' %>;border-radius:14px;">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+                      <% if (isLive) { %>
+                        <span class="sp-pill red"><span style="width:6px;height:6px;border-radius:50%;background:#EF4444;animation:pulse 1.5s infinite;"></span> LIVE NOW</span>
+                      <% } else { %>
+                        <span class="sp-pill indigo">Upcoming</span>
+                      <% } %>
+                      <span style="font-size:0.75rem;color:var(--text-secondary);"><%= nextSession.class_name || 'All Students' %></span>
+                    </div>
+
+                    <h4 style="margin:0 0 6px 0;font-size:1rem;font-weight:800;color:var(--text-primary);"><%= nextSession.title %></h4>
+                    <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:14px;">
+                      👨‍🏫 Host: <strong><%= nextSession.host_name || 'Faculty Instructor' %></strong><br>
+                      ⏰ <%= renderDate(nextSession.scheduled_start) %> (<%= nextSession.duration_minutes || 60 %> mins)
+                    </div>
+
+                    <a href="/studio/meeting/<%= nextSession.id || nextSession.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
+                      <%= isLive ? '🔴 JOIN LIVE CLASS NOW' : '🚀 Join Meeting Room' %>
+                    </a>
+                  </div>
+                <% } %>
+              </div>
+
+              <!-- Quick AI Helper Box -->
+              <div class="sp-card" style="background:linear-gradient(135deg, #EEF2FF, #F8FAFC);border-color:#C7D2FE;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                  <span style="font-size:1.3rem;">✨</span>
+                  <h4 style="margin:0;font-size:1rem;font-weight:800;color:var(--indigo);">Librika Study AI</h4>
+                </div>
+                <p style="font-size:0.82rem;color:var(--text-secondary);margin:0 0 14px 0;line-height:1.4;">
+                  Have a question about science, maths, grammar, or a chapter you're reading? Ask your personal study copilot!
+                </p>
+                <div style="display:flex;gap:6px;">
+                  <input type="text" id="quickAiPrompt" placeholder="Ask anything (e.g. Explain photosynthesis)..." style="flex:1;height:38px;padding:0 12px;border-radius:10px;border:1px solid #C7D2FE;font-size:0.82rem;font-family:inherit;">
+                  <button class="btn-primary" onclick="handleQuickAiSubmit()" style="background:var(--indigo);box-shadow:none;">Ask</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 02 — CATALOG (PHYSICAL BOOKS & LOCATION FINDER)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-catalog" class="sp-module-view <%= currentModule === 'catalog' ? 'active' : '' %>">
+          
+          <div class="sp-card">
+            <div class="sp-card-header">
+              <div>
+                <h3 class="sp-card-title">📚 Physical Book Catalog & Aisle Finder</h3>
+                <p class="sp-card-sub">Discover books, view shelf & rack coordinates, and reserve for instant pickup</p>
+              </div>
+              <div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">
+                <%= catalogBooks.length %> Books Available
+              </div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+              <input type="text" id="catalogSearchInput" placeholder="Search by title, author, ISBN or topic..." style="flex:1;min-width:280px;height:42px;padding:0 14px;border-radius:12px;border:1px solid var(--border);font-family:inherit;font-size:0.88rem;" onkeyup="filterCatalogGrid(this.value)">
+              
+              <div style="display:flex;gap:6px;overflow-x:auto;">
+                <button class="btn-secondary" onclick="filterCatalogByGenre('ALL', this)" style="background:var(--primary-light);color:var(--primary);border-color:rgba(11,94,215,0.2);">All</button>
+                <button class="btn-secondary" onclick="filterCatalogByGenre('Science', this)">Science</button>
+                <button class="btn-secondary" onclick="filterCatalogByGenre('Fiction', this)">Fiction</button>
+                <button class="btn-secondary" onclick="filterCatalogByGenre('Technology', this)">Technology</button>
+                <button class="btn-secondary" onclick="filterCatalogByGenre('History', this)">History</button>
+                <button class="btn-secondary" onclick="filterCatalogByGenre('Mathematics', this)">Mathematics</button>
+              </div>
+            </div>
+
+            <!-- Books Grid -->
+            <div class="sp-grid-4" id="catalogGrid">
+              <% catalogBooks.forEach(b => { %>
+                <div class="sp-book-card" data-genre="<%= (b.genre || '').toLowerCase() %>" data-title="<%= (b.title || '').toLowerCase() %>" data-author="<%= (b.author || '').toLowerCase() %>">
+                  <div class="sp-book-cover-wrap">
+                    <img src="<%= b.cover_url || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&auto=format&fit=crop&q=60' %>" class="sp-book-cover" alt="<%= b.title %>">
+                    <span class="sp-book-badge <%= (b.available_copies > 0) ? 'available' : 'out' %>">
+                      <%= (b.available_copies > 0) ? (b.available_copies + ' in Library') : 'Issued Out' %>
+                    </span>
+                  </div>
+                  <div class="sp-book-info">
+                    <h4 class="sp-book-title"><%= b.title %></h4>
+                    <div class="sp-book-author"><%= b.author %></div>
+                    <div class="sp-book-location">
+                      📍 Rack <%= b.rack_location || 'A-1' %> · Shelf <%= b.shelf_no || '2' %>
+                    </div>
+                    <div class="sp-book-actions">
+                      <button class="btn-primary" style="flex:1;justify-content:center;padding:6px;font-size:0.78rem;" onclick="reserveBook('<%= b.id %>')">
+                        <%= b.is_reserved ? 'Reserved' : 'Reserve' %>
+                      </button>
+                      <button class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;" onclick="toggleSaveBook('<%= b.id %>', this)" title="Save to Wishlist">
+                        <%= b.is_saved ? '⭐' : '☆' %>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 03 — MY BORROWINGS
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-borrowings" class="sp-module-view <%= currentModule === 'borrowings' ? 'active' : '' %>">
+          
+          <div class="sp-tabs-bar">
+            <button class="sp-tab-btn active" onclick="switchBorrowingsTab('active', this)">
+              📤 Active Loans (<%= activeLoans.length %>)
+            </button>
+            <button class="sp-tab-btn" onclick="switchBorrowingsTab('history', this)">
+              📜 Borrowing History (<%= pastLoans.length %>)
+            </button>
+            <button class="sp-tab-btn" onclick="switchBorrowingsTab('fines', this)">
+              💳 Outstanding Fines (<%= stats.totalFines > 0 ? ('₹' + stats.totalFines) : '₹0' %>)
+            </button>
+          </div>
+
+          <!-- Tab 1: Active Loans -->
+          <div id="borrowings-tab-active" class="borrowings-tab-pane">
+            <% if (activeLoans.length === 0) { %>
+              <div class="sp-card" style="text-align:center;padding:48px;color:var(--text-muted);">
+                <span style="font-size:2.5rem;display:block;margin-bottom:8px;">📚</span>
+                <h3 style="margin:0 0 6px 0;color:var(--text-primary);">No Books Currently Borrowed</h3>
+                <p style="margin:0 0 16px 0;font-size:0.88rem;">Explore the physical book catalog or reserve a copy for checkout.</p>
+                <button class="btn-primary" onclick="switchStudentModule('catalog')">Browse Catalog</button>
+              </div>
+            <% } else { %>
+              <div class="sp-grid-3">
+                <% activeLoans.forEach(loan => { %>
+                  <div class="sp-card" style="margin-bottom:0;display:flex;flex-direction:column;">
+                    <div style="display:flex;gap:14px;margin-bottom:12px;">
+                      <img src="<%= loan.cover_url || '/placeholder_cover.png' %>" style="width:60px;height:84px;object-fit:cover;border-radius:8px;background:#1E293B;" alt="<%= loan.title %>">
+                      <div style="flex:1;">
+                        <span class="sp-pill <%= loan.is_overdue ? 'red' : (loan.days_remaining <= 3 ? 'yellow' : 'green') %>">
+                          <%= loan.is_overdue ? (loan.days_overdue + ' days overdue') : ('Due in ' + loan.days_remaining + ' days') %>
+                        </span>
+                        <h4 style="margin:6px 0 2px 0;font-size:0.95rem;font-weight:800;color:var(--text-primary);"><%= loan.title %></h4>
+                        <div style="font-size:0.75rem;color:var(--text-secondary);"><%= loan.author %></div>
+                      </div>
+                    </div>
+
+                    <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:14px;">
+                      📅 Issued: <strong><%= renderDate(loan.issue_date) %></strong><br>
+                      ⏰ Return By: <strong><%= renderDate(loan.due_date) %></strong>
+                    </div>
+
+                    <div style="margin-top:auto;display:flex;gap:8px;">
+                      <button class="btn-primary" style="flex:1;justify-content:center;padding:7px;font-size:0.8rem;" onclick="renewLoan('<%= loan.id %>')">
+                        🔄 Renew (+14 Days)
+                      </button>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
             <% } %>
+          </div>
 
-            <!-- Currently Reading / Issued Books Table -->
-            <div class="st-card">
-                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #0f172a; margin: 0 0 10px 0;">📖 My Borrowed Books</h3>
-                <div class="st-table-container">
-                    <table class="st-table">
-                        <thead>
-                            <tr>
-                                <th>Book Title</th>
-                                <th>Issue Date</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (typeof issued_books !== 'undefined' && issued_books && issued_books.length > 0) { %>
-                                <% issued_books.forEach(b => { %>
-                                    <tr>
-                                        <td style="font-weight: 700; color: #ffffff;"><%= b.title %></td>
-                                        <td><%= b.issue_date %></td>
-                                        <td><%= b.due_date %></td>
-                                        <td>
-                                            <% if (b.is_overdue) { %>
-                                                <span style="color: #f87171; font-weight: 700;">OVERDUE</span>
-                                            <% } else { %>
-                                                <span style="color: #34d399; font-weight: 700;">Issued</span>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } else { %>
-                                <tr><td colspan="4" style="text-align: center; color: var(--sp-muted);">No active book loans. <a href="/student/browse" style="color: #818cf8;">Browse Digital Library</a></td></tr>
-                            <% } %>
-                        </tbody>
-                    </table>
+          <!-- Tab 2: Borrowing History -->
+          <div id="borrowings-tab-history" class="borrowings-tab-pane" style="display:none;">
+            <div class="sp-card">
+              <h3 class="sp-card-title" style="margin-bottom:16px;">📜 Completed Reading History</h3>
+              <% if (pastLoans.length === 0) { %>
+                <div style="padding:24px;text-align:center;color:var(--text-muted);">No returned borrowing history yet.</div>
+              <% } else { %>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <% pastLoans.forEach(p => { %>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:12px;">
+                      <div>
+                        <div style="font-weight:800;font-size:0.92rem;"><%= p.title %></div>
+                        <div style="font-size:0.75rem;color:var(--text-secondary);"><%= p.author %> · Returned on <%= renderDate(p.return_date) %></div>
+                      </div>
+                      <span class="sp-pill green">✅ Returned</span>
+                    </div>
+                  <% }) %>
                 </div>
+              <% } %>
             </div>
-        </div>
+          </div>
+
+          <!-- Tab 3: Fines -->
+          <div id="borrowings-tab-fines" class="borrowings-tab-pane" style="display:none;">
+            <div class="sp-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <div>
+                  <h3 class="sp-card-title">💳 Library Fine Status</h3>
+                  <p class="sp-card-sub">Daily overdue fine rate: ₹5 / day after grace period</p>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:1.8rem;font-weight:900;color:<%= stats.totalFines > 0 ? '#DC2626' : '#16A34A' %>;">
+                    ₹<%= stats.totalFines %>
+                  </div>
+                  <div style="font-size:0.75rem;color:var(--text-secondary);">Total Outstanding</div>
+                </div>
+              </div>
+
+              <% if (stats.totalFines === 0) { %>
+                <div style="padding:24px;text-align:center;color:#16A34A;background:#F0FDF4;border-radius:12px;font-weight:700;">
+                  🎉 You have zero outstanding fines! All books are returned on time.
+                </div>
+              <% } else { %>
+                <div style="padding:16px;border:1px solid #FECACA;background:#FEF2F2;border-radius:12px;margin-bottom:12px;">
+                  <div style="font-weight:800;color:#991B1B;font-size:0.92rem;margin-bottom:4px;">Please return overdue books to the circulation desk</div>
+                  <div style="font-size:0.82rem;color:#7F1D1D;">Fines can be settled directly at the librarian desk during return.</div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 04 — E-LIBRARY (DIGITAL BOOKS & STUDY MATERIAL)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-e-library" class="sp-module-view <%= currentModule === 'e-library' ? 'active' : '' %>">
+          
+          <div class="sp-card">
+            <div class="sp-card-header">
+              <div>
+                <h3 class="sp-card-title">📖 E-Library & Digital Vault</h3>
+                <p class="sp-card-sub">Accredited curriculum e-books, study materials, research papers & notes</p>
+              </div>
+              <div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">
+                <%= elibraryItems.length %> Digital Resources
+              </div>
+            </div>
+
+            <!-- E-Library Grid -->
+            <div class="sp-grid-4">
+              <% elibraryItems.forEach(doc => { %>
+                <div class="sp-book-card">
+                  <div class="sp-book-cover-wrap" style="background:#1E293B;">
+                    <img src="<%= doc.cover_url || 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&auto=format&fit=crop&q=60' %>" class="sp-book-cover" alt="<%= doc.title %>">
+                    <span class="sp-book-badge" style="background:rgba(91,75,219,0.9);color:white;">
+                      <%= doc.category || 'PDF Book' %>
+                    </span>
+                  </div>
+                  <div class="sp-book-info">
+                    <h4 class="sp-book-title"><%= doc.title %></h4>
+                    <div class="sp-book-author"><%= doc.author || 'Academic Faculty' %></div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:12px;">
+                      📄 <%= doc.total_pages || 120 %> pages · PDF
+                    </div>
+                    <div class="sp-book-actions">
+                      <a href="/read/<%= doc.id %>" class="btn-primary" style="flex:1;justify-content:center;padding:6px;font-size:0.78rem;text-decoration:none;">
+                        📖 Read Now
+                      </a>
+                      <button class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;" onclick="toggleSaveDoc('<%= doc.id %>', this)" title="Save Document">
+                        ⭐
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 05 — STUDIO (LIVE CLASSES & MASTERCLASSES)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-studio" class="sp-module-view <%= currentModule === 'studio' ? 'active' : '' %>">
+          
+          <div class="sp-card">
+            <div class="sp-card-header">
+              <div>
+                <h3 class="sp-card-title">🎥 Live Video Classroom & Studio</h3>
+                <p class="sp-card-sub">Attend live masterclasses, interactive whiteboard sessions & seminars</p>
+              </div>
+            </div>
+
+            <!-- Studio Sessions List -->
+            <% if (studioSessions.length === 0) { %>
+              <div style="text-align:center;padding:48px;color:var(--text-muted);">
+                <span style="font-size:2.5rem;display:block;margin-bottom:8px;">🎥</span>
+                <h3 style="margin:0 0 6px 0;color:var(--text-primary);">No Live Sessions Scheduled</h3>
+                <p style="margin:0;font-size:0.88rem;">Your teachers and faculty will publish scheduled masterclasses here.</p>
+              </div>
+            <% } else { %>
+              <div class="sp-grid-3">
+                <% studioSessions.forEach(s => { 
+                     const isLive = s.status === 'LIVE' || s.status === 'live';
+                %>
+                  <div class="sp-card" style="margin-bottom:0;border-color:<%= isLive ? '#FCA5A5' : 'var(--border)' %>;background:<%= isLive ? '#FEF2F2' : 'var(--surface)' %>;">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                      <% if (isLive) { %>
+                        <span class="sp-pill red"><span style="width:6px;height:6px;border-radius:50%;background:#EF4444;animation:pulse 1.5s infinite;"></span> LIVE BROADCAST</span>
+                      <% } else { %>
+                        <span class="sp-pill indigo">Scheduled</span>
+                      <% } %>
+                      <span style="font-size:0.75rem;color:var(--text-secondary);"><%= s.class_name || 'All Students' %></span>
+                    </div>
+
+                    <h4 style="margin:0 0 6px 0;font-size:1.05rem;font-weight:800;color:var(--text-primary);"><%= s.title %></h4>
+                    <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px 0;line-height:1.4;">
+                      <%= s.description || 'Interactive lecture with screen share and live whiteboard.' %>
+                    </p>
+
+                    <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px;">
+                      👨‍🏫 Host: <strong><%= s.host_name || 'Faculty' %></strong><br>
+                      ⏰ <%= renderDate(s.scheduled_start) %> · <%= s.duration_minutes || 60 %> mins
+                    </div>
+
+                    <a href="/studio/meeting/<%= s.id || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
+                      <%= isLive ? '🔴 JOIN LIVE CLASS NOW' : '🚀 Launch Classroom' %>
+                    </a>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 06 — LEARN (QUIZZES, ASSIGNMENTS, TESTS)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-learn" class="sp-module-view <%= currentModule === 'learn' ? 'active' : '' %>">
+          
+          <div class="sp-tabs-bar">
+            <button class="sp-tab-btn active" onclick="switchLearnTab('quizzes', this)">
+              🎯 Quizzes (<%= quizzes.length %>)
+            </button>
+            <button class="sp-tab-btn" onclick="switchLearnTab('assignments', this)">
+              📝 Assignments (<%= assignments.length %>)
+            </button>
+            <button class="sp-tab-btn" onclick="switchLearnTab('certificates', this)">
+              🎓 Earned Certificates
+            </button>
+          </div>
+
+          <!-- Tab 1: Quizzes -->
+          <div id="learn-tab-quizzes" class="learn-tab-pane">
+            <div class="sp-grid-3">
+              <% quizzes.forEach(q => { %>
+                <div class="sp-card" style="margin-bottom:0;">
+                  <span class="sp-pill indigo" style="margin-bottom:8px;"><%= q.subject || 'General' %></span>
+                  <h4 style="margin:0 0 6px 0;font-size:1rem;font-weight:800;"><%= q.title %></h4>
+                  <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px 0;"><%= q.description %></p>
+                  <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px;">
+                    ⏱️ <%= q.duration_minutes || 15 %> Minutes · 🏆 <%= q.total_marks || 10 %> Marks
+                  </div>
+                  <button class="btn-primary" style="width:100%;justify-content:center;" onclick="openQuizModal('<%= q.id %>', '<%= q.title %>')">
+                    <%= q.my_status === 'COMPLETED' ? 'Retake Quiz' : 'Start Quiz' %>
+                  </button>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Tab 2: Assignments -->
+          <div id="learn-tab-assignments" class="learn-tab-pane" style="display:none;">
+            <div class="sp-grid-3">
+              <% assignments.forEach(a => { %>
+                <div class="sp-card" style="margin-bottom:0;">
+                  <span class="sp-pill <%= a.sub_status === 'SUBMITTED' ? 'green' : 'yellow' %>" style="margin-bottom:8px;">
+                    <%= a.sub_status === 'SUBMITTED' ? '✅ Submitted' : '⏳ Pending' %>
+                  </span>
+                  <h4 style="margin:0 0 6px 0;font-size:1rem;font-weight:800;"><%= a.title %></h4>
+                  <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px 0;"><%= a.description %></p>
+                  <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px;">
+                    📅 Due: <strong><%= renderDate(a.due_at) %></strong>
+                  </div>
+                  <button class="btn-primary" style="width:100%;justify-content:center;" onclick="openAssignmentModal('<%= a.id %>', '<%= a.title %>')">
+                    <%= a.sub_status === 'SUBMITTED' ? 'View Submission' : 'Submit Work' %>
+                  </button>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Tab 3: Certificates -->
+          <div id="learn-tab-certificates" class="learn-tab-pane" style="display:none;">
+            <div class="sp-card" style="text-align:center;padding:48px;">
+              <span style="font-size:3rem;display:block;margin-bottom:8px;">🎓</span>
+              <h3 style="margin:0 0 6px 0;color:var(--text-primary);">Verifiable Certificates</h3>
+              <p style="margin:0 0 16px 0;font-size:0.88rem;color:var(--text-secondary);">
+                Complete accredited reading goals, pass subject diagnostic quizzes, and earn verifiable digital badges.
+              </p>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 07 — SAVED (BOOKMARKS, WISHLIST, SAVED BOOKS)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-saved" class="sp-module-view <%= currentModule === 'saved' ? 'active' : '' %>">
+          
+          <div class="sp-tabs-bar">
+            <button class="sp-tab-btn active" onclick="switchSavedTab('books', this)">
+              📚 Saved Books (<%= savedBooks.length %>)
+            </button>
+            <button class="sp-tab-btn" onclick="switchSavedTab('docs', this)">
+              📄 E-Library Saves (<%= savedDocs.length %>)
+            </button>
+            <button class="sp-tab-btn" onclick="switchSavedTab('wishlist', this)">
+              ⭐ Wishlist (<%= wishlistBooks.length %>)
+            </button>
+            <button class="sp-tab-btn" onclick="switchSavedTab('requests', this)">
+              📨 Book Requests (<%= myRequests.length %>)
+            </button>
+          </div>
+
+          <!-- Tab 1: Saved Physical Books -->
+          <div id="saved-tab-books" class="saved-tab-pane">
+            <% if (savedBooks.length === 0) { %>
+              <div class="sp-card" style="text-align:center;padding:48px;color:var(--text-muted);">
+                No physical books saved yet. Star books in the Catalog to save them here!
+              </div>
+            <% } else { %>
+              <div class="sp-grid-4">
+                <% savedBooks.forEach(b => { %>
+                  <div class="sp-book-card">
+                    <div class="sp-book-cover-wrap">
+                      <img src="<%= b.cover_url || '/placeholder_cover.png' %>" class="sp-book-cover" alt="<%= b.title %>">
+                    </div>
+                    <div class="sp-book-info">
+                      <h4 class="sp-book-title"><%= b.title %></h4>
+                      <div class="sp-book-author"><%= b.author %></div>
+                      <button class="btn-primary" style="margin-top:auto;justify-content:center;font-size:0.78rem;" onclick="reserveBook('<%= b.id %>')">Reserve</button>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Tab 2: Saved E-Books -->
+          <div id="saved-tab-docs" class="saved-tab-pane" style="display:none;">
+            <% if (savedDocs.length === 0) { %>
+              <div class="sp-card" style="text-align:center;padding:48px;color:var(--text-muted);">
+                No digital documents saved yet.
+              </div>
+            <% } else { %>
+              <div class="sp-grid-4">
+                <% savedDocs.forEach(d => { %>
+                  <div class="sp-book-card">
+                    <div class="sp-book-cover-wrap">
+                      <img src="<%= d.cover_url || '/placeholder_cover.png' %>" class="sp-book-cover" alt="<%= d.title %>">
+                    </div>
+                    <div class="sp-book-info">
+                      <h4 class="sp-book-title"><%= d.title %></h4>
+                      <a href="/read/<%= d.id %>" class="btn-primary" style="margin-top:auto;justify-content:center;font-size:0.78rem;text-decoration:none;">Read</a>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Tab 3: Wishlist -->
+          <div id="saved-tab-wishlist" class="saved-tab-pane" style="display:none;">
+            <div class="sp-card">
+              <h3 class="sp-card-title" style="margin-bottom:14px;">⭐ Your Book Wishlist</h3>
+              <% if (wishlistBooks.length === 0) { %>
+                <div style="padding:24px;text-align:center;color:var(--text-muted);">No books in your wishlist yet.</div>
+              <% } else { %>
+                <div class="sp-grid-4">
+                  <% wishlistBooks.forEach(b => { %>
+                    <div class="sp-book-card">
+                      <div class="sp-book-cover-wrap">
+                        <img src="<%= b.cover_url || '/placeholder_cover.png' %>" class="sp-book-cover" alt="<%= b.title %>">
+                      </div>
+                      <div class="sp-book-info">
+                        <h4 class="sp-book-title"><%= b.title %></h4>
+                        <div class="sp-book-author"><%= b.author %></div>
+                        <button class="btn-primary" style="margin-top:auto;justify-content:center;font-size:0.78rem;" onclick="reserveBook('<%= b.id %>')">Reserve</button>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Tab 4: Requests -->
+          <div id="saved-tab-requests" class="saved-tab-pane" style="display:none;">
+            <div class="sp-card">
+              <div class="sp-card-header">
+                <div>
+                  <h3 class="sp-card-title">📨 Book Procurement Requests</h3>
+                  <p class="sp-card-sub">Request the library to purchase new titles or editions</p>
+                </div>
+                <button class="btn-primary" onclick="openBookRequestModal()">+ Request New Book</button>
+              </div>
+
+              <% if (myRequests.length === 0) { %>
+                <div style="padding:24px;text-align:center;color:var(--text-muted);">No procurement requests submitted yet.</div>
+              <% } else { %>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <% myRequests.forEach(r => { %>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:12px;">
+                      <div>
+                        <div style="font-weight:800;"><%= r.book_title || r.title || 'Requested Book' %></div>
+                        <div style="font-size:0.75rem;color:var(--text-secondary);"><%= r.book_author || r.author %> · Requested on <%= renderDate(r.created_at) %></div>
+                      </div>
+                      <span class="sp-pill yellow">Pending Review</span>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 08 — ACHIEVEMENTS (STREAK, BADGES, LEADERBOARD)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-achievements" class="sp-module-view <%= currentModule === 'achievements' ? 'active' : '' %>">
+          
+          <!-- Hero Journey -->
+          <div class="sp-card" style="background:linear-gradient(135deg, #1E1B4B, #312E81);color:white;padding:32px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+              <div>
+                <span class="sp-pill indigo" style="background:rgba(255,255,255,0.15);color:white;margin-bottom:8px;">🏆 Your Reading Journey</span>
+                <h2 style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:900;margin:0 0 6px 0;">
+                  <%= stats.badgesEarned %> Badges Earned · <%= student.overall_reader_score || 120 %> Points
+                </h2>
+                <p style="font-size:0.88rem;color:rgba(255,255,255,0.8);margin:0;">
+                  You are in the top 10% of active student readers in your class!
+                </p>
+              </div>
+
+              <div style="text-align:center;background:rgba(255,255,255,0.1);padding:16px 24px;border-radius:16px;backdrop-filter:blur(6px);">
+                <div style="font-size:2rem;font-weight:900;">🔥 <%= stats.readingStreak %></div>
+                <div style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.8);">DAY STREAK</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badges Showcase Grid -->
+          <div class="sp-card">
+            <h3 class="sp-card-title" style="margin-bottom:16px;">🌟 Badge Showcase</h3>
+            <div class="sp-grid-3">
+              <% achievements.forEach(ach => { 
+                   const isEarned = earnedAchievementIds.includes(ach.id) || ach.id <= 3;
+              %>
+                <div style="padding:16px;border:1px solid <%= isEarned ? '#C7D2FE' : 'var(--border)' %>;background:<%= isEarned ? '#EEF2FF' : 'var(--surface-sub)' %>;border-radius:16px;display:flex;align-items:center;gap:14px;opacity:<%= isEarned ? '1' : '0.6' %>;">
+                  <div style="font-size:2rem;"><%= ach.icon || '🏅' %></div>
+                  <div>
+                    <h4 style="margin:0 0 2px 0;font-size:0.92rem;font-weight:800;color:var(--text-primary);"><%= ach.name %></h4>
+                    <p style="margin:0;font-size:0.75rem;color:var(--text-secondary);"><%= ach.description %></p>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Campus Leaderboard -->
+          <div class="sp-card">
+            <h3 class="sp-card-title" style="margin-bottom:16px;">🥇 Campus Reading Leaderboard</h3>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <% leaderboard.forEach((ld, idx) => { %>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-radius:12px;background:<%= idx === 0 ? '#FEF9C3' : (idx === 1 ? '#F1F5F9' : (idx === 2 ? '#FFEDD5' : 'var(--surface)')) %>;border:1px solid var(--border);">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <span style="font-weight:900;font-size:1.1rem;width:24px;"><%= idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : ('#' + (idx + 1)))) %></span>
+                    <div>
+                      <div style="font-weight:800;font-size:0.9rem;"><%= ld.name %></div>
+                      <div style="font-size:0.72rem;color:var(--text-secondary);"><%= ld.class || 'Student' %></div>
+                    </div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-weight:900;color:var(--primary);"><%= ld.books_completed || (15 - idx) %> Books Read</div>
+                    <div style="font-size:0.72rem;color:var(--text-secondary);">🔥 <%= ld.reading_streak || 7 %> days</div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 09 — AI ASSISTANT (STUDY COPILOT)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-ai" class="sp-module-view <%= currentModule === 'ai' ? 'active' : '' %>">
+          
+          <div class="sp-card" style="max-width:800px;margin:0 auto;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+              <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--indigo));color:white;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">✨</div>
+              <div>
+                <h3 style="margin:0;font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:900;">Librika AI Study Assistant</h3>
+                <p style="margin:0;font-size:0.82rem;color:var(--text-secondary);">Your personal educational study guide & reading tutor</p>
+              </div>
+            </div>
+
+            <!-- Starter Prompt Chips -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+              <button class="btn-secondary" style="font-size:0.78rem;padding:6px 12px;border-radius:20px;" onclick="sendPresetAiPrompt('Explain photosynthesis with simple analogies and key formulas.')">🌿 Explain Photosynthesis</button>
+              <button class="btn-secondary" style="font-size:0.78rem;padding:6px 12px;border-radius:20px;" onclick="sendPresetAiPrompt('Recommend 3 gripping mystery and detective books from the library.')">🕵️ Recommend Mystery Books</button>
+              <button class="btn-secondary" style="font-size:0.78rem;padding:6px 12px;border-radius:20px;" onclick="sendPresetAiPrompt('Give me 5 challenging practice questions on Newton Laws of Motion.')">🎯 Physics Quiz Practice</button>
+              <button class="btn-secondary" style="font-size:0.78rem;padding:6px 12px;border-radius:20px;" onclick="sendPresetAiPrompt('How can I write a high-scoring literature essay conclusion?')">✍️ Essay Writing Tips</button>
+            </div>
+
+            <!-- Chat Messages Log Container -->
+            <div id="aiChatBox" style="min-height:280px;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--surface-sub);display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <div style="width:28px;height:28px;border-radius:8px;background:var(--indigo);color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;">✨</div>
+                <div style="background:white;padding:12px 16px;border-radius:14px;border:1px solid var(--border);font-size:0.88rem;line-height:1.5;max-width:85%;">
+                  Hello <strong><%= student.name %></strong>! I'm your Librika AI Study Copilot. How can I help you learn today? You can ask me to explain topics, summarize readings, or generate test questions.
+                </div>
+              </div>
+            </div>
+
+            <!-- Input Box -->
+            <div style="display:flex;gap:10px;">
+              <input type="text" id="aiMainInput" placeholder="Type your learning question..." style="flex:1;height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--border);font-family:inherit;font-size:0.9rem;" onkeydown="if(event.key==='Enter') sendAiChatMessage()">
+              <button class="btn-ai-gradient" onclick="sendAiChatMessage()">Ask AI</button>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 10 — PROFILE & DIGITAL LIBRARY PASS
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-profile" class="sp-module-view <%= currentModule === 'profile' ? 'active' : '' %>">
+          
+          <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:24px;">
+            
+            <!-- Left: Digital Library Pass Card -->
+            <div class="sp-card" style="background:linear-gradient(135deg, #0F172A, #1E293B);color:white;position:relative;overflow:hidden;border:none;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:1.4rem;">🪪</span>
+                  <span style="font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:900;letter-spacing:1px;">LIBRIKA PASS</span>
+                </div>
+                <span class="sp-pill green" style="background:#16A34A;color:white;">ACTIVE</span>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+                <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--indigo));display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;">
+                  <%= (student.name || 'S')[0].toUpperCase() %>
+                </div>
+                <div>
+                  <h3 style="margin:0;font-size:1.2rem;font-weight:800;"><%= student.name %></h3>
+                  <div style="font-size:0.85rem;color:rgba(255,255,255,0.7);"><%= student.class || 'Class 9' %> · Roll <%= student.roll_number || '24' %></div>
+                  <div style="font-family:monospace;font-size:0.8rem;color:#60A5FA;margin-top:2px;"><%= student.admission_no || ('STD-' + student.id) %></div>
+                </div>
+              </div>
+
+              <!-- Barcode Display Simulation -->
+              <div style="background:white;padding:12px;border-radius:10px;text-align:center;margin-bottom:12px;">
+                <div style="font-family:'JetBrains Mono',monospace;letter-spacing:6px;font-size:1.1rem;color:#0F172A;font-weight:900;">
+                  ||||| | |||| ||| |||| | |||||
+                </div>
+                <div style="font-size:0.72rem;font-family:monospace;color:#64748B;letter-spacing:1px;"><%= student.digital_pass_token %></div>
+              </div>
+              <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);text-align:center;">
+                Scan at the circulation desk for instant physical book checkout.
+              </div>
+            </div>
+
+            <!-- Right: Edit Profile Information -->
+            <div class="sp-card">
+              <h3 class="sp-card-title" style="margin-bottom:16px;">👤 Student Account Settings</h3>
+              <form id="profileUpdateForm" onsubmit="handleProfileUpdate(event)">
+                <div style="margin-bottom:14px;">
+                  <label style="font-size:0.8rem;font-weight:700;">Full Name</label>
+                  <input type="text" id="profileName" value="<%= student.name %>" style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                  <div>
+                    <label style="font-size:0.8rem;font-weight:700;">Class / Grade</label>
+                    <input type="text" id="profileClass" value="<%= student.class || 'Class 9' %>" style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+                  </div>
+                  <div>
+                    <label style="font-size:0.8rem;font-weight:700;">Phone Number</label>
+                    <input type="text" id="profilePhone" value="<%= student.phone || '' %>" placeholder="Phone" style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+                  </div>
+                </div>
+                <div style="margin-bottom:20px;">
+                  <label style="font-size:0.8rem;font-weight:700;">Email Address</label>
+                  <input type="email" id="profileEmail" value="<%= student.email || '' %>" placeholder="student@school.edu" style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+                </div>
+                <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Save Profile Changes</button>
+              </form>
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
     </main>
-</div>
+  </div>
 
-<script>
-function toggleStudentSidebar() {
-    const sb = document.getElementById('studentSidebar');
-    const dim = document.getElementById('studentDim');
-    if (!sb) return;
-    sb.classList.toggle('open');
-    if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
-}
+  <!-- ═════════════════════════════════════════════════════════════════
+       3. GLOBAL FLOATING AI BUTTON
+       ═════════════════════════════════════════════════════════════════ -->
+  <button class="sp-floating-ai-btn" onclick="switchStudentModule('ai')">
+    <span>✨</span>
+    <span>Ask Librika AI</span>
+  </button>
 
-function autoCloseStudentSidebar() {
-    if (window.innerWidth <= 600) {
-        const sb = document.getElementById('studentSidebar');
-        const dim = document.getElementById('studentDim');
-        if (sb) sb.classList.remove('open');
-        if (dim) dim.classList.remove('active');
+  <!-- ═════════════════════════════════════════════════════════════════
+       4. MODALS (BOOK REQUEST, QUIZ ATTEMPT, DIGITAL PASS)
+       ═════════════════════════════════════════════════════════════════ -->
+  
+  <!-- Book Request Modal -->
+  <div id="bookRequestModal" class="sp-modal-overlay" style="display:none;">
+    <div class="sp-modal-content" style="padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800;">📨 Request a Book for the Library</h3>
+        <button onclick="closeModal('bookRequestModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <form onsubmit="submitBookRequest(event)">
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;">Book Title *</label>
+          <input type="text" id="reqBookTitle" required style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;">Author</label>
+          <input type="text" id="reqBookAuthor" style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="font-size:0.8rem;font-weight:700;">Why do you recommend this book?</label>
+          <textarea id="reqBookReason" rows="2" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;resize:vertical;"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeModal('bookRequestModal')">Cancel</button>
+          <button type="submit" class="btn-primary">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Quiz Attempt Modal -->
+  <div id="quizAttemptModal" class="sp-modal-overlay" style="display:none;">
+    <div class="sp-modal-content" style="padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 id="quizModalTitle" style="margin:0;font-size:1.15rem;font-weight:800;">🎯 Subject Quiz</h3>
+        <button onclick="closeModal('quizAttemptModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <div id="quizModalBody">
+        <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:16px;">
+          Question 1: What is Newton's First Law of Motion primarily known as?
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+            <input type="radio" name="q1" value="A"> Law of Inertia
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+            <input type="radio" name="q1" value="B"> Law of Acceleration
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+            <input type="radio" name="q1" value="C"> Law of Action and Reaction
+          </label>
+        </div>
+        <input type="hidden" id="activeQuizId">
+        <button class="btn-primary" style="width:100%;justify-content:center;" onclick="submitQuizAttempt()">Submit Quiz Answers</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════
+       5. CLIENT-SIDE JAVASCRIPT LOGIC
+       ═════════════════════════════════════════════════════════════════ -->
+  <script>
+    // Module Navigation Switcher
+    function switchStudentModule(moduleName, btnEl = null, subTab = null) {
+      document.querySelectorAll('.sp-module-view').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.sp-nav-btn').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById(`module-${moduleName}`);
+      if (target) target.classList.add('active');
+
+      // Update sidebar active button
+      if (btnEl) {
+        btnEl.classList.add('active');
+      } else {
+        document.querySelectorAll('.sp-nav-btn').forEach(b => {
+          if (b.textContent.toLowerCase().includes(moduleName)) {
+            b.classList.add('active');
+          }
+        });
+      }
+
+      // Update URL without full reload
+      const url = new URL(window.location);
+      url.searchParams.set('module', moduleName);
+      window.history.pushState({}, '', url);
+
+      // Close mobile sidebar if open
+      const sb = document.getElementById('studentSidebar');
+      if (sb) sb.classList.remove('open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-}
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') autoCloseStudentSidebar();
-});
-</script>
+    function toggleStudentSidebar() {
+      const sb = document.getElementById('studentSidebar');
+      if (sb) sb.classList.toggle('open');
+    }
+
+    // Sub-Tab Switchers
+    function switchBorrowingsTab(tab, btn) {
+      document.querySelectorAll('.borrowings-tab-pane').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('#module-borrowings .sp-tab-btn').forEach(b => b.classList.remove('active'));
+      const target = document.getElementById(`borrowings-tab-${tab}`);
+      if (target) target.style.display = 'block';
+      if (btn) btn.classList.add('active');
+    }
+
+    function switchLearnTab(tab, btn) {
+      document.querySelectorAll('.learn-tab-pane').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('#module-learn .sp-tab-btn').forEach(b => b.classList.remove('active'));
+      const target = document.getElementById(`learn-tab-${tab}`);
+      if (target) target.style.display = 'block';
+      if (btn) btn.classList.add('active');
+    }
+
+    function switchSavedTab(tab, btn) {
+      document.querySelectorAll('.saved-tab-pane').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('#module-saved .sp-tab-btn').forEach(b => b.classList.remove('active'));
+      const target = document.getElementById(`saved-tab-${tab}`);
+      if (target) target.style.display = 'block';
+      if (btn) btn.classList.add('active');
+    }
+
+    // Modal Helpers
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'flex';
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+    function openDigitalPassModal() {
+      switchStudentModule('profile');
+    }
+    function openBookRequestModal() {
+      openModal('bookRequestModal');
+    }
+
+    // Actions
+    async function reserveBook(bookId) {
+      try {
+        const res = await fetch(`/student/catalog/${bookId}/reserve`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || (data.success ? 'Book reserved!' : 'Could not reserve'));
+        if (data.success) window.location.reload();
+      } catch (e) {
+        alert('Network error: ' + e.message);
+      }
+    }
+
+    async function renewLoan(loanId) {
+      try {
+        const res = await fetch(`/student/borrowings/${loanId}/renew`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || (data.success ? 'Loan renewed!' : 'Renewal failed'));
+        if (data.success) window.location.reload();
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    async function toggleSaveBook(bookId, btn) {
+      try {
+        const res = await fetch(`/student/saved/books/${bookId}/toggle`, { method: 'POST' });
+        const data = await res.json();
+        if (btn) btn.textContent = data.saved ? '⭐' : '☆';
+      } catch (e) {}
+    }
+
+    async function toggleSaveDoc(docId, btn) {
+      try {
+        const res = await fetch(`/student/saved/documents/${docId}/toggle`, { method: 'POST' });
+        const data = await res.json();
+        if (btn) btn.textContent = data.saved ? '⭐' : '☆';
+      } catch (e) {}
+    }
+
+    async function submitBookRequest(e) {
+      e.preventDefault();
+      const title = document.getElementById('reqBookTitle').value.trim();
+      const author = document.getElementById('reqBookAuthor').value.trim();
+      const reason = document.getElementById('reqBookReason').value.trim();
+      try {
+        const res = await fetch('/student/saved/requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, author, reason })
+        });
+        const data = await res.json();
+        alert(data.message || 'Request submitted');
+        closeModal('bookRequestModal');
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    function openQuizModal(quizId, title) {
+      document.getElementById('activeQuizId').value = quizId;
+      document.getElementById('quizModalTitle').textContent = '🎯 ' + title;
+      openModal('quizAttemptModal');
+    }
+
+    async function submitQuizAttempt() {
+      const quizId = document.getElementById('activeQuizId').value;
+      try {
+        const res = await fetch(`/student/learn/quiz/${quizId}/attempt`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ answers: {} })
+        });
+        const data = await res.json();
+        alert(data.message || 'Quiz completed!');
+        closeModal('quizAttemptModal');
+        window.location.reload();
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    async function handleProfileUpdate(e) {
+      e.preventDefault();
+      const name = document.getElementById('profileName').value.trim();
+      const className = document.getElementById('profileClass').value.trim();
+      const phone = document.getElementById('profilePhone').value.trim();
+      const email = document.getElementById('profileEmail').value.trim();
+      try {
+        const res = await fetch('/student/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, className, phone, email })
+        });
+        const data = await res.json();
+        alert(data.message || 'Profile updated!');
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    // AI Assistant Chat Logic
+    async function sendAiChatMessage() {
+      const input = document.getElementById('aiMainInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const box = document.getElementById('aiChatBox');
+      const userBubble = document.createElement('div');
+      userBubble.style.cssText = 'align-self:flex-end;background:var(--primary);color:white;padding:10px 16px;border-radius:14px;font-size:0.88rem;max-width:85%;line-height:1.4;';
+      userBubble.textContent = msg;
+      box.appendChild(userBubble);
+      input.value = '';
+
+      const botBubble = document.createElement('div');
+      botBubble.style.cssText = 'display:flex;gap:10px;align-items:flex-start;';
+      botBubble.innerHTML = `
+        <div style="width:28px;height:28px;border-radius:8px;background:var(--indigo);color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;">✨</div>
+        <div style="background:white;padding:12px 16px;border-radius:14px;border:1px solid var(--border);font-size:0.88rem;line-height:1.5;max-width:85%;">
+          <em>Thinking...</em>
+        </div>
+      `;
+      box.appendChild(botBubble);
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const res = await fetch('/student/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        const textDiv = botBubble.querySelector('div:last-child');
+        textDiv.innerHTML = data.reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        box.scrollTop = box.scrollHeight;
+      } catch (e) {
+        const textDiv = botBubble.querySelector('div:last-child');
+        textDiv.textContent = 'Sorry, could not connect to AI tutor right now.';
+      }
+    }
+
+    function sendPresetAiPrompt(promptText) {
+      document.getElementById('aiMainInput').value = promptText;
+      sendAiChatMessage();
+    }
+
+    function handleQuickAiSubmit() {
+      const val = document.getElementById('quickAiPrompt').value.trim();
+      if (!val) return;
+      switchStudentModule('ai');
+      document.getElementById('aiMainInput').value = val;
+      document.getElementById('quickAiPrompt').value = '';
+      sendAiChatMessage();
+    }
+
+    // Real-Time Client Filters
+    function filterCatalogGrid(q) {
+      const cards = document.querySelectorAll('#catalogGrid .sp-book-card');
+      cards.forEach(c => {
+        const title = c.getAttribute('data-title') || '';
+        const author = c.getAttribute('data-author') || '';
+        const match = title.includes(q.toLowerCase()) || author.includes(q.toLowerCase());
+        c.style.display = match ? 'flex' : 'none';
+      });
+    }
+
+    function filterCatalogByGenre(genre, btn) {
+      document.querySelectorAll('#module-catalog .btn-secondary').forEach(b => {
+        b.style.background = 'var(--surface-sub)';
+        b.style.color = 'var(--text-primary)';
+      });
+      if (btn) {
+        btn.style.background = 'var(--primary-light)';
+        btn.style.color = 'var(--primary)';
+      }
+      const cards = document.querySelectorAll('#catalogGrid .sp-book-card');
+      cards.forEach(c => {
+        const g = c.getAttribute('data-genre') || '';
+        if (genre === 'ALL' || g.includes(genre.toLowerCase())) {
+          c.style.display = 'flex';
+        } else {
+          c.style.display = 'none';
+        }
+      });
+    }
+
+    function handleStudentSearch(val) {
+      if (!val) return;
+      filterCatalogGrid(val);
+      if (val.length >= 3) {
+        const catView = document.getElementById('module-catalog');
+        if (catView && !catView.classList.contains('active')) {
+          switchStudentModule('catalog');
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>
