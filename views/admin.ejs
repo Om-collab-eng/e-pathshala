@@ -14,6 +14,18 @@
   <link rel="stylesheet" href="/librarian-pro.css">
 </head>
 <body class="lp-body">
+<%
+  function renderDate(d) {
+    if (!d) return '';
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return '';
+      return dt.toISOString().slice(0, 10);
+    } catch (e) {
+      return '';
+    }
+  }
+%>
 
   <div class="lp-shell">
     
@@ -911,7 +923,7 @@
                     <tr>
                       <td style="font-weight:700;"><%= s.title %></td>
                       <td style="font-family:monospace;font-weight:700;"><%= s.meeting_id %></td>
-                      <td><%= renderDate(s.scheduled_at) %></td>
+                      <td><%= renderDate(s.scheduled_start || s.scheduled_at) %></td>
                       <td><span class="lp-status-pill available">Scheduled</span></td>
                       <td>
                         <a href="/live/<%= s.meeting_id %>" target="_blank" class="btn-primary" style="padding:4px 10px;font-size:0.75rem;">Launch Room</a>

@@ -118,7 +118,7 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
       SELECT bc.*, b.title as book_title, b.author as book_author, b.isbn as book_isbn
       FROM book_copies bc
       JOIN books b ON bc.book_id = b.id
-      WHERE bc.school_code = $1
+      WHERE b.school_code = $1
       ORDER BY bc.id DESC
     `, [sCode]).catch(() => ({ rows: [] }));
     const bookCopies = copiesRes.rows || [];
@@ -166,11 +166,12 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
 
     // 6. Fetch Live Studio Sessions
     const studioRes = await db.query(`
-      SELECT ls.*, u.name as host_name
+      SELECT ls.*, COALESCE(u.name, ls.host_name) as host_name
       FROM live_sessions ls
-      LEFT JOIN users u ON ls.host_id = u.id
-      ORDER BY ls.scheduled_at DESC LIMIT 30
-    `).catch(() => ({ rows: [] }));
+      LEFT JOIN users u ON ls.host_user_id = u.id
+      WHERE ls.school_code = $1 OR ls.school_code IS NULL
+      ORDER BY ls.scheduled_start DESC LIMIT 30
+    `, [sCode]).catch(() => ({ rows: [] }));
     const studioSessions = studioRes.rows || [];
 
     // 7. Fetch Library Settings & Rules
@@ -211,6 +212,7 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
       title: 'Librika Librarian Console - Intelligent Workspace',
       currentModule: targetModule,
       currentTab: targetTab,
+      renderDate,
       school,
       settings: settingsMap,
       stats: {
