@@ -1,6 +1,12 @@
 const { query } = require('../db');
 const crypto = require('crypto');
 
+// Helper to generate unique Librika Jitsi room code (e.g. LIBRIKA-42-A8F31C2D)
+function generateMeetingCode(id, prefix = 'LIBRIKA') {
+  const rand = crypto.randomUUID ? crypto.randomUUID().substring(0, 8).toUpperCase() : Math.random().toString(36).substring(2, 10).toUpperCase();
+  return `${prefix}-${id || Math.floor(Math.random() * 900 + 100)}-${rand}`;
+}
+
 // Helper to generate readable Meeting IDs like LIB-MERN-842
 function generateMeetingId(prefix = 'LIB') {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -10,6 +16,176 @@ function generateMeetingId(prefix = 'LIB') {
   }
   return `${prefix}-${code.slice(0, 3)}-${code.slice(3)}`;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 0. STUDIO REST APIS (MEETING SCHEDULING, LIFECYCLE & ATTENDANCE)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getStudioMeetingsApi = async (req, res) => {
+  try {
+    const schoolCode = (req.session && req.session.school_code) || 'DPS123';
+    const result = await query(
+      `SELECT ss.*, 
+        (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
+       FROM studio_sessions ss
+       WHERE ss.school_code = $1 OR ss.school_code = 'DPS123'
+       ORDER BY ss.scheduled_start ASC`,
+      [schoolCode]
+    ).catch(() => ({ rows: [] }));
+
+    const all = result.rows || [];
+    const now = new Date();
+    const upcoming = all.filter(m => m.status === 'SCHEDULED' || (!m.status && new Date(m.scheduled_start) >= now));
+    const live = all.filter(m => m.status === 'LIVE' || m.status === 'live');
+    const past = all.filter(m => m.status === 'COMPLETED' || m.status === 'CANCELLED' || (new Date(m.scheduled_start) < now && m.status !== 'LIVE'));
+
+    res.json({ success: true, meetings: all, upcoming, live, past });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.postCreateStudioMeeting = async (req, res) => {
+  try {
+    const { title, description, className, scheduledStart, scheduledEnd, durationMinutes } = req.body;
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'Meeting title is required' });
+    }
+    const hostId = (req.session && req.session.user_id) || 23;
+    const hostName = (req.session && req.session.name) || 'Mrs. Sharma';
+    const schoolCode = (req.session && req.session.school_code) || 'DPS123';
+    const duration = parseInt(durationMinutes, 10) || 60;
+
+    const startDt = scheduledStart ? new Date(scheduledStart) : new Date();
+    const endDt = scheduledEnd ? new Date(scheduledEnd) : new Date(startDt.getTime() + duration * 60000);
+
+    const tempCode = `LIBRIKA-TMP-${Date.now().toString(36).toUpperCase()}`;
+
+    const insertRes = await query(
+      `INSERT INTO studio_sessions (title, description, host_id, host_name, meeting_code, scheduled_start, scheduled_end, duration_minutes, status, class_name, school_code)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'SCHEDULED', $9, $10)`,
+      [title, description || '', hostId, hostName, tempCode, startDt.toISOString().slice(0, 19).replace('T', ' '), endDt.toISOString().slice(0, 19).replace('T', ' '), duration, className || 'All Students', schoolCode]
+    );
+
+    const newId = insertRes.insertId || (insertRes.rows && insertRes.rows[0] && insertRes.rows[0].id) || Math.floor(Math.random() * 8000 + 100);
+    const finalCode = generateMeetingCode(newId);
+
+    await query('UPDATE studio_sessions SET meeting_code = $1 WHERE id = $2 OR meeting_code = $3', [finalCode, newId, tempCode]).catch(() => {});
+
+    res.json({
+      success: true,
+      meeting: {
+        id: newId,
+        title,
+        meetingCode: finalCode,
+        status: 'SCHEDULED',
+        scheduledStart: startDt,
+        hostName,
+        className: className || 'All Students'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getStudioMeetingById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await query(
+      `SELECT ss.* FROM studio_sessions ss WHERE ss.id = $1 OR ss.meeting_code = $1`,
+      [id]
+    );
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Meeting not found' });
+    }
+    const meeting = result.rows[0];
+    const attendanceRes = await query(
+      `SELECT * FROM studio_attendance WHERE session_id = $1 ORDER BY joined_at DESC`,
+      [meeting.id]
+    ).catch(() => ({ rows: [] }));
+
+    res.json({ success: true, meeting, attendance: attendanceRes.rows || [] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.postStartStudioMeeting = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await query(`UPDATE studio_sessions SET status = 'LIVE' WHERE id = $1 OR meeting_code = $1`, [id]);
+    res.json({ success: true, status: 'LIVE' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.postEndStudioMeeting = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await query(`UPDATE studio_sessions SET status = 'COMPLETED', scheduled_end = CURRENT_TIMESTAMP WHERE id = $1 OR meeting_code = $1`, [id]);
+    res.json({ success: true, status: 'COMPLETED' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.deleteStudioMeeting = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await query(`DELETE FROM studio_sessions WHERE id = $1 OR meeting_code = $1`, [id]);
+    res.json({ success: true, message: 'Meeting deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.postRecordAttendanceJoin = async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const memberId = (req.session && req.session.user_id) || req.body.memberId || 0;
+    const memberName = (req.session && (req.session.name || req.session.user_name)) || req.body.memberName || 'Participant';
+    const role = (req.session && req.session.role) || req.body.role || 'student';
+
+    await query(
+      `INSERT INTO studio_attendance (session_id, member_id, member_name, role, joined_at)
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
+      [sessionId, memberId, memberName, role]
+    ).catch(() => {});
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.postRecordAttendanceLeave = async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const memberId = (req.session && req.session.user_id) || req.body.memberId || 0;
+
+    await query(
+      `UPDATE studio_attendance 
+       SET left_at = CURRENT_TIMESTAMP, 
+           duration_seconds = TIMESTAMPDIFF(SECOND, joined_at, CURRENT_TIMESTAMP)
+       WHERE session_id = $1 AND member_id = $2 AND left_at IS NULL`,
+      [sessionId, memberId]
+    ).catch(async () => {
+      // SQLite fallback syntax
+      await query(
+        `UPDATE studio_attendance 
+         SET left_at = CURRENT_TIMESTAMP,
+             duration_seconds = (strftime('%s', 'now') - strftime('%s', joined_at))
+         WHERE session_id = $1 AND member_id = $2 AND left_at IS NULL`,
+        [sessionId, memberId]
+      ).catch(() => {});
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. INSTRUCTOR LIVE STUDIO DASHBOARD (/studio)
@@ -366,22 +542,39 @@ exports.postScheduleSession = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. FULL-SCREEN INTERACTIVE LIVE VIDEO CLASSROOM (ZOOM STYLE)
+// 4. FULL-SCREEN INTERACTIVE LIVE VIDEO CLASSROOM (JITSI BACKEND ENGINE)
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getLiveClassroom = async (req, res) => {
   try {
-    const meetingId = req.params.meetingId || req.query.meeting_id;
+    const rawMeetingId = req.params.meetingId || req.params.id || req.query.meeting_id || '';
     const shareToken = req.query.token;
 
     let session = null;
-    if (meetingId) {
+
+    // 1. Try studio_sessions first (Primary Jitsi Meeting Table)
+    if (rawMeetingId) {
+      const studioRes = await query(
+        `SELECT ss.*, ss.meeting_code as meeting_id, ss.class_name as course_title, ss.host_name as course_instructor
+         FROM studio_sessions ss
+         WHERE ss.id = $1 OR ss.meeting_code = $1`,
+        [rawMeetingId]
+      ).catch(() => ({ rows: [] }));
+
+      if (studioRes.rows && studioRes.rows.length > 0) {
+        session = studioRes.rows[0];
+      }
+    }
+
+    // 2. Fallback to live_sessions
+    if (!session && rawMeetingId) {
       const sessRes = await query(
         `SELECT s.*, c.title as course_title, c.instructor_name as course_instructor
          FROM live_sessions s
          LEFT JOIN live_courses c ON s.course_id = c.id
          WHERE s.meeting_id = $1 OR s.shareable_token = $1`,
-        [meetingId]
-      );
+        [rawMeetingId]
+      ).catch(() => ({ rows: [] }));
+
       if (sessRes.rows && sessRes.rows.length > 0) {
         session = sessRes.rows[0];
       }
@@ -394,26 +587,33 @@ exports.getLiveClassroom = async (req, res) => {
          LEFT JOIN live_courses c ON s.course_id = c.id
          WHERE s.shareable_token = $1`,
         [shareToken]
-      );
+      ).catch(() => ({ rows: [] }));
+
       if (sessRes.rows && sessRes.rows.length > 0) {
         session = sessRes.rows[0];
       }
     }
 
-    // Default fallback room if testing directly
+    // 3. Fallback mock room for testing
     if (!session) {
+      const generatedCode = rawMeetingId.startsWith('LIBRIKA-') ? rawMeetingId : `LIBRIKA-DEMO-${(rawMeetingId || 'ROOM').toUpperCase()}`;
       session = {
-        meeting_id: meetingId || 'LIB-DEMO-ROOM',
-        title: 'Interactive Live Masterclass Demo',
-        host_name: 'Prof. Vikram Malhotra',
-        passcode: '123456',
-        course_title: 'Full-Stack Web Development Bootcamp',
-        status: 'live'
+        id: 99,
+        meeting_id: generatedCode,
+        meeting_code: generatedCode,
+        title: rawMeetingId ? `Live Class: ${rawMeetingId}` : 'Interactive Live Studio Masterclass',
+        host_name: 'Mrs. Sharma (Faculty)',
+        course_title: 'Librika Studio Live Session',
+        status: 'LIVE'
       };
     }
 
+    const meetingCode = session.meeting_code || session.meeting_id;
+    session.meeting_code = meetingCode;
+    session.meeting_id = meetingCode;
+
     const referer = req.headers.referer || '';
-    const fromStudio = referer.includes('/studio');
+    const fromStudio = referer.includes('/studio') || referer.includes('/admin');
 
     const currentUserId = (req.session && req.session.user_id) || Math.floor(Math.random() * 8000 + 1000);
     const currentUserName = (req.session && (req.session.name || req.session.user_name)) || req.query.guest_name || (fromStudio ? (session.host_name || 'Host Instructor') : 'Participant');
@@ -426,18 +626,18 @@ exports.getLiveClassroom = async (req, res) => {
 
     const isHost = Boolean(isInstructorRole || isSessionOwner || isExplicitHostQuery || fromStudio);
 
-    // Record attendance if user is logged in
+    // Automatically record attendance join if user is logged in
     if (session.id && req.session && req.session.user_id) {
       query(
-        `INSERT INTO session_attendance (session_id, user_id, user_name, status)
-         VALUES ($1, $2, $3, 'present')`,
-        [session.id, currentUserId, currentUserName]
+        `INSERT INTO studio_attendance (session_id, member_id, member_name, role, joined_at)
+         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
+        [session.id, currentUserId, currentUserName, isHost ? 'host' : 'student']
       ).catch(() => {});
     }
 
     res.render('live_classroom', {
       layout: false,
-      title: `Live Class: ${session.title} - Librika Meet`,
+      title: `Live Studio: ${session.title} - Librika Meet`,
       session,
       isHost,
       user: {
@@ -449,7 +649,7 @@ exports.getLiveClassroom = async (req, res) => {
     });
   } catch (err) {
     console.error('Live classroom error:', err);
-    res.status(500).send('Error loading live classroom');
+    res.status(500).send('Error loading live classroom: ' + err.message);
   }
 };
 

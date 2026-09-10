@@ -7,243 +7,448 @@
   
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="shortcut icon" href="/favicon.ico">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/live-studio.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #0B0F19;
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+    }
 
-  <!-- Room Config for In-House WebRTC Engine -->
+    .ls-app-shell {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      background: #0B0F19;
+    }
+
+    /* Top App Bar */
+    .ls-topbar {
+      height: 60px;
+      min-height: 60px;
+      background: #111827;
+      border-bottom: 1px solid #1F2937;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      z-index: 50;
+    }
+
+    .ls-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ls-exit-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #1F2937;
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border: 1px solid #374151;
+    }
+    .ls-exit-btn:hover {
+      background: #DC2626;
+      color: #FFFFFF;
+      border-color: #DC2626;
+    }
+
+    .ls-meeting-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ls-meeting-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ls-meeting-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .ls-live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(220, 38, 38, 0.2);
+      color: #F87171;
+      border: 1px solid rgba(220, 38, 38, 0.4);
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .ls-live-dot {
+      width: 6px;
+      height: 6px;
+      background: #EF4444;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    .ls-meeting-sub {
+      font-size: 0.78rem;
+      color: #94A3B8;
+    }
+
+    .ls-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ls-code-pill {
+      background: #1F2937;
+      border: 1px solid #374151;
+      color: #60A5FA;
+      font-family: monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 8px;
+      letter-spacing: 1px;
+    }
+
+    .ls-action-btn {
+      background: #1F2937;
+      border: 1px solid #374151;
+      color: #F8FAFC;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .ls-action-btn:hover {
+      background: #374151;
+      border-color: #4B5563;
+    }
+
+    .ls-badge-host {
+      background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+      color: #FFFFFF;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .ls-badge-student {
+      background: #374151;
+      color: #E2E8F0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    /* Main Jitsi Container */
+    #jitsiContainer {
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 60px);
+      background: #000000;
+      position: relative;
+    }
+
+    #jitsiContainer iframe {
+      width: 100% !important;
+      height: 100% !important;
+      border: none !important;
+    }
+
+    /* Loading Overlay */
+    .ls-loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0B0F19;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+
+    .ls-spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(11, 94, 215, 0.2);
+      border-top-color: #0B5ED7;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+
+  <!-- Meeting Config Injection -->
   <script>
-    window.ROOM_CONFIG = {
-      meetingId: '<%= session.meeting_id %>',
-      sessionTitle: '<%= session.title %>',
-      userId: '<%= user.id || session.host_id || "" %>',
-      userName: '<%= user.name %>',
-      userEmail: '<%= user.email %>',
-      isHost: <%= isHost ? 'true' : 'false' %>
+    window.MEETING_CONFIG = {
+      id: <%= session.id || 0 %>,
+      meetingCode: '<%= session.meeting_code || session.meeting_id %>',
+      title: '<%= (session.title || "Live Studio Class").replace(/'/g, "\\'") %>',
+      isHost: <%= isHost ? 'true' : 'false' %>,
+      userId: <%= user.id || 0 %>,
+      userName: '<%= (user.name || "Participant").replace(/'/g, "\\'") %>',
+      userEmail: '<%= user.email || "" %>'
     };
   </script>
 
-  <!-- Socket.IO & Native WebRTC Meet Engine (Zero Jitsi) -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/live-classroom.js" defer></script>
+  <!-- Official Jitsi External API SDK -->
+  <script src="https://meet.jit.si/external_api.js"></script>
 </head>
-<body class="ls-body ls-body-dark">
+<body>
 
-  <div class="ls-room-shell">
+  <div class="ls-app-shell">
     
-    <!-- =========================================================================
-         1. TOP APP BAR
-         ========================================================================= -->
-    <header class="ls-room-topbar">
-      <div class="ls-room-title-wrap">
-        <a href="<%= isHost ? '/studio' : '/student' %>" style="color:#94A3B8;text-decoration:none;display:flex;align-items:center;margin-right:4px;" title="Exit Room">
-          <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+    <!-- Top Bar -->
+    <header class="ls-topbar">
+      <div class="ls-topbar-left">
+        <a href="<%= isHost ? '/admin?module=studio' : '/student/live-classes' %>" class="ls-exit-btn" title="Leave & Return" onclick="recordAttendanceLeave()">
+          <span class="material-symbols-outlined text-[20px]">arrow_back</span>
         </a>
 
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <h2 class="ls-room-title"><%= session.title %></h2>
-            <span class="ls-room-rec-badge">
-              <span class="ls-rec-dot"></span>
-              <span id="liveTimerDisplay">00:00:00</span>
+        <div class="ls-meeting-meta">
+          <div class="ls-meeting-title-row">
+            <h1 class="ls-meeting-title"><%= session.title %></h1>
+            <span class="ls-live-badge">
+              <span class="ls-live-dot"></span>
+              LIVE STUDIO
             </span>
           </div>
-          <div style="font-size:0.8rem;color:#94A3B8;">
-            <%= session.course_title || 'Librika Live Masterclass' %> &bull; Host: <strong><%= session.host_name || 'Faculty' %></strong>
+          <div class="ls-meeting-sub">
+            <%= session.course_title || session.class_name || 'Classroom' %> &bull; Host: <strong><%= session.host_name || 'Mrs. Sharma' %></strong>
           </div>
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span class="ls-meeting-id-pill" style="background:#1E293B;color:#FFFFFF;border-color:#334155;">
-          ID: <%= session.meeting_id %>
-        </span>
+      <div class="ls-topbar-right">
+        <span class="ls-code-pill"><%= session.meeting_code || session.meeting_id %></span>
 
-        <button id="copyInviteBtn" class="ls-btn ls-btn-outline" style="color:#FFFFFF;border-color:#334155;background:#182035;padding:6px 12px;font-size:0.82rem;">
-          <span class="material-symbols-outlined text-[16px]">share</span> Copy Link
+        <button class="ls-action-btn" onclick="copyJoinLink()" title="Copy Meeting Link">
+          <span class="material-symbols-outlined text-[16px]">content_copy</span>
+          <span id="copyBtnText">Copy Link</span>
         </button>
 
         <% if (isHost) { %>
-          <span class="ls-badge live" style="background:#10B981;font-weight:700;letter-spacing:0.5px;">
-            👑 HOST (ORGANIZER)
-          </span>
+          <span class="ls-badge-host">👑 HOST (INSTRUCTOR)</span>
         <% } else { %>
-          <a href="?role=host" class="ls-btn ls-btn-outline" style="color:#60A5FA;border-color:#3B82F6;background:#1E293B;padding:4px 10px;font-size:0.75rem;" title="Are you the instructor? Click to join as Host">
-            👑 Switch to Host
-          </a>
-          <span class="ls-badge scheduled">
-            STUDENT
-          </span>
+          <span class="ls-badge-student">STUDENT</span>
         <% } %>
+
+        <a href="<%= isHost ? '/admin?module=studio' : '/student/live-classes' %>" class="ls-action-btn" style="background:#DC2626;border-color:#DC2626;color:#FFFFFF;" onclick="recordAttendanceLeave()">
+          Leave Room
+        </a>
       </div>
     </header>
 
-    <!-- =========================================================================
-         2. STAGE & VIDEO GRID + WHITEBOARD
-         ========================================================================= -->
-    <div class="ls-room-main">
-      
-      <div class="ls-stage-area">
-        
-        <!-- Native WebRTC Multi-Cam Responsive Video Grid -->
-        <div id="videoGrid" class="ls-video-grid">
-          
-          <!-- Self Video Card -->
-          <div id="selfTile" class="ls-video-tile" onclick="LibrikaClassroom.pinTile('self')">
-            <video id="selfVideo" class="ls-video-stream" autoplay playsinline muted></video>
-            
-            <div id="selfAvatar" class="ls-video-avatar" style="display:none;">
-              <span><%= (user.name || 'U').charAt(0).toUpperCase() %></span>
-            </div>
-
-            <div class="ls-tile-overlay-top">
-              <span id="selfHandIcon" class="ls-tile-hand" style="display:none;">✋</span>
-              <span class="ls-badge <%= isHost ? 'live' : 'scheduled' %>" style="font-size:0.68rem;padding:2px 6px;">
-                <%= isHost ? 'YOU (HOST)' : 'YOU (STUDENT)' %>
-              </span>
-            </div>
-
-            <div class="ls-tile-overlay-bottom">
-              <span id="selfNameBadge" class="ls-tile-name"><%= user.name %> (You)</span>
-              <span id="micStatusIcon" class="material-symbols-outlined text-[16px]" style="color:#10B981;">mic</span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Interactive Collaborative Whiteboard Overlay -->
-        <div id="whiteboardOverlay" class="ls-whiteboard-overlay">
-          <div class="ls-whiteboard-toolbar">
-            <div class="ls-wb-tools">
-              <button class="ls-wb-btn active" id="wb_pen" onclick="LibrikaClassroom.setTool('pen')">✏️ Pen</button>
-              <button class="ls-wb-btn" id="wb_highlighter" onclick="LibrikaClassroom.setTool('highlighter')">🖍️ Highlight</button>
-              <button class="ls-wb-btn" id="wb_eraser" onclick="LibrikaClassroom.setTool('eraser')">🧹 Eraser</button>
-              
-              <div style="display:flex;align-items:center;gap:6px;margin-left:12px;">
-                <button onclick="LibrikaClassroom.setColor('#0056D2')" style="width:20px;height:20px;background:#0056D2;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
-                <button onclick="LibrikaClassroom.setColor('#EF4444')" style="width:20px;height:20px;background:#EF4444;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
-                <button onclick="LibrikaClassroom.setColor('#10B981')" style="width:20px;height:20px;background:#10B981;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
-                <button onclick="LibrikaClassroom.setColor('#F59E0B')" style="width:20px;height:20px;background:#F59E0B;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
-                <button onclick="LibrikaClassroom.setColor('#0F172A')" style="width:20px;height:20px;background:#0F172A;border:2px solid #FFFFFF;border-radius:50%;cursor:pointer;"></button>
-              </div>
-            </div>
-
-            <div class="ls-wb-tools">
-              <button class="ls-wb-btn" onclick="LibrikaClassroom.clearWhiteboard()">Clear Canvas</button>
-              <button class="ls-wb-btn" onclick="LibrikaClassroom.saveWhiteboardPNG()">💾 Save Snapshot</button>
-              <button class="ls-wb-btn" style="background:#EF4444;" onclick="LibrikaClassroom.toggleWhiteboard()">✖ Close Board</button>
-            </div>
-          </div>
-          <canvas id="whiteboardCanvas"></canvas>
-        </div>
-
+    <!-- Video Meeting Stage -->
+    <main id="jitsiContainer">
+      <div id="jitsiLoading" class="ls-loading-overlay">
+        <div class="ls-spinner"></div>
+        <h3 style="margin:0 0 6px 0;font-weight:700;">Connecting to Librika Studio...</h3>
+        <p style="margin:0;color:#94A3B8;font-size:0.85rem;">Securing audio, video & collaborative whiteboard room</p>
       </div>
-
-      <!-- Right Side Panel: Live Chat & Attendees Drawer -->
-      <aside id="sidePanel" class="ls-side-panel">
-        
-        <!-- Live Chat Section -->
-        <div id="chatSection" style="display:flex;flex-direction:column;height:100%;">
-          <div class="ls-panel-head">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="material-symbols-outlined text-[18px]">chat</span>
-              <span>Live Class Chat</span>
-            </div>
-            <span style="font-size:0.75rem;background:#10B981;color:white;padding:2px 8px;border-radius:9999px;">Active</span>
-          </div>
-
-          <div id="inClassChatBody" class="ls-panel-body">
-            <div class="ls-chat-msg" style="background:rgba(0,86,210,0.15);border-color:#0056D2;">
-              <div class="ls-chat-sender" style="color:#60A5FA;">Librika Live Engine</div>
-              <div class="ls-chat-text">Welcome to the native interactive live room. Chat messages and collaborative whiteboard sync in real-time.</div>
-            </div>
-          </div>
-
-          <form id="inClassChatForm" class="ls-panel-footer">
-            <input type="text" id="inClassChatInput" class="ls-chat-input" placeholder="Type a message or doubt..." autocomplete="off">
-            <button type="submit" class="ls-btn ls-btn-primary" style="padding:0.5rem 0.85rem;">
-              <span class="material-symbols-outlined text-[18px]">send</span>
-            </button>
-          </form>
-        </div>
-
-        <!-- Participants List Section -->
-        <div id="participantsSection" style="display:none;flex-direction:column;height:100%;">
-          <div class="ls-panel-head">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="material-symbols-outlined text-[18px]">group</span>
-              <span>Participants (<span id="participantCountBadge">1</span>)</span>
-            </div>
-            <% if (isHost) { %>
-              <button onclick="LibrikaClassroom.hostMuteAll()" class="ls-btn ls-btn-outline" style="font-size:0.75rem;padding:3px 8px;color:#EF4444;border-color:#EF4444;">
-                Mute All
-              </button>
-            <% } %>
-          </div>
-
-          <div id="participantsList" class="ls-panel-body" style="gap:8px;">
-            <!-- Rendered dynamically by live-classroom.js -->
-          </div>
-        </div>
-
-      </aside>
-
-    </div>
-
-    <!-- =========================================================================
-         3. BOTTOM CONTROL DOCK
-         ========================================================================= -->
-    <footer class="ls-room-dock">
-      
-      <!-- Microphone Toggle -->
-      <button id="dockMicBtn" class="ls-dock-btn" title="Toggle Microphone (Mute/Unmute)">
-        <span class="material-symbols-outlined">mic</span>
-      </button>
-
-      <!-- Camera Toggle -->
-      <button id="dockCamBtn" class="ls-dock-btn" title="Toggle Camera (On/Off)">
-        <span class="material-symbols-outlined">videocam</span>
-      </button>
-
-      <!-- Screen Share -->
-      <button id="dockScreenBtn" class="ls-dock-btn" title="Share Screen">
-        <span class="material-symbols-outlined">present_to_all</span>
-      </button>
-
-      <!-- Interactive Whiteboard Toggle -->
-      <button id="dockWhiteboardBtn" class="ls-dock-btn" title="Collaborative Whiteboard">
-        <span class="material-symbols-outlined">draw</span>
-      </button>
-
-      <!-- Raise Hand (Student Interaction) -->
-      <button id="dockHandBtn" class="ls-dock-btn" title="Raise Hand">
-        <span class="material-symbols-outlined">front_hand</span>
-      </button>
-
-      <!-- In-Class Chat Drawer Toggle -->
-      <button id="dockChatBtn" class="ls-dock-btn active" title="Toggle Live Chat">
-        <span class="material-symbols-outlined">chat</span>
-        <span id="chatUnreadBadge" style="display:none;position:absolute;top:6px;right:6px;width:8px;height:8px;background:#EF4444;border-radius:50%;"></span>
-      </button>
-
-      <!-- Participants List Toggle -->
-      <button id="dockParticipantsBtn" class="ls-dock-btn" title="View Participants">
-        <span class="material-symbols-outlined">group</span>
-      </button>
-
-      <!-- Leave / End Meeting -->
-      <button id="dockLeaveBtn" class="ls-dock-btn danger" title="Leave or End Meeting">
-        <span class="material-symbols-outlined">call_end</span>
-      </button>
-
-    </footer>
+    </main>
 
   </div>
+
+  <script>
+    let jitsiApi = null;
+
+    function initJitsiMeet() {
+      const config = window.MEETING_CONFIG;
+      const container = document.getElementById('jitsiContainer');
+      const loader = document.getElementById('jitsiLoading');
+
+      const domain = 'meet.jit.si';
+      const options = {
+        roomName: config.meetingCode,
+        width: '100%',
+        height: '100%',
+        parentNode: container,
+        userInfo: {
+          displayName: config.userName,
+          email: config.userEmail
+        },
+        configOverwrite: {
+          startWithAudioMuted: !config.isHost,
+          startWithVideoMuted: !config.isHost,
+          prejoinPageEnabled: false,
+          disableModeratorIndicator: false,
+          enableWelcomePage: false,
+          enableClosePage: false,
+          disableDeepLinking: true,
+          hideConferenceSubject: true,
+          subject: config.title,
+          toolbarButtons: [
+            'camera',
+            'chat',
+            'desktop',
+            'download',
+            'etherpad',
+            'filmstrip',
+            'fullscreen',
+            'hangup',
+            'help',
+            'highlight',
+            'microphone',
+            'noisesuppression',
+            'participants-pane',
+            'profile',
+            'raisehand',
+            'recording',
+            'security',
+            'select-background',
+            'settings',
+            'shareaudio',
+            'sharedvideo',
+            'shortcuts',
+            'stats',
+            'tileview',
+            'toggle-camera',
+            'videoquality',
+            'whiteboard'
+          ]
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUEST: false,
+          SHOW_BRAND_WATERMARK: false,
+          BRAND_WATERMARK_LINK: '',
+          SHOW_POWERED_BY: false,
+          SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+          DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
+          TILE_VIEW_MAX_COLUMNS: 4,
+          MOBILE_APP_PROMO: false
+        }
+      };
+
+      try {
+        jitsiApi = new JitsiMeetExternalAPI(domain, options);
+
+        jitsiApi.addListener('videoConferenceJoined', (data) => {
+          console.log('[LIBRIKA STUDIO] Connected to room:', data);
+          if (loader) loader.style.display = 'none';
+          recordAttendanceJoin();
+        });
+
+        jitsiApi.addListener('readyToClose', () => {
+          console.log('[LIBRIKA STUDIO] Conference ended or closed by user.');
+          recordAttendanceLeave();
+          window.location.href = config.isHost ? '/admin?module=studio' : '/student/live-classes';
+        });
+
+        jitsiApi.addListener('participantJoined', (participant) => {
+          console.log('[LIBRIKA STUDIO] Participant joined:', participant);
+        });
+
+        jitsiApi.addListener('participantLeft', (participant) => {
+          console.log('[LIBRIKA STUDIO] Participant left:', participant);
+        });
+
+        // Safety timeout to hide loader
+        setTimeout(() => {
+          if (loader) loader.style.display = 'none';
+        }, 3500);
+
+      } catch (err) {
+        console.error('[LIBRIKA STUDIO] Jitsi init error:', err);
+        if (loader) {
+          loader.innerHTML = `
+            <div style="text-align:center;padding:24px;">
+              <h3 style="color:#F87171;">Could not load meeting room</h3>
+              <p style="color:#94A3B8;">${err.message}</p>
+              <button onclick="window.location.reload()" class="ls-action-btn" style="background:#0B5ED7;border-color:#0B5ED7;margin-top:12px;">Retry</button>
+            </div>
+          `;
+        }
+      }
+    }
+
+    async function recordAttendanceJoin() {
+      if (!window.MEETING_CONFIG.id) return;
+      try {
+        await fetch(`/api/studio/meetings/${window.MEETING_CONFIG.id}/attendance/join`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId: window.MEETING_CONFIG.userId,
+            memberName: window.MEETING_CONFIG.userName,
+            role: window.MEETING_CONFIG.isHost ? 'host' : 'student'
+          })
+        });
+      } catch(e) {}
+    }
+
+    async function recordAttendanceLeave() {
+      if (!window.MEETING_CONFIG.id) return;
+      try {
+        navigator.sendBeacon(`/api/studio/meetings/${window.MEETING_CONFIG.id}/attendance/leave`, JSON.stringify({
+          memberId: window.MEETING_CONFIG.userId
+        }));
+      } catch(e) {}
+    }
+
+    window.addEventListener('beforeunload', recordAttendanceLeave);
+
+    function copyJoinLink() {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        const txt = document.getElementById('copyBtnText');
+        txt.textContent = 'Copied!';
+        setTimeout(() => { txt.textContent = 'Copy Link'; }, 2000);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initJitsiMeet);
+  </script>
 </body>
 </html>

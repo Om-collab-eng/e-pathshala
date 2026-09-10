@@ -164,14 +164,22 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     `, [sCode]).catch(() => ({ rows: [] }));
     const digitalItems = digRes.rows || [];
 
-    // 6. Fetch Live Studio Sessions
+    // 6. Fetch Live Studio Sessions (Jitsi-Powered Architecture)
     const studioRes = await db.query(`
-      SELECT ls.*, COALESCE(u.name, ls.host_name) as host_name
-      FROM live_sessions ls
-      LEFT JOIN users u ON ls.host_user_id = u.id
-      WHERE ls.school_code = $1 OR ls.school_code IS NULL
-      ORDER BY ls.scheduled_start DESC LIMIT 30
-    `, [sCode]).catch(() => ({ rows: [] }));
+      SELECT ss.*, ss.meeting_code as meeting_id, ss.class_name,
+        (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
+      FROM studio_sessions ss
+      WHERE ss.school_code = $1 OR ss.school_code = 'DPS123'
+      ORDER BY ss.scheduled_start DESC LIMIT 30
+    `, [sCode]).catch(async () => {
+      return await db.query(`
+        SELECT ls.*, COALESCE(u.name, ls.host_name) as host_name
+        FROM live_sessions ls
+        LEFT JOIN users u ON ls.host_user_id = u.id
+        WHERE ls.school_code = $1 OR ls.school_code IS NULL
+        ORDER BY ls.scheduled_start DESC LIMIT 30
+      `, [sCode]).catch(() => ({ rows: [] }));
+    });
     const studioSessions = studioRes.rows || [];
 
     // 7. Fetch Library Settings & Rules

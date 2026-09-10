@@ -892,48 +892,220 @@
              MODULE 07 — STUDIO (LIVE LECTURES & MASTERCLASSES)
              ───────────────────────────────────────────────────────────── -->
         <section id="module-studio" class="lp-module-view" style="display:<%= currentModule === 'studio' ? 'block' : 'none' %>;">
-          <div class="card" style="margin-bottom:24px;">
-            <div class="lp-card-header">
-              <div>
-                <h3 class="lp-card-title">🎥 Live Online Classroom & Video Studio</h3>
-                <p class="lp-card-sub">In-house native WebRTC video conferencing with interactive whiteboard</p>
+          <%
+            const nowTime = new Date();
+            const studioLiveList = studioSessions.filter(s => s.status === 'LIVE' || s.status === 'live');
+            const studioUpcomingList = studioSessions.filter(s => s.status === 'SCHEDULED' || (!s.status && new Date(s.scheduled_start || s.scheduled_at) >= nowTime));
+            const studioPastList = studioSessions.filter(s => s.status === 'COMPLETED' || s.status === 'CANCELLED' || (new Date(s.scheduled_start || s.scheduled_at) < nowTime && s.status !== 'LIVE' && s.status !== 'live'));
+            const totalAttendees = studioSessions.reduce((acc, s) => acc + (parseInt(s.attendee_count) || 0), 0);
+          %>
+          
+          <!-- Studio Stats Overview -->
+          <div class="lp-stats-grid" style="margin-bottom:24px;">
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Total Sessions</span>
+                <h3 class="lp-stat-value"><%= studioSessions.length %></h3>
               </div>
-              <a href="/studio" class="btn-primary">+ Host Live Meeting</a>
+              <div class="lp-stat-icon-wrap indigo">🎥</div>
             </div>
-            <p style="color:#64748B;font-size:0.9rem;">
-              Conduct live masterclasses, interactive lectures, and audio/video conferencing with crystal-clear screen sharing, synchronized collaborative whiteboard, and instant chat.
-            </p>
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Live Now</span>
+                <h3 class="lp-stat-value" style="color:#ef4444;"><%= studioLiveList.length %></h3>
+              </div>
+              <div class="lp-stat-icon-wrap red">🔴</div>
+            </div>
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Student Attendances</span>
+                <h3 class="lp-stat-value"><%= totalAttendees %></h3>
+              </div>
+              <div class="lp-stat-icon-wrap green">👥</div>
+            </div>
           </div>
 
-          <div class="lp-table-container">
-            <table class="lp-table">
-              <thead>
-                <tr>
-                  <th>Session Title</th>
-                  <th>Meeting ID</th>
-                  <th>Scheduled Date</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (studioSessions.length === 0) { %>
-                  <tr><td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">No scheduled live sessions.</td></tr>
-                <% } else { %>
-                  <% studioSessions.forEach(s => { %>
-                    <tr>
-                      <td style="font-weight:700;"><%= s.title %></td>
-                      <td style="font-family:monospace;font-weight:700;"><%= s.meeting_id %></td>
-                      <td><%= renderDate(s.scheduled_start || s.scheduled_at) %></td>
-                      <td><span class="lp-status-pill available">Scheduled</span></td>
-                      <td>
-                        <a href="/live/<%= s.meeting_id %>" target="_blank" class="btn-primary" style="padding:4px 10px;font-size:0.75rem;">Launch Room</a>
-                      </td>
-                    </tr>
-                  <% }) %>
-                <% } %>
-              </tbody>
-            </table>
+          <!-- Studio Header Card -->
+          <div class="card" style="margin-bottom:20px;">
+            <div class="lp-card-header">
+              <div>
+                <h3 class="lp-card-title">🎥 Librika Studio & Jitsi Live Classroom Engine</h3>
+                <p class="lp-card-sub">Create, schedule, and host HD interactive classes with attendance logging and collaborative whiteboard</p>
+              </div>
+              <div style="display:flex;gap:10px;">
+                <button class="btn-primary" onclick="openModal('scheduleStudioModal')">
+                  + Schedule Live Class
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Studio Sub-Tabs -->
+          <div class="lp-tabs-bar" style="margin-bottom:16px;">
+            <button class="lp-tab-btn active" id="btn-tab-studio-upcoming" onclick="switchStudioTab('upcoming', this)">
+              📅 Upcoming Meetings (<%= studioUpcomingList.length %>)
+            </button>
+            <button class="lp-tab-btn" id="btn-tab-studio-live" onclick="switchStudioTab('live', this)">
+              🔴 Live Meetings (<%= studioLiveList.length %>)
+            </button>
+            <button class="lp-tab-btn" id="btn-tab-studio-past" onclick="switchStudioTab('past', this)">
+              📜 Past & Attendance (<%= studioPastList.length %>)
+            </button>
+          </div>
+
+          <!-- Tab 1: Upcoming Meetings -->
+          <div id="studio-tab-upcoming" class="studio-tab-pane">
+            <div class="lp-table-container">
+              <table class="lp-table">
+                <thead>
+                  <tr>
+                    <th>Session Title & Agenda</th>
+                    <th>Target Class</th>
+                    <th>Teacher / Host</th>
+                    <th>Meeting Code</th>
+                    <th>Date & Time</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (studioUpcomingList.length === 0) { %>
+                    <tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8;">No upcoming live sessions scheduled. Click "+ Schedule Live Class" to create one.</td></tr>
+                  <% } else { %>
+                    <% studioUpcomingList.forEach(s => { 
+                         const mCode = s.meeting_code || s.meeting_id || ('LIBRIKA-' + s.id);
+                    %>
+                      <tr>
+                        <td>
+                          <div style="font-weight:700;color:var(--text-main);"><%= s.title %></div>
+                          <% if (s.description) { %>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= s.description %></div>
+                          <% } %>
+                        </td>
+                        <td><span class="lp-status-pill available"><%= s.class_name || 'All Students' %></span></td>
+                        <td style="font-weight:600;"><%= s.host_name || 'Faculty' %></td>
+                        <td>
+                          <code style="background:var(--bg-card-sub);padding:3px 8px;border-radius:6px;font-size:0.78rem;font-weight:700;color:var(--brand-primary);"><%= mCode %></code>
+                        </td>
+                        <td>
+                          <div style="font-size:0.85rem;font-weight:600;"><%= renderDate(s.scheduled_start || s.scheduled_at) %></div>
+                          <div style="font-size:0.75rem;color:var(--text-muted);"><%= s.duration_minutes || 60 %> mins</div>
+                        </td>
+                        <td>
+                          <div style="display:flex;gap:6px;align-items:center;">
+                            <a href="/studio/meeting/<%= s.id || mCode %>" target="_blank" class="btn-primary" style="padding:5px 10px;font-size:0.78rem;text-decoration:none;">
+                              🚀 Launch Room
+                            </a>
+                            <button class="btn-secondary" onclick="copyStudioLink('<%= mCode %>', '<%= s.id %>')" style="padding:5px 10px;font-size:0.78rem;" title="Copy Invite Link">
+                              📋 Copy Link
+                            </button>
+                            <button class="btn-secondary" onclick="deleteStudioMeeting('<%= s.id %>')" style="padding:5px 8px;font-size:0.78rem;color:#ef4444;" title="Cancel Session">
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab 2: Live Meetings -->
+          <div id="studio-tab-live" class="studio-tab-pane" style="display:none;">
+            <div class="lp-table-container">
+              <table class="lp-table">
+                <thead>
+                  <tr>
+                    <th>Live Session</th>
+                    <th>Target Class</th>
+                    <th>Host</th>
+                    <th>Meeting Code</th>
+                    <th>Attendees</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (studioLiveList.length === 0) { %>
+                    <tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8;">No sessions are live right now. Launch an upcoming session to start broadcasting.</td></tr>
+                  <% } else { %>
+                    <% studioLiveList.forEach(s => { 
+                         const mCode = s.meeting_code || s.meeting_id || ('LIBRIKA-' + s.id);
+                    %>
+                      <tr style="background:rgba(239,68,68,0.04);">
+                        <td>
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;animation:pulse 1.5s infinite;"></span>
+                            <span style="font-weight:700;"><%= s.title %></span>
+                          </div>
+                        </td>
+                        <td><span class="lp-status-pill available"><%= s.class_name || 'All Students' %></span></td>
+                        <td style="font-weight:600;"><%= s.host_name || 'Faculty' %></td>
+                        <td>
+                          <code style="background:var(--bg-card-sub);padding:3px 8px;border-radius:6px;font-size:0.78rem;font-weight:700;color:#ef4444;"><%= mCode %></code>
+                        </td>
+                        <td>
+                          <span class="lp-status-pill reserved"><%= s.attendee_count || 0 %> Joined</span>
+                        </td>
+                        <td>
+                          <div style="display:flex;gap:6px;align-items:center;">
+                            <a href="/studio/meeting/<%= s.id || mCode %>" target="_blank" class="btn-primary" style="padding:5px 10px;font-size:0.78rem;background:#ef4444;border-color:#ef4444;text-decoration:none;">
+                              🔴 Join as Host
+                            </a>
+                            <button class="btn-secondary" onclick="copyStudioLink('<%= mCode %>', '<%= s.id %>')" style="padding:5px 10px;font-size:0.78rem;">
+                              📋 Copy Link
+                            </button>
+                            <button class="btn-secondary" onclick="endStudioMeeting('<%= s.id %>')" style="padding:5px 10px;font-size:0.78rem;color:#ef4444;" title="End Meeting for all">
+                              ⏹️ End
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab 3: Past Meetings & Attendance -->
+          <div id="studio-tab-past" class="studio-tab-pane" style="display:none;">
+            <div class="lp-table-container">
+              <table class="lp-table">
+                <thead>
+                  <tr>
+                    <th>Completed Session</th>
+                    <th>Target Class</th>
+                    <th>Host</th>
+                    <th>Held On</th>
+                    <th>Status</th>
+                    <th>Total Attendees</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (studioPastList.length === 0) { %>
+                    <tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8;">No past meeting records found.</td></tr>
+                  <% } else { %>
+                    <% studioPastList.forEach(s => { %>
+                      <tr>
+                        <td style="font-weight:700;"><%= s.title %></td>
+                        <td><span class="lp-status-pill available"><%= s.class_name || 'All Students' %></span></td>
+                        <td><%= s.host_name || 'Faculty' %></td>
+                        <td><%= renderDate(s.scheduled_start || s.scheduled_at) %></td>
+                        <td>
+                          <span class="lp-status-pill <%= s.status === 'CANCELLED' ? 'overdue' : 'lost' %>">
+                            <%= s.status || 'COMPLETED' %>
+                          </span>
+                        </td>
+                        <td>
+                          <strong><%= s.attendee_count || 0 %> students</strong>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -1241,6 +1413,56 @@
           </div>
         </div>
         <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Register Member</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Schedule Live Studio Meeting Modal -->
+  <div id="scheduleStudioModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;">
+    <div class="card" style="width:90%;max-width:540px;position:relative;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800;">🎥 Schedule New Live Class / Studio Meeting</h3>
+        <button onclick="closeModal('scheduleStudioModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <form id="scheduleStudioForm" onsubmit="submitScheduleStudioMeeting(event)">
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;">Meeting / Class Title *</label>
+          <input type="text" id="studioMeetingTitle" name="title" required class="lp-search-input" style="width:100%;" placeholder="e.g., Grade 10 Physics: Electromagnetism">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Target Class / Batch</label>
+            <input type="text" id="studioMeetingClass" name="className" class="lp-search-input" style="width:100%;" placeholder="e.g., Class 10-A, All Students" value="All Students">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Host / Instructor</label>
+            <input type="text" id="studioMeetingHost" name="hostName" class="lp-search-input" style="width:100%;" value="<%= (typeof user !== 'undefined' && user && user.name) ? user.name : 'Teacher / Host' %>">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Start Date & Time *</label>
+            <input type="datetime-local" id="studioMeetingStart" name="scheduledStart" required class="lp-search-input" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Duration</label>
+            <select id="studioMeetingDuration" name="durationMinutes" class="lp-search-input" style="width:100%;">
+              <option value="30">30 Mins</option>
+              <option value="45">45 Mins</option>
+              <option value="60" selected>60 Mins (1 hr)</option>
+              <option value="90">90 Mins (1.5 hr)</option>
+              <option value="120">120 Mins (2 hr)</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:0.8rem;font-weight:700;">Agenda / Description</label>
+          <textarea id="studioMeetingDesc" name="description" class="lp-search-input" style="width:100%;resize:vertical;min-height:56px;" placeholder="Outline topics, study material reference or instructions..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeModal('scheduleStudioModal')">Cancel</button>
+          <button type="submit" class="btn-primary" style="justify-content:center;">🚀 Schedule & Create Room</button>
+        </div>
       </form>
     </div>
   </div>
@@ -1630,6 +1852,103 @@
         body.scrollTop = body.scrollHeight;
       } catch (e) {
         botBubble.textContent = 'Sorry, could not process request right now.';
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Studio & Jitsi Live Meeting Actions
+    // ─────────────────────────────────────────────────────────────────
+    function switchStudioTab(tabId, btn) {
+      document.querySelectorAll('.studio-tab-pane').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.lp-tabs-bar .lp-tab-btn').forEach(b => {
+        if (b.id && b.id.startsWith('btn-tab-studio-')) b.classList.remove('active');
+      });
+      const targetPane = document.getElementById('studio-tab-' + tabId);
+      if (targetPane) targetPane.style.display = 'block';
+      if (btn) btn.classList.add('active');
+    }
+
+    function copyStudioLink(mCode, mId) {
+      const roomSlug = mId || mCode;
+      const url = `${window.location.origin}/studio/meeting/${encodeURIComponent(roomSlug)}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          alert(`📋 Join link copied to clipboard!\n\nLink: ${url}\nMeeting Code: ${mCode}`);
+        }).catch(() => {
+          prompt('Copy this meeting link:', url);
+        });
+      } else {
+        prompt('Copy this meeting link:', url);
+      }
+    }
+
+    async function endStudioMeeting(id) {
+      if (!confirm('Are you sure you want to end this live meeting for all participants?')) return;
+      try {
+        const res = await fetch(`/api/studio/meetings/${id}/end`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert('Live meeting ended successfully.');
+          window.location.href = '/admin?module=studio';
+        } else {
+          alert('Failed to end meeting: ' + (data.message || 'Error'));
+        }
+      } catch (err) {
+        alert('Error ending meeting: ' + err.message);
+      }
+    }
+
+    async function deleteStudioMeeting(id) {
+      if (!confirm('Are you sure you want to cancel and delete this scheduled meeting?')) return;
+      try {
+        const res = await fetch(`/api/studio/meetings/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          alert('Meeting deleted.');
+          window.location.href = '/admin?module=studio';
+        } else {
+          alert('Failed to delete: ' + (data.message || 'Error'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function submitScheduleStudioMeeting(e) {
+      e.preventDefault();
+      const title = document.getElementById('studioMeetingTitle').value.trim();
+      const className = document.getElementById('studioMeetingClass').value.trim();
+      const scheduledStart = document.getElementById('studioMeetingStart').value;
+      const durationMinutes = parseInt(document.getElementById('studioMeetingDuration').value, 10) || 60;
+      const description = document.getElementById('studioMeetingDesc').value.trim();
+
+      if (!title || !scheduledStart) {
+        alert('Please provide meeting title and start date/time');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/studio/meetings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            className,
+            scheduledStart,
+            durationMinutes,
+            description
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`✅ Meeting scheduled successfully!\n\nMeeting Code: ${data.meeting.meetingCode}\nHost: ${data.meeting.hostName}`);
+          closeModal('scheduleStudioModal');
+          window.location.href = '/admin?module=studio';
+        } else {
+          alert('Failed to schedule meeting: ' + (data.message || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
       }
     }
 
