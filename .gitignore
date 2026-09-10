@@ -6,6 +6,9 @@ venv/
 *.local
 
 firebase-key.json
+*.pk
+*.pub
+jaas_private_key.*
 scratch/test_gemini.js
 .env
 PROJECT_CREDENTIALS_AND_CONFIG.md

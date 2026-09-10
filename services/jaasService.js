@@ -11,25 +11,39 @@ const jwt = require('jsonwebtoken');
 
 // Retrieve and normalize JaaS configuration from environment
 function getJaasConfig() {
-  const appId = process.env.JAAS_APP_ID || '';
-  const apiKeyId = process.env.JAAS_API_KEY_ID || '';
+  const appId = process.env.JAAS_APP_ID || 'vpaas-magic-cookie-d9c01d21634f4fb793f4a3b0cd859fab';
+  let apiKeyId = process.env.JAAS_API_KEY_ID || 'LIBRIKA';
   const privateKeyRaw = process.env.JAAS_PRIVATE_KEY || '';
   const domain = process.env.JAAS_DOMAIN || '8x8.vc';
 
+  const cleanAppId = appId.trim();
+  let cleanApiKeyId = apiKeyId.trim();
+
+  // Format kid if missing App ID prefix
+  if (cleanApiKeyId && cleanAppId && !cleanApiKeyId.includes('/')) {
+    cleanApiKeyId = `${cleanAppId}/${cleanApiKeyId}`;
+  }
+
   return {
-    appId: appId.trim(),
-    apiKeyId: apiKeyId.trim(),
+    appId: cleanAppId,
+    apiKeyId: cleanApiKeyId,
     privateKeyRaw: privateKeyRaw.trim(),
     domain: domain.trim() || '8x8.vc'
   };
 }
 
 /**
- * Checks if JaaS environment variables are configured on the server
+ * Checks if JaaS environment variables or key files are configured on the server
  */
 function isJaasConfigured() {
   const config = getJaasConfig();
-  return Boolean(config.appId && config.apiKeyId && config.privateKeyRaw);
+  if (!config.appId) return false;
+  try {
+    const pk = getPrivateKey();
+    return Boolean(pk && pk.length > 50);
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
@@ -39,6 +53,22 @@ function isJaasConfigured() {
 function getPrivateKey() {
   const config = getJaasConfig();
   let key = config.privateKeyRaw;
+
+  // If not set in env, look for local key files in project
+  if (!key) {
+    const candidatePaths = [
+      path.resolve(process.cwd(), 'jaas_private_key.pk'),
+      path.resolve(process.cwd(), 'LIBRIKA.pk'),
+      path.resolve(__dirname, '..', 'jaas_private_key.pk'),
+      path.resolve(__dirname, '..', 'LIBRIKA.pk')
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        key = fs.readFileSync(p, 'utf8');
+        break;
+      }
+    }
+  }
 
   if (!key) {
     throw new Error('JAAS_PRIVATE_KEY is not configured on the server.');
