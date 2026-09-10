@@ -26,46 +26,61 @@ exports.getStudioSessionsApi = async (req, res) => {
   try {
     const schoolCode = (req.session && req.session.school_code) || 'DPS123';
     const userId = req.session && req.session.user_id;
-    const userRole = (req.session && req.session.role) || 'student';
-    const userClass = (req.session && (req.session.class || req.session.class_name)) || '';
     const filter = (req.query.filter || req.query.tab || 'all').toLowerCase();
     const classFilter = req.query.class;
 
     const result = await query(
-      `SELECT ss.*, 
-        (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
+      `SELECT ss.id, ss.title, ss.description, ss.host_id, ss.host_name, ss.meeting_code, ss.meeting_code as meeting_id,
+              ss.jaas_room_name, ss.scheduled_start, ss.scheduled_end, ss.duration_minutes, ss.status,
+              ss.class_name, ss.visibility, ss.school_code,
+              (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
        FROM studio_sessions ss
-       WHERE (ss.school_code = $1 OR ss.school_code = 'DPS123' OR ss.school_code = 'GLOBAL')
-       ORDER BY ss.scheduled_start ASC`,
+       WHERE (LOWER(ss.school_code) = LOWER($1) OR ss.school_code = 'DPS123' OR ss.school_code = 'GLOBAL' OR ss.school_code IS NULL OR ss.school_code = '')
+       UNION ALL
+       SELECT ls.id + 100000 as id, ls.title, '' as description, ls.host_user_id as host_id, ls.host_name,
+              ls.meeting_id as meeting_code, ls.meeting_id, ls.meeting_id as jaas_room_name,
+              ls.scheduled_start, ls.scheduled_end, ls.duration_minutes, ls.status,
+              'All Students' as class_name, 'CLASS' as visibility, ls.school_code,
+              0 as attendee_count
+       FROM live_sessions ls
+       WHERE (LOWER(ls.school_code) = LOWER($1) OR ls.school_code = 'DPS123' OR ls.school_code = 'GLOBAL' OR ls.school_code IS NULL OR ls.school_code = '')
+         AND NOT EXISTS (SELECT 1 FROM studio_sessions s2 WHERE s2.meeting_code = ls.meeting_id OR s2.title = ls.title)
+       ORDER BY scheduled_start ASC`,
       [schoolCode]
     ).catch(() => ({ rows: [] }));
 
     let all = result.rows || [];
     const now = new Date();
+    const nowMs = now.getTime();
 
     // Auto-recovery: If scheduled_end passed by over 2 hours and still marked LIVE, auto-complete
     for (const s of all) {
-      if (s.status === 'LIVE' && s.scheduled_end && (now - new Date(s.scheduled_end)) > 2 * 3600 * 1000) {
+      if ((s.status || '').toUpperCase() === 'LIVE' && s.scheduled_end && (nowMs - new Date(s.scheduled_end).getTime()) > 2 * 3600 * 1000) {
         s.status = 'COMPLETED';
         query(`UPDATE studio_sessions SET status = 'COMPLETED' WHERE id = $1`, [s.id]).catch(() => {});
       }
     }
 
-    // Apply role-based filtering for students if class restriction exists
-    if (userRole === 'student' && userClass) {
+    if (classFilter && classFilter !== 'all') {
       all = all.filter(s => {
         const sc = (s.class_name || '').toLowerCase();
-        return !sc || sc === 'all' || sc === 'all students' || sc === 'all classes' || sc === 'global' || sc.includes(userClass.toLowerCase());
+        return sc === classFilter.toLowerCase() || sc === 'all' || sc === 'all students' || !sc;
       });
     }
 
-    if (classFilter && classFilter !== 'all') {
-      all = all.filter(s => (s.class_name || '').toLowerCase() === classFilter.toLowerCase());
-    }
-
-    const upcoming = all.filter(m => m.status === 'SCHEDULED' || (!m.status && new Date(m.scheduled_start) >= now));
-    const live = all.filter(m => m.status === 'LIVE' || m.status === 'live');
-    const past = all.filter(m => m.status === 'COMPLETED' || m.status === 'CANCELLED' || (new Date(m.scheduled_start) < now && m.status !== 'LIVE'));
+    const upcoming = all.filter(m => {
+      const st = (m.status || '').toUpperCase();
+      const startMs = new Date(m.scheduled_start).getTime();
+      const durMs = (parseInt(m.duration_minutes, 10) || 60) * 60000;
+      return st === 'SCHEDULED' || (!st && (startMs + durMs) >= nowMs) || (st !== 'COMPLETED' && st !== 'CANCELLED' && (startMs + durMs) >= nowMs);
+    });
+    const live = all.filter(m => (m.status || '').toUpperCase() === 'LIVE');
+    const past = all.filter(m => {
+      const st = (m.status || '').toUpperCase();
+      const startMs = new Date(m.scheduled_start).getTime();
+      const durMs = (parseInt(m.duration_minutes, 10) || 60) * 60000;
+      return st === 'COMPLETED' || st === 'CANCELLED' || (st !== 'LIVE' && (startMs + durMs) < nowMs);
+    });
     const mine = userId ? all.filter(m => Number(m.host_id) === Number(userId)) : [];
 
     let filteredList = all;
@@ -121,9 +136,10 @@ exports.postCreateStudioSession = async (req, res) => {
 
     const tempCode = `LIB-${Date.now().toString(36).toUpperCase()}`;
 
-    const insertRes = await query(
+    // Use RETURNING id for PostgreSQL, fall back for MySQL
+    let insertRes = await query(
       `INSERT INTO studio_sessions (title, description, host_id, host_name, meeting_code, scheduled_start, scheduled_end, duration_minutes, status, class_name, visibility, school_code)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'SCHEDULED', $9, $10, $11)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'SCHEDULED', $9, $10, $11) RETURNING id`,
       [
         title.trim(),
         description || '',
@@ -137,16 +153,63 @@ exports.postCreateStudioSession = async (req, res) => {
         visibility || 'CLASS',
         schoolCode
       ]
-    );
+    ).catch(async () => {
+      // Fallback for database without RETURNING support
+      return await query(
+        `INSERT INTO studio_sessions (title, description, host_id, host_name, meeting_code, scheduled_start, scheduled_end, duration_minutes, status, class_name, visibility, school_code)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'SCHEDULED', $9, $10, $11)`,
+        [
+          title.trim(),
+          description || '',
+          hostId,
+          hostName,
+          tempCode,
+          startDt.toISOString().slice(0, 19).replace('T', ' '),
+          endDt.toISOString().slice(0, 19).replace('T', ' '),
+          duration,
+          className || 'All Students',
+          visibility || 'CLASS',
+          schoolCode
+        ]
+      );
+    });
 
-    const newId = insertRes.lastId || insertRes.insertId || (insertRes.rows && insertRes.rows[0] && insertRes.rows[0].id) || Math.floor(Math.random() * 8000 + 100);
+    let newId = (insertRes.rows && insertRes.rows[0] && insertRes.rows[0].id) || insertRes.lastId || insertRes.insertId;
+    if (!newId) {
+      const findRow = await query(`SELECT id FROM studio_sessions WHERE meeting_code = $1 LIMIT 1`, [tempCode]).catch(() => ({ rows: [] }));
+      newId = findRow.rows && findRow.rows[0] ? findRow.rows[0].id : Math.floor(Math.random() * 8000 + 100);
+    }
+
     const jaasRoomName = jaasService.generateJaasRoomName(newId);
     const finalCode = `LIB-${newId}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
-
 
     await query(
       `UPDATE studio_sessions SET meeting_code = $1, jaas_room_name = $2 WHERE id = $3 OR meeting_code = $4`,
       [finalCode, jaasRoomName, newId, tempCode]
+    ).catch(() => {});
+
+    // Sync into live_sessions as well to guarantee cross-module discovery
+    await query(
+      `INSERT INTO live_sessions (title, scheduled_start, scheduled_end, duration_minutes, meeting_id, passcode, host_user_id, host_name, status, shareable_token, max_participants, school_code)
+       VALUES ($1, $2, $3, $4, $5, '123456', $6, $7, 'SCHEDULED', $8, 100, $9)`,
+      [
+        title.trim(),
+        startDt.toISOString().slice(0, 19).replace('T', ' '),
+        endDt.toISOString().slice(0, 19).replace('T', ' '),
+        duration,
+        finalCode,
+        hostId,
+        hostName,
+        `live_${finalCode}`,
+        schoolCode
+      ]
+    ).catch(() => {});
+
+    // Broadcast in-app notification to students of this school
+    await query(
+      `INSERT INTO notifications (user_id, message, type, school_code)
+       VALUES (0, $1, 'live_class', $2)`,
+      [`🎥 New live class scheduled: "${title.trim()}" by ${hostName} (${className || 'All Students'}).`, schoolCode]
     ).catch(() => {});
 
     // Audit Logging
@@ -183,6 +246,7 @@ exports.postCreateStudioSession = async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('postCreateStudioSession error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -990,7 +1054,7 @@ exports.postScheduleSession = async (req, res) => {
 
     await query(
       `INSERT INTO live_sessions (course_id, title, scheduled_start, scheduled_end, duration_minutes, meeting_id, passcode, host_user_id, host_name, status, shareable_token, max_participants, school_code)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'SCHEDULED', $10, $11, $12)`,
       [
         parseInt(course_id) || null,
         title || 'Live Interactive Class Session',
@@ -1001,12 +1065,36 @@ exports.postScheduleSession = async (req, res) => {
         passcode || '123456',
         hostUserId,
         hostName,
-        'scheduled',
         shareableToken,
         parseInt(max_participants) || 100,
         schoolCode
       ]
     );
+
+    // Sync into studio_sessions to guarantee student portal and JaaS discovery
+    await query(
+      `INSERT INTO studio_sessions (title, description, host_id, host_name, meeting_code, jaas_room_name, scheduled_start, scheduled_end, duration_minutes, status, class_name, visibility, school_code)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'SCHEDULED', 'All Students', 'CLASS', $10)`,
+      [
+        title || 'Live Interactive Class Session',
+        'Live interactive class lecture and discussion.',
+        hostUserId,
+        hostName,
+        meetingId,
+        meetingId,
+        fmt(scheduledStartDate),
+        fmt(scheduledEndDate),
+        durMins,
+        schoolCode
+      ]
+    ).catch(() => {});
+
+    // Broadcast in-app notification to students of this school
+    await query(
+      `INSERT INTO notifications (user_id, message, type, school_code)
+       VALUES (0, $1, 'live_class', $2)`,
+      [`🎥 New live class scheduled: "${title || 'Live Interactive Class'}" by ${hostName}.`, schoolCode]
+    ).catch(() => {});
 
     const redirectTarget = req.body.redirect_to || '/studio/calendar';
     res.redirect(`${redirectTarget}?scheduled=1&meeting_id=${meetingId}`);
@@ -1265,13 +1353,26 @@ exports.getStudentLiveClasses = async (req, res) => {
     const userId = (req.session && req.session.user_id) || 0;
     const schoolCode = (req.session && req.session.school_code) || 'DPS123';
 
-    // 1. Fetch upcoming / active live sessions
+    // 1. Fetch upcoming / active live sessions from studio_sessions and live_sessions
     const sessionsRes = await query(
-      `SELECT s.*, c.title as course_title, c.cover_image as course_cover, c.category as course_category, c.instructor_name
-       FROM live_sessions s
-       LEFT JOIN live_courses c ON s.course_id = c.id
-       ORDER BY s.scheduled_start ASC
-       LIMIT 20`
+      `SELECT ss.id, ss.title, ss.description, ss.host_name, ss.meeting_code as meeting_id,
+              ss.scheduled_start, ss.scheduled_end, ss.duration_minutes, ss.status,
+              ss.class_name, ss.school_code,
+              'Standalone Live Class' as course_title, '' as course_cover, 'General' as course_category, ss.host_name as instructor_name
+       FROM studio_sessions ss
+       WHERE (LOWER(ss.school_code) = LOWER($1) OR ss.school_code = 'DPS123' OR ss.school_code = 'GLOBAL' OR ss.school_code IS NULL OR ss.school_code = '')
+       UNION ALL
+       SELECT ls.id + 100000 as id, ls.title, '' as description, ls.host_name, ls.meeting_id,
+              ls.scheduled_start, ls.scheduled_end, ls.duration_minutes, ls.status,
+              'All Students' as class_name, ls.school_code,
+              COALESCE(c.title, 'Standalone Live Class') as course_title, COALESCE(c.cover_image, '') as course_cover, COALESCE(c.category, 'General') as course_category, COALESCE(c.instructor_name, ls.host_name) as instructor_name
+       FROM live_sessions ls
+       LEFT JOIN live_courses c ON ls.course_id = c.id
+       WHERE (LOWER(ls.school_code) = LOWER($1) OR ls.school_code = 'DPS123' OR ls.school_code = 'GLOBAL' OR ls.school_code IS NULL OR ls.school_code = '')
+         AND NOT EXISTS (SELECT 1 FROM studio_sessions s2 WHERE s2.meeting_code = ls.meeting_id OR s2.title = ls.title)
+       ORDER BY scheduled_start ASC
+       LIMIT 40`,
+      [schoolCode]
     ).catch(() => ({ rows: [] }));
     const sessions = sessionsRes.rows || [];
 

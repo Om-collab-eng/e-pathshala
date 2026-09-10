@@ -1038,7 +1038,16 @@
                 </div>
 
                 <% 
-                  const nextSession = studioSessions.find(s => s.status === 'LIVE' || s.status === 'live' || s.status === 'SCHEDULED');
+                  const nowTime = new Date().getTime();
+                  const nextSession = studioSessions.find(s => {
+                    const st = (s.status || '').toUpperCase();
+                    if (st === 'LIVE') return true;
+                    const startMs = new Date(s.scheduled_start || s.scheduled_at).getTime();
+                    const durMs = (parseInt(s.duration_minutes, 10) || 60) * 60000;
+                    const endMs = s.scheduled_end ? new Date(s.scheduled_end).getTime() : (startMs + durMs);
+                    return endMs >= (nowTime - 300000) && st !== 'COMPLETED' && st !== 'CANCELLED';
+                  }) || (studioSessions.length > 0 ? studioSessions[0] : null);
+
                   if (!nextSession) {
                 %>
                   <div style="padding:24px;text-align:center;color:var(--text-muted);background:var(--surface-sub);border-radius:14px;">
@@ -1046,14 +1055,18 @@
                     No upcoming live classes scheduled today. Check back soon!
                   </div>
                 <% } else { 
-                     const isLive = nextSession.status === 'LIVE' || nextSession.status === 'live';
+                     const st = (nextSession.status || '').toUpperCase();
+                     const startMs = new Date(nextSession.scheduled_start || nextSession.scheduled_at).getTime();
+                     const durMs = (parseInt(nextSession.duration_minutes, 10) || 60) * 60000;
+                     const endMs = nextSession.scheduled_end ? new Date(nextSession.scheduled_end).getTime() : (startMs + durMs);
+                     const isLive = st === 'LIVE' || (startMs <= nowTime && endMs >= nowTime && st !== 'COMPLETED' && st !== 'CANCELLED');
                 %>
                   <div style="padding:16px;border:1px solid <%= isLive ? '#FCA5A5' : 'var(--border)' %>;background:<%= isLive ? '#FEF2F2' : 'var(--surface-sub)' %>;border-radius:14px;">
                     <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
                       <% if (isLive) { %>
                         <span class="sp-pill red"><span style="width:6px;height:6px;border-radius:50%;background:#EF4444;animation:pulse 1.5s infinite;"></span> LIVE NOW</span>
                       <% } else { %>
-                        <span class="sp-pill indigo">Upcoming</span>
+                        <span class="sp-pill indigo">Scheduled</span>
                       <% } %>
                       <span style="font-size:0.75rem;color:var(--text-secondary);"><%= nextSession.class_name || 'All Students' %></span>
                     </div>
@@ -1064,7 +1077,7 @@
                       ⏰ <%= renderDate(nextSession.scheduled_start) %> (<%= nextSession.duration_minutes || 60 %> mins)
                     </div>
 
-                    <a href="/studio/meeting/<%= nextSession.id || nextSession.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
+                    <a href="/studio/meeting/<%= nextSession.id || nextSession.meeting_code || nextSession.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
                       <%= isLive ? '🔴 JOIN LIVE CLASS NOW' : '🚀 Join Meeting Room' %>
                     </a>
                   </div>
@@ -1345,18 +1358,44 @@
             </div>
 
             <!-- Studio Sub-Tabs -->
+            <%
+              const nowTimeStudio = new Date().getTime();
+              const liveCount = studioSessions.filter(s => {
+                const st = (s.status || '').toUpperCase();
+                const startMs = new Date(s.scheduled_start || s.scheduled_at).getTime();
+                const durMs = (parseInt(s.duration_minutes, 10) || 60) * 60000;
+                const endMs = s.scheduled_end ? new Date(s.scheduled_end).getTime() : (startMs + durMs);
+                return st === 'LIVE' || (startMs <= nowTimeStudio && endMs >= nowTimeStudio && st !== 'COMPLETED' && st !== 'CANCELLED');
+              }).length;
+
+              const upcomingCount = studioSessions.filter(s => {
+                const st = (s.status || '').toUpperCase();
+                const startMs = new Date(s.scheduled_start || s.scheduled_at).getTime();
+                const durMs = (parseInt(s.duration_minutes, 10) || 60) * 60000;
+                const endMs = s.scheduled_end ? new Date(s.scheduled_end).getTime() : (startMs + durMs);
+                return (st === 'SCHEDULED' || (!st && endMs >= nowTimeStudio)) && startMs > nowTimeStudio && st !== 'COMPLETED' && st !== 'CANCELLED';
+              }).length;
+
+              const pastCount = studioSessions.filter(s => {
+                const st = (s.status || '').toUpperCase();
+                const startMs = new Date(s.scheduled_start || s.scheduled_at).getTime();
+                const durMs = (parseInt(s.duration_minutes, 10) || 60) * 60000;
+                const endMs = s.scheduled_end ? new Date(s.scheduled_end).getTime() : (startMs + durMs);
+                return st === 'COMPLETED' || st === 'CANCELLED' || (endMs < nowTimeStudio && st !== 'LIVE');
+              }).length;
+            %>
             <div class="sp-tabs-bar" style="margin-bottom:1.25rem;">
               <button class="sp-tab-btn active" id="st-tab-btn-all" onclick="filterStudentStudio('all', this)">
                 🌐 All Classes (<%= studioSessions.length %>)
               </button>
               <button class="sp-tab-btn" id="st-tab-btn-live" onclick="filterStudentStudio('live', this)">
-                🔴 Live Now (<%= studioSessions.filter(s => s.status === 'LIVE' || s.status === 'live').length %>)
+                🔴 Live Now (<%= liveCount %>)
               </button>
               <button class="sp-tab-btn" id="st-tab-btn-upcoming" onclick="filterStudentStudio('upcoming', this)">
-                📅 Upcoming (<%= studioSessions.filter(s => s.status === 'SCHEDULED' || (!s.status && new Date(s.scheduled_start) >= new Date())).length %>)
+                📅 Upcoming (<%= upcomingCount %>)
               </button>
               <button class="sp-tab-btn" id="st-tab-btn-past" onclick="filterStudentStudio('past', this)">
-                📼 Replays & Completed (<%= studioSessions.filter(s => s.status === 'COMPLETED' || (new Date(s.scheduled_start) < new Date() && s.status !== 'LIVE')).length %>)
+                📼 Replays & Completed (<%= pastCount %>)
               </button>
             </div>
 
@@ -1370,8 +1409,12 @@
             <% } else { %>
               <div class="sp-grid-3" id="studentStudioGrid">
                 <% studioSessions.forEach(s => { 
-                     const isLive = s.status === 'LIVE' || s.status === 'live';
-                     const isPast = s.status === 'COMPLETED' || (new Date(s.scheduled_start) < new Date() && !isLive);
+                     const st = (s.status || '').toUpperCase();
+                     const startMs = new Date(s.scheduled_start || s.scheduled_at).getTime();
+                     const durMs = (parseInt(s.duration_minutes, 10) || 60) * 60000;
+                     const endMs = s.scheduled_end ? new Date(s.scheduled_end).getTime() : (startMs + durMs);
+                     const isLive = st === 'LIVE' || (startMs <= nowTimeStudio && endMs >= nowTimeStudio && st !== 'COMPLETED' && st !== 'CANCELLED');
+                     const isPast = st === 'COMPLETED' || st === 'CANCELLED' || (endMs < nowTimeStudio && !isLive);
                      const sessionType = isLive ? 'live' : (isPast ? 'past' : 'upcoming');
                 %>
                   <div class="sp-card studio-session-card" data-session-type="<%= sessionType %>" style="margin-bottom:0;border-color:<%= isLive ? '#FCA5A5' : 'var(--border)' %>;background:<%= isLive ? '#FEF2F2' : 'var(--surface)' %>;">
@@ -1392,16 +1435,16 @@
                     </p>
 
                     <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px;">
-                      👨‍🏫 Host: <strong><%= s.host_name || 'Faculty' %></strong><br>
+                      👨‍🏫 Host: <strong><%= s.host_name || 'Faculty Instructor' %></strong><br>
                       ⏰ <%= renderDate(s.scheduled_start) %> · <%= s.duration_minutes || 60 %> mins
                     </div>
 
                     <% if (isPast) { %>
-                      <a href="/studio/meeting/<%= s.id || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;background:#4B5563;border-color:#4B5563;">
+                      <a href="/studio/meeting/<%= s.id || s.meeting_code || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;background:#4B5563;border-color:#4B5563;">
                         📼 View Session Archive
                       </a>
                     <% } else { %>
-                      <a href="/studio/meeting/<%= s.id || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
+                      <a href="/studio/meeting/<%= s.id || s.meeting_code || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
                         <%= isLive ? '🔴 JOIN LIVE CLASS NOW' : '🚀 Launch Classroom' %>
                       </a>
                     <% } %>

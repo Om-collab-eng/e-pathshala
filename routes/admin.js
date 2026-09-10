@@ -179,19 +179,24 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
 
     // 6. Fetch Live Studio Sessions (Jitsi-Powered Architecture)
     const studioRes = await db.query(`
-      SELECT ss.*, ss.meeting_code as meeting_id, ss.class_name,
-        (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
+      SELECT ss.id, ss.title, ss.description, ss.host_id, ss.host_name, ss.meeting_code, ss.meeting_code as meeting_id,
+             ss.jaas_room_name, ss.scheduled_start, ss.scheduled_end, ss.duration_minutes, ss.status,
+             ss.class_name, ss.visibility, ss.school_code,
+             (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
       FROM studio_sessions ss
-      WHERE ss.school_code = $1 OR ss.school_code = 'DPS123'
-      ORDER BY ss.scheduled_start DESC LIMIT 30
+      WHERE (LOWER(ss.school_code) = LOWER($1) OR ss.school_code = 'DPS123' OR ss.school_code = 'GLOBAL' OR ss.school_code IS NULL OR ss.school_code = '')
+      UNION ALL
+      SELECT ls.id + 100000 as id, ls.title, '' as description, ls.host_user_id as host_id, ls.host_name,
+             ls.meeting_id as meeting_code, ls.meeting_id, ls.meeting_id as jaas_room_name,
+             ls.scheduled_start, ls.scheduled_end, ls.duration_minutes, ls.status,
+             'All Students' as class_name, 'CLASS' as visibility, ls.school_code,
+             0 as attendee_count
+      FROM live_sessions ls
+      WHERE (LOWER(ls.school_code) = LOWER($1) OR ls.school_code = 'DPS123' OR ls.school_code = 'GLOBAL' OR ls.school_code IS NULL OR ls.school_code = '')
+        AND NOT EXISTS (SELECT 1 FROM studio_sessions s2 WHERE s2.meeting_code = ls.meeting_id OR s2.title = ls.title)
+      ORDER BY scheduled_start DESC LIMIT 40
     `, [sCode]).catch(async () => {
-      return await db.query(`
-        SELECT ls.*, COALESCE(u.name, ls.host_name) as host_name
-        FROM live_sessions ls
-        LEFT JOIN users u ON ls.host_user_id = u.id
-        WHERE ls.school_code = $1 OR ls.school_code IS NULL
-        ORDER BY ls.scheduled_start DESC LIMIT 30
-      `, [sCode]).catch(() => ({ rows: [] }));
+      return await db.query(`SELECT * FROM studio_sessions ORDER BY id DESC LIMIT 30`).catch(() => ({ rows: [] }));
     });
     const studioSessions = studioRes.rows || [];
 
