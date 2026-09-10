@@ -59,6 +59,10 @@
   box-sizing: border-box;
 }
 
+.global-nav-container {
+  display: none !important;
+}
+
 body.lp-body {
   margin: 0;
   padding: 0;

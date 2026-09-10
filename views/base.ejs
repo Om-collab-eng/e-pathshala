@@ -67,30 +67,7 @@
     <link rel="stylesheet" href="/librika-light.css">
     <style>
         .global-nav-container {
-            position: fixed;
-            bottom: 1.5rem;
-            left: 1.5rem;
-            z-index: 9000;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-direction: row;
-        }
-
-        @media (max-width: 600px) {
-            .global-nav-container {
-                display: none !important;
-            }
-        }
-
-        @media (min-width: 600px) {
-            .global-nav-container {
-                flex-direction: column;
-                left: 1.5rem;
-                top: 50%;
-                bottom: auto;
-                transform: translateY(-50%);
-            }
+            display: none !important;
         }
 
         .ai-chat-widget-container {
@@ -312,18 +289,6 @@
         }, 1000);
     </script>
     <% } %>
-
-    <div class="global-nav-container">
-        <button class="btn-alt" onclick="window.history.back()" title="Go Back" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: var(--shadow-premium); background: var(--bg-card); backdrop-filter: var(--glass-blur);">
-            ⬅️
-        </button>
-        <button class="btn-alt" onclick="saGoHome()" title="Go Home" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: var(--shadow-premium); background: var(--bg-card); backdrop-filter: var(--glass-blur);">
-            🏠
-        </button>
-        <div class="theme-toggle" id="themeToggle" title="Switch Appearance" style="margin: 0; box-shadow: var(--shadow-premium);">
-            <span id="themeIcon">🌙</span>
-        </div>
-    </div>
 
     <div id="customModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.35); z-index: 10000; display: none; align-items: center; justify-content: center; ">
         <div class="auth-card" style="width: 400px; text-align: center;">
