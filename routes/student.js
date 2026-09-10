@@ -338,6 +338,23 @@ router.get('/achievements', studentOnly, (req, res) => renderStudentPortal(req, 
 router.get('/ai', studentOnly, (req, res) => renderStudentPortal(req, res, 'ai'));
 router.get('/profile', studentOnly, (req, res) => renderStudentPortal(req, res, 'profile'));
 
+// Legacy route redirects to prevent accessing outdated UI
+router.get('/browse', studentOnly, (req, res) => res.redirect('/student?module=e-library'));
+router.get('/my-library', studentOnly, (req, res) => res.redirect('/student?module=borrowings'));
+router.get('/favorites', studentOnly, (req, res) => res.redirect('/student?module=saved'));
+router.get('/wishlist', studentOnly, (req, res) => res.redirect('/student?module=saved'));
+router.get('/bookmarks', studentOnly, (req, res) => res.redirect('/student?module=saved'));
+router.get('/goals', studentOnly, (req, res) => res.redirect('/student?module=dashboard'));
+router.get('/analytics', studentOnly, (req, res) => res.redirect('/student?module=dashboard'));
+router.get('/calendar', studentOnly, (req, res) => res.redirect('/student?module=studio'));
+router.get('/assignments', studentOnly, (req, res) => res.redirect('/student?module=learn'));
+router.get('/requests', studentOnly, (req, res) => res.redirect('/student?module=catalog'));
+router.get('/notifications', studentOnly, (req, res) => res.redirect('/student?module=dashboard'));
+router.get('/settings', studentOnly, (req, res) => res.redirect('/student?module=profile'));
+router.get('/security', studentOnly, (req, res) => res.redirect('/student?module=profile'));
+router.get('/support', studentOnly, (req, res) => res.redirect('/student?module=profile'));
+router.get('/live-classes', studentOnly, (req, res) => res.redirect('/student?module=studio'));
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTEXTUAL ACTIONS (RESERVE, RENEW, SAVE, QUIZ, ASSIGNMENT, DIGITAL PASS)
 // ─────────────────────────────────────────────────────────────────────────────

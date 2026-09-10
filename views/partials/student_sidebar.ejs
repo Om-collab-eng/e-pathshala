@@ -114,60 +114,45 @@
 
   <nav class="sp-nav">
     <div class="sp-nav-group-label">Main</div>
-    <a href="/student" class="sp-nav-link <%= active === 'dashboard' ? 'active' : '' %>">
+    <a href="/student?module=dashboard" class="sp-nav-link <%= active === 'dashboard' ? 'active' : '' %>">
       <span class="sp-nav-icon">🏠</span><span class="sp-nav-label">Dashboard</span>
     </a>
-    <a href="/student/live-classes" class="sp-nav-link <%= active === 'live_classes' ? 'active' : '' %>">
-      <span class="sp-nav-icon">📹</span><span class="sp-nav-label">Live Classes &amp; Courses</span>
+    <a href="/student?module=studio" class="sp-nav-link <%= active === 'studio' || active === 'live_classes' ? 'active' : '' %>">
+      <span class="sp-nav-icon">📹</span><span class="sp-nav-label">Live Classes &amp; Studio</span>
     </a>
-    <a href="/student/browse" class="sp-nav-link <%= active === 'browse' ? 'active' : '' %>">
-      <span class="sp-nav-icon">📚</span><span class="sp-nav-label">Digital Library</span>
+    <a href="/student?module=e-library" class="sp-nav-link <%= active === 'e-library' || active === 'browse' ? 'active' : '' %>">
+      <span class="sp-nav-icon">📖</span><span class="sp-nav-label">E-Library</span>
     </a>
-    <a href="/student/my-library" class="sp-nav-link <%= active === 'library' ? 'active' : '' %>">
-      <span class="sp-nav-icon">📦</span><span class="sp-nav-label">My Library</span>
+    <a href="/student?module=catalog" class="sp-nav-link <%= active === 'catalog' ? 'active' : '' %>">
+      <span class="sp-nav-icon">📚</span><span class="sp-nav-label">Physical Catalog</span>
     </a>
-    <a href="/digital-library" class="sp-nav-link <%= active === 'community' ? 'active' : '' %>">
-      <span class="sp-nav-icon">🌐</span><span class="sp-nav-label">Community</span>
+    <a href="/student?module=borrowings" class="sp-nav-link <%= active === 'borrowings' || active === 'library' ? 'active' : '' %>">
+      <span class="sp-nav-icon">🔄</span><span class="sp-nav-label">My Borrowings</span>
     </a>
-    <a href="/student/ai" class="sp-nav-link <%= active === 'ai' ? 'active' : '' %>">
+    <a href="/student?module=ai" class="sp-nav-link <%= active === 'ai' ? 'active' : '' %>">
       <span class="sp-nav-icon">🤖</span><span class="sp-nav-label">AI Assistant</span>
     </a>
 
-    <div class="sp-nav-group-label">Create &amp; Track</div>
+    <div class="sp-nav-group-label">Create &amp; Learn</div>
     <a href="/student/publish" class="sp-nav-link <%= active === 'publish' ? 'active' : '' %>">
       <span class="sp-nav-icon">✏️</span><span class="sp-nav-label">Publish Content</span>
     </a>
     <a href="/student/my-publications" class="sp-nav-link <%= active === 'publications' ? 'active' : '' %>">
       <span class="sp-nav-icon">📄</span><span class="sp-nav-label">My Publications</span>
     </a>
-    <a href="/student/bookmarks" class="sp-nav-link <%= active === 'bookmarks' ? 'active' : '' %>">
-      <span class="sp-nav-icon">🔖</span><span class="sp-nav-label">Saved Items</span>
+    <a href="/student?module=learn" class="sp-nav-link <%= active === 'learn' || active === 'assignments' ? 'active' : '' %>">
+      <span class="sp-nav-icon">📝</span><span class="sp-nav-label">Quizzes &amp; Learn</span>
     </a>
-    <a href="/student/goals" class="sp-nav-link <%= active === 'goals' ? 'active' : '' %>">
-      <span class="sp-nav-icon">🎯</span><span class="sp-nav-label">Reading Goals</span>
+    <a href="/student?module=saved" class="sp-nav-link <%= active === 'saved' || active === 'bookmarks' || active === 'wishlist' ? 'active' : '' %>">
+      <span class="sp-nav-icon">🔖</span><span class="sp-nav-label">Saved &amp; Wishlist</span>
+    </a>
+    <a href="/student?module=achievements" class="sp-nav-link <%= active === 'achievements' ? 'active' : '' %>">
+      <span class="sp-nav-icon">🏆</span><span class="sp-nav-label">Achievements</span>
     </a>
 
     <div class="sp-nav-group-label">Account</div>
-    <a href="/student/achievements" class="sp-nav-link <%= active === 'achievements' ? 'active' : '' %>">
-      <span class="sp-nav-icon">🏆</span><span class="sp-nav-label">Achievements</span>
-    </a>
-    <a href="/student/assignments" class="sp-nav-link <%= active === 'assignments' ? 'active' : '' %>">
-      <span class="sp-nav-icon">📝</span><span class="sp-nav-label">Assignments</span>
-    </a>
-    <a href="/student/requests" class="sp-nav-link <%= active === 'requests' ? 'active' : '' %>">
-      <span class="sp-nav-icon">📬</span><span class="sp-nav-label">Book Requests</span>
-    </a>
-    <a href="/student/notifications" class="sp-nav-link <%= active === 'notifications' ? 'active' : '' %>">
-      <span class="sp-nav-icon">🔔</span><span class="sp-nav-label">Notifications</span>
-    </a>
-    <a href="/student/settings" class="sp-nav-link <%= active === 'settings' ? 'active' : '' %>">
-      <span class="sp-nav-icon">⚙️</span><span class="sp-nav-label">Settings</span>
-    </a>
-        <a href="/student/support" class="sp-nav-link <%= active === 'support' ? 'active' : '' %>">
-      <span class="sp-nav-icon">🛟</span><span class="sp-nav-label">Help &amp; Support</span>
-    </a>
-    <a href="/student/profile" class="sp-nav-link <%= active === 'profile' ? 'active' : '' %>">
-      <span class="sp-nav-icon">👤</span><span class="sp-nav-label">My Profile</span>
+    <a href="/student?module=profile" class="sp-nav-link <%= active === 'profile' || active === 'settings' ? 'active' : '' %>">
+      <span class="sp-nav-icon">👤</span><span class="sp-nav-label">My Profile &amp; ID</span>
     </a>
   </nav>
 
