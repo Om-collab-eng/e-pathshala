@@ -602,18 +602,20 @@ router.post('/ai/chat', studentOnly, async (req, res) => {
     return res.status(400).json({ success: false, message: 'Query message is required' });
   }
 
-  const systemGuardrail = `You are Librika AI, an encouraging and intelligent personal study copilot for students. 
-Your goal is to help students learn, understand complex concepts simply, summarize readings, recommend great educational books, and generate revision questions. 
-Keep explanations crystal clear, encouraging, educational, and formatted with clean markdown bullet points. Do not perform any librarian administrative tasks.`;
+  const studentName = req.session && req.session.user_name ? req.session.user_name : 'Student';
+  const schoolCode = req.session && req.session.school_code ? req.session.school_code : 'LIBRIKA';
 
   try {
-    const prompt = `${systemGuardrail}\n\nStudent asks: ${message.trim()}`;
-    const reply = await aiService.chatWithLibra(message.trim(), [{ role: 'user', content: prompt }]);
+    const studentHistory = [
+      { role: 'user', content: `[Context: Student ${studentName} at school ${schoolCode}] ${message.trim()}` }
+    ];
+    const reply = await aiService.chatWithLibra(message.trim(), studentHistory);
     res.json({ success: true, reply: reply || 'Here is what you need to know about that topic.' });
   } catch (err) {
+    console.error('Student AI chat error:', err);
     res.json({
       success: true,
-      reply: `I can help explain concepts, summarize chapters, recommend books, and create practice quizzes for your subjects. What would you like to study today?`
+      reply: `I can help explain concepts, summarize chapters, recommend books, explain digital publishing (up to 27MB), and create practice quizzes for your subjects. What would you like to study today?`
     });
   }
 });

@@ -54,12 +54,12 @@ router.get('/libra/suggestions', (req, res) => {
   res.json({
     status: 'success',
     suggestions: [
-      { text: "Find free Computer Science & Coding courses", icon: "💻", category: "courses" },
-      { text: "Recommend top-rated personal growth & productivity e-books", icon: "📚", category: "books" },
-      { text: "How does the Librika Free vs. Pro membership work?", icon: "💳", category: "pricing" },
-      { text: "How can I earn verifiable course certificates & badges?", icon: "🎓", category: "certifications" },
-      { text: "Show me UPSC, GATE & competitive exam study vaults", icon: "🏆", category: "exams" },
-      { text: "How do I publish my own e-book or research paper?", icon: "✍️", category: "publishing" }
+      { text: "How do I publish a digital book (up to 27MB) in E-Library?", icon: "✍️", category: "publishing" },
+      { text: "How do I join live interactive video classes on Jitsi?", icon: "🎥", category: "live_classes" },
+      { text: "Explain how borrowing, barcodes, and due date fines work", icon: "📚", category: "borrowing" },
+      { text: "Create a 5-question practice quiz on Photosynthesis", icon: "🧠", category: "quiz" },
+      { text: "What are the features of Free, Basic, and Pro plans?", icon: "💳", category: "pricing" },
+      { text: "How do I use the in-browser reader and audio TTS?", icon: "📖", category: "reader" }
     ]
   });
 });

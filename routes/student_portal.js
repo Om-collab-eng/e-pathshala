@@ -866,25 +866,32 @@ router.post('/api/ai/chat', async (req, res) => {
       await pool.query('INSERT INTO ai_usage_log (user_id, tool, prompt, created_at) VALUES ($1, $2, $3, $4)',
         [req.session.user_id, toolName, String(message).slice(0, 500), nowStr()]).catch(() => {});
     }
+
+    if (toolName === 'chat') {
+      const studentName = req.session && req.session.user_name ? req.session.user_name : 'Student';
+      const history = [{ role: 'user', content: `[Student: ${studentName}] ${message}` }];
+      const reply = await aiService.chatWithLibra(message, history);
+      return res.json({ status: 'success', reply });
+    }
+
     const systemPrompts = {
-      chat: 'You are the librika.in AI Assistant for students and librarians. Answer clearly, kindly, and concisely.',
-      summarize: 'Summarize the given text in 5-6 clear bullet points.',
-      quiz: 'Create a 5-question multiple-choice quiz on the given topic. Format each question with options and answers.',
-      flashcards: 'Create 8 flashcards on the given topic. Format as Front: ... Back: ...',
-      explain: 'Explain this topic in simple language with a short everyday example.',
-      vocabulary: 'List important vocabulary words with meanings and example sentences.',
-      translate: 'Translate the text faithfully into simple English.',
+      summarize: `You are Librika's Study AI. Summarize the following text or topic into 5-6 crisp, high-impact bullet points with a brief "Key Takeaway" box at the end.`,
+      quiz: `You are Librika's Quiz Master. Create a 5-question multiple-choice practice quiz based on this topic. Format each question clearly with options (A, B, C, D) and provide the correct answer and a 1-sentence explanation at the end of each question.`,
+      flashcards: `You are Librika's Memory Copilot. Create 8 high-yield flashcards for this topic. Format each flashcard as:\nCard 1: 🗂️ Front: [Concept/Question] | Back: [Clear Answer/Definition]`,
+      explain: `You are Librika's Concept Explainer. Explain this topic in simple, intuitive terms suitable for a high school or college student. Include a real-world everyday analogy and 2 key takeaways.`,
+      vocabulary: `You are Librika's Vocabulary Coach. List 6-8 essential key terms and vocabulary for this topic, providing clear definitions and an example sentence for each.`,
+      translate: `You are Librika's Language Tutor. Faithfully translate the following text into simple, accurate, natural English (or into the requested target language).`,
     };
-    const system = systemPrompts[toolName] || systemPrompts.chat;
-    const fullPrompt = `${system}\n\nUser Query: ${message}`;
+    const system = systemPrompts[toolName] || systemPrompts.explain;
+    const fullPrompt = `${system}\n\nUser Input: ${message}`;
     
-    const reply = await aiService.callAI(fullPrompt, { temperature: 0.7 });
-    return res.json({ status: 'success', reply: reply || 'How can I assist you with your library research today?' });
+    const reply = await aiService.callAI(fullPrompt, { temperature: 0.6 });
+    return res.json({ status: 'success', reply: reply || 'How can I assist you with your studies and library research today?' });
   } catch (err) {
     console.error('AI chat endpoint fallback:', err.message);
     return res.json({ 
       status: 'success', 
-      reply: 'I am your Library AI Assistant. I can help you search books, summarize text, create study quizzes, and recommend reading materials! What would you like to explore?' 
+      reply: 'I am your Librika AI Study Assistant. I can explain concepts, summarize chapters, create practice quizzes, help you publish digital books (up to 27MB), and navigate the library! What would you like to explore?' 
     });
   }
 });

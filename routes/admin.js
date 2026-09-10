@@ -711,14 +711,16 @@ router.post('/api/ai/chat', adminOnly, async (req, res) => {
       });
     }
 
-    // Default AI answer with live metrics
+    // Full AI answer with live metrics and Librika knowledge
     const countRes = await db.query('SELECT COUNT(*) as total FROM books WHERE school_code = $1', [sCode]);
-    const totalB = countRes.rows ? countRes.rows[0].total : 120;
-    return res.json({
-      reply: `I can help you manage your library of **${totalB} titles**. You can ask me to:\n- *Show overdue books and fines*\n- *Find book recommendations for Class 6 to 12*\n- *Check purchase requisitions & vendor orders*\n- *Search catalog by author, rack, or ISBN*`
-    });
+    const totalB = countRes.rows && countRes.rows[0] ? countRes.rows[0].total : 0;
+    
+    const context = `Librarian at school ${sCode} with ${totalB} physical books in the catalog. User is logged in as School Admin / Librarian.`;
+    const aiReply = await aiService.chatWithAssistant(message.trim(), context);
+    return res.json({ reply: aiReply });
   } catch (err) {
-    return res.json({ reply: 'I am ready to help! Ask me anything about your books, members, or circulation desk.' });
+    console.error('Admin AI endpoint error:', err);
+    return res.json({ reply: 'I am ready to help! Ask me anything about your books, members, circulation desk, or digital library publishing.' });
   }
 });
 

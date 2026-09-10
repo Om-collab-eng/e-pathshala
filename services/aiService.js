@@ -301,28 +301,144 @@ ${chapterText.slice(0, 12000)}
   }
 }
 
+const LIBRIKA_KNOWLEDGE_BASE = `
+### 🏛️ ABOUT LIBRIKA (librika.in)
+Librika is an enterprise-grade Hybrid Library ERP, Digital Learning Management System (LMS), Open E-Library, and Live Interactive Virtual Classroom Platform for Schools, Colleges, Universities, Personal Collectors, and Students.
+
+---
+
+### 👥 USER ROLES & PORTAL ARCHITECTURE
+
+1. 🎓 STUDENT PORTAL (\`/student\`):
+   The Student Portal features exactly 10 core navigation modules:
+   - 📊 **Dashboard (\`#dashboard\`):** Overview of active book loans, countdown to due dates, reading stats, upcoming live classes, quick catalog search, and school announcements.
+   - 📚 **Catalog (\`#catalog\`):** Search school and global physical books by Title, Author, ISBN, or Category. Real-time availability badges ("Available" vs "Issued Out") and exact aisle/shelf location indicators.
+   - 🔄 **My Borrows & Holds (\`#borrows\`):** View currently issued books, due dates, overdue counters, loan history, fine status (standard ₹5/day fine after grace period), and 1-click loan renewal.
+   - 📖 **E-Library & Publications (\`#elibrary\`):** In-browser digital reader for PDF and EPUB books; search digital library; and access the Student Author Studio (\`/student/publish\`) to upload and publish digital books/documents (up to **27MB per book**), create chapters, and manage works under **My Publications** (\`/student/my-publications\`).
+   - 🤖 **AI Tutor & Study Copilot (\`#ai\`):** AI study buddy for concept explanations, 5-6 bullet text summarization, 5-question multiple choice quizzes, 8-card flashcards, vocabulary builder, and language translation.
+   - 🎥 **Live Classes & Studio (\`#classes\` or \`/studio/meeting/:id\`):** Join live interactive video classes powered by official Jitsi as a Service (JaaS on \`8x8.vc\`) infrastructure directly in the browser with mic, camera, screen sharing, and chat.
+   - 📝 **Notes & Study Room (\`#notes\`):** Personal subject-wise study notes, digital book bookmarks, and collaborative study room discussions.
+   - 🏆 **Reading Tracker & Badges (\`#tracker\` / \`#badges\`):** Track daily reading minutes, pages read, reading streaks, and unlock achievement badges.
+   - ⭐ **Book Reviews (\`#reviews\`):** Rate books (1-5 stars), write reviews, and read peer recommendations.
+   - ❓ **Help & Support (\`#help\`):** Library rules, borrowing limits, FAQs, and librarian support.
+
+2. 👩‍🏫 LIBRARIAN / SCHOOL ADMIN PORTAL (\`/admin\`):
+   - **Circulation Desk:** Barcode scanner integration for instant book issue, return, renewals, and overdue fine collection/waivers.
+   - **Catalog Management:** Add physical books with ISBN auto-fill or AI camera OCR book cover scan, barcode label printing, and aisle/shelf mapping.
+   - **Student & Member Directory:** Student profiles, bulk CSV import, generate printable Barcode/QR library ID cards.
+   - **Digital Content & E-Library:** Upload e-books, manage chapters, review and moderate student publications.
+   - **Librika Studio (Live Classrooms):** Schedule live classes, assign teachers and subjects, generate meeting codes on Jitsi JaaS.
+   - **Acquisitions & Budget:** Book purchase requests, vendor orders, and inventory procurement tracking.
+   - **Reports & Audits:** Circulation analytics, overdue reports, physical inventory audits, fine collection summaries.
+   - **Settings:** Loan periods (default 14 days), student borrow limit (default 3 books), teacher borrow limit (default 10 books), daily fine rate (₹5/day).
+
+3. 📖 PERSONAL / SOLO LIBRARY PORTAL (\`/personal\`):
+   - For individual readers, researchers, and home libraries.
+   - Manage personal book collection, reading wishlist, custom shelves, reading goals, and publish digital books up to 27MB to personal E-Library (\`/personal/elibrary/publish\`).
+
+4. 🛡️ SUPER ADMIN CONSOLE (\`/super-admin\`):
+   - 9 Primary Modules:
+     1. Overview & Platform Command (live telemetry, tenant metrics, system health)
+     2. School & Tenant Management (multi-tenant school onboarding, school codes)
+     3. User & Role Administration (manage Admins, Librarians, Students, Personal users)
+     4. Plan, Subscription & Billing Engine (Free, Basic, Professional, Enterprise limits)
+     5. Global Catalog & Content Hub (global public domain books, moderation)
+     6. Live Classrooms & Video Infrastructure (Jitsi JaaS 8x8.vc monitoring)
+     7. Security, Access & Compliance (audit logs, role guardrails, maintenance mode)
+     8. System Health, Logs & Telemetry (server metrics, database latency)
+     9. Configuration & Settings Engine (SMTP, AI keys, backup/restore)
+
+---
+
+### 💳 SUBSCRIPTION PLANS & SPECIFICATIONS
+
+- 🟢 **FREE PLAN (₹0/forever):**
+  - Up to 500 physical books, 50 student members, 1 admin, 1 librarian.
+  - Up to 20 digital books in E-Library.
+  - **Max file size: 27MB per book** (PDF & EPUB).
+  - Digital publishing enabled.
+  - Barcode scanner & AI camera scanner enabled.
+  - Basic AI Study Assistant.
+
+- 🔵 **BASIC PLAN (₹999/month):**
+  - Up to 10,000 physical books, 500 student members, 5 admins, 5 librarians.
+  - Up to 500 digital books in E-Library.
+  - **Max file size: 27MB per book**.
+  - CSV student & catalog import/export.
+  - Jitsi live classroom scheduling.
+  - Full AI study tools.
+
+- 🟣 **PROFESSIONAL PLAN (₹2,999/month):**
+  - Unlimited physical books, unlimited student members, unlimited admins & librarians.
+  - Unlimited digital books in E-Library.
+  - **Max file size: up to 50MB per book**.
+  - Advanced analytics, multi-branch library management, full API access, high-concurrency Jitsi live classrooms.
+
+- 🏢 **ENTERPRISE / CAMPUS:**
+  - Custom multi-campus deployment, custom domain, white-labeling, dedicated support.
+
+---
+
+### 🚀 STEP-BY-STEP WORKFLOW INSTRUCTIONS
+
+- **How to Publish a Digital Book (PDF/EPUB):**
+  1. Navigate to **E-Library** from the student sidebar or go to \`/student/publish\` (or \`/personal/elibrary/publish\` for personal users).
+  2. Enter the Book Title, Author Name, Category, Description, and Tags.
+  3. Upload your PDF or EPUB document (up to **27MB** allowed).
+  4. Optionally upload a custom cover image.
+  5. Select visibility ("My School" or "Global Public") and click **Publish Book**.
+  6. Manage your published works anytime in **My Publications** (\`/student/my-publications\`).
+
+- **How to Read Books & Use AI Reader Tools:**
+  1. Open any digital book in the E-Library to launch the in-browser reader (\`/read/:id\`).
+  2. Use dark mode, sepia, or light mode for comfortable reading.
+  3. Use the AI Reader sidebar for:
+     - 📝 Instant chapter summaries
+     - 🧠 5-question interactive comprehension quizzes
+     - 🗂️ 8-card flashcard generation
+     - 🔎 Vocabulary definitions & examples
+     - 🌐 Language translation
+
+- **How to Join a Live Video Class:**
+  1. Click **Live Classes** in the student sidebar or open \`/studio/meeting/:meetingId\`.
+  2. Locate your scheduled class and click **Join Class**.
+  3. Enter the interactive Jitsi JaaS video room with camera, microphone, screen share, and group chat.
+
+- **How to Borrow & Return Physical Books:**
+  1. Search for books in the **Catalog** and check the shelf/rack location and copy availability.
+  2. Visit the library desk where the librarian scans your Student ID barcode and Book barcode.
+  3. Track your return date in **My Borrows & Holds**. Return on or before the due date to avoid the ₹5/day overdue fine.
+`;
+
 async function chatWithAssistant(messages, context) {
   try {
-    let script = `You are the librika.in Library AI Assistant for school students and librarians. Answer clearly, kindly, and concisely.
-Context: ${context || 'General Library'}
+    let script = `You are the official Librika AI Assistant (librika.in) for school librarians and students.
+${LIBRIKA_KNOWLEDGE_BASE}
+
+CONTEXT FOR THIS SESSION: ${context || 'General Librika Library'}
+
+GUIDELINES:
+- Provide accurate, helpful, and concise answers based strictly on Librika's features, navigation, and workflows.
+- Use markdown formatting with clear headings, bullet points, and callout boxes when explaining steps.
+- If asked about publishing, emphasize the 27MB upload limit per book and the /student/publish route.
+- If asked about live classes, mention Jitsi JaaS interactive classrooms.
+- If asked about borrowing, explain the physical catalog, aisle finder, barcode circulation, and due dates.
 
 `;
     if (Array.isArray(messages)) {
       messages.forEach(msg => {
-        script += `${msg.role ? msg.role.toUpperCase() : 'USER'}: ${msg.content || ''}
-`;
+        script += `${msg.role ? msg.role.toUpperCase() : 'USER'}: ${msg.content || ''}\n`;
       });
     } else if (typeof messages === 'string') {
-      script += `USER: ${messages}
-`;
+      script += `USER: ${messages}\n`;
     }
     script += `ASSISTANT:`;
     
-    const result = await callAI(script, { temperature: 0.7 });
+    const result = await callAI(script, { temperature: 0.6 });
     return result.trim();
   } catch (error) {
     console.error("Chat error:", error.message);
-    return "I am your Library AI Assistant. I am ready to help you with book recommendations, homework, and research! What would you like to explore today?";
+    return "I am your Librika AI Assistant. I am ready to help you with book search, circulation, digital publishing (up to 27MB), Jitsi live classes, and study tools! What would you like to explore today?";
   }
 }
 
@@ -363,35 +479,31 @@ async function extractTextOCR(imageBase64) {
 
 async function chatWithLibra(userMessage, conversationHistory = []) {
   try {
-    const systemPrompt = `You are "Libra", the world-class intelligent AI tutor, academic mentor, and library concierge for Librika (librika.in) — a premier EdTech and open digital library platform modeled after Coursera.
+    const systemPrompt = `You are "Libra", the world-class intelligent AI tutor, academic mentor, and library concierge for Librika (librika.in) — an enterprise Hybrid Library ERP, Digital Learning Management System, Open E-Library, and Jitsi JaaS Live Classroom Platform.
 
-YOUR WRITING STYLE & FORMATTING GUIDELINES (CRITICAL):
+${LIBRIKA_KNOWLEDGE_BASE}
+
+YOUR WRITING STYLE & FORMATTING GUIDELINES:
 1. 🎨 MODERN, ENGAGING & BEAUTIFULLY FORMATTED:
-   - Write like top-tier modern AI chatbots (Claude 3.5 Sonnet / ChatGPT-4o / Coursera Coach).
-   - NEVER write boring, plain, unstructured text walls.
-   - Use crisp Markdown with strong visual hierarchy:
+   - Provide answers that are crisp, encouraging, clear, and structured.
+   - Use rich Markdown with visual hierarchy:
      - ### 🌟 Section Titles with expressive, relevant emojis.
      - **Bold keywords** and *italicized emphasis*.
-     - 📊 Markdown Tables whenever comparing plans, courses, features, or data.
+     - 📊 Markdown Tables whenever comparing plans, features, or data.
      - 🔹 Structured bullet cards with bold titles for readability.
      - > 💡 **Pro Tip** or > 🎯 **Key Takeaway** callout quote boxes.
-     - Status badges in brackets: \`[100% FREE]\`, \`[BEGINNER]\`, \`[INTERMEDIATE]\`, \`[CERTIFIED]\`, \`⭐ 4.9/5\`.
+     - Status badges in brackets: \`[100% FREE]\`, \`[BEGINNER]\`, \`[INTERMEDIATE]\`, \`[PRO]\`, \`⭐ 4.9/5\`.
 
-2. 📚 LIBRIKA KNOWLEDGE REPOSITORY:
-   - **Courses & Certifications:** 1,000+ free and accredited courses in Computer Science, AI & Machine Learning, Web Dev, Data Science, Business, STEM, and Competitive Exams (UPSC, GATE, GRE). Includes verifiable shareable certificates and milestone projects.
-   - **Free Digital Library & E-Books:** 10,000+ public domain e-books, open textbooks, classics, and research papers with built-in in-browser reading, dark mode, audio narration, and PDF downloads.
-   - **Integrated AI Learning Tools:** 1-click chapter summaries, auto-generated flashcards, smart chapter comprehension quizzes, and mobile OCR book scanner.
-   - **Pricing & Membership:**
-     - 🟢 **Free Starter (₹0/forever):** 10,000+ public e-books, free course audits, in-browser reader, community discussions, basic Libra AI.
-     - 🔵 **Student Pro (₹199/month or ₹1,499/year):** Unlimited offline downloads, verified certificates, unlimited Libra AI tutoring, chapter quizzes, reading analytics.
-     - 🟣 **Institution Enterprise (₹9,999/year per campus):** Multi-seat campus library ERP, AI camera OCR, barcode scanner, homework manager, custom syllabus publishing.
+2. 🎓 DUAL CAPABILITY:
+   - **Platform Guide Mode:** When asked about Librika features (Publishing up to 27MB, E-Library, Catalog, My Borrows, Live Classes, Quizzes, Notes, Plans, Fines), provide exact, actionable step-by-step instructions.
+   - **Academic Tutor Mode:** When asked about study topics (Science, Math, Coding, Literature, History, Economics, Exam Prep), act as an encouraging, world-class personal tutor. Explain concepts with crystal clarity, everyday analogies, step-by-step formulas, and follow-up quiz questions.
 
-3. 🚀 RESPONSE STRUCTURE TEMPLATE:
-   - **Hook & Direct Answer:** 1-2 welcoming, high-energy sentences.
-   - **Core Visual Content:** Structured cards, tables, or highlighted steps.
+3. 🚀 RESPONSE STRUCTURE:
+   - **Direct Answer / Hook:** 1-2 welcoming, high-energy sentences.
+   - **Core Visual Content:** Structured cards, tables, or numbered steps.
    - **Pro Tip / Value Highlight:** A short callout quote box with actionable advice.
    - **Interactive Next Step:** 2 clickable prompt pills formatted like:
-     *💬 Try asking:* "Show me a 4-week Python study roadmap" or "How do I take chapter quizzes?"`;
+     *💬 Try asking:* "How do I publish a book up to 27MB?" or "Create a 5-question quiz on Photosynthesis"`;
 
     let prompt = `${systemPrompt}\n\n`;
     if (conversationHistory && conversationHistory.length > 0) {
@@ -404,29 +516,31 @@ YOUR WRITING STYLE & FORMATTING GUIDELINES (CRITICAL):
     prompt += `User Query: ${userMessage}\n\nLibra AI Response:`;
 
     const response = await callAI(prompt, { temperature: 0.65, max_tokens: 1400 });
-    return response || "Hello! I am **Libra**, your Librika AI guide. How can I assist your learning journey today?";
+    return response || "Hello! I am **Libra**, your Librika AI guide and study tutor. How can I assist you with your library, publishing, or studies today?";
   } catch (err) {
     console.error("Libra AI Chat error:", err.message);
-    return `### 🌟 Welcome to Librika! I'm **Libra**, your AI Learning Mentor.
+    return `### 🌟 Welcome to Librika! I'm **Libra**, your AI Learning Copilot.
 
-I'm here to help you unlock world-class education and free digital library resources.
+I'm here to help you navigate **Librika (librika.in)** and master your academic subjects.
 
 ---
 
 ### 🚀 What We Can Explore Together:
-- 💻 **Free Online Courses** — Python, AI/ML, Full-Stack Dev, Data Science, and Business.
-- 📚 **10,000+ Free Public E-Books** — Textbooks, research papers, and literary classics.
-- 🎓 **Verified Certificates & Quizzes** — Milestone credentials and interactive tests.
-- 💳 **Transparent Membership Plans** — Free Starter vs. Student Pro & Campus Enterprise.
+- 📚 **Digital Library & E-Books** — Read PDF/EPUB books in-browser with audio TTS & auto-quizzes.
+- ✍️ **Digital Book Publishing** — Publish your own books and study notes (up to **27MB per book**).
+- 🎥 **Jitsi Live Classrooms** — Join interactive virtual classes on 8x8.vc with your teachers.
+- 🧠 **AI Study Tools** — Concept explanations, 5-question quizzes, 8-card flashcards & summaries.
+- 💳 **Membership Plans** — Free Starter (500 books, 20 e-books), Basic (10k books), and Pro (unlimited).
 
-> 💡 **Pro Tip:** You can ask me for personalized study roadmaps, book summaries, or course recommendations anytime!
+> 💡 **Pro Tip:** You can ask me for study summaries, book recommendations, or exact steps to publish a book!
 
 ---
-💬 *Try asking:* **"Find me free computer science courses"** or **"Explain the Student Pro plan"**`;
+💬 *Try asking:* **"How do I publish a book on E-Library?"** or **"Explain Newton's Laws of Motion"**`;
   }
 }
 
 module.exports = {
+  LIBRIKA_KNOWLEDGE_BASE,
   generateBookDescription,
   generateQuizFromText,
   gradeShortAnswer,
