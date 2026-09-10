@@ -1,14 +1,48 @@
 <%- layout("base") %>
 
-<style>
-/* ═══════════════════════════════════════════════
-   SUPER ADMIN DASHBOARD — MASTER RESPONSIVE DESIGN
-   Complete Theme Isolation & Zero Layout Shifts
-═══════════════════════════════════════════════ */
+<<style>
+/* ═══════════════════════════════════════════════════════════════════
+   LIBRIKA SUPER ADMIN PORTAL — ENTERPRISE DESIGN SYSTEM
+   Modern SaaS + EdTech + Digital Library Control Center
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --primary: #0B5ED7;
+  --primary-dark: #084298;
+  --primary-light: #EAF3FF;
+  --indigo: #5B4BDB;
+  --indigo-light: #EEF2FF;
+  --success: #198754;
+  --success-light: #E8F5E9;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --danger: #DC3545;
+  --danger-light: #FFEBEE;
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-sub: #F1F5F9;
+  --text-primary: #111827;
+  --text-secondary: #667085;
+  --text-muted: #9CA3AF;
+  --border: #E5E7EB;
+  --border-focus: #0B5ED7;
+  --sidebar: #FFFFFF;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 18px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.08);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html, body {
-  background: #060d1f !important;
-  background-color: #060d1f !important;
-  color: #f1f5f9 !important;
+  background: var(--background) !important;
+  background-color: var(--background) !important;
+  color: var(--text-primary) !important;
   margin: 0 !important;
   padding: 0 !important;
   padding-top: 0 !important;
@@ -16,17 +50,19 @@ html, body {
   width: 100% !important;
   max-width: 100vw !important;
   min-height: 100vh !important;
+  font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
 }
 
 .sa-page-wrapper {
-  background: #060d1f !important;
+  background: var(--background) !important;
   min-height: 100vh;
   width: 100vw;
   max-width: 100vw;
   overflow-x: hidden;
   position: relative;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #f1f5f9;
+  font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-primary);
 }
 
 .sa-layout {
@@ -37,12 +73,12 @@ html, body {
   overflow-x: hidden;
 }
 
-/* ── SIDEBAR ── */
+/* ── SIDEBAR (EXACTLY 9 PRIMARY MODULES) ── */
 .sa-sidebar {
-  width: 260px;
-  max-width: 85vw; /* 80-85% screen width max on mobile */
-  background: #080f22;
-  border-right: 1px solid rgba(99, 102, 241, 0.14);
+  width: 270px;
+  max-width: 85vw;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -50,10 +86,10 @@ html, body {
   left: 0;
   height: 100vh;
   height: 100dvh;
-  z-index: 9999;
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.28s ease, width 0.28s ease;
+  z-index: 1000;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.25s ease;
   overflow: hidden;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-sm);
 }
 
 .sa-sidebar.collapsed {
@@ -61,8 +97,8 @@ html, body {
 }
 
 .sa-sidebar-brand {
-  padding: 1.1rem 1.2rem 0.9rem;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
+  padding: 1.25rem 1.4rem;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -72,106 +108,86 @@ html, body {
 .sa-brand-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .sa-brand-icon {
   width: 38px;
   height: 38px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, var(--primary), var(--indigo));
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1.25rem;
+  color: white;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(11, 94, 215, 0.25);
 }
 
 .sa-brand-text h2 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1rem;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.15rem;
   font-weight: 900;
   margin: 0;
-  background: linear-gradient(135deg, #818cf8, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .sa-brand-text p {
-  font-size: 0.67rem;
-  color: #475569;
-  margin: 1px 0 0;
-  font-weight: 600;
+  font-size: 0.68rem;
+  color: var(--primary);
+  margin: 2px 0 0;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .sa-sidebar-close-mob {
   display: none;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  background: var(--surface-sub);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
 }
-.sa-sidebar-close-mob:active { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+.sa-sidebar-close-mob:active { background: var(--danger-light); color: var(--danger); }
 
 .sa-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 0.75rem 0.6rem;
+  padding: 1rem 0.75rem;
   scrollbar-width: thin;
-  scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
-  -webkit-overflow-scrolling: touch;
-}
-.sa-nav::-webkit-scrollbar { width: 4px; }
-.sa-nav::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 4px; }
-
-/* Collapsible / Group section headers */
-.sa-nav-section-title {
-  font-size: 0.64rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: #475569;
-  padding: 0.7rem 0.7rem 0.35rem;
-  margin-top: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s ease;
-}
-.sa-nav-section-title:first-child { margin-top: 0; }
-.sa-nav-section-title:hover { color: #818cf8; }
-.sa-nav-group {
+  scrollbar-color: var(--border) transparent;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
-.sa-nav-group.collapsed {
-  display: none;
+.sa-nav::-webkit-scrollbar { width: 4px; }
+.sa-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.sa-nav-item {
+  display: flex;
+  flex-direction: column;
 }
 
 .sa-nav-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  min-height: 44px; /* 44px touch target */
+  gap: 12px;
+  padding: 10px 14px;
+  min-height: 42px;
   border-radius: 10px;
-  color: #94a3b8;
-  font-size: 0.83rem;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 2px;
+  transition: all 0.15s ease;
   border: 1px solid transparent;
   background: none;
   width: 100%;
@@ -181,76 +197,152 @@ html, body {
   box-sizing: border-box;
 }
 .sa-nav-link:hover {
-  background: rgba(99, 102, 241, 0.1);
-  color: #a5b4fc;
+  background: var(--surface-sub);
+  color: var(--text-primary);
 }
 .sa-nav-link.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.24), rgba(168, 85, 247, 0.14));
-  color: #a5b4fc;
-  border-left: 3.5px solid #818cf8;
-  border-color: rgba(99, 102, 241, 0.25);
+  background: var(--primary-light);
+  color: var(--primary);
   font-weight: 700;
+  border-color: rgba(11, 94, 215, 0.15);
 }
 .sa-nav-icon {
-  font-size: 1.05rem;
-  min-width: 20px;
+  font-size: 1.15rem;
+  min-width: 22px;
   text-align: center;
+  line-height: 1;
+}
+.sa-nav-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sa-nav-arrow {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+.sa-nav-item.open .sa-nav-arrow {
+  transform: rotate(90deg);
+  color: var(--primary);
+}
+
+.sa-submenu {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 32px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+.sa-nav-item.open .sa-submenu {
+  display: flex;
+}
+.sa-sub-link {
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  min-height: 34px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  width: 100%;
+}
+.sa-sub-link:hover {
+  color: var(--primary);
+  background: var(--surface-sub);
+}
+.sa-sub-link.active {
+  color: var(--primary);
+  background: var(--primary-light);
+  font-weight: 700;
 }
 
 .sa-sidebar-footer {
-  padding: 0.85rem;
-  border-top: 1px solid rgba(99, 102, 241, 0.12);
+  padding: 1rem 1.1rem;
+  border-top: 1px solid var(--border);
   flex-shrink: 0;
-  background: #080f22;
+  background: var(--sidebar);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .sa-user-chip {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   padding: 8px 10px;
-  background: rgba(99, 102, 241, 0.08);
-  border-radius: 11px;
-  border: 1px solid rgba(99, 102, 241, 0.14);
+  background: var(--surface-sub);
+  border-radius: 12px;
+  border: 1px solid var(--border);
 }
 .sa-avatar {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, var(--primary), var(--indigo));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 900;
   color: #fff;
   flex-shrink: 0;
 }
+.sa-avatar-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.7rem;
+}
+.sa-user-meta {
+  flex: 1;
+  min-width: 0;
+}
 .sa-user-name {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.2;
 }
 .sa-user-role {
-  font-size: 0.65rem;
-  color: #6366f1;
+  font-size: 0.7rem;
+  color: var(--primary);
   font-weight: 700;
 }
+.sa-logout-btn {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 1.1rem;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+.sa-logout-btn:hover {
+  color: var(--danger);
+  background: var(--danger-light);
+}
 
-/* Semi-transparent dark overlay for mobile */
 .sa-overlay-dim {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
-  
-  
-  z-index: 9998;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 999;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.25s ease;
 }
 .sa-overlay-dim.active {
   opacity: 1;
@@ -259,15 +351,15 @@ html, body {
 
 /* ── MAIN CONTENT ── */
 .sa-main {
-  margin-left: 260px;
+  margin-left: 270px;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  width: calc(100vw - 260px);
+  width: calc(100vw - 270px);
   max-width: 100vw;
   overflow-x: hidden;
-  transition: margin-left 0.28s ease, width 0.28s ease;
+  transition: margin-left 0.25s ease, width 0.25s ease;
 }
 
 .sa-main.expanded {
@@ -275,63 +367,138 @@ html, body {
   width: 100vw !important;
 }
 
+/* ── STICKY TOPBAR HEADER ── */
 .sa-topbar {
-  background: rgba(8, 15, 34, 0.92);
-  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
-  padding: 0.85rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 1.8rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 100;
-  gap: 12px;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
 }
 .sa-topbar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  min-width: 0;
 }
 .sa-mob-toggle {
-  display: inline-flex !important;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #e2e8f0;
-  font-size: 1.25rem;
+  display: none;
+  background: var(--surface-sub);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 1.2rem;
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 10px;
-  min-height: 40px;
-  min-width: 40px;
+  min-height: 38px;
+  min-width: 38px;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 .sa-mob-toggle:hover {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.4);
-  color: #ffffff;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: rgba(11, 94, 215, 0.2);
 }
 .sa-breadcrumbs {
-  font-size: 0.72rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
   font-weight: 600;
   margin-bottom: 2px;
 }
 .sa-topbar-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.15rem;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.2rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.01em;
 }
+
+.sa-topbar-center {
+  flex: 1;
+  max-width: 440px;
+  margin: 0 12px;
+}
+.sa-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-sub);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0 14px;
+  height: 40px;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+.sa-search-wrap:focus-within {
+  border-color: var(--primary);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.12);
+}
+.sa-search-icon {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+.sa-global-search {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: inherit;
+  width: 100%;
+}
+.sa-global-search::placeholder {
+  color: var(--text-muted);
+}
+
 .sa-topbar-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
+.sa-btn-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  font-size: 1rem;
+}
+.sa-btn-icon:hover {
+  background: var(--surface-sub);
+  color: var(--text-primary);
+  border-color: #D1D5DB;
+}
+.sa-badge-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 1.5px solid #FFFFFF;
+}
+
 .sa-content {
-  padding: 1.5rem;
+  padding: 1.8rem;
   flex: 1;
   width: 100%;
   max-width: 100%;
@@ -339,102 +506,201 @@ html, body {
   box-sizing: border-box;
 }
 
-/* ── TABS ── */
+/* ── TABS & PANES ── */
 .sa-tab-pane { display: none; }
-.sa-tab-pane.active { display: block; }
+.sa-tab-pane.active { display: block; animation: saFadeIn 0.2s ease-out; }
 
-/* ── STAT CARDS ── */
+@keyframes saFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── IN-PAGE SEGMENTED TAB CONTROLS ── */
+.sa-segmented-nav {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-sub);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  gap: 4px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.sa-seg-pill {
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sa-seg-pill:hover {
+  color: var(--text-primary);
+}
+.sa-seg-pill.active {
+  background: #FFFFFF;
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ── STAT / KPI CARDS ── */
 .sa-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-  gap: 0.9rem;
-  margin-bottom: 1.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.1rem;
+  margin-bottom: 2rem;
 }
 .sa-stat-card {
-  background: linear-gradient(145deg, #0d1630, #111c3a);
-  border: 1px solid rgba(99, 102, 241, 0.14);
-  border-radius: 16px;
-  padding: 1.2rem 1.3rem;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
-  cursor: default;
-  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 .sa-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(99, 102, 241, 0.15);
+  border-color: rgba(11, 94, 215, 0.4);
+  box-shadow: var(--shadow-lg);
 }
-.sa-stat-card::after {
-  content: '';
-  position: absolute;
-  top: -24px;
-  right: -24px;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: var(--glow, rgba(99, 102, 241, 0.1));
-  pointer-events: none;
+.sa-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  margin-bottom: 12px;
 }
-.sa-stat-icon { font-size: 1.6rem; margin-bottom: 0.4rem; display: block; line-height: 1; }
-.sa-stat-label { font-size: 0.67rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; }
-.sa-stat-value { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; color: #fff; margin: 3px 0 0; line-height: 1; }
-.sa-stat-sub { font-size: 0.72rem; color: #64748b; margin-top: 3px; }
+.sa-stat-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+.sa-stat-value {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin: 4px 0 0;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.sa-stat-sub {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 
 /* ── CARDS ── */
 .sa-card {
-  background: linear-gradient(145deg, #0d1630, #111c3a);
-  border: 1px solid rgba(99, 102, 241, 0.14);
-  border-radius: 18px;
-  margin-bottom: 1.2rem;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1.5rem;
   overflow: hidden;
+  transition: box-shadow 0.2s ease;
 }
 .sa-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.1rem 1.4rem;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+  padding: 1.2rem 1.6rem;
+  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
+  background: #FFFFFF;
 }
-.sa-card-title { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
-.sa-card-body { padding: 1.4rem; }
+.sa-card-title {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+.sa-card-body { padding: 1.6rem; }
 .sa-card-body-np { padding: 0; }
 
 /* ── BUTTONS ── */
 .sa-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
-  min-height: 44px; /* Accessible 44px touch target */
-  border-radius: 10px;
-  font-size: 0.82rem;
+  padding: 9px 16px;
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
-  border: none;
-  transition: all 0.18s ease;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
   text-decoration: none;
   white-space: nowrap;
   font-family: inherit;
   box-sizing: border-box;
 }
 .sa-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.sa-btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3); }
-.sa-btn-primary:hover { box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45); transform: translateY(-1px); }
-.sa-btn-success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
-.sa-btn-success:hover { transform: translateY(-1px); }
-.sa-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-.sa-btn-danger:hover { transform: translateY(-1px); }
-.sa-btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
-.sa-btn-warning:hover { transform: translateY(-1px); }
-.sa-btn-info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
-.sa-btn-ghost { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.08); }
-.sa-btn-ghost:hover { background: rgba(255, 255, 255, 0.09); color: #e2e8f0; }
-.sa-btn-sm { padding: 6px 12px; font-size: 0.78rem; min-height: 36px; border-radius: 8px; }
-.sa-btn-xs { padding: 4px 10px; font-size: 0.72rem; min-height: 32px; border-radius: 6px; }
+.sa-btn-primary {
+  background: var(--primary);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(11, 94, 215, 0.25);
+}
+.sa-btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+.sa-btn-success { background: var(--success); color: #fff; }
+.sa-btn-success:hover { background: #146c43; transform: translateY(-1px); }
+.sa-btn-danger { background: var(--danger); color: #fff; }
+.sa-btn-danger:hover { background: #b02a37; transform: translateY(-1px); }
+.sa-btn-warning { background: var(--warning); color: #111827; }
+.sa-btn-warning:hover { background: #d97706; color:#fff; transform: translateY(-1px); }
+.sa-btn-info { background: #0284C7; color: #fff; }
+.sa-btn-secondary {
+  background: var(--surface-sub);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.sa-btn-secondary:hover {
+  background: #E2E8F0;
+}
+.sa-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.sa-btn-ghost:hover {
+  background: var(--surface-sub);
+  color: var(--text-primary);
+}
+.sa-btn-sm { padding: 6px 12px; font-size: 0.78rem; min-height: 34px; border-radius: 8px; }
+.sa-btn-xs { padding: 4px 10px; font-size: 0.72rem; min-height: 30px; border-radius: 6px; }
 
-/* ── TABLE OVERFLOW & RESPONSIVENESS ── */
+/* ── TABLE OVERFLOW & STYLES ── */
 .sa-table-wrap {
   width: 100%;
   max-width: 100%;
@@ -445,105 +711,320 @@ html, body {
 .sa-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.83rem;
-  min-width: 600px;
+  font-size: 0.85rem;
+  min-width: 650px;
 }
 .sa-table th {
-  padding: 10px 13px;
-  font-size: 0.65rem;
+  padding: 12px 16px;
+  font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #334155;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
   text-align: left;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-sub);
 }
 .sa-table td {
-  padding: 10px 13px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  color: #94a3b8;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
   vertical-align: middle;
 }
-.sa-table td:first-child { color: #e2e8f0; }
-.sa-table tr:hover td { background: rgba(99, 102, 241, 0.04); }
+.sa-table tr:hover td {
+  background: var(--surface-sub);
+}
 .sa-table tr:last-child td { border-bottom: none; }
-.sa-table-actions { display: flex; gap: 5px; flex-wrap: nowrap; }
+.sa-table-actions { display: flex; gap: 6px; flex-wrap: nowrap; }
 .sa-col-check { width: 40px; }
-input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1; cursor: pointer; }
+input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
 
 /* ── BADGES ── */
-.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
-.badge-indigo { background: rgba(99, 102, 241, 0.18); color: #a5b4fc; }
-.badge-purple { background: rgba(168, 85, 247, 0.18); color: #d8b4fe; }
-.badge-green { background: rgba(16, 185, 129, 0.18); color: #34d399; }
-.badge-red { background: rgba(239, 68, 68, 0.18); color: #f87171; }
-.badge-yellow { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
-.badge-blue { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
-.badge-gray { background: rgba(100, 116, 139, 0.18); color: #94a3b8; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.badge-indigo { background: var(--indigo-light); color: var(--indigo); }
+.badge-purple { background: #F5F3FF; color: #7C3AED; }
+.badge-green { background: var(--success-light); color: var(--success); }
+.badge-red { background: var(--danger-light); color: var(--danger); }
+.badge-yellow { background: var(--warning-light); color: #B45309; }
+.badge-blue { background: var(--primary-light); color: var(--primary); }
+.badge-gray { background: var(--surface-sub); color: var(--text-secondary); }
 
 /* ── FILTERS / SEARCH ── */
-.sa-toolbar { display: flex; align-items: center; gap: 8px; padding: 1rem 1.4rem; border-bottom: 1px solid rgba(99, 102, 241, 0.08); flex-wrap: wrap; }
-.sa-search { display: flex; align-items: center; gap: 7px; background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(99, 102, 241, 0.18); border-radius: 10px; padding: 8px 12px; flex: 1; min-width: 180px; min-height: 44px; }
-.sa-search input { background: none; border: none; color: #e2e8f0; outline: none; font-size: 0.83rem; flex: 1; font-family: inherit; min-width: 80px; }
-.sa-search input::placeholder { color: #334155; }
-.sa-select { background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(99, 102, 241, 0.18); border-radius: 10px; color: #e2e8f0; font-size: 0.83rem; padding: 8px 12px; min-height: 44px; font-family: inherit; outline: none; cursor: pointer; }
-.sa-select option { background: #111c3a; }
-.sa-input { width: 100%; padding: 10px 14px; min-height: 44px; background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(99, 102, 241, 0.18); border-radius: 10px; color: #e2e8f0; font-size: 0.85rem; font-family: inherit; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
-.sa-input:focus, .sa-select:focus { border-color: #6366f1; background: rgba(99, 102, 241, 0.07); }
-.sa-input::placeholder { color: #334155; }
-.sa-textarea { width: 100%; padding: 10px 14px; background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(99, 102, 241, 0.18); border-radius: 10px; color: #e2e8f0; font-size: 0.85rem; font-family: inherit; outline: none; resize: vertical; min-height: 90px; box-sizing: border-box; }
-.sa-form-group { margin-bottom: 0.9rem; }
-.sa-form-group label { display: block; font-size: 0.72rem; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
-.sa-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.sa-form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.sa-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1.1rem 1.6rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  background: #FFFFFF;
+}
+.sa-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-sub);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  flex: 1;
+  min-width: 200px;
+  height: 42px;
+}
+.sa-search input {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  outline: none;
+  font-size: 0.85rem;
+  flex: 1;
+  font-family: inherit;
+}
+.sa-search input::placeholder { color: var(--text-muted); }
+.sa-select {
+  background: var(--surface-sub);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  padding: 0 12px;
+  height: 42px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+.sa-select option { background: #FFFFFF; color: var(--text-primary); }
+.sa-input {
+  width: 100%;
+  padding: 10px 14px;
+  min-height: 42px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.sa-input:focus, .sa-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.12);
+  background: #FFFFFF;
+}
+.sa-input::placeholder { color: var(--text-muted); }
+.sa-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  min-height: 90px;
+  box-sizing: border-box;
+}
+.sa-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.12);
+}
+.sa-form-group { margin-bottom: 1.1rem; }
+.sa-form-group label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sa-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.sa-form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
 /* ── PAGINATION ── */
-.sa-pagination { display: flex; align-items: center; gap: 6px; padding: 0.9rem 1.4rem; border-top: 1px solid rgba(99, 102, 241, 0.08); flex-wrap: wrap; }
-.sa-page-info { font-size: 0.78rem; color: #475569; flex: 1; }
-.sa-page-btn { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(99, 102, 241, 0.15); color: #94a3b8; border-radius: 8px; padding: 6px 12px; min-height: 38px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-.sa-page-btn:hover, .sa-page-btn.active { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.3); }
+.sa-pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1.1rem 1.6rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  background: #FFFFFF;
+}
+.sa-page-info { font-size: 0.82rem; color: var(--text-secondary); flex: 1; }
+.sa-page-btn {
+  background: var(--surface-sub);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 6px 12px;
+  min-height: 36px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sa-page-btn:hover, .sa-page-btn.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: rgba(11, 94, 215, 0.3);
+}
 .sa-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── BULK ACTION BAR ── */
-.sa-bulk-bar { display: none; align-items: center; gap: 10px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 10px; padding: 10px 16px; margin-bottom: 12px; flex-wrap: wrap; }
+.sa-bulk-bar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: var(--primary-light);
+  border: 1px solid rgba(11, 94, 215, 0.25);
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
 .sa-bulk-bar.show { display: flex; }
-.sa-bulk-count { font-size: 0.83rem; font-weight: 700; color: #a5b4fc; flex: 1; }
+.sa-bulk-count { font-size: 0.85rem; font-weight: 700; color: var(--primary); flex: 1; }
 
-/* ── MODAL ── */
-.sa-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.35);   z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1.2rem; }
+/* ── MODAL & DRAWERS ── */
+.sa-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
 .sa-modal-overlay.open { display: flex; }
-.sa-modal { background: #0d1630; border: 1px solid rgba(99, 102, 241, 0.22); border-radius: 20px; width: 100%; max-width: 540px; max-height: 92vh; overflow-y: auto; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6); }
-.sa-modal-lg { max-width: 680px; }
-.sa-modal-header { padding: 1.3rem 1.5rem 1rem; border-bottom: 1px solid rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #0d1630; z-index: 1; }
-.sa-modal-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0; }
-.sa-modal-body { padding: 1.2rem 1.5rem; }
-.sa-modal-footer { padding: 0.9rem 1.5rem 1.4rem; display: flex; gap: 9px; justify-content: flex-end; border-top: 1px solid rgba(99, 102, 241, 0.08); }
-.sa-close-btn { background: none; border: none; color: #475569; font-size: 1.3rem; cursor: pointer; padding: 4px; line-height: 1; transition: color 0.15s; min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
-.sa-close-btn:hover { color: #fff; }
+.sa-modal {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.sa-modal-lg { max-width: 720px; }
+.sa-modal-header {
+  padding: 1.4rem 1.6rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: #FFFFFF;
+  z-index: 2;
+}
+.sa-modal-header h3 {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+.sa-modal-body { padding: 1.4rem 1.6rem; }
+.sa-modal-footer {
+  padding: 1rem 1.6rem 1.4rem;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border);
+  background: #FFFFFF;
+}
+.sa-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.15s;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+.sa-close-btn:hover {
+  background: var(--surface-sub);
+  color: var(--text-primary);
+}
 
-/* ── SKELETON ANIMATION ── */
-.sa-skeleton {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
-  background-size: 200% 100%;
-  animation: skeletonPulse 1.5s infinite;
-  border-radius: 6px;
-  display: inline-block;
+/* ── QUICK ACTIONS GRID ── */
+.sa-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
 }
-@keyframes skeletonPulse {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+.sa-quick-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
 }
+.sa-quick-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.sa-quick-icon { font-size: 1.6rem; margin-bottom: 6px; }
+.sa-quick-label { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); }
+
+/* ── SYSTEM HEALTH ── */
+.sa-health-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sa-health-item:last-child { border-bottom: none; }
+.sa-health-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.sa-dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.sa-dot-yellow { width: 8px; height: 8px; border-radius: 50%; background: var(--warning); }
 
 /* ── RESPONSIVE BREAKPOINTS ── */
-@media (max-width: 900px) {
+@media (max-width: 990px) {
   .sa-sidebar {
     transform: translateX(-105%);
   }
   .sa-sidebar.open {
     transform: translateX(0) !important;
-    box-shadow: 20px 0 60px rgba(0, 0, 0, 0.8);
+    box-shadow: 20px 0 60px rgba(0, 0, 0, 0.2);
   }
   .sa-sidebar-close-mob {
     display: flex !important;
@@ -556,17 +1037,20 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
   .sa-mob-toggle {
     display: inline-flex !important;
   }
+  .sa-topbar-center {
+    display: none;
+  }
   .sa-content {
-    padding: 1rem;
+    padding: 1.2rem;
   }
   .sa-topbar {
-    padding: 0.75rem 1rem;
+    padding: 0.8rem 1.2rem;
   }
   .sa-toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    padding: 0.8rem;
+    padding: 1rem;
   }
   .sa-search, .sa-select {
     width: 100%;
@@ -574,9 +1058,6 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
   }
   .sa-form-row, .sa-form-row-3 {
     grid-template-columns: 1fr !important;
-  }
-  .sa-btn {
-    min-height: 44px; /* Accessible touch target */
   }
 }
 @media (max-width: 480px) {
@@ -587,99 +1068,6 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
-
-/* ═══════════════════════════════════════════════
-   PREVENT GLOBAL TABLE CARD BREAKAGE & WHITE SPACE
-═══════════════════════════════════════════════ */
-.sa-page-wrapper table,
-.sa-page-wrapper thead,
-.sa-page-wrapper tbody,
-.sa-page-wrapper tfoot,
-.sa-page-wrapper tr,
-.sa-page-wrapper th,
-.sa-page-wrapper td {
-  display: table-cell !important;
-}
-
-.sa-page-wrapper table {
-  display: table !important;
-  width: 100% !important;
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-}
-
-.sa-page-wrapper thead {
-  display: table-header-group !important;
-  position: static !important;
-  top: auto !important;
-  left: auto !important;
-}
-
-.sa-page-wrapper tbody {
-  display: table-row-group !important;
-}
-
-.sa-page-wrapper tr {
-  display: table-row !important;
-  margin-bottom: 0 !important;
-  border: none !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-}
-
-.sa-page-wrapper th {
-  display: table-cell !important;
-  padding: 10px 14px !important;
-  font-size: 0.68rem !important;
-  font-weight: 800 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  color: #64748b !important;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.12) !important;
-  border-top: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  background: rgba(0, 0, 0, 0.3) !important;
-  text-align: left !important;
-  white-space: nowrap !important;
-}
-
-.sa-page-wrapper td {
-  display: table-cell !important;
-  padding: 10px 14px !important;
-  position: static !important;
-  padding-left: 14px !important;
-  text-align: left !important;
-  border-top: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: #94a3b8 !important;
-  vertical-align: middle !important;
-}
-
-.sa-page-wrapper td:before {
-  content: none !important;
-  display: none !important;
-}
-
-.sa-page-wrapper tr:hover td {
-  background: rgba(99, 102, 241, 0.06) !important;
-}
-
-.sa-table-wrap {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  border-radius: 12px;
-  margin-bottom: 0.5rem;
-}
-
 </style>
 
 <div class="sa-page-wrapper">
@@ -699,123 +1087,112 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
   </div>
 
   <nav class="sa-nav">
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-overview')">
-      <span>📊 Overview</span><span class="sa-nav-arrow" id=arr-grp-overview>▾</span>
-    </div>
-    <div class="sa-nav-group" id="grp-overview">
-      <button class="sa-nav-link active" onclick="switchTab('dashboard',this)" id="navDashboard">
-        <span class="sa-nav-icon">📊</span> Dashboard
+    <!-- 1. Overview -->
+    <div class="sa-nav-item">
+      <button class="sa-nav-link active" onclick="switchTab('dashboard', this)" id="nav-dashboard">
+        <span class="sa-nav-icon">📊</span>
+        <span class="sa-nav-label">Overview</span>
       </button>
     </div>
 
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-users')">
-      <span>👥 User Management</span><span class="sa-nav-arrow" id=arr-grp-users>▾</span>
-    </div>
-    <div class="sa-nav-group" id="grp-users">
-      <button class="sa-nav-link" onclick="switchTab('users',this)">
-        <span class="sa-nav-icon">👥</span> Users Directory
+    <!-- 2. User Management -->
+    <div class="sa-nav-item" id="nav-item-users">
+      <button class="sa-nav-link" onclick="toggleNavSubmenu('nav-item-users', 'users', this)">
+        <span class="sa-nav-icon">👥</span>
+        <span class="sa-nav-label">User Management</span>
+        <span class="sa-nav-arrow">›</span>
       </button>
-      <button class="sa-nav-link" onclick="switchTab('roles',this)">
-        <span class="sa-nav-icon">🛡️</span> Roles & Permissions
+      <div class="sa-submenu">
+        <button class="sa-sub-link" onclick="switchTab('users', this)" id="nav-users">Directory</button>
+        <button class="sa-sub-link" onclick="switchTab('roles', this)" id="nav-roles">Roles & Permissions</button>
+      </div>
+    </div>
+
+    <!-- 3. Schools -->
+    <div class="sa-nav-item">
+      <button class="sa-nav-link" onclick="switchTab('schools', this)" id="nav-schools">
+        <span class="sa-nav-icon">🏫</span>
+        <span class="sa-nav-label">Schools</span>
       </button>
     </div>
 
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-schools')">
-      <span>🏫 Schools</span><span class="sa-nav-arrow" id=arr-grp-schools>▾</span>
+    <!-- 4. Library & Content -->
+    <div class="sa-nav-item" id="nav-item-library">
+      <button class="sa-nav-link" onclick="toggleNavSubmenu('nav-item-library', 'books', this)">
+        <span class="sa-nav-icon">📚</span>
+        <span class="sa-nav-label">Library & Content</span>
+        <span class="sa-nav-arrow">›</span>
+      </button>
+      <div class="sa-submenu">
+        <button class="sa-sub-link" onclick="switchTab('books', this)" id="nav-books">Books Catalog</button>
+        <button class="sa-sub-link" onclick="switchTab('digital', this)" id="nav-digital">Digital Vault</button>
+        <button class="sa-sub-link" onclick="switchTab('transactions', this)" id="nav-transactions">Transactions</button>
+        <button class="sa-sub-link" onclick="switchTab('rfid', this)" id="nav-rfid">RFID Records</button>
+        <button class="sa-sub-link" onclick="switchTab('categories', this)" id="nav-categories">Categories</button>
+        <button class="sa-sub-link" onclick="switchTab('requests', this)" id="nav-requests">Book Requests</button>
+        <button class="sa-sub-link" onclick="switchTab('goals', this)" id="nav-goals">Reading Goals</button>
+        <button class="sa-sub-link" onclick="switchTab('ads', this)" id="nav-ads">Advertisements</button>
+      </div>
     </div>
-    <div class="sa-nav-group" id="grp-schools">
-      <button class="sa-nav-link" onclick="switchTab('schools',this)">
-        <span class="sa-nav-icon">🏫</span> Schools Directory
+
+    <!-- 5. Communications -->
+    <div class="sa-nav-item" id="nav-item-comm">
+      <button class="sa-nav-link" onclick="toggleNavSubmenu('nav-item-comm', 'notifications', this)">
+        <span class="sa-nav-icon">🔔</span>
+        <span class="sa-nav-label">Communications</span>
+        <span class="sa-nav-arrow">›</span>
+      </button>
+      <div class="sa-submenu">
+        <button class="sa-sub-link" onclick="switchTab('notifications', this)" id="nav-notifications">Broadcast</button>
+        <button class="sa-sub-link" onclick="switchTab('scheduled', this)" id="nav-scheduled">Scheduled Messages</button>
+      </div>
+    </div>
+
+    <!-- 6. Analytics -->
+    <div class="sa-nav-item">
+      <button class="sa-nav-link" onclick="switchTab('analytics', this)" id="nav-analytics">
+        <span class="sa-nav-icon">📈</span>
+        <span class="sa-nav-label">Analytics</span>
       </button>
     </div>
 
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-library')">
-      <span>📚 Library</span><span class="sa-nav-arrow" id=arr-grp-library>▾</span>
-    </div>
-    <div class="sa-nav-group" id="grp-library">
-      <button class="sa-nav-link" onclick="switchTab('books',this)">
-        <span class="sa-nav-icon">📚</span> Books Catalog
+    <!-- 7. System & AI -->
+    <div class="sa-nav-item" id="nav-item-system">
+      <button class="sa-nav-link" onclick="toggleNavSubmenu('nav-item-system', 'settings', this)">
+        <span class="sa-nav-icon">⚙️</span>
+        <span class="sa-nav-label">System & AI</span>
+        <span class="sa-nav-arrow">›</span>
       </button>
-      <button class="sa-nav-link" onclick="switchTab('digital',this)">
-        <span class="sa-nav-icon">🌐</span> Digital Library
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('transactions',this)">
-        <span class="sa-nav-icon">📋</span> Transactions
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('ads',this)">
-        <span class="sa-nav-icon">📢</span> Advertisements
-      </button>
+      <div class="sa-submenu">
+        <button class="sa-sub-link" onclick="switchTab('settings', this)" id="nav-settings">Settings</button>
+        <button class="sa-sub-link" onclick="switchTab('aiconfig', this)" id="nav-aiconfig">AI Search Config</button>
+        <button class="sa-sub-link" onclick="switchTab('maintenance', this)" id="nav-maintenance">Maintenance</button>
+        <button class="sa-sub-link" onclick="switchTab('masterauth', this)" id="nav-masterauth">Master Auth</button>
+      </div>
     </div>
 
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-comm')">
-      <span>🔔 Communication</span><span class="sa-nav-arrow" id=arr-grp-comm>▾</span>
-    </div>
-    <div class="sa-nav-group" id="grp-comm">
-      <button class="sa-nav-link" onclick="switchTab('notifications',this)">
-        <span class="sa-nav-icon">🔔</span> Broadcast Notifications
+    <!-- 8. Security & Logs -->
+    <div class="sa-nav-item" id="nav-item-security">
+      <button class="sa-nav-link" onclick="toggleNavSubmenu('nav-item-security', 'audit', this)">
+        <span class="sa-nav-icon">🛡️</span>
+        <span class="sa-nav-label">Security & Logs</span>
+        <span class="sa-nav-arrow">›</span>
       </button>
-      <button class="sa-nav-link" onclick="switchTab('scheduled',this)">
-        <span class="sa-nav-icon">⏰</span> Scheduled Messages
-      </button>
-    </div>
-
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-analytics')">
-      <span>📈 Analytics</span><span class="sa-nav-arrow" id=arr-grp-analytics>▾</span>
-    </div>
-    <div class="sa-nav-group" id="grp-analytics">
-      <button class="sa-nav-link" onclick="switchTab('analytics',this)">
-        <span class="sa-nav-icon">📈</span> Analytics Overview
-      </button>
+      <div class="sa-submenu">
+        <button class="sa-sub-link" onclick="switchTab('audit', this)" id="nav-audit">Audit Logs</button>
+        <button class="sa-sub-link" onclick="switchTab('login-history', this)" id="nav-login-history">Login History</button>
+        <button class="sa-sub-link" onclick="switchTab('devices', this)" id="nav-devices">Active Devices</button>
+        <button class="sa-sub-link" onclick="switchTab('two-factor', this)" id="nav-two-factor">Two-Factor Auth</button>
+        <button class="sa-sub-link" onclick="switchTab('ip-allowlist', this)" id="nav-ip-allowlist">IP Restrictions</button>
+        <button class="sa-sub-link" onclick="switchTab('backups', this)" id="nav-backups">Database Backups</button>
+      </div>
     </div>
 
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-system')">
-      <span>⚙️ System & AI</span><span class="sa-nav-arrow" id=arr-grp-system>▾</span>
-    </div>
-    <div class="sa-nav-group" id="grp-system">
-      <button class="sa-nav-link" onclick="switchTab('settings',this)">
-        <span class="sa-nav-icon">⚙️</span> System Settings
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('aiconfig',this)">
-        <span class="sa-nav-icon">🤖</span> AI Search Config
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('maintenance',this)">
-        <span class="sa-nav-icon">🛠️</span> Maintenance Mode
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('masterauth',this)">
-        <span class="sa-nav-icon">🔑</span> Master Auth
-      </button>
-    </div>
-
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-security')">
-      <span>🔍 Security & Logs</span><span class="sa-nav-arrow" id=arr-grp-security>▾</span>
-    </div>
-    <div class="sa-nav-group" id="grp-security">
-      <button class="sa-nav-link" onclick="switchTab('audit',this)">
-        <span class="sa-nav-icon">🔍</span> Audit Logs
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('login-history',this)">
-        <span class="sa-nav-icon">🔐</span> Login History
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('devices',this)">
-        <span class="sa-nav-icon">💻</span> Active Devices
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('two-factor',this)">
-        <span class="sa-nav-icon">🔏</span> Two-Factor Auth
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('ip-allowlist',this)">
-        <span class="sa-nav-icon">🛡️</span> IP Restrictions
-      </button>
-      <button class="sa-nav-link" onclick="switchTab('backups',this)">
-        <span class="sa-nav-icon">💾</span> Database Backups
-      </button>
-    </div>
-
-    <div class="sa-nav-section-title" onclick="toggleNavGroup('grp-reports')">
-      <span>📥 Reports</span><span class="sa-nav-arrow" id=arr-grp-reports>▾</span>
-    </div>
-    <div class="sa-nav-group" id="grp-reports">
-      <button class="sa-nav-link" onclick="switchTab('reports',this)">
-        <span class="sa-nav-icon">📥</span> Download Reports
+    <!-- 9. Reports -->
+    <div class="sa-nav-item">
+      <button class="sa-nav-link" onclick="switchTab('reports', this)" id="nav-reports">
+        <span class="sa-nav-icon">📥</span>
+        <span class="sa-nav-label">Reports</span>
       </button>
     </div>
   </nav>
@@ -823,13 +1200,15 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
   <div class="sa-sidebar-footer">
     <div class="sa-user-chip">
       <div class="sa-avatar">SA</div>
-      <div>
+      <div class="sa-user-meta">
         <div class="sa-user-name"><%= typeof session !== 'undefined' && session ? (session.name || 'Super Admin') : 'Super Admin' %></div>
         <div class="sa-user-role">Super Administrator</div>
       </div>
     </div>
-    <a href="/" class="sa-btn sa-btn-ghost" style="width:100%;justify-content:center;" title="Go to public site">🏠 Public Site</a>
-    <a href="/logout" class="sa-btn sa-btn-danger" style="width:100%;justify-content:center;">🚪 Logout</a>
+    <div style="display:flex;gap:8px;">
+      <a href="/" class="sa-btn sa-btn-ghost sa-btn-sm" style="flex:1;justify-content:center;" title="Go to public site">🏠 Public</a>
+      <a href="/logout" class="sa-btn sa-btn-danger sa-btn-sm" style="flex:1;justify-content:center;">🚪 Logout</a>
+    </div>
   </div>
 </aside>
 <div class="sa-overlay-dim" id="saDim" onclick="closeSidebar()"></div>
@@ -845,10 +1224,18 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
         <h1 class="sa-topbar-title" id="pageTitle">Dashboard</h1>
       </div>
     </div>
+
+    <div class="sa-topbar-center">
+      <div class="sa-search-wrap">
+        <span class="sa-search-icon">🔍</span>
+        <input type="text" class="sa-global-search" placeholder="Search users, books, schools (Ctrl+K)..." id="saGlobalSearch" oninput="handleGlobalSearch(this.value)">
+      </div>
+    </div>
+
     <div class="sa-topbar-right">
-        <button class="sa-btn sa-btn-xs sa-btn-primary" onclick="toggleAiChat()" style="font-weight: 700;">🤖 AI Chat</button>
-      <button class="sa-btn sa-btn-ghost sa-btn-sm" onclick="refreshCurrentTab()" title="Refresh Tab">↻ Refresh</button>
-      <a href="/logout" class="sa-btn sa-btn-danger sa-btn-sm">🚪 Logout</a>
+      <button class="sa-btn sa-btn-sm sa-btn-primary" onclick="toggleAiChat()" style="font-weight: 700;">🤖 AI Assistant</button>
+      <button class="sa-btn-icon" onclick="refreshCurrentTab()" title="Refresh Tab">↻</button>
+      <a href="/logout" class="sa-btn-icon" title="Logout" style="color:var(--danger)">🚪</a>
     </div>
   </div>
 
@@ -969,6 +1356,11 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: USERS ═══ -->
     <div class="sa-tab-pane" id="tab-users">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill active" data-sub="users" onclick="switchTab('users', document.getElementById('nav-users'))">👥 Users Directory</button>
+        <button class="sa-seg-pill" data-sub="roles" onclick="switchTab('roles', document.getElementById('nav-roles'))">🛡️ Roles & Permissions</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header">
           <div class="sa-card-title">👥 User Management</div>
@@ -1007,6 +1399,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: BOOKS ═══ -->
     <div class="sa-tab-pane" id="tab-books">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill active" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header">
           <div class="sa-card-title">📚 Book Management</div>
@@ -1037,6 +1440,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: TRANSACTIONS ═══ -->
     <div class="sa-tab-pane" id="tab-transactions">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill active" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header">
           <div class="sa-card-title">📋 Transaction Management</div>
@@ -1057,6 +1471,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: DIGITAL CONTENT ═══ -->
     <div class="sa-tab-pane" id="tab-content">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill active" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header">
           <div class="sa-card-title">🌐 Digital Content Moderation</div>
@@ -1127,6 +1552,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: ADS ═══ -->
     <div class="sa-tab-pane" id="tab-ads">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill active" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header">
           <div class="sa-card-title">📢 Advertisement Manager</div>
@@ -1166,6 +1602,11 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: NOTIFICATIONS ═══ -->
     <div class="sa-tab-pane" id="tab-notifications">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill active" data-sub="notifications" onclick="switchTab('notifications', document.getElementById('nav-notifications'))">🔔 Broadcast</button>
+        <button class="sa-seg-pill" data-sub="scheduled" onclick="switchTab('scheduled', document.getElementById('nav-scheduled'))">⏰ Scheduled Messages</button>
+      </div>
+
       <div class="sa-card" style="max-width:640px">
         <div class="sa-card-header"><div class="sa-card-title">🔔 Send Notification</div></div>
         <div class="sa-card-body">
@@ -1218,6 +1659,15 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: AUDIT LOGS ═══ -->
     <div class="sa-tab-pane" id="tab-audit">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill active" data-sub="audit" onclick="switchTab('audit', document.getElementById('nav-audit'))">🔍 Audit Logs</button>
+        <button class="sa-seg-pill" data-sub="login-history" onclick="switchTab('login-history', document.getElementById('nav-login-history'))">🔐 Login History</button>
+        <button class="sa-seg-pill" data-sub="devices" onclick="switchTab('devices', document.getElementById('nav-devices'))">💻 Devices</button>
+        <button class="sa-seg-pill" data-sub="two-factor" onclick="switchTab('two-factor', document.getElementById('nav-two-factor'))">🔏 2FA</button>
+        <button class="sa-seg-pill" data-sub="ip-allowlist" onclick="switchTab('ip-allowlist', document.getElementById('nav-ip-allowlist'))">🛡️ IP Rules</button>
+        <button class="sa-seg-pill" data-sub="backups" onclick="switchTab('backups', document.getElementById('nav-backups'))">💾 Backups</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🔍 Audit Logs</div></div>
         <div class="sa-toolbar">
@@ -1238,6 +1688,13 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: SETTINGS ═══ -->
     <div class="sa-tab-pane" id="tab-settings">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill active" data-sub="settings" onclick="switchTab('settings', document.getElementById('nav-settings'))">⚙️ Settings</button>
+        <button class="sa-seg-pill" data-sub="aiconfig" onclick="switchTab('aiconfig', document.getElementById('nav-aiconfig'))">🤖 AI Search</button>
+        <button class="sa-seg-pill" data-sub="maintenance" onclick="switchTab('maintenance', document.getElementById('nav-maintenance'))">🛠️ Maintenance</button>
+        <button class="sa-seg-pill" data-sub="masterauth" onclick="switchTab('masterauth', document.getElementById('nav-masterauth'))">🔑 Master Auth</button>
+      </div>
+
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem">
         <div class="sa-card">
           <div class="sa-card-header"><div class="sa-card-title">🛠 System Controls</div></div>
@@ -1264,6 +1721,13 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- ═══ TAB: MASTER AUTH ═══ -->
     <div class="sa-tab-pane" id="tab-masterauth">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="settings" onclick="switchTab('settings', document.getElementById('nav-settings'))">⚙️ Settings</button>
+        <button class="sa-seg-pill" data-sub="aiconfig" onclick="switchTab('aiconfig', document.getElementById('nav-aiconfig'))">🤖 AI Search</button>
+        <button class="sa-seg-pill" data-sub="maintenance" onclick="switchTab('maintenance', document.getElementById('nav-maintenance'))">🛠️ Maintenance</button>
+        <button class="sa-seg-pill active" data-sub="masterauth" onclick="switchTab('masterauth', document.getElementById('nav-masterauth'))">🔑 Master Auth</button>
+      </div>
+
       <div class="sa-card" style="max-width:560px">
         <div class="sa-card-header"><div class="sa-card-title">🔑 Master Authentication</div></div>
         <div class="sa-card-body">
@@ -1314,6 +1778,11 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: ROLES & PERMISSIONS -->
     <div class="sa-tab-pane" id="tab-roles">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="users" onclick="switchTab('users', document.getElementById('nav-users'))">👥 Users Directory</button>
+        <button class="sa-seg-pill active" data-sub="roles" onclick="switchTab('roles', document.getElementById('nav-roles'))">🛡️ Roles & Permissions</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🛡️ Roles & Permissions</div></div>
         <div class="sa-card-body">
@@ -1325,6 +1794,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: DIGITAL LIBRARY (school + community) -->
     <div class="sa-tab-pane" id="tab-digital">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill active" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🌐 Digital Library</div></div>
         <div class="sa-toolbar">
@@ -1360,7 +1840,7 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🌍 Global Library (system-wide)</div>
           <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('addGlobalModal')">+ Add Global</button>
-        </div></div>
+        </div>
         <div class="sa-toolbar"><input class="sa-search" placeholder="Search global content..." oninput="loadGlobalList(1)" id="globalSearch"></div>
         <div id="globTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
         <div class="sa-pagination" id="globPagination"></div>
@@ -1385,6 +1865,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: CATEGORIES & SUBJECTS -->
     <div class="sa-tab-pane" id="tab-categories">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill active" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🏷️ Categories & Subjects</div></div>
         <div id="catWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
@@ -1393,6 +1884,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: READING GOALS -->
     <div class="sa-tab-pane" id="tab-goals">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill active" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🎯 Reading Goals</div>
           <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newGoalModal')">+ New Goal</button>
@@ -1403,6 +1905,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: BOOK REQUESTS -->
     <div class="sa-tab-pane" id="tab-requests">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill active" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">📬 Book Requests</div></div>
         <div class="sa-toolbar">
@@ -1420,6 +1933,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: ISSUED BOOKS -->
     <div class="sa-tab-pane" id="tab-issued">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill active" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">📤 Issued Books</div></div>
         <div class="sa-toolbar">
@@ -1436,6 +1960,17 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: RFID RECORDS -->
     <div class="sa-tab-pane" id="tab-rfid">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
+        <button class="sa-seg-pill" data-sub="digital" onclick="switchTab('digital', document.getElementById('nav-digital'))">🌐 Digital Vault</button>
+        <button class="sa-seg-pill" data-sub="transactions" onclick="switchTab('transactions', document.getElementById('nav-transactions'))">📋 Transactions</button>
+        <button class="sa-seg-pill active" data-sub="rfid" onclick="switchTab('rfid', document.getElementById('nav-rfid'))">🏷️ RFID</button>
+        <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
+        <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
+        <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
+        <button class="sa-seg-pill" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">📡 RFID Records</div>
           <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newRfidModal')">+ New RFID</button>
@@ -1448,6 +1983,11 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: SCHEDULED NOTIFICATIONS -->
     <div class="sa-tab-pane" id="tab-scheduled">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="notifications" onclick="switchTab('notifications', document.getElementById('nav-notifications'))">🔔 Broadcast</button>
+        <button class="sa-seg-pill active" data-sub="scheduled" onclick="switchTab('scheduled', document.getElementById('nav-scheduled'))">⏰ Scheduled Messages</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">⏰ Scheduled Notifications</div>
           <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newScheduledModal')">+ Schedule</button>
@@ -1458,6 +1998,13 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: AI CONFIG -->
     <div class="sa-tab-pane" id="tab-aiconfig">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="settings" onclick="switchTab('settings', document.getElementById('nav-settings'))">⚙️ Settings</button>
+        <button class="sa-seg-pill active" data-sub="aiconfig" onclick="switchTab('aiconfig', document.getElementById('nav-aiconfig'))">🤖 AI Search</button>
+        <button class="sa-seg-pill" data-sub="maintenance" onclick="switchTab('maintenance', document.getElementById('nav-maintenance'))">🛠️ Maintenance</button>
+        <button class="sa-seg-pill" data-sub="masterauth" onclick="switchTab('masterauth', document.getElementById('nav-masterauth'))">🔑 Master Auth</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🤖 AI Configuration</div></div>
         <div id="aiConfigWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
@@ -1466,6 +2013,13 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: MAINTENANCE -->
     <div class="sa-tab-pane" id="tab-maintenance">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="settings" onclick="switchTab('settings', document.getElementById('nav-settings'))">⚙️ Settings</button>
+        <button class="sa-seg-pill" data-sub="aiconfig" onclick="switchTab('aiconfig', document.getElementById('nav-aiconfig'))">🤖 AI Search</button>
+        <button class="sa-seg-pill active" data-sub="maintenance" onclick="switchTab('maintenance', document.getElementById('nav-maintenance'))">🛠️ Maintenance</button>
+        <button class="sa-seg-pill" data-sub="masterauth" onclick="switchTab('masterauth', document.getElementById('nav-masterauth'))">🔑 Master Auth</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🛠️ Maintenance & Diagnostics</div></div>
         <div class="sa-card-body">
@@ -1492,6 +2046,15 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: LOGIN HISTORY -->
     <div class="sa-tab-pane" id="tab-login-history">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="audit" onclick="switchTab('audit', document.getElementById('nav-audit'))">🔍 Audit Logs</button>
+        <button class="sa-seg-pill active" data-sub="login-history" onclick="switchTab('login-history', document.getElementById('nav-login-history'))">🔐 Login History</button>
+        <button class="sa-seg-pill" data-sub="devices" onclick="switchTab('devices', document.getElementById('nav-devices'))">💻 Devices</button>
+        <button class="sa-seg-pill" data-sub="two-factor" onclick="switchTab('two-factor', document.getElementById('nav-two-factor'))">🔏 2FA</button>
+        <button class="sa-seg-pill" data-sub="ip-allowlist" onclick="switchTab('ip-allowlist', document.getElementById('nav-ip-allowlist'))">🛡️ IP Rules</button>
+        <button class="sa-seg-pill" data-sub="backups" onclick="switchTab('backups', document.getElementById('nav-backups'))">💾 Backups</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
           <div class="sa-card-title">🔐 Login History</div>
@@ -1519,6 +2082,15 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: DEVICES -->
     <div class="sa-tab-pane" id="tab-devices">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="audit" onclick="switchTab('audit', document.getElementById('nav-audit'))">🔍 Audit Logs</button>
+        <button class="sa-seg-pill" data-sub="login-history" onclick="switchTab('login-history', document.getElementById('nav-login-history'))">🔐 Login History</button>
+        <button class="sa-seg-pill active" data-sub="devices" onclick="switchTab('devices', document.getElementById('nav-devices'))">💻 Devices</button>
+        <button class="sa-seg-pill" data-sub="two-factor" onclick="switchTab('two-factor', document.getElementById('nav-two-factor'))">🔏 2FA</button>
+        <button class="sa-seg-pill" data-sub="ip-allowlist" onclick="switchTab('ip-allowlist', document.getElementById('nav-ip-allowlist'))">🛡️ IP Rules</button>
+        <button class="sa-seg-pill" data-sub="backups" onclick="switchTab('backups', document.getElementById('nav-backups'))">💾 Backups</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">💻 Active Devices / Sessions</div></div>
         <div id="devicesWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
@@ -1527,6 +2099,15 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: 2FA -->
     <div class="sa-tab-pane" id="tab-two-factor">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="audit" onclick="switchTab('audit', document.getElementById('nav-audit'))">🔍 Audit Logs</button>
+        <button class="sa-seg-pill" data-sub="login-history" onclick="switchTab('login-history', document.getElementById('nav-login-history'))">🔐 Login History</button>
+        <button class="sa-seg-pill" data-sub="devices" onclick="switchTab('devices', document.getElementById('nav-devices'))">💻 Devices</button>
+        <button class="sa-seg-pill active" data-sub="two-factor" onclick="switchTab('two-factor', document.getElementById('nav-two-factor'))">🔏 2FA</button>
+        <button class="sa-seg-pill" data-sub="ip-allowlist" onclick="switchTab('ip-allowlist', document.getElementById('nav-ip-allowlist'))">🛡️ IP Rules</button>
+        <button class="sa-seg-pill" data-sub="backups" onclick="switchTab('backups', document.getElementById('nav-backups'))">💾 Backups</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🔏 Two-Factor Authentication</div></div>
         <div class="sa-card-body">
@@ -1538,6 +2119,15 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: IP ALLOWLIST -->
     <div class="sa-tab-pane" id="tab-ip-allowlist">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="audit" onclick="switchTab('audit', document.getElementById('nav-audit'))">🔍 Audit Logs</button>
+        <button class="sa-seg-pill" data-sub="login-history" onclick="switchTab('login-history', document.getElementById('nav-login-history'))">🔐 Login History</button>
+        <button class="sa-seg-pill" data-sub="devices" onclick="switchTab('devices', document.getElementById('nav-devices'))">💻 Devices</button>
+        <button class="sa-seg-pill" data-sub="two-factor" onclick="switchTab('two-factor', document.getElementById('nav-two-factor'))">🔏 2FA</button>
+        <button class="sa-seg-pill active" data-sub="ip-allowlist" onclick="switchTab('ip-allowlist', document.getElementById('nav-ip-allowlist'))">🛡️ IP Rules</button>
+        <button class="sa-seg-pill" data-sub="backups" onclick="switchTab('backups', document.getElementById('nav-backups'))">💾 Backups</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">🛡️ IP Restrictions</div>
           <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('newIpRuleModal')">+ Add Rule</button>
@@ -1548,6 +2138,15 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: #6366f1
 
     <!-- TAB: BACKUPS (alias to maintenance backups panel) -->
     <div class="sa-tab-pane" id="tab-backups">
+      <div class="sa-segmented-nav">
+        <button class="sa-seg-pill" data-sub="audit" onclick="switchTab('audit', document.getElementById('nav-audit'))">🔍 Audit Logs</button>
+        <button class="sa-seg-pill" data-sub="login-history" onclick="switchTab('login-history', document.getElementById('nav-login-history'))">🔐 Login History</button>
+        <button class="sa-seg-pill" data-sub="devices" onclick="switchTab('devices', document.getElementById('nav-devices'))">💻 Devices</button>
+        <button class="sa-seg-pill" data-sub="two-factor" onclick="switchTab('two-factor', document.getElementById('nav-two-factor'))">🔏 2FA</button>
+        <button class="sa-seg-pill" data-sub="ip-allowlist" onclick="switchTab('ip-allowlist', document.getElementById('nav-ip-allowlist'))">🛡️ IP Rules</button>
+        <button class="sa-seg-pill active" data-sub="backups" onclick="switchTab('backups', document.getElementById('nav-backups'))">💾 Backups</button>
+      </div>
+
       <div class="sa-card">
         <div class="sa-card-header"><div class="sa-card-title">💾 Backups & Schedules</div></div>
         <div id="backupsWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
@@ -2046,23 +2645,116 @@ function openSidebar() {
 }
 
 const TAB_TITLES = {
-  dashboard:'Dashboard', schools:'School Management', users:'User Management',
-  books:'Book Management', transactions:'Transactions', content:'Digital Content',
-  ads:'Advertisements', notifications:'Notifications', analytics:'Analytics',
-  audit:'Audit Logs', settings:'System Settings', masterauth:'Master Auth', reports:'Reports'
+  dashboard: 'Overview & Metrics',
+  users: 'Users Directory',
+  roles: 'Roles & Permissions',
+  schools: 'School Management',
+  books: 'Book Catalog',
+  digital: 'Digital Vault',
+  transactions: 'Circulation & Borrows',
+  content: 'Digital Content Moderation',
+  ads: 'Advertisements',
+  notifications: 'Broadcast Notifications',
+  scheduled: 'Scheduled Notifications',
+  analytics: 'Analytics & Insights',
+  audit: 'Audit Logs',
+  'login-history': 'Login History',
+  devices: 'Active Devices',
+  'two-factor': 'Two-Factor Authentication',
+  'ip-allowlist': 'IP Restrictions',
+  backups: 'Database Backups',
+  categories: 'Categories & Subjects',
+  goals: 'Reading Goals',
+  requests: 'Book Requests',
+  issued: 'Issued Books',
+  rfid: 'RFID Records',
+  settings: 'System Settings',
+  aiconfig: 'AI Configuration',
+  maintenance: 'Maintenance & Diagnostics',
+  masterauth: 'Master Authentication',
+  reports: 'Reports & Exports'
 };
+
+const TAB_MODULES = {
+  dashboard: 'Overview',
+  users: 'User Management',
+  roles: 'User Management',
+  schools: 'Schools',
+  books: 'Library & Content',
+  digital: 'Library & Content',
+  transactions: 'Library & Content',
+  content: 'Library & Content',
+  rfid: 'Library & Content',
+  categories: 'Library & Content',
+  requests: 'Library & Content',
+  goals: 'Library & Content',
+  issued: 'Library & Content',
+  ads: 'Library & Content',
+  notifications: 'Communications',
+  scheduled: 'Communications',
+  analytics: 'Analytics',
+  settings: 'System & AI',
+  aiconfig: 'System & AI',
+  maintenance: 'System & AI',
+  masterauth: 'System & AI',
+  audit: 'Security & Logs',
+  'login-history': 'Security & Logs',
+  devices: 'Security & Logs',
+  'two-factor': 'Security & Logs',
+  'ip-allowlist': 'Security & Logs',
+  backups: 'Security & Logs',
+  reports: 'Reports'
+};
+
+function toggleNavSubmenu(parentId, defaultTab, navLinkBtn) {
+  const parent = document.getElementById(parentId);
+  if (!parent) return;
+  const isAlreadyOpen = parent.classList.contains('open');
+  // Toggle current parent
+  parent.classList.toggle('open');
+  if (!isAlreadyOpen && defaultTab) {
+    const subTarget = document.getElementById('nav-' + defaultTab) || navLinkBtn;
+    switchTab(defaultTab, subTarget);
+  }
+}
 
 function switchTab(name, btn) {
   document.querySelectorAll('.sa-tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sa-nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.sa-nav-link, .sa-sub-link').forEach(l => l.classList.remove('active'));
+
   const pane = document.getElementById('tab-' + name);
   if (pane) pane.classList.add('active');
-  if (btn) btn.classList.add('active');
+
+  let targetNav = btn || document.getElementById('nav-' + name);
+  if (targetNav) {
+    targetNav.classList.add('active');
+    const parentNavItem = targetNav.closest('.sa-nav-item');
+    if (parentNavItem) {
+      parentNavItem.classList.add('open');
+      const parentLink = parentNavItem.querySelector('.sa-nav-link');
+      if (parentLink && !parentLink.classList.contains('active')) {
+        parentLink.classList.add('active');
+      }
+    }
+  }
+
+  // Update in-page segmented navigation pills
+  document.querySelectorAll('.sa-seg-pill').forEach(pill => {
+    const sub = pill.getAttribute('data-sub');
+    if (sub === name || pill.getAttribute('onclick')?.includes(`'${name}'`)) {
+      pill.classList.add('active');
+    } else {
+      pill.classList.remove('active');
+    }
+  });
+
   const titleName = TAB_TITLES[name] || (name.charAt(0).toUpperCase() + name.slice(1));
+  const moduleName = TAB_MODULES[name] || 'Control Center';
   if (document.getElementById('pageTitle')) document.getElementById('pageTitle').textContent = titleName;
-  if (document.getElementById('saBreadcrumbs')) document.getElementById('saBreadcrumbs').textContent = 'Super Admin / ' + titleName;
+  if (document.getElementById('saBreadcrumbs')) document.getElementById('saBreadcrumbs').textContent = `Super Admin / ${moduleName} / ${titleName}`;
   SA.currentTab = name;
   closeSidebar();
+
   // Lazy load
   const loaders = {
     schools: () => loadSchools(),
@@ -2094,6 +2786,33 @@ function switchTab(name, btn) {
   };
   if (loaders[name]) loaders[name]();
 }
+
+function handleGlobalSearch(q) {
+  if (!q) return;
+  const lower = q.toLowerCase().trim();
+  if (SA.currentTab === 'users') {
+    const input = document.getElementById('userSearch');
+    if (input) { input.value = q; debouncedLoadUsers(); }
+  } else if (SA.currentTab === 'books') {
+    const input = document.getElementById('bookSearch');
+    if (input) { input.value = q; debouncedLoadBooks(); }
+  } else if (SA.currentTab === 'schools') {
+    const input = document.getElementById('schoolSearch');
+    if (input) { input.value = q; filterSchools(); }
+  } else if (SA.currentTab === 'audit') {
+    const input = document.getElementById('auditSearch');
+    if (input) { input.value = q; debouncedLoadAudit(); }
+  }
+}
+
+// Global shortcut Ctrl+K / Cmd+K
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    const searchInput = document.getElementById('saGlobalSearch');
+    if (searchInput) searchInput.focus();
+  }
+});
 
 function refreshCurrentTab() { switchTab(SA.currentTab, document.querySelector('.sa-nav-link.active')); }
 
