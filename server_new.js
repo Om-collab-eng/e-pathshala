@@ -396,36 +396,56 @@ app.use('/digital-library', digitalRoutes);
 app.use('/author', digitalRoutes);
 app.use('/leaderboard', digitalRoutes);
 
-// Public Advertisement API Endpoints
-app.get('/api/ads', async (req, res) => {
+// Public Advertisement & E-Library Ticker API Endpoints
+const handleGetAdvertisements = async (req, res) => {
   const section = req.query.section || 'all';
+  const schoolCode = (req.session && req.session.school_code) || req.query.school_code || 'GLOBAL';
   try {
     const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
     const queryStr = `
-      SELECT * FROM advertisements 
-      WHERE status = 'active'
-      AND (start_time IS NULL OR start_time <= $1)
-      AND (end_time IS NULL OR end_time >= $1)
-      AND (target_section = 'all' OR target_section = $2)
-      ORDER BY priority DESC, created_at DESC
+      SELECT id, title, subtitle, description, 
+             COALESCE(type, 'BANNER') as type, 
+             media_url, thumbnail_url,
+             COALESCE(target_url, '#') as target_url,
+             COALESCE(target_url, '#') as destination_url,
+             COALESCE(cta_text, 'Explore Now') as cta_text,
+             content_text, category, source, 
+             COALESCE(target_type, 'ALL_SCHOOLS') as target_type, 
+             school_code,
+             COALESCE(display_order, 0) as display_order, 
+             bg_gradient, impressions, clicks
+      FROM advertisements 
+      WHERE (is_active IS NULL OR is_active = 1)
+        AND (status IS NULL OR (status != 'PAUSED' AND status != 'inactive' AND status != 'draft' AND status != 'DRAFT'))
+        AND (start_time IS NULL OR start_time <= $1)
+        AND (end_time IS NULL OR end_time >= $1)
+        AND (target_section IS NULL OR target_section = 'all' OR target_section = $2)
+        AND (target_type IS NULL OR target_type = 'ALL_SCHOOLS' OR school_code = $3 OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+      ORDER BY display_order ASC, priority DESC, created_at DESC
     `;
-    const result = await db.query(queryStr, [nowStr, section]);
-    const ads = result.rows;
+    const result = await db.query(queryStr, [nowStr, section, schoolCode]);
+    const ads = result.rows || [];
 
     if (ads.length > 0) {
-      const ids = ads.map(a => a.id);
-      db.query(`UPDATE advertisements SET impressions = impressions + 1 WHERE id IN (${ids.join(',')})`).catch(() => {});
+      const ids = ads.map(a => a.id).filter(id => id !== null && id !== undefined);
+      if (ids.length > 0) {
+        db.query(`UPDATE advertisements SET impressions = impressions + 1 WHERE id IN (${ids.join(',')})`).catch(() => {});
+      }
     }
 
-    res.json({ status: 'success', advertisements: ads });
+    res.json({ status: 'success', advertisements: ads, count: ads.length });
   } catch (err) {
     console.error('Fetch Ads Error:', err);
-    res.json({ status: 'error', advertisements: [] });
+    res.json({ status: 'error', advertisements: [], count: 0 });
   }
-});
+};
 
-app.post('/api/ads/:id/click', async (req, res) => {
-  const adId = parseInt(req.params.id);
+app.get('/api/ads', handleGetAdvertisements);
+app.get('/api/elibrary/advertisements', handleGetAdvertisements);
+
+app.post(['/api/ads/:id/click', '/api/elibrary/advertisements/:id/click'], async (req, res) => {
+  const adId = parseInt(req.params.id, 10);
+  if (!adId || isNaN(adId)) return res.json({ status: 'error', message: 'Invalid ID' });
   try {
     await db.query('UPDATE advertisements SET clicks = clicks + 1 WHERE id = $1', [adId]);
     res.json({ status: 'success' });

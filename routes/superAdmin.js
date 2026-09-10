@@ -62,9 +62,36 @@ function parseCsvText(text) {
 const uploadDir = path.join(__dirname, '..', 'static', 'uploads', 'sa');
 try { fs.mkdirSync(uploadDir, { recursive: true }); } catch (e) {}
 
+const adsUploadDir = path.join(__dirname, '..', 'static', 'uploads', 'ads');
+try { fs.mkdirSync(adsUploadDir, { recursive: true }); } catch (e) {}
+
 const upload = multer({
   dest: uploadDir,
   limits: { fileSize: 28 * 1024 * 1024 }, // 28 MB
+});
+
+const adStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, adsUploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const safeName = 'ad_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8) + ext;
+    cb(null, safeName);
+  }
+});
+
+const adUpload = multer({
+  storage: adStorage,
+  limits: { fileSize: 26 * 1024 * 1024 }, // 26 MB
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|webp|gif|mp4|webm|quicktime|ogg/;
+    const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+    const mime = file.mimetype.toLowerCase();
+    if (allowed.test(ext) || allowed.test(mime)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG, PNG, WEBP, GIF, MP4, and WEBM media files are allowed'));
+    }
+  }
 });
 
 // ─────────────────────────────────────────────
@@ -778,104 +805,244 @@ router.post(['/notifications/read-all', '/api/notifications/read-all'], async (r
 });
 
 // ─────────────────────────────────────────────
+//  ADVERTISEMENT & E-LIBRARY TICKER CMS
+// ─────────────────────────────────────────────
 router.get('/ads-data', async (req, res) => {
   try {
     await ensureSecurityTables();
-    const result = await db.query(`SELECT *,
-      (CASE WHEN end_time IS NOT NULL AND end_time < NOW() THEN 'expired' ELSE status END) as computed_status,
-      ROUND(CASE WHEN impressions > 0 THEN (clicks*100.0/impressions) ELSE 0 END,2) as ctr
-      FROM advertisements ORDER BY priority DESC, created_at DESC`);
-    res.json({ success: true, advertisements: result.rows || [] });
+    const [adsResult, schoolsResult] = await Promise.all([
+      db.query(`SELECT *,
+        (CASE 
+          WHEN is_active = 0 OR status = 'PAUSED' OR status = 'inactive' THEN 'PAUSED'
+          WHEN status = 'DRAFT' OR status = 'draft' THEN 'DRAFT'
+          WHEN end_time IS NOT NULL AND end_time < NOW() THEN 'EXPIRED'
+          WHEN start_time IS NOT NULL AND start_time > NOW() THEN 'SCHEDULED'
+          ELSE 'ACTIVE'
+        END) as computed_status,
+        ROUND(CASE WHEN impressions > 0 THEN (clicks*100.0/impressions) ELSE 0 END, 2) as ctr
+        FROM advertisements 
+        ORDER BY display_order ASC, priority DESC, created_at DESC`),
+      db.query('SELECT school_code, name FROM schools ORDER BY name ASC').catch(() => ({ rows: [] }))
+    ]);
+
+    const advertisements = adsResult.rows || [];
+    const stats = {
+      total: advertisements.length,
+      active: advertisements.filter(a => a.computed_status === 'ACTIVE').length,
+      scheduled: advertisements.filter(a => a.computed_status === 'SCHEDULED').length,
+      expired: advertisements.filter(a => a.computed_status === 'EXPIRED').length,
+      paused: advertisements.filter(a => a.computed_status === 'PAUSED' || a.computed_status === 'DRAFT').length
+    };
+
+    res.json({ 
+      success: true, 
+      advertisements, 
+      stats, 
+      schools: schoolsResult.rows || [] 
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Fetch ads-data error:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-router.post('/ads/create', async (req, res) => {
-  let { title, subtitle, description, cta_text, target_url, image_url, bg_gradient, start_time, end_time, status, priority, target_section } = req.body;
+router.post('/ads/create', adUpload.single('media_file'), async (req, res) => {
+  let {
+    title, subtitle, description, cta_text, target_url, destination_url,
+    image_url, bg_gradient, start_time, end_time, status, priority,
+    target_section, type, content_text, category, source,
+    target_type, school_code, display_order, media_url
+  } = req.body;
+
   try {
     await ensureSecurityTables();
+    let finalMediaUrl = (media_url && String(media_url).trim()) || (image_url && String(image_url).trim()) || null;
+    let thumbnailUrl = null;
+
+    if (req.file) {
+      finalMediaUrl = `/uploads/ads/${req.file.filename}`;
+      const ext = path.extname(req.file.filename).toLowerCase();
+      if (['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext)) {
+        thumbnailUrl = finalMediaUrl;
+      }
+    }
+
+    const adType = (type || 'BANNER').toUpperCase();
+    const adTargetType = (target_type || 'ALL_SCHOOLS').toUpperCase();
     const cleanStart = (start_time && String(start_time).trim()) ? String(start_time).replace('T', ' ') : null;
     const cleanEnd = (end_time && String(end_time).trim()) ? String(end_time).replace('T', ' ') : null;
+    const finalUrl = (destination_url && String(destination_url).trim()) || (target_url && String(target_url).trim()) || '#';
+    const finalStatus = (status || 'ACTIVE').toUpperCase();
+    const isActive = (finalStatus === 'ACTIVE' || finalStatus === 'SCHEDULED') ? 1 : 0;
+
     await db.query(
-      `INSERT INTO advertisements (title, subtitle, description, cta_text, target_url, image_url, bg_gradient, start_time, end_time, status, priority, target_section)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      `INSERT INTO advertisements (
+        title, subtitle, description, cta_text, target_url, image_url,
+        media_url, thumbnail_url, type, content_text, category, source,
+        target_type, school_code, display_order, bg_gradient,
+        start_time, end_time, status, is_active, priority, target_section
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)`,
       [
-        title,
+        title || (adType === 'INTERESTING_FACT' ? (category || 'Did You Know?') : 'Announcement'),
         subtitle || null,
         description || null,
-        cta_text || 'Learn More',
-        target_url || '#',
-        image_url || null,
-        bg_gradient || 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+        cta_text || (adType === 'INTERESTING_FACT' ? 'Read Fact' : 'Explore Now'),
+        finalUrl,
+        finalMediaUrl,
+        finalMediaUrl,
+        thumbnailUrl,
+        adType,
+        content_text || description || null,
+        category || null,
+        source || null,
+        adTargetType,
+        adTargetType === 'SPECIFIC_SCHOOL' ? school_code : null,
+        safeInt(display_order, 0),
+        bg_gradient || 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
         cleanStart,
         cleanEnd,
-        status || 'active',
+        finalStatus,
+        isActive,
         safeInt(priority, 1),
         target_section || 'all'
       ]
     );
+
     await logActivity(req, {
-      action: `Published advertisement: "${title}"`,
+      action: `Created advertisement: "${title || content_text || 'Item'}" [${adType}]`,
       module: 'marketing'
     });
-    res.json({ success: true, message: 'Advertisement published successfully' });
+
+    res.json({ success: true, message: 'Advertisement created successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Create ad error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/ads/edit/:id', adUpload.single('media_file'), async (req, res) => {
+  let {
+    title, subtitle, description, cta_text, target_url, destination_url,
+    image_url, bg_gradient, start_time, end_time, status, priority,
+    target_section, type, content_text, category, source,
+    target_type, school_code, display_order, media_url
+  } = req.body;
+
+  try {
+    await ensureSecurityTables();
+    let finalMediaUrl = (media_url && String(media_url).trim()) || (image_url && String(image_url).trim()) || null;
+    let thumbnailUrl = null;
+
+    if (req.file) {
+      finalMediaUrl = `/uploads/ads/${req.file.filename}`;
+      const ext = path.extname(req.file.filename).toLowerCase();
+      if (['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext)) {
+        thumbnailUrl = finalMediaUrl;
+      }
+    }
+
+    const adType = (type || 'BANNER').toUpperCase();
+    const adTargetType = (target_type || 'ALL_SCHOOLS').toUpperCase();
+    const cleanStart = (start_time && String(start_time).trim()) ? String(start_time).replace('T', ' ') : null;
+    const cleanEnd = (end_time && String(end_time).trim()) ? String(end_time).replace('T', ' ') : null;
+    const finalUrl = (destination_url && String(destination_url).trim()) || (target_url && String(target_url).trim()) || '#';
+    const finalStatus = (status || 'ACTIVE').toUpperCase();
+    const isActive = (finalStatus === 'ACTIVE' || finalStatus === 'SCHEDULED') ? 1 : 0;
+
+    // Fetch existing if no new media supplied
+    if (!finalMediaUrl) {
+      const existing = await db.query('SELECT media_url, thumbnail_url, image_url FROM advertisements WHERE id = $1', [req.params.id]);
+      if (existing.rows && existing.rows[0]) {
+        finalMediaUrl = existing.rows[0].media_url || existing.rows[0].image_url || null;
+        thumbnailUrl = existing.rows[0].thumbnail_url || null;
+      }
+    }
+
+    await db.query(
+      `UPDATE advertisements SET
+         title = $1, subtitle = $2, description = $3, cta_text = $4, target_url = $5,
+         image_url = $6, media_url = $7, thumbnail_url = $8, type = $9,
+         content_text = $10, category = $11, source = $12, target_type = $13,
+         school_code = $14, display_order = $15, bg_gradient = $16,
+         start_time = $17, end_time = $18, status = $19, is_active = $20,
+         priority = $21, target_section = $22
+       WHERE id = $23`,
+      [
+        title || (adType === 'INTERESTING_FACT' ? (category || 'Did You Know?') : 'Announcement'),
+        subtitle || null,
+        description || null,
+        cta_text || (adType === 'INTERESTING_FACT' ? 'Read Fact' : 'Explore Now'),
+        finalUrl,
+        finalMediaUrl,
+        finalMediaUrl,
+        thumbnailUrl,
+        adType,
+        content_text || description || null,
+        category || null,
+        source || null,
+        adTargetType,
+        adTargetType === 'SPECIFIC_SCHOOL' ? school_code : null,
+        safeInt(display_order, 0),
+        bg_gradient || 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+        cleanStart,
+        cleanEnd,
+        finalStatus,
+        isActive,
+        safeInt(priority, 1),
+        target_section || 'all',
+        req.params.id
+      ]
+    );
+
+    await logActivity(req, {
+      action: `Updated advertisement ID ${req.params.id} ("${title || content_text || 'Item'}")`,
+      module: 'marketing'
+    });
+
+    res.json({ success: true, message: 'Advertisement updated successfully' });
+  } catch (err) {
+    console.error('Update ad error:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 router.post('/ads/toggle/:id', async (req, res) => {
   try {
     await ensureSecurityTables();
-    await db.query(`UPDATE advertisements SET status=(CASE WHEN status='active' THEN 'inactive' ELSE 'active' END) WHERE id=$1`, [req.params.id]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+    const existing = await db.query('SELECT status, is_active FROM advertisements WHERE id = $1', [req.params.id]);
+    if (!existing.rows || existing.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Advertisement not found' });
+    }
+    const currentStatus = (existing.rows[0].status || '').toUpperCase();
+    const isPaused = currentStatus === 'PAUSED' || currentStatus === 'INACTIVE' || existing.rows[0].is_active === 0;
 
-router.post('/ads/edit/:id', async (req, res) => {
-  let { title, subtitle, description, cta_text, target_url, image_url, bg_gradient, start_time, end_time, status, priority, target_section } = req.body;
-  try {
-    await ensureSecurityTables();
-    const cleanStart = (start_time && String(start_time).trim()) ? String(start_time).replace('T', ' ') : null;
-    const cleanEnd = (end_time && String(end_time).trim()) ? String(end_time).replace('T', ' ') : null;
-    await db.query(
-      `UPDATE advertisements SET
-         title=$1, subtitle=$2, description=$3, cta_text=$4, target_url=$5,
-         image_url=$6, bg_gradient=$7, start_time=$8, end_time=$9,
-         status=$10, priority=$11, target_section=$12
-       WHERE id=$13`,
-      [
-        title,
-        subtitle || null,
-        description || null,
-        cta_text || 'Learn More',
-        target_url || '#',
-        image_url || null,
-        bg_gradient || 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-        cleanStart,
-        cleanEnd,
-        status || 'active',
-        safeInt(priority, 1),
-        target_section || 'all',
-        req.params.id
-      ]
-    );
-    res.json({ success: true, message: 'Advertisement updated successfully' });
+    const newStatus = isPaused ? 'ACTIVE' : 'PAUSED';
+    const newIsActive = isPaused ? 1 : 0;
+
+    await db.query('UPDATE advertisements SET status = $1, is_active = $2 WHERE id = $3', [newStatus, newIsActive, req.params.id]);
+
+    await logActivity(req, {
+      action: `${isPaused ? 'Resumed' : 'Paused'} advertisement ID ${req.params.id}`,
+      module: 'marketing'
+    });
+
+    res.json({ success: true, newStatus });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 router.post('/ads/delete/:id', async (req, res) => {
   try {
     await ensureSecurityTables();
-    await db.query('DELETE FROM advertisements WHERE id=$1', [req.params.id]);
+    await db.query('DELETE FROM advertisements WHERE id = $1', [req.params.id]);
+    await logActivity(req, {
+      action: `Deleted advertisement ID ${req.params.id}`,
+      module: 'marketing'
+    });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

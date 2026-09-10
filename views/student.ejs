@@ -713,6 +713,178 @@
       .sp-topbar { padding: 0 16px; }
       .sp-content-body { padding: 16px; }
     }
+
+    /* ── E-Library Dynamic Scrolling Ticker & Educational Strip ── */
+    .elib-ticker-wrapper {
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.95));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      height: 58px;
+    }
+    .elib-ticker-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 16px;
+      height: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--indigo));
+      color: #ffffff;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      z-index: 5;
+      box-shadow: 2px 0 10px rgba(11, 94, 215, 0.2);
+    }
+    .elib-ticker-badge .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+      animation: tickerPulse 1.8s infinite;
+    }
+    @keyframes tickerPulse {
+      0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+    .elib-ticker-track-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+    }
+    .elib-ticker-track {
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      width: max-content;
+      will-change: transform;
+      animation: elibTickerScroll 42s linear infinite;
+    }
+    .elib-ticker-track-container:hover .elib-ticker-track,
+    .elib-ticker-track-container:focus-within .elib-ticker-track {
+      animation-play-state: paused;
+    }
+    @keyframes elibTickerScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .elib-ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 18px;
+      margin-right: 20px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      cursor: pointer;
+      user-select: none;
+      height: 42px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .elib-ticker-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border-color: var(--primary-light);
+    }
+    .elib-ticker-item-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .elib-ticker-item-thumb {
+      width: 44px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #0f172a;
+    }
+    .elib-ticker-item-video-box {
+      position: relative;
+      width: 44px;
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #000;
+    }
+    .elib-ticker-item-video-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .elib-ticker-item-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .elib-ticker-item-sub {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      max-width: 380px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .elib-ticker-fact-tag {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(124, 58, 237, 0.12);
+      color: #7c3aed;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .elib-ticker-cta-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--primary-light);
+      color: var(--primary);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .elib-ticker-track {
+        animation: none !important;
+        overflow-x: auto;
+      }
+    }
+    @media (max-width: 768px) {
+      .elib-ticker-wrapper {
+        height: auto;
+        min-height: 52px;
+      }
+      .elib-ticker-badge {
+        padding: 0 12px;
+        font-size: 0.7rem;
+      }
+      .elib-ticker-item-sub {
+        max-width: 220px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1301,6 +1473,19 @@
              ───────────────────────────────────────────────────────────── -->
         <section id="module-e-library" class="sp-module-view <%= currentModule === 'e-library' ? 'active' : '' %>">
           
+          <!-- Dynamic Announcements, Promos & Educational Facts Strip -->
+          <div class="elib-ticker-wrapper" id="elibTickerWrapper" style="display:none;" aria-label="Library Announcements and Highlights">
+            <div class="elib-ticker-badge">
+              <span class="pulse-dot"></span>
+              <span>Highlights</span>
+            </div>
+            <div class="elib-ticker-track-container" id="elibTickerTrackContainer" tabindex="0" aria-live="polite">
+              <div class="elib-ticker-track" id="elibTickerTrack">
+                <!-- Dynamically populated via loadElibraryTicker() -->
+              </div>
+            </div>
+          </div>
+
           <div class="sp-card">
             <div class="sp-card-header">
               <div>
@@ -2435,6 +2620,103 @@
         }
       }
     }
+
+    // ─────────────────────────────────────────────────────────────
+    //  E-LIBRARY SCROLLING TICKER & ANNOUNCEMENTS ENGINE
+    // ─────────────────────────────────────────────────────────────
+    async function loadElibraryTicker() {
+      const wrapper = document.getElementById('elibTickerWrapper');
+      const track = document.getElementById('elibTickerTrack');
+      if (!wrapper || !track) return;
+
+      try {
+        const res = await fetch('/api/elibrary/advertisements?section=all');
+        const data = await res.json();
+
+        if (!data || data.status !== 'success' || !data.advertisements || data.advertisements.length === 0) {
+          wrapper.style.display = 'none';
+          return;
+        }
+
+        const items = data.advertisements;
+        const renderItem = (ad) => {
+          const type = (ad.type || 'BANNER').toUpperCase();
+          const href = ad.destination_url || ad.target_url || '#';
+          const title = ad.title || (type === 'INTERESTING_FACT' ? (ad.category || 'Did You Know?') : 'Announcement');
+          const sub = ad.content_text || ad.subtitle || ad.description || '';
+          const cta = ad.cta_text || (type === 'INTERESTING_FACT' ? 'Read Fact' : 'Explore');
+          const media = ad.thumbnail_url || ad.media_url;
+
+          let icon = '📢';
+          let mediaHtml = '';
+          let catHtml = '';
+
+          if (type === 'INTERESTING_FACT') {
+            icon = '💡';
+            catHtml = `<span class="elib-ticker-fact-tag">${ad.category || 'DID YOU KNOW?'}</span>`;
+          } else if (type === 'IMAGE') {
+            icon = '🖼️';
+            if (media) {
+              mediaHtml = `<img src="${media}" class="elib-ticker-item-thumb" alt="thumb">`;
+            }
+          } else if (type === 'VIDEO') {
+            icon = '🎥';
+            if (media) {
+              mediaHtml = `
+                <div class="elib-ticker-item-video-box">
+                  <video src="${media}" autoplay loop muted playsinline disablepictureinpicture></video>
+                </div>`;
+            }
+          } else if (type === 'TEXT') {
+            icon = '📝';
+          } else {
+            // BANNER
+            icon = '📢';
+            if (media) {
+              mediaHtml = `<img src="${media}" class="elib-ticker-item-thumb" alt="thumb">`;
+            }
+          }
+
+          return `
+            <a href="${href}" class="elib-ticker-item" onclick="trackAdClick(${ad.id}, event)" title="${title}">
+              ${mediaHtml ? mediaHtml : `<span class="elib-ticker-item-icon">${icon}</span>`}
+              <div style="display:flex;align-items:center;gap:8px;">
+                ${catHtml}
+                <span class="elib-ticker-item-title">${title}</span>
+                ${sub ? `<span style="color:var(--border);">·</span><span class="elib-ticker-item-sub">${sub}</span>` : ''}
+              </div>
+              <span class="elib-ticker-cta-badge">${cta} →</span>
+            </a>
+          `;
+        };
+
+        const singleSetHtml = items.map(renderItem).join('');
+        // Duplicate content for smooth infinite seamless horizontal scrolling loop
+        track.innerHTML = singleSetHtml + singleSetHtml + singleSetHtml;
+
+        // Dynamic speed based on number of items
+        const duration = Math.max(30, items.length * 14);
+        track.style.animationDuration = `${duration}s`;
+
+        wrapper.style.display = 'flex';
+      } catch (err) {
+        console.error('loadElibraryTicker error:', err);
+        wrapper.style.display = 'none';
+      }
+    }
+
+    async function trackAdClick(id, event) {
+      if (!id) return;
+      try {
+        navigator.sendBeacon ? 
+          navigator.sendBeacon(`/api/elibrary/advertisements/${id}/click`) :
+          fetch(`/api/elibrary/advertisements/${id}/click`, { method: 'POST', keepalive: true });
+      } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadElibraryTicker();
+    });
   </script>
 
 

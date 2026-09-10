@@ -37,6 +37,7 @@ npm install --silent || true
 
 # Run DB schema sync
 node db/initStudentPortalTables.js || true
+node db/initAdsMigration.js || true
 
 # Kill running node instance so supervisor cleanly restarts server
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true

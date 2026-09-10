@@ -1550,7 +1550,7 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
       </div>
     </div>
 
-    <!-- ═══ TAB: ADS ═══ -->
+    <!-- ═══ TAB: ADS (E-LIBRARY TICKER & PROMOTIONS CMS) ═══ -->
     <div class="sa-tab-pane" id="tab-ads">
       <div class="sa-segmented-nav">
         <button class="sa-seg-pill" data-sub="books" onclick="switchTab('books', document.getElementById('nav-books'))">📚 Books</button>
@@ -1560,41 +1560,106 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
         <button class="sa-seg-pill" data-sub="categories" onclick="switchTab('categories', document.getElementById('nav-categories'))">📂 Categories</button>
         <button class="sa-seg-pill" data-sub="requests" onclick="switchTab('requests', document.getElementById('nav-requests'))">🙋 Requests</button>
         <button class="sa-seg-pill" data-sub="goals" onclick="switchTab('goals', document.getElementById('nav-goals'))">🎯 Goals</button>
-        <button class="sa-seg-pill active" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads</button>
+        <button class="sa-seg-pill active" data-sub="ads" onclick="switchTab('ads', document.getElementById('nav-ads'))">📢 Ads & Ticker</button>
+      </div>
+
+      <!-- KPI Metrics Cards for Ads -->
+      <div class="sa-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 1.5rem;">
+        <div class="sa-stat-card" style="padding:1.1rem">
+          <div class="sa-stat-icon" style="background:rgba(99,102,241,0.12);color:#818cf8;">📢</div>
+          <div class="sa-stat-info">
+            <div class="sa-stat-value" id="adStatTotal">0</div>
+            <div class="sa-stat-label">Total Items</div>
+          </div>
+        </div>
+        <div class="sa-stat-card" style="padding:1.1rem">
+          <div class="sa-stat-icon" style="background:rgba(16,185,129,0.12);color:#34d399;">🟢</div>
+          <div class="sa-stat-info">
+            <div class="sa-stat-value" id="adStatActive">0</div>
+            <div class="sa-stat-label">Active Now</div>
+          </div>
+        </div>
+        <div class="sa-stat-card" style="padding:1.1rem">
+          <div class="sa-stat-icon" style="background:rgba(245,158,11,0.12);color:#fbbf24;">⏰</div>
+          <div class="sa-stat-info">
+            <div class="sa-stat-value" id="adStatScheduled">0</div>
+            <div class="sa-stat-label">Scheduled</div>
+          </div>
+        </div>
+        <div class="sa-stat-card" style="padding:1.1rem">
+          <div class="sa-stat-icon" style="background:rgba(239,68,68,0.12);color:#f87171;">⌛</div>
+          <div class="sa-stat-info">
+            <div class="sa-stat-value" id="adStatExpired">0</div>
+            <div class="sa-stat-label">Expired / Paused</div>
+          </div>
+        </div>
       </div>
 
       <div class="sa-card">
-        <div class="sa-card-header">
-          <div class="sa-card-title">📢 Advertisement Manager</div>
-          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('createAdModal')">+ New Banner</button>
-        </div>
-        <div class="sa-card-body">
-          <div id="adsContent">
-            <% if (advertisements && advertisements.length) { %>
-            <div class="sa-ads-grid">
-              <% advertisements.forEach(ad => { %>
-              <div class="sa-ad-card">
-                <div class="sa-ad-preview" style="background:<%= ad.bg_gradient||'linear-gradient(135deg,#4f46e5,#7c3aed)' %>">
-                  <div style="position:absolute;top:8px;right:8px;"><span class="badge <%= ad.computed_status==='active'?'badge-green':ad.computed_status==='expired'?'badge-red':'badge-gray' %>" style="background:rgba(0,0,0,.35);"><%= ad.computed_status %></span></div>
-                  <div><div style="font-size:.95rem;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.5);"><%= ad.title %></div>
-                  <div style="font-size:.75rem;opacity:.85;margin-top:2px;"><%= ad.subtitle||'' %></div></div>
-                  <span style="background:rgba(255,255,255,.2);padding:3px 10px;border-radius:7px;font-size:.72rem;font-weight:800;display:inline-block;margin-top:8px;"><%= ad.cta_text||'Learn More' %></span>
-                </div>
-                <div class="sa-ad-info">
-                  <div style="font-size:.75rem;color:#475569;">Section: <strong style="color:#94a3b8;"><%= ad.target_section %></strong> · Priority: <strong><%= ad.priority %></strong></div>
-                  <div class="sa-ad-metrics"><span>👁️ <%= ad.impressions||0 %></span><span>👆 <%= ad.clicks||0 %></span><span>📈 <%= ad.ctr||0 %>%</span></div>
-                  <div class="sa-ad-actions">
-                    <button class="sa-btn sa-btn-ghost sa-btn-sm" style="flex:1" onclick='openEditAd(<%= JSON.stringify(ad).replace(/'/g,"&#39;") %>)'>✏️ Edit</button>
-                    <button class="sa-btn sa-btn-ghost sa-btn-sm" style="flex:1" onclick="toggleAd(<%= ad.id %>)"><%= ad.status==='active'?'⏸ Pause':'▶ Activate' %></button>
-                    <button class="sa-btn sa-btn-danger sa-btn-sm" onclick="deleteAd(<%= ad.id %>)">🗑️</button>
-                  </div>
-                </div>
-              </div>
-              <% }) %>
+        <div class="sa-card-header" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <div class="sa-card-title">📢 E-Library Advertisements & Scrolling Ticker CMS</div>
+            <div class="sa-card-sub" style="font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-top:2px;">
+              Create and manage banners, announcements, video teasers, and interesting educational facts shown across Librika E-Library.
             </div>
-            <% } else { %>
-            <div class="sa-empty"><div class="sa-empty-icon">📢</div><p>No advertisements yet.</p><button class="sa-btn sa-btn-primary" onclick="openModal('createAdModal')">+ Create Banner</button></div>
-            <% } %>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="sa-btn sa-btn-ghost sa-btn-sm" onclick="loadAdsData()">🔄 Refresh</button>
+            <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openCreateAdModal()">+ Create Advertisement</button>
+          </div>
+        </div>
+
+        <div class="sa-toolbar" style="flex-wrap:wrap;gap:10px;">
+          <div class="sa-search" style="flex:2;min-width:220px;">
+            <span>🔍</span>
+            <input type="text" id="adSearchInput" placeholder="Search by title, fact, category, or url..." oninput="filterAdsTable()">
+          </div>
+          <select class="sa-select" id="adTypeFilter" onchange="filterAdsTable()">
+            <option value="">All Content Types</option>
+            <option value="BANNER">🎨 Banner</option>
+            <option value="INTERESTING_FACT">💡 Interesting Fact</option>
+            <option value="IMAGE">🖼️ Image</option>
+            <option value="VIDEO">🎥 Video</option>
+            <option value="TEXT">📝 Text Announcement</option>
+          </select>
+          <select class="sa-select" id="adStatusFilter" onchange="filterAdsTable()">
+            <option value="">All Statuses</option>
+            <option value="ACTIVE">🟢 Active</option>
+            <option value="SCHEDULED">⏰ Scheduled</option>
+            <option value="EXPIRED">⌛ Expired</option>
+            <option value="PAUSED">⏸ Paused / Draft</option>
+          </select>
+          <select class="sa-select" id="adSchoolFilter" onchange="filterAdsTable()">
+            <option value="">All School Audiences</option>
+            <option value="ALL_SCHOOLS">🌍 All Schools (Global)</option>
+            <option value="SPECIFIC_SCHOOL">🏫 Specific Schools</option>
+          </select>
+        </div>
+
+        <div class="sa-card-body-np">
+          <div class="sa-table-wrap">
+            <table class="sa-table" id="adsMainTable">
+              <thead>
+                <tr>
+                  <th style="width:70px">Media</th>
+                  <th>Title / Information</th>
+                  <th>Type</th>
+                  <th>Target Audience</th>
+                  <th>Schedule / Dates</th>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th>Analytics</th>
+                  <th style="text-align:right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adsTableBody">
+                <tr>
+                  <td colspan="9" style="text-align:center;padding:36px;color:#94a3b8">
+                    <span class="sa-spinner"></span> Loading advertisements...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -2524,79 +2589,188 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
   </div>
 </div>
 
-<!-- Create Ad Modal -->
-<div class="sa-modal-overlay" id="createAdModal">
-  <div class="sa-modal sa-modal-lg">
-    <div class="sa-modal-header"><h3>✨ Create Advertisement</h3><button class="sa-close-btn" onclick="closeModal('createAdModal')">✕</button></div>
-    <div class="sa-modal-body">
-      <div class="sa-form-group"><label>Title *</label><input type="text" class="sa-input" id="adTitle" placeholder="Banner title" oninput="updateAdPreview()"></div>
-      <div class="sa-form-group"><label>Subtitle</label><input type="text" class="sa-input" id="adSubtitle" placeholder="Tagline" oninput="updateAdPreview()"></div>
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>CTA Text</label><input type="text" class="sa-input" id="adCta" value="Explore Now" oninput="updateAdPreview()"></div>
-        <div class="sa-form-group"><label>URL</label><input type="text" class="sa-input" id="adUrl" value="/student/browse"></div>
-      </div>
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>Section</label>
-          <select class="sa-select" id="adSection"><option value="all">All Pages</option><option value="digital_library">Digital Library</option><option value="community_library">Community Library</option><option value="home">Student Home</option></select>
-        </div>
-        <div class="sa-form-group"><label>Priority (1-10)</label><input type="number" class="sa-input" id="adPriority" value="1" min="1" max="10"></div>
-      </div>
-      <div class="sa-form-group"><label>Background Gradient</label><input type="text" class="sa-input" id="adGradient" value="linear-gradient(135deg,#6366f1 0%,#a855f7 100%)" oninput="updateAdPreview()"></div>
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>Start Date/Time</label><input type="datetime-local" class="sa-input" id="adStart"></div>
-        <div class="sa-form-group"><label>Expiry Date/Time</label><input type="datetime-local" class="sa-input" id="adEnd"></div>
-      </div>
-      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:1rem;margin-top:.5rem">
-        <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;color:#334155;margin-bottom:8px">Preview</div>
-        <div id="adPreviewBox" style="padding:1.1rem;border-radius:10px;color:#fff;background:linear-gradient(135deg,#6366f1,#a855f7)">
-          <div id="adPreviewTitle" style="font-weight:800;font-size:.95rem">Banner Title</div>
-          <div id="adPreviewSub" style="font-size:.78rem;opacity:.85;margin:3px 0 10px">Subtitle...</div>
-          <span id="adPreviewCta" style="background:rgba(255,255,255,.22);padding:3px 10px;border-radius:7px;font-size:.72rem;font-weight:800">Explore Now</span>
-        </div>
-      </div>
+<!-- Unified Create / Edit Ad Modal -->
+<div class="sa-modal-overlay" id="adEditorModal">
+  <div class="sa-modal" style="max-width:860px;width:95%;max-height:92vh;overflow-y:auto;">
+    <div class="sa-modal-header">
+      <h3 id="adEditorModalTitle">✨ Create Advertisement & Ticker Item</h3>
+      <button class="sa-close-btn" onclick="closeModal('adEditorModal')">✕</button>
     </div>
-    <div class="sa-modal-footer">
-      <button class="sa-btn sa-btn-ghost" onclick="closeModal('createAdModal')">Cancel</button>
-      <button class="sa-btn sa-btn-primary" onclick="createAd()">🚀 Publish</button>
-    </div>
-  </div>
-</div>
+    <form id="adEditorForm" onsubmit="handleAdFormSubmit(event)" enctype="multipart/form-data">
+      <input type="hidden" id="adEditId" name="ad_id">
+      
+      <div class="sa-modal-body" style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Top Row: Type & Section -->
+        <div class="sa-form-row">
+          <div class="sa-form-group" style="flex:1">
+            <label>Content Type *</label>
+            <select class="sa-select" id="adFormType" name="type" onchange="onAdTypeChange()" required>
+              <option value="BANNER">🎨 Interactive Banner</option>
+              <option value="INTERESTING_FACT">💡 Interesting Educational Fact</option>
+              <option value="IMAGE">🖼️ Image Banner</option>
+              <option value="VIDEO">🎥 Video Teaser / Short</option>
+              <option value="TEXT">📝 Text Announcement</option>
+            </select>
+          </div>
+          <div class="sa-form-group" style="flex:1">
+            <label>Placement / Section</label>
+            <select class="sa-select" id="adFormSection" name="target_section">
+              <option value="all">Everywhere (All E-Libraries)</option>
+              <option value="digital_library">Digital Library Only</option>
+              <option value="community_library">Community Library Only</option>
+              <option value="home">Student Home Only</option>
+            </select>
+          </div>
+        </div>
 
-<div class="sa-modal-overlay" id="editAdModal">
-  <div class="sa-modal sa-modal-lg">
-    <div class="sa-modal-header"><h3>✏️ Edit Advertisement</h3><button class="sa-close-btn" onclick="closeModal('editAdModal')">✕</button></div>
-    <div class="sa-modal-body">
-      <input type="hidden" id="eadId">
-      <div class="sa-form-group"><label>Title *</label><input type="text" class="sa-input" id="eadTitle" placeholder="Banner title" oninput="updateEditAdPreview()"></div>
-      <div class="sa-form-group"><label>Subtitle</label><input type="text" class="sa-input" id="eadSubtitle" placeholder="Tagline" oninput="updateEditAdPreview()"></div>
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>CTA Text</label><input type="text" class="sa-input" id="eadCta" oninput="updateEditAdPreview()"></div>
-        <div class="sa-form-group"><label>URL</label><input type="text" class="sa-input" id="eadUrl"></div>
-      </div>
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>Section</label>
-          <select class="sa-select" id="eadSection"><option value="all">All Pages</option><option value="digital_library">Digital Library</option><option value="community_library">Community Library</option><option value="home">Student Home</option></select>
+        <!-- Dynamic Fields Container -->
+        <div id="adFormDynamicFields">
+          <!-- Standard Title & Subtitle -->
+          <div class="sa-form-group" id="groupAdTitle">
+            <label id="lblAdTitle">Title / Headline *</label>
+            <input type="text" class="sa-input" id="adFormTitle" name="title" placeholder="e.g. Annual Reading Challenge 2026" oninput="updateLiveAdPreview()">
+          </div>
+
+          <!-- Fact Category & Source (Visible for INTERESTING_FACT) -->
+          <div class="sa-form-row" id="groupFactMeta" style="display:none;">
+            <div class="sa-form-group" style="flex:1">
+              <label>Category / Topic</label>
+              <input type="text" class="sa-input" id="adFormCategory" name="category" placeholder="e.g. Astronomy, History, Science, Literature" oninput="updateLiveAdPreview()">
+            </div>
+            <div class="sa-form-group" style="flex:1">
+              <label>Source / Reference</label>
+              <input type="text" class="sa-input" id="adFormSource" name="source" placeholder="e.g. NASA / Encyclopaedia Britannica" oninput="updateLiveAdPreview()">
+            </div>
+          </div>
+
+          <!-- Content Text / Fact Body -->
+          <div class="sa-form-group" id="groupAdContentText">
+            <label id="lblAdContentText">Fact / Announcement Text</label>
+            <textarea class="sa-textarea" id="adFormContentText" name="content_text" rows="3" placeholder="Enter the engaging educational fact or announcement body..." oninput="updateLiveAdPreview()"></textarea>
+          </div>
+
+          <!-- Subtitle / Tagline -->
+          <div class="sa-form-group" id="groupAdSubtitle">
+            <label>Subtitle / Tagline</label>
+            <input type="text" class="sa-input" id="adFormSubtitle" name="subtitle" placeholder="e.g. Explore over 5,000 new research papers" oninput="updateLiveAdPreview()">
+          </div>
         </div>
-        <div class="sa-form-group"><label>Priority (1-10)</label><input type="number" class="sa-input" id="eadPriority" min="1" max="10"></div>
-      </div>
-      <div class="sa-form-group"><label>Background Gradient</label><input type="text" class="sa-input" id="eadGradient" oninput="updateEditAdPreview()"></div>
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>Start Date/Time</label><input type="datetime-local" class="sa-input" id="eadStart"></div>
-        <div class="sa-form-group"><label>Expiry Date/Time</label><input type="datetime-local" class="sa-input" id="eadEnd"></div>
-      </div>
-      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:1rem;margin-top:.5rem">
-        <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;color:#334155;margin-bottom:8px">Preview</div>
-        <div id="eadPreviewBox" style="padding:1.1rem;border-radius:10px;color:#fff;background:linear-gradient(135deg,#6366f1,#a855f7)">
-          <div id="eadPreviewTitle" style="font-weight:800;font-size:.95rem">Banner Title</div>
-          <div id="eadPreviewSub" style="font-size:.78rem;opacity:.85;margin:3px 0 10px">Subtitle...</div>
-          <span id="eadPreviewCta" style="background:rgba(255,255,255,.22);padding:3px 10px;border-radius:7px;font-size:.72rem;font-weight:800">Explore Now</span>
+
+        <!-- Media Upload & Existing Media URL -->
+        <div class="sa-form-row" id="groupAdMedia">
+          <div class="sa-form-group" style="flex:1">
+            <label>Upload Media File (Max 26MB: JPG, PNG, WEBP, MP4, WebM)</label>
+            <input type="file" class="sa-input" id="adFormMediaFile" name="media_file" accept="image/*,video/mp4,video/webm" onchange="handleAdMediaSelected(this)">
+          </div>
+          <div class="sa-form-group" style="flex:1">
+            <label>Or Media URL / Embed Link</label>
+            <input type="text" class="sa-input" id="adFormMediaUrl" name="media_url" placeholder="https://..." oninput="updateLiveAdPreview()">
+          </div>
         </div>
+
+        <!-- Destination URL & CTA Text -->
+        <div class="sa-form-row" id="groupAdDestination">
+          <div class="sa-form-group" style="flex:1">
+            <label>Destination / Click URL</label>
+            <input type="text" class="sa-input" id="adFormUrl" name="destination_url" value="/student#e-library" placeholder="/student#e-library or https://..." oninput="updateLiveAdPreview()">
+          </div>
+          <div class="sa-form-group" style="flex:1">
+            <label>CTA Button Label</label>
+            <input type="text" class="sa-input" id="adFormCta" name="cta_text" value="Explore Now" oninput="updateLiveAdPreview()">
+          </div>
+        </div>
+
+        <!-- Multi-tenant School Targeting -->
+        <div class="sa-form-row">
+          <div class="sa-form-group" style="flex:1">
+            <label>Target Audience *</label>
+            <select class="sa-select" id="adFormTargetType" name="target_type" onchange="onAdTargetTypeChange()">
+              <option value="ALL_SCHOOLS">🌍 All Schools (Global Audience)</option>
+              <option value="SPECIFIC_SCHOOL">🏫 Specific School Tenant</option>
+            </select>
+          </div>
+          <div class="sa-form-group" id="groupAdSpecificSchool" style="flex:1;display:none;">
+            <label>Select School Tenant *</label>
+            <select class="sa-select" id="adFormSchoolCode" name="school_code">
+              <option value="">-- Choose School --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Scheduling, Priority, Order & Status -->
+        <div class="sa-form-row">
+          <div class="sa-form-group" style="flex:1">
+            <label>Start Date / Time (Optional)</label>
+            <input type="datetime-local" class="sa-input" id="adFormStart" name="start_time">
+          </div>
+          <div class="sa-form-group" style="flex:1">
+            <label>Expiry Date / Time (Optional)</label>
+            <input type="datetime-local" class="sa-input" id="adFormEnd" name="end_time">
+          </div>
+        </div>
+
+        <div class="sa-form-row">
+          <div class="sa-form-group" style="flex:1">
+            <label>Display Order (Lower comes first)</label>
+            <input type="number" class="sa-input" id="adFormOrder" name="display_order" value="0" min="0">
+          </div>
+          <div class="sa-form-group" style="flex:1">
+            <label>Status</label>
+            <select class="sa-select" id="adFormStatus" name="status">
+              <option value="ACTIVE">🟢 Active</option>
+              <option value="SCHEDULED">⏰ Scheduled</option>
+              <option value="PAUSED">⏸ Paused</option>
+              <option value="DRAFT">📝 Draft</option>
+            </select>
+          </div>
+          <div class="sa-form-group" style="flex:1" id="groupAdGradient">
+            <label>Background Gradient</label>
+            <input type="text" class="sa-input" id="adFormGradient" name="bg_gradient" value="linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)" oninput="updateLiveAdPreview()">
+          </div>
+        </div>
+
+        <!-- LIVE PREVIEW COMPONENT -->
+        <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;margin-top:0.5rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;display:flex;align-items:center;gap:6px;">
+              <span>👁️ Live Strip Preview</span>
+              <span id="previewTypeBadge" class="badge badge-blue">BANNER</span>
+            </div>
+            <div style="display:flex;gap:4px;background:rgba(0,0,0,0.3);padding:2px;border-radius:8px;">
+              <button type="button" class="sa-btn sa-btn-xs sa-btn-primary" id="btnPreviewDesktop" onclick="setPreviewDevice('desktop')">🖥️ Desktop</button>
+              <button type="button" class="sa-btn sa-btn-xs sa-btn-ghost" id="btnPreviewMobile" onclick="setPreviewDevice('mobile')">📱 Mobile</button>
+            </div>
+          </div>
+
+          <!-- Preview Wrapper Container -->
+          <div id="previewContainer" style="width:100%;transition:max-width 0.3s ease;margin:0 auto;">
+            <!-- Rendered ticker strip mock item -->
+            <div id="adLivePreviewItem" style="min-height:54px;display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:10px;background:linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);color:#fff;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.25);">
+              <div id="adPrevIcon" style="font-size:1.3rem;">📢</div>
+              <div id="adPrevMediaBox" style="display:none;width:56px;height:38px;border-radius:6px;overflow:hidden;background:#000;flex-shrink:0;">
+                <img id="adPrevImg" style="width:100%;height:100%;object-fit:cover;display:none;" alt="preview">
+                <video id="adPrevVid" style="width:100%;height:100%;object-fit:cover;display:none;" muted playsinline></video>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                  <span id="adPrevFactCategory" style="display:none;font-size:0.68rem;font-weight:800;background:rgba(255,255,255,0.22);padding:2px 7px;border-radius:4px;text-transform:uppercase;">SCIENCE</span>
+                  <span id="adPrevTitle" style="font-size:0.88rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Exciting Announcement</span>
+                </div>
+                <div id="adPrevSub" style="font-size:0.75rem;opacity:0.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Explore books and reading materials across the library.</div>
+              </div>
+              <div id="adPrevCtaBox">
+                <span id="adPrevCta" style="background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);padding:4px 12px;border-radius:6px;font-size:0.72rem;font-weight:800;white-space:nowrap;">Explore Now →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
-    </div>
-    <div class="sa-modal-footer">
-      <button class="sa-btn sa-btn-ghost" onclick="closeModal('editAdModal')">Cancel</button>
-      <button class="sa-btn sa-btn-primary" onclick="saveAd()">💾 Save</button>
-    </div>
+      <div class="sa-modal-footer">
+        <button type="button" class="sa-btn sa-btn-ghost" onclick="closeModal('adEditorModal')">Cancel</button>
+        <button type="submit" class="sa-btn sa-btn-primary" id="btnSaveAd">🚀 Save & Publish</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -2774,6 +2948,7 @@ function switchTab(name, btn) {
     requests: () => loadBookRequests(1),
     issued: () => loadIssuedBooks(1),
     rfid: () => loadRfid(1),
+    ads: () => loadAdsData(),
     scheduled: () => loadScheduled(),
     aiconfig: () => loadAiConfig(),
     maintenance: () => { runDiagnostics(); loadBackups(); loadBackupSchedules(); },
@@ -3452,51 +3627,435 @@ async function saveDigitalContent(){
 }
 
 // ═══════════════════════════════════════
-//  ADS
 // ═══════════════════════════════════════
-function updateAdPreview() {
-  document.getElementById('adPreviewTitle').textContent=document.getElementById('adTitle').value||'Banner Title';
-  document.getElementById('adPreviewSub').textContent=document.getElementById('adSubtitle').value||'Subtitle...';
-  document.getElementById('adPreviewCta').textContent=document.getElementById('adCta').value||'Explore Now';
-  document.getElementById('adPreviewBox').style.background=document.getElementById('adGradient').value||'linear-gradient(135deg,#6366f1,#a855f7)';
+//  E-LIBRARY ADS & TICKER CMS JAVASCRIPT ENGINE
+// ═══════════════════════════════════════
+let _adsCache = [];
+let _adSchoolsCache = [];
+let _previewDevice = 'desktop';
+
+async function loadAdsData() {
+  const tbody = document.getElementById('adsTableBody');
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:36px;color:#94a3b8"><span class="sa-spinner"></span> Loading advertisements...</td></tr>`;
+  }
+
+  try {
+    const res = await apiGet('/super-admin/ads-data');
+    if (!res.success) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:#ef4444">Failed to load advertisements: ${res.error || 'Unknown error'}</td></tr>`;
+      return;
+    }
+
+    _adsCache = res.advertisements || [];
+    _adSchoolsCache = res.schools || [];
+
+    // Populate school options in Create/Edit modal
+    const schoolSelect = document.getElementById('adFormSchoolCode');
+    if (schoolSelect) {
+      schoolSelect.innerHTML = '<option value="">-- Choose School --</option>' +
+        _adSchoolsCache.map(s => `<option value="${s.school_code}">${s.name} (${s.school_code})</option>`).join('');
+    }
+
+    // Populate KPI cards
+    const stats = res.stats || {};
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? 0; };
+    setVal('adStatTotal', stats.total);
+    setVal('adStatActive', stats.active);
+    setVal('adStatScheduled', stats.scheduled);
+    setVal('adStatExpired', (stats.expired || 0) + (stats.paused || 0));
+
+    renderAdsTable(_adsCache);
+  } catch (err) {
+    console.error('loadAdsData error:', err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:#ef4444">Error connecting to server</td></tr>`;
+  }
 }
-async function createAd(){
-  const body={title:document.getElementById('adTitle').value,subtitle:document.getElementById('adSubtitle').value,cta_text:document.getElementById('adCta').value,target_url:document.getElementById('adUrl').value,target_section:document.getElementById('adSection').value,priority:document.getElementById('adPriority').value,bg_gradient:document.getElementById('adGradient').value,start_time:document.getElementById('adStart').value||null,end_time:document.getElementById('adEnd').value||null,status:'active'};
-  if(!body.title) return showToast('Title required','error');
-  const d=await apiPost('/super-admin/ads/create',body);
-  if(d.success){closeModal('createAdModal');showToast('Ad published!','success');setTimeout(()=>window.location.reload(),700);}
-  else showToast(d.error||'Failed','error');
+
+function renderAdsTable(ads) {
+  const tbody = document.getElementById('adsTableBody');
+  if (!tbody) return;
+
+  if (!ads || ads.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align:center;padding:48px 20px;color:#94a3b8">
+          <div style="font-size:2rem;margin-bottom:8px;">📢</div>
+          <div style="font-weight:700;font-size:1rem;color:#e2e8f0;">No Advertisements Found</div>
+          <div style="font-size:0.8rem;margin-top:4px;margin-bottom:16px;">Create your first announcement or interesting fact to show in E-Library!</div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openCreateAdModal()">+ Create Advertisement</button>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = ads.map(ad => {
+    const status = (ad.computed_status || ad.status || 'ACTIVE').toUpperCase();
+    let badgeClass = 'badge-gray';
+    if (status === 'ACTIVE') badgeClass = 'badge-green';
+    else if (status === 'SCHEDULED') badgeClass = 'badge-yellow';
+    else if (status === 'EXPIRED') badgeClass = 'badge-red';
+    else if (status === 'PAUSED' || status === 'DRAFT') badgeClass = 'badge-gray';
+
+    const type = (ad.type || 'BANNER').toUpperCase();
+    let typeBadge = `<span class="badge badge-blue">🎨 Banner</span>`;
+    let typeIcon = '📢';
+    if (type === 'INTERESTING_FACT') {
+      typeBadge = `<span class="badge badge-purple">💡 Fact</span>`;
+      typeIcon = '💡';
+    } else if (type === 'IMAGE') {
+      typeBadge = `<span class="badge badge-blue">🖼️ Image</span>`;
+      typeIcon = '🖼️';
+    } else if (type === 'VIDEO') {
+      typeBadge = `<span class="badge badge-indigo">🎥 Video</span>`;
+      typeIcon = '🎥';
+    } else if (type === 'TEXT') {
+      typeBadge = `<span class="badge badge-gray">📝 Text</span>`;
+      typeIcon = '📝';
+    }
+
+    const mediaSrc = ad.thumbnail_url || ad.media_url || ad.image_url;
+    let thumbHtml = `
+      <div style="width:48px;height:34px;border-radius:6px;background:${ad.bg_gradient || '#334155'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+        ${typeIcon}
+      </div>`;
+    if (mediaSrc) {
+      thumbHtml = `
+        <div style="width:48px;height:34px;border-radius:6px;overflow:hidden;background:#0f172a;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
+          <img src="${mediaSrc}" alt="thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='${typeIcon}';">
+        </div>`;
+    }
+
+    const schoolLabel = (ad.target_type === 'SPECIFIC_SCHOOL' && ad.school_code) 
+      ? `🏫 <span style="color:#60a5fa;font-weight:700;">${ad.school_code}</span>` 
+      : `🌍 <span style="color:#94a3b8;">All Schools</span>`;
+
+    const cleanDate = d => d ? String(d).slice(0, 16).replace('T', ' ') : '—';
+    const scheduleStr = (ad.start_time || ad.end_time) 
+      ? `<div style="font-size:0.75rem;line-height:1.3"><span>Start: ${cleanDate(ad.start_time)}</span><br><span style="opacity:0.75">End: ${cleanDate(ad.end_time)}</span></div>` 
+      : `<span style="color:#64748b;font-size:0.75rem">Always Active</span>`;
+
+    const titleText = ad.title || ad.content_text || 'Announcement';
+    const subText = ad.content_text ? (ad.content_text.slice(0, 60) + (ad.content_text.length > 60 ? '...' : '')) : (ad.subtitle || '');
+
+    const isCurrentlyPaused = status === 'PAUSED' || ad.is_active === 0;
+
+    return `
+      <tr>
+        <td>${thumbHtml}</td>
+        <td>
+          <div style="font-weight:700;color:#f8fafc;font-size:0.88rem;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            ${titleText}
+          </div>
+          <div style="font-size:0.74rem;color:#94a3b8;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">
+            ${subText}
+          </div>
+          ${ad.category ? `<span style="font-size:0.68rem;background:rgba(124,58,237,0.15);color:#c084fc;padding:1px 6px;border-radius:4px;font-weight:700;margin-top:4px;display:inline-block;">${ad.category}</span>` : ''}
+        </td>
+        <td>${typeBadge}</td>
+        <td><div style="font-size:0.8rem">${schoolLabel}</div></td>
+        <td>${scheduleStr}</td>
+        <td><span style="font-size:0.8rem;font-weight:700;color:#cbd5e1;">#${ad.display_order ?? 0}</span></td>
+        <td><span class="badge ${badgeClass}">${status}</span></td>
+        <td>
+          <div style="font-size:0.75rem;color:#cbd5e1;line-height:1.4">
+            <span>👁️ ${ad.impressions || 0}</span> · <span>👆 ${ad.clicks || 0}</span>
+            <div style="font-weight:700;color:#38bdf8;">${ad.ctr || 0}% CTR</div>
+          </div>
+        </td>
+        <td style="text-align:right">
+          <div style="display:inline-flex;gap:4px">
+            <button class="sa-btn sa-btn-ghost sa-btn-xs" title="Edit" onclick="openEditAdModal(${ad.id})">✏️</button>
+            <button class="sa-btn sa-btn-ghost sa-btn-xs" title="${isCurrentlyPaused ? 'Resume' : 'Pause'}" onclick="toggleAdStatus(${ad.id})">${isCurrentlyPaused ? '▶' : '⏸'}</button>
+            <button class="sa-btn sa-btn-danger sa-btn-xs" title="Delete" onclick="deleteAdItem(${ad.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
-async function toggleAd(id){const d=await apiPost(`/super-admin/ads/toggle/${id}`,{});if(d.success){showToast('Status updated','success');setTimeout(()=>window.location.reload(),600);}else showToast(d.error||'Failed','error');}
-async function deleteAd(id){if(!confirm('Delete this advertisement?'))return;const d=await apiPost(`/super-admin/ads/delete/${id}`,{});if(d.success){showToast('Ad deleted','success');setTimeout(()=>window.location.reload(),600);}else showToast(d.error||'Failed','error');}
-function openEditAd(ad){
-  document.getElementById('eadId').value=ad.id;
-  document.getElementById('eadTitle').value=ad.title||'';
-  document.getElementById('eadSubtitle').value=ad.subtitle||'';
-  document.getElementById('eadCta').value=ad.cta_text||'Explore Now';
-  document.getElementById('eadUrl').value=ad.target_url||'';
-  document.getElementById('eadSection').value=ad.target_section||'all';
-  document.getElementById('eadPriority').value=ad.priority||1;
-  document.getElementById('eadGradient').value=ad.bg_gradient||'linear-gradient(135deg,#6366f1,#a855f7)';
-  document.getElementById('eadStart').value=(ad.start_time||'').toString().replace(' ','T');
-  document.getElementById('eadEnd').value=(ad.end_time||'').toString().replace(' ','T');
-  updateEditAdPreview();
-  openModal('editAdModal');
+
+function filterAdsTable() {
+  const q = (document.getElementById('adSearchInput')?.value || '').toLowerCase().trim();
+  const typeF = document.getElementById('adTypeFilter')?.value || '';
+  const statusF = document.getElementById('adStatusFilter')?.value || '';
+  const schoolF = document.getElementById('adSchoolFilter')?.value || '';
+
+  const filtered = _adsCache.filter(ad => {
+    if (q) {
+      const matchT = (ad.title || '').toLowerCase().includes(q);
+      const matchC = (ad.content_text || '').toLowerCase().includes(q);
+      const matchCat = (ad.category || '').toLowerCase().includes(q);
+      const matchU = (ad.target_url || ad.destination_url || '').toLowerCase().includes(q);
+      if (!matchT && !matchC && !matchCat && !matchU) return false;
+    }
+    if (typeF && (ad.type || 'BANNER').toUpperCase() !== typeF) return false;
+    if (statusF && (ad.computed_status || ad.status || 'ACTIVE').toUpperCase() !== statusF) return false;
+    if (schoolF && (ad.target_type || 'ALL_SCHOOLS').toUpperCase() !== schoolF) return false;
+    return true;
+  });
+
+  renderAdsTable(filtered);
 }
-function updateEditAdPreview(){
-  document.getElementById('eadPreviewBox').style.background=document.getElementById('eadGradient').value||'linear-gradient(135deg,#6366f1,#a855f7)';
-  document.getElementById('eadPreviewTitle').textContent=document.getElementById('eadTitle').value||'Banner Title';
-  document.getElementById('eadPreviewSub').textContent=document.getElementById('eadSubtitle').value||'Subtitle...';
-  document.getElementById('eadPreviewCta').textContent=document.getElementById('eadCta').value||'Explore Now';
+
+function onAdTypeChange() {
+  const type = (document.getElementById('adFormType')?.value || 'BANNER').toUpperCase();
+  const groupFactMeta = document.getElementById('groupFactMeta');
+  const groupGradient = document.getElementById('groupAdGradient');
+  const groupMedia = document.getElementById('groupAdMedia');
+  const groupSubtitle = document.getElementById('groupAdSubtitle');
+  const lblContentText = document.getElementById('lblAdContentText');
+  const lblTitle = document.getElementById('lblAdTitle');
+  const badge = document.getElementById('previewTypeBadge');
+
+  if (badge) badge.textContent = type;
+
+  if (type === 'INTERESTING_FACT') {
+    if (groupFactMeta) groupFactMeta.style.display = 'flex';
+    if (lblContentText) lblContentText.textContent = 'Educational Fact Body *';
+    if (lblTitle) lblTitle.textContent = 'Catchy Header / Fact Title (e.g. "Did You Know?")';
+    if (groupSubtitle) groupSubtitle.style.display = 'none';
+  } else {
+    if (groupFactMeta) groupFactMeta.style.display = 'none';
+    if (lblContentText) lblContentText.textContent = 'Announcement / Description Body';
+    if (lblTitle) lblTitle.textContent = 'Title / Headline *';
+    if (groupSubtitle) groupSubtitle.style.display = 'block';
+  }
+
+  updateLiveAdPreview();
 }
-async function saveAd(){
-  const id=document.getElementById('eadId').value;
-  const title=document.getElementById('eadTitle').value.trim();
-  if(!title) return showToast('Title is required','error');
-  const body={title,subtitle:document.getElementById('eadSubtitle').value,cta_text:document.getElementById('eadCta').value,target_url:document.getElementById('eadUrl').value,target_section:document.getElementById('eadSection').value,priority:document.getElementById('eadPriority').value,bg_gradient:document.getElementById('eadGradient').value,start_time:document.getElementById('eadStart').value||null,end_time:document.getElementById('eadEnd').value||null};
-  const d=await apiPost(`/super-admin/ads/edit/${id}`,body);
-  if(d.success){closeModal('editAdModal');showToast('Ad updated','success');setTimeout(()=>window.location.reload(),600);}
-  else showToast(d.error||'Failed','error');
+
+function onAdTargetTypeChange() {
+  const targetType = document.getElementById('adFormTargetType')?.value;
+  const specSchool = document.getElementById('groupAdSpecificSchool');
+  if (specSchool) {
+    specSchool.style.display = targetType === 'SPECIFIC_SCHOOL' ? 'block' : 'none';
+  }
+}
+
+function setPreviewDevice(dev) {
+  _previewDevice = dev;
+  const container = document.getElementById('previewContainer');
+  const btnD = document.getElementById('btnPreviewDesktop');
+  const btnM = document.getElementById('btnPreviewMobile');
+
+  if (dev === 'mobile') {
+    if (container) container.style.maxWidth = '380px';
+    if (btnM) { btnM.className = 'sa-btn sa-btn-xs sa-btn-primary'; }
+    if (btnD) { btnD.className = 'sa-btn sa-btn-xs sa-btn-ghost'; }
+  } else {
+    if (container) container.style.maxWidth = '100%';
+    if (btnD) { btnD.className = 'sa-btn sa-btn-xs sa-btn-primary'; }
+    if (btnM) { btnM.className = 'sa-btn sa-btn-xs sa-btn-ghost'; }
+  }
+}
+
+function handleAdMediaSelected(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const url = URL.createObjectURL(file);
+    updateLiveAdPreview(url, file.type.startsWith('video/'));
+  } else {
+    updateLiveAdPreview();
+  }
+}
+
+function updateLiveAdPreview(localBlobUrl = null, isVideo = false) {
+  const type = (document.getElementById('adFormType')?.value || 'BANNER').toUpperCase();
+  const title = document.getElementById('adFormTitle')?.value || '';
+  const content = document.getElementById('adFormContentText')?.value || '';
+  const sub = document.getElementById('adFormSubtitle')?.value || '';
+  const cat = document.getElementById('adFormCategory')?.value || '';
+  const cta = document.getElementById('adFormCta')?.value || (type === 'INTERESTING_FACT' ? 'Read Fact' : 'Explore Now');
+  const grad = document.getElementById('adFormGradient')?.value || 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+  const mediaUrl = localBlobUrl || document.getElementById('adFormMediaUrl')?.value || '';
+
+  const item = document.getElementById('adLivePreviewItem');
+  const pTitle = document.getElementById('adPrevTitle');
+  const pSub = document.getElementById('adPrevSub');
+  const pCta = document.getElementById('adPrevCta');
+  const pCat = document.getElementById('adPrevFactCategory');
+  const pIcon = document.getElementById('adPrevIcon');
+  const pMediaBox = document.getElementById('adPrevMediaBox');
+  const pImg = document.getElementById('adPrevImg');
+  const pVid = document.getElementById('adPrevVid');
+
+  if (item) item.style.background = grad;
+  if (pCta) pCta.textContent = cta ? `${cta} →` : 'View →';
+
+  if (type === 'INTERESTING_FACT') {
+    if (pIcon) pIcon.textContent = '💡';
+    if (pCat) {
+      pCat.style.display = 'inline-block';
+      pCat.textContent = cat || 'DID YOU KNOW?';
+    }
+    if (pTitle) pTitle.textContent = title || 'Fascinating Fact';
+    if (pSub) pSub.textContent = content || 'Educational facts expand student horizons and spark curiosity.';
+  } else if (type === 'VIDEO') {
+    if (pIcon) pIcon.textContent = '🎥';
+    if (pCat) pCat.style.display = 'none';
+    if (pTitle) pTitle.textContent = title || 'Featured Video / Reel';
+    if (pSub) pSub.textContent = content || sub || 'Tap to watch short educational preview.';
+  } else if (type === 'IMAGE') {
+    if (pIcon) pIcon.textContent = '🖼️';
+    if (pCat) pCat.style.display = 'none';
+    if (pTitle) pTitle.textContent = title || 'Featured Visual';
+    if (pSub) pSub.textContent = content || sub || 'Discover highlighted library collections.';
+  } else if (type === 'TEXT') {
+    if (pIcon) pIcon.textContent = '📝';
+    if (pCat) pCat.style.display = 'none';
+    if (pTitle) pTitle.textContent = title || 'Notice & Announcement';
+    if (pSub) pSub.textContent = content || sub || 'Important notification for students and faculty.';
+  } else {
+    // BANNER
+    if (pIcon) pIcon.textContent = '📢';
+    if (pCat) pCat.style.display = 'none';
+    if (pTitle) pTitle.textContent = title || 'Interactive Promotion';
+    if (pSub) pSub.textContent = sub || content || 'Explore reading challenges and resources.';
+  }
+
+  // Handle media preview
+  if (mediaUrl && pMediaBox) {
+    pMediaBox.style.display = 'block';
+    const isVidUrl = isVideo || mediaUrl.match(/\.(mp4|webm|mov)(\?.*)?$/i);
+    if (isVidUrl) {
+      if (pImg) pImg.style.display = 'none';
+      if (pVid) {
+        pVid.style.display = 'block';
+        pVid.src = mediaUrl;
+      }
+    } else {
+      if (pVid) pVid.style.display = 'none';
+      if (pImg) {
+        pImg.style.display = 'block';
+        pImg.src = mediaUrl;
+      }
+    }
+  } else if (pMediaBox) {
+    pMediaBox.style.display = 'none';
+  }
+}
+
+function openCreateAdModal() {
+  const form = document.getElementById('adEditorForm');
+  if (form) form.reset();
+
+  document.getElementById('adEditId').value = '';
+  document.getElementById('adEditorModalTitle').textContent = '✨ Create Advertisement & Ticker Item';
+  document.getElementById('adFormTargetType').value = 'ALL_SCHOOLS';
+  document.getElementById('adFormType').value = 'BANNER';
+  document.getElementById('adFormStatus').value = 'ACTIVE';
+  document.getElementById('adFormOrder').value = '0';
+  document.getElementById('adFormGradient').value = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+  document.getElementById('adFormCta').value = 'Explore Now';
+  document.getElementById('adFormUrl').value = '/student#e-library';
+
+  onAdTypeChange();
+  onAdTargetTypeChange();
+  setPreviewDevice('desktop');
+  updateLiveAdPreview();
+
+  openModal('adEditorModal');
+}
+
+function openEditAdModal(id) {
+  const ad = _adsCache.find(a => a.id === id);
+  if (!ad) return showToast('Advertisement not found', 'error');
+
+  const form = document.getElementById('adEditorForm');
+  if (form) form.reset();
+
+  document.getElementById('adEditId').value = ad.id;
+  document.getElementById('adEditorModalTitle').textContent = `✏️ Edit Advertisement #${ad.id}`;
+  document.getElementById('adFormType').value = (ad.type || 'BANNER').toUpperCase();
+  document.getElementById('adFormSection').value = ad.target_section || 'all';
+  document.getElementById('adFormTitle').value = ad.title || '';
+  document.getElementById('adFormCategory').value = ad.category || '';
+  document.getElementById('adFormSource').value = ad.source || '';
+  document.getElementById('adFormContentText').value = ad.content_text || ad.description || '';
+  document.getElementById('adFormSubtitle').value = ad.subtitle || '';
+  document.getElementById('adFormMediaUrl').value = ad.media_url || ad.image_url || '';
+  document.getElementById('adFormUrl').value = ad.destination_url || ad.target_url || '';
+  document.getElementById('adFormCta').value = ad.cta_text || 'Explore Now';
+  document.getElementById('adFormTargetType').value = (ad.target_type || 'ALL_SCHOOLS').toUpperCase();
+  document.getElementById('adFormSchoolCode').value = ad.school_code || '';
+  document.getElementById('adFormStart').value = (ad.start_time || '').toString().slice(0, 16);
+  document.getElementById('adFormEnd').value = (ad.end_time || '').toString().slice(0, 16);
+  document.getElementById('adFormOrder').value = ad.display_order ?? 0;
+  document.getElementById('adFormStatus').value = (ad.status || 'ACTIVE').toUpperCase();
+  document.getElementById('adFormGradient').value = ad.bg_gradient || 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+
+  onAdTypeChange();
+  onAdTargetTypeChange();
+  setPreviewDevice('desktop');
+  updateLiveAdPreview(ad.media_url || ad.image_url);
+
+  openModal('adEditorModal');
+}
+
+async function handleAdFormSubmit(e) {
+  e.preventDefault();
+  const form = document.getElementById('adEditorForm');
+  const formData = new FormData(form);
+  const editId = document.getElementById('adEditId').value;
+  const isEdit = Boolean(editId);
+
+  const btn = document.getElementById('btnSaveAd');
+  const origText = btn.textContent;
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    const url = isEdit ? `/super-admin/ads/edit/${editId}` : '/super-admin/ads/create';
+    const res = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(data.message || 'Saved successfully!', 'success');
+      closeModal('adEditorModal');
+      await loadAdsData();
+    } else {
+      showToast(data.error || 'Failed to save advertisement', 'error');
+    }
+  } catch (err) {
+    console.error('Submit ad form error:', err);
+    showToast('Network error saving advertisement', 'error');
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+async function toggleAdStatus(id) {
+  try {
+    const res = await apiPost(`/super-admin/ads/toggle/${id}`, {});
+    if (res.success) {
+      showToast(`Status updated to ${res.newStatus || 'new state'}`, 'success');
+      await loadAdsData();
+    } else {
+      showToast(res.error || 'Failed to toggle status', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to toggle status', 'error');
+  }
+}
+
+async function deleteAdItem(id) {
+  if (!confirm('Are you sure you want to delete this advertisement?')) return;
+  try {
+    const res = await apiPost(`/super-admin/ads/delete/${id}`, {});
+    if (res.success) {
+      showToast('Advertisement deleted successfully', 'success');
+      await loadAdsData();
+    } else {
+      showToast(res.error || 'Failed to delete advertisement', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to delete advertisement', 'error');
+  }
 }
 
 // ═══════════════════════════════════════
