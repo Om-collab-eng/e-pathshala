@@ -1277,10 +1277,15 @@
             <div class="sp-card-header">
               <div>
                 <h3 class="sp-card-title">📖 E-Library & Digital Vault</h3>
-                <p class="sp-card-sub">Accredited curriculum e-books, study materials, research papers & notes</p>
+                <p class="sp-card-sub">Accredited curriculum e-books, study materials, research papers & notes (Up to 27MB per book)</p>
               </div>
-              <div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">
-                <%= elibraryItems.length %> Digital Resources
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">
+                  <%= elibraryItems.length %> Resources
+                </span>
+                <a href="/student/publish" class="btn-primary" style="padding:7px 14px;font-size:0.82rem;text-decoration:none;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
+                  ➕ Publish Book
+                </a>
               </div>
             </div>
 
@@ -1290,7 +1295,10 @@
                 <div style="grid-column:1/-1;text-align:center;padding:48px 20px;background:var(--surface-sub);border-radius:var(--radius-md);border:1px dashed var(--border);">
                   <div style="font-size:2.4rem;margin-bottom:12px;">📖</div>
                   <h4 style="margin:0 0 6px 0;font-weight:800;color:var(--text-primary);">Digital Vault is Empty</h4>
-                  <p style="margin:0;font-size:0.85rem;color:var(--text-secondary);">No digital textbooks or e-resources uploaded yet.</p>
+                  <p style="margin:0 0 16px 0;font-size:0.85rem;color:var(--text-secondary);">No digital textbooks or e-resources uploaded yet. You can publish your own books up to 27MB per book.</p>
+                  <a href="/student/publish" class="btn-primary" style="display:inline-flex;padding:8px 18px;font-size:0.85rem;text-decoration:none;border-radius:8px;">
+                    ✍️ Publish First Book (Max 27MB)
+                  </a>
                 </div>
               <% } %>
               <% elibraryItems.forEach(doc => { %>

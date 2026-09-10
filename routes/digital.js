@@ -9,7 +9,10 @@ const aiService = require('../services/aiService');
 
 const multer = require('multer');
 
-const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
+const upload = multer({
+  dest: path.join(__dirname, '..', 'static', 'uploads'),
+  limits: { fileSize: 28 * 1024 * 1024 }
+});
 
 const pool = { query: (text, params) => db.query(text, params) };
 

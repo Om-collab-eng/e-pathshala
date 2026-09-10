@@ -9,7 +9,10 @@ const aiService = require('../services/aiService');
 const { logActivity, ensureSecurityTables } = require('../services/auditLogger');
 require('dotenv').config();
 
-const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
+const upload = multer({
+  dest: path.join(__dirname, '..', 'static', 'uploads'),
+  limits: { fileSize: 28 * 1024 * 1024 }
+});
 
 // Strict Router-Level RBAC Guard: Super Admin must NEVER load Librarian views
 router.use(async (req, res, next) => {

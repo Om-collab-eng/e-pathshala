@@ -807,7 +807,7 @@
                     </div>
                     <div class="card-header-info">
                         <h3 class="card-header-title">Upload Document<span class="req">*</span></h3>
-                        <p class="card-header-subtitle">Upload your PDF, EPUB, DOCX, or PPT file (Max 25MB)</p>
+                        <p class="card-header-subtitle">Upload your PDF, EPUB, DOCX, or PPT file (Max 27MB)</p>
                     </div>
                 </div>
 
@@ -823,7 +823,7 @@
                         </svg>
                     </div>
                     <div class="upload-box-title">Tap to upload file</div>
-                    <div class="upload-box-subtitle">PDF, DOCX, PPTX, ZIP • Max size: 25MB</div>
+                    <div class="upload-box-subtitle">PDF, EPUB, DOCX, PPTX • Max size: 27MB</div>
                 </div>
 
                 <!-- Selected state -->
@@ -1143,9 +1143,9 @@
         if (input.files && input.files[0]) {
             const file = input.files[0];
 
-            // Size Validation
-            if (file.size > 25 * 1024 * 1024) {
-                showToast('Document size must be less than 25MB', 'error');
+            // Size Validation (27MB limit)
+            if (file.size > 27 * 1024 * 1024) {
+                showToast('Document size must be less than 27MB', 'error');
                 input.value = '';
                 return;
             }

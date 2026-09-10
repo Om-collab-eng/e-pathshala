@@ -9,7 +9,10 @@ const fs = require('fs-extra');
 const db = require('../db');
 
 const pool = { query: (text, params) => db.query(text, params) };
-const upload = multer({ dest: path.join(__dirname, '..', 'static', 'uploads') });
+const upload = multer({
+  dest: path.join(__dirname, '..', 'static', 'uploads'),
+  limits: { fileSize: 28 * 1024 * 1024 }
+});
 
 function ownerOnly(req, res, next) {
   if (req.session && req.session.user_id && (req.session.role === 'personal' || req.session.role === 'owner')) return next();
@@ -1212,11 +1215,7 @@ router.get('/elibrary/publish', ownerOnly, async (req, res) => {
   const ownerId = req.session.user_id;
   await ensureActiveLibrary(req);
   try {
-    const lib = (await pool.query('SELECT * FROM personal_libraries WHERE owner_id = $1', [ownerId])).rows[0];
-    if (!lib || lib.plan_name !== 'PRO') {
-      req.flash('error', 'E-Library publishing requires the Pro plan.');
-      return res.redirect('/personal/elibrary');
-    }
+    const lib = (await pool.query('SELECT * FROM personal_libraries WHERE owner_id = $1', [ownerId])).rows[0] || { plan_name: 'FREE' };
     res.render('personal_elibrary_publish', { title: 'Publish Digital Book', lib });
   } catch (err) {
     console.error('Publish form error:', err);
@@ -1229,9 +1228,16 @@ router.post('/elibrary/publish', upload.fields([{ name: 'cover', maxCount: 1 }, 
   const ownerId = req.session.user_id;
   await ensureActiveLibrary(req);
   try {
-    const lib = (await pool.query('SELECT * FROM personal_libraries WHERE owner_id = $1', [ownerId])).rows[0];
-    if (!lib || lib.plan_name !== 'PRO') {
-      req.flash('error', 'E-Library publishing requires the Pro plan.');
+    const lib = (await pool.query('SELECT * FROM personal_libraries WHERE owner_id = $1', [ownerId])).rows[0] || { plan_name: 'FREE' };
+    
+    // Check digital book count limit based on plan
+    const isPro = lib.plan_name === 'PRO' || lib.plan_name === 'PLUS';
+    const digitalCountRes = await pool.query("SELECT COUNT(*) as c FROM digital_content WHERE student_id = $1 AND school_code = 'PERSONAL'", [ownerId]);
+    const currentCount = parseInt(digitalCountRes.rows[0]?.c || 0, 10);
+    const maxBooksAllowed = isPro ? 999999 : 20;
+
+    if (!isPro && currentCount >= maxBooksAllowed) {
+      req.flash('error', `Free plan limit reached (${maxBooksAllowed} digital books). Upgrade to Pro for unlimited E-Library publishing.`);
       return res.redirect('/personal/elibrary');
     }
 
@@ -1245,7 +1251,14 @@ router.post('/elibrary/publish', upload.fields([{ name: 'cover', maxCount: 1 }, 
     const coverFile = req.files && req.files['cover'] ? req.files['cover'][0] : null;
 
     if (!docFile) {
-      req.flash('error', 'Document (PDF) file is required.');
+      req.flash('error', 'Document (PDF/EPUB) file is required.');
+      return res.redirect('/personal/elibrary/publish');
+    }
+
+    // 27MB file size check (27 * 1024 * 1024 = 28,311,552 bytes)
+    const MAX_FILE_SIZE = 27 * 1024 * 1024;
+    if (docFile.size > MAX_FILE_SIZE) {
+      req.flash('error', 'Document file size exceeds the 27MB per book limit.');
       return res.redirect('/personal/elibrary/publish');
     }
 
@@ -1273,28 +1286,21 @@ router.post('/elibrary/publish', upload.fields([{ name: 'cover', maxCount: 1 }, 
       fileUrl = `/static/digital_content/${docName}`;
 
       if (!coverUrl && docFile.originalname.toLowerCase().endsWith('.pdf')) {
-        try {
-          const sharp = require('sharp');
-          const pdf2pic = require('pdf2pic');
-          // fallback: use a default cover image
-          coverUrl = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&q=80';
-        } catch (e) {
-          coverUrl = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&q=80';
-        }
+        coverUrl = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&q=80';
       }
     }
 
     const result = await pool.query(
       `INSERT INTO digital_content (title, category, description, subject, tags, cover_url, file_url, student_id, school_code, status, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'PERSONAL', 'Published', $9) RETURNING id`,
-      [title, category, description, subject, tags, coverUrl, fileUrl, ownerId, nowStr()]);
+      [title, category, description, subject, tags || '', coverUrl, fileUrl, ownerId, nowStr()]);
 
     await logActivity(pool, ownerId, `Published digital book '${title}' to E-Library`);
     req.flash('success', 'Book published to E-Library successfully!');
     res.redirect('/personal/elibrary');
   } catch (err) {
     console.error('Publish error:', err);
-    req.flash('error', 'Failed to publish book');
+    req.flash('error', 'Failed to publish book: ' + err.message);
     res.redirect('/personal/elibrary/publish');
   }
 });

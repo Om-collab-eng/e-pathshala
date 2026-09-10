@@ -9,7 +9,7 @@ const aiService = require('../services/aiService');
 const pool = { query: (text, params) => db.query(text, params) };
 const upload = multer({
   dest: path.join(__dirname, '..', 'static', 'uploads'),
-  limits: { fileSize: 10 * 1024 * 1024 }
+  limits: { fileSize: 28 * 1024 * 1024 }
 });
 
 function studentOnly(req, res, next) {
@@ -144,7 +144,7 @@ async function fetchStudentPortalData(userId, sCode) {
             COALESCE(dc.subject, 'Academic Resource') as author,
             (SELECT COUNT(*) FROM student_saved_documents sd WHERE sd.user_id = $1 AND sd.document_id = dc.id) as is_saved
      FROM digital_content dc
-     WHERE (dc.school_code = $2 OR dc.school_code = 'GLOBAL' OR dc.school_code = 'DPS123')
+     WHERE (dc.school_code = $2 OR dc.school_code = 'GLOBAL' OR dc.school_code = 'DPS123' OR dc.student_id = $1 OR dc.school_code IS NULL)
      ORDER BY dc.id DESC LIMIT 80`,
     [userId, sCode]
   ).catch(() => ({ rows: [] }));
@@ -626,6 +626,134 @@ router.get('/e-library/read/:id', studentOnly, (req, res) => {
 // Studio Meeting Direct Launcher
 router.get('/studio/meeting/:id', studentOnly, (req, res) => {
   res.redirect(`/studio/meeting/${req.params.id}`);
+});
+
+// ── Digital Publishing & Author Studio (Max 27MB per book) ─────────────────
+router.get('/publish', studentOnly, async (req, res) => {
+  const draftId = req.query.draft_id;
+  let draft = null;
+  if (draftId) {
+    draft = (await pool.query('SELECT * FROM digital_content WHERE id = $1 AND student_id = $2', [draftId, req.session.user_id])).rows[0];
+  }
+  res.render('student_publish', { title: 'Publish Content - librika.in', draft });
+});
+
+router.post('/publish', studentOnly, upload.fields([{ name: 'cover', maxCount: 1 }, { name: 'document', maxCount: 1 }]), async (req, res) => {
+  const sCode = req.session.school_code || 'GLOBAL';
+  const userId = req.session.user_id;
+  const { title, category, description, subject, class: cls, tags, draft_id } = req.body;
+  const coverFile = req.files && req.files['cover'] ? req.files['cover'][0] : null;
+  const docFile = req.files && req.files['document'] ? req.files['document'][0] : null;
+
+  let coverUrl = '';
+  let fileUrl = '';
+  const fs = require('fs');
+
+  try {
+    const DIGITAL_CONTENT_DIR = path.join(__dirname, '..', 'static', 'digital_content');
+    const UPLOADS_DIR = path.join(__dirname, '..', 'static', 'uploads');
+    if (!fs.existsSync(DIGITAL_CONTENT_DIR)) fs.mkdirSync(DIGITAL_CONTENT_DIR, { recursive: true });
+    if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+    // Validate 27MB document file limit (27 * 1024 * 1024 = 28,311,552 bytes)
+    const MAX_DOC_SIZE = 27 * 1024 * 1024;
+    if (docFile && docFile.size > MAX_DOC_SIZE) {
+      if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+        return res.status(400).json({ status: 'error', message: 'Book file size exceeds the 27MB limit.' });
+      }
+      req.flash('error', 'Book file size exceeds the 27MB limit.');
+      return res.redirect('/student/publish');
+    }
+
+    if (coverFile) {
+      const ext = path.extname(coverFile.originalname);
+      const coverName = `c_${userId}_${Date.now()}${ext}`;
+      const coverPath = path.join(UPLOADS_DIR, coverName);
+      fs.renameSync(coverFile.path, coverPath);
+      coverUrl = '/uploads/' + coverName;
+    }
+
+    if (docFile) {
+      const ext = path.extname(docFile.originalname);
+      const docName = `d_${userId}_${Date.now()}${ext}`;
+      const docPath = path.join(DIGITAL_CONTENT_DIR, docName);
+      fs.renameSync(docFile.path, docPath);
+      fileUrl = '/digital_content/' + docName;
+
+      if (!coverUrl && ext.toLowerCase() === '.pdf') {
+        coverUrl = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&q=80';
+      }
+    }
+
+    let resultId = draft_id;
+    if (draft_id) {
+      const old = (await pool.query('SELECT cover_url, file_url FROM digital_content WHERE id = $1 AND student_id = $2', [draft_id, userId])).rows[0];
+      if (old) {
+        if (!coverUrl) coverUrl = old.cover_url || '';
+        if (!fileUrl) fileUrl = old.file_url || '';
+      }
+      await pool.query(
+        'UPDATE digital_content SET title=$1, category=$2, description=$3, subject=$4, class=$5, tags=$6, cover_url=$7, file_url=$8, status=$9 WHERE id=$10 AND student_id=$11',
+        [title, category, description, subject, cls || null, tags || '', coverUrl, fileUrl, 'Published', draft_id, userId]);
+    } else {
+      const insRes = await pool.query(
+        `INSERT INTO digital_content (title, category, description, subject, class, tags, cover_url, file_url, student_id, school_code, status, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CURRENT_TIMESTAMP)`,
+        [title, category, description, subject, cls || null, tags || '', coverUrl, fileUrl, userId, sCode, 'Published']);
+      resultId = insRes.lastId || insRes.insertId || (insRes.rows && insRes.rows[0] ? insRes.rows[0].id : Date.now());
+    }
+
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.json({ status: 'success', draft_id: resultId || 'new', redirect: '/student/my-publications' });
+    }
+    req.flash('success', 'Book published to E-Library successfully!');
+    res.redirect('/student/my-publications');
+  } catch (err) {
+    console.error('Publish error:', err);
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.status(500).json({ status: 'error', message: err.message });
+    }
+    req.flash('error', 'Failed to publish content: ' + err.message);
+    res.redirect('/student/publish');
+  }
+});
+
+router.post('/api/publish-finalize/:pubId', studentOnly, async (req, res) => {
+  const { pubId } = req.params;
+  try {
+    await pool.query("UPDATE digital_content SET status = 'Published' WHERE id = $1 AND student_id = $2", [pubId, req.session.user_id]);
+    res.json({ status: 'success', message: 'Book published to E-Library!' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+router.get('/my-publications', studentOnly, async (req, res) => {
+  try {
+    const userId = req.session.user_id;
+    const pubs = await pool.query(
+      `SELECT d.*, 
+              (SELECT COUNT(*) FROM reading_progress rp WHERE rp.content_id = d.id) as bookmarks_count,
+              COALESCE(d.views, 0) as views,
+              COALESCE(d.downloads, 0) as downloads
+       FROM digital_content d
+       WHERE d.student_id = $1
+       ORDER BY d.id DESC`, [userId]);
+    res.render('student_my_publications', { title: 'My Publications - librika.in', publications: pubs.rows || [] });
+  } catch (err) {
+    console.error('My publications error:', err);
+    res.redirect('/student');
+  }
+});
+
+router.post('/api/publication-delete/:pubId', studentOnly, async (req, res) => {
+  const { pubId } = req.params;
+  try {
+    await pool.query("DELETE FROM digital_content WHERE id = $1 AND student_id = $2", [pubId, req.session.user_id]);
+    res.json({ status: 'success', message: 'Publication deleted.' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 });
 
 router.fetchStudentPortalData = fetchStudentPortalData;

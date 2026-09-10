@@ -9,7 +9,7 @@ const db = require('../db');
 const pool = { query: (text, params) => db.query(text, params) };
 const upload = multer({
   dest: path.join(__dirname, '..', 'static', 'uploads'),
-  limits: { fileSize: 15 * 1024 * 1024 },
+  limits: { fileSize: 28 * 1024 * 1024 },
 });
 
 function studentOnly(req, res, next) {
