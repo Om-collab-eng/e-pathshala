@@ -182,6 +182,11 @@ async function initStudentPortalTables() {
     `).catch(() => {});
   });
 
+  // Ensure quiz_attempts table columns exist
+  await query(`ALTER TABLE quiz_attempts ADD COLUMN quiz_id INT DEFAULT NULL`).catch(() => {});
+  await query(`ALTER TABLE quiz_attempts ADD COLUMN total_marks INT DEFAULT 10`).catch(() => {});
+  await query(`ALTER TABLE quiz_attempts ADD COLUMN status VARCHAR(50) DEFAULT 'COMPLETED'`).catch(() => {});
+
   // 8. assignments
   await query(`
     CREATE TABLE IF NOT EXISTS assignments (
