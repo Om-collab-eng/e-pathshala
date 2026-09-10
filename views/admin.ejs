@@ -1905,7 +1905,7 @@
     async function endStudioMeeting(id) {
       if (!confirm('Are you sure you want to end this live meeting for all participants?')) return;
       try {
-        const res = await fetch(`/api/studio/meetings/${id}/end`, { method: 'POST' });
+        const res = await fetch(`/api/studio/sessions/${id}/end`, { method: 'POST' });
         const data = await res.json();
         if (data.success) {
           alert('Live meeting ended successfully.');
@@ -1921,7 +1921,7 @@
     async function deleteStudioMeeting(id) {
       if (!confirm('Are you sure you want to cancel and delete this scheduled meeting?')) return;
       try {
-        const res = await fetch(`/api/studio/meetings/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/studio/sessions/${id}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) {
           alert('Meeting deleted.');
@@ -1948,7 +1948,7 @@
       }
 
       try {
-        const res = await fetch('/api/studio/meetings', {
+        const res = await fetch('/api/studio/sessions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1961,7 +1961,8 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert(`✅ Meeting scheduled successfully!\n\nMeeting Code: ${data.meeting.meetingCode}\nHost: ${data.meeting.hostName}`);
+          const m = data.session || data.meeting;
+          alert(`✅ Meeting scheduled successfully!\n\nMeeting Code: ${m.meetingCode}\nHost: ${m.hostName}`);
           closeModal('scheduleStudioModal');
           window.location.href = '/admin?module=studio';
         } else {
@@ -1971,6 +1972,7 @@
         alert('Network error: ' + err.message);
       }
     }
+
 
     // ─────────────────────────────────────────────────────────────────
     // Reservations & Moderation Actions

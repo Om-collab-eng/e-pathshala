@@ -1276,7 +1276,7 @@
         </section>
 
         <!-- ─────────────────────────────────────────────────────────────
-             MODULE 05 — STUDIO (LIVE CLASSES & MASTERCLASSES)
+             MODULE 05 — STUDIO (LIVE VIDEO CLASSROOM / JAAS 8X8.VC)
              ───────────────────────────────────────────────────────────── -->
         <section id="module-studio" class="sp-module-view <%= currentModule === 'studio' ? 'active' : '' %>">
           
@@ -1284,8 +1284,24 @@
             <div class="sp-card-header">
               <div>
                 <h3 class="sp-card-title">🎥 Live Video Classroom & Studio</h3>
-                <p class="sp-card-sub">Attend live masterclasses, interactive whiteboard sessions & seminars</p>
+                <p class="sp-card-sub">Attend live masterclasses, interactive whiteboard sessions & seminars on JaaS (8x8.vc)</p>
               </div>
+            </div>
+
+            <!-- Studio Sub-Tabs -->
+            <div class="sp-tabs-bar" style="margin-bottom:1.25rem;">
+              <button class="sp-tab-btn active" id="st-tab-btn-all" onclick="filterStudentStudio('all', this)">
+                🌐 All Classes (<%= studioSessions.length %>)
+              </button>
+              <button class="sp-tab-btn" id="st-tab-btn-live" onclick="filterStudentStudio('live', this)">
+                🔴 Live Now (<%= studioSessions.filter(s => s.status === 'LIVE' || s.status === 'live').length %>)
+              </button>
+              <button class="sp-tab-btn" id="st-tab-btn-upcoming" onclick="filterStudentStudio('upcoming', this)">
+                📅 Upcoming (<%= studioSessions.filter(s => s.status === 'SCHEDULED' || (!s.status && new Date(s.scheduled_start) >= new Date())).length %>)
+              </button>
+              <button class="sp-tab-btn" id="st-tab-btn-past" onclick="filterStudentStudio('past', this)">
+                📼 Replays & Completed (<%= studioSessions.filter(s => s.status === 'COMPLETED' || (new Date(s.scheduled_start) < new Date() && s.status !== 'LIVE')).length %>)
+              </button>
             </div>
 
             <!-- Studio Sessions List -->
@@ -1296,14 +1312,18 @@
                 <p style="margin:0;font-size:0.88rem;">Your teachers and faculty will publish scheduled masterclasses here.</p>
               </div>
             <% } else { %>
-              <div class="sp-grid-3">
+              <div class="sp-grid-3" id="studentStudioGrid">
                 <% studioSessions.forEach(s => { 
                      const isLive = s.status === 'LIVE' || s.status === 'live';
+                     const isPast = s.status === 'COMPLETED' || (new Date(s.scheduled_start) < new Date() && !isLive);
+                     const sessionType = isLive ? 'live' : (isPast ? 'past' : 'upcoming');
                 %>
-                  <div class="sp-card" style="margin-bottom:0;border-color:<%= isLive ? '#FCA5A5' : 'var(--border)' %>;background:<%= isLive ? '#FEF2F2' : 'var(--surface)' %>;">
+                  <div class="sp-card studio-session-card" data-session-type="<%= sessionType %>" style="margin-bottom:0;border-color:<%= isLive ? '#FCA5A5' : 'var(--border)' %>;background:<%= isLive ? '#FEF2F2' : 'var(--surface)' %>;">
                     <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
                       <% if (isLive) { %>
                         <span class="sp-pill red"><span style="width:6px;height:6px;border-radius:50%;background:#EF4444;animation:pulse 1.5s infinite;"></span> LIVE BROADCAST</span>
+                      <% } else if (isPast) { %>
+                        <span class="sp-pill gray">Completed</span>
                       <% } else { %>
                         <span class="sp-pill indigo">Scheduled</span>
                       <% } %>
@@ -1320,9 +1340,15 @@
                       ⏰ <%= renderDate(s.scheduled_start) %> · <%= s.duration_minutes || 60 %> mins
                     </div>
 
-                    <a href="/studio/meeting/<%= s.id || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
-                      <%= isLive ? '🔴 JOIN LIVE CLASS NOW' : '🚀 Launch Classroom' %>
-                    </a>
+                    <% if (isPast) { %>
+                      <a href="/studio/meeting/<%= s.id || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;background:#4B5563;border-color:#4B5563;">
+                        📼 View Session Archive
+                      </a>
+                    <% } else { %>
+                      <a href="/studio/meeting/<%= s.id || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
+                        <%= isLive ? '🔴 JOIN LIVE CLASS NOW' : '🚀 Launch Classroom' %>
+                      </a>
+                    <% } %>
                   </div>
                 <% }) %>
               </div>
@@ -2039,6 +2065,20 @@
       });
     }
 
+    function filterStudentStudio(filterType, btn) {
+      document.querySelectorAll('#module-studio .sp-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const cards = document.querySelectorAll('#studentStudioGrid .studio-session-card');
+      cards.forEach(c => {
+        const type = c.getAttribute('data-session-type');
+        if (filterType === 'all' || type === filterType) {
+          c.style.display = 'block';
+        } else {
+          c.style.display = 'none';
+        }
+      });
+    }
+
     function handleStudentSearch(val) {
       if (!val) return;
       filterCatalogGrid(val);
@@ -2050,6 +2090,7 @@
       }
     }
   </script>
+
 
 </body>
 </html>

@@ -1,13 +1,10 @@
 const { query } = require('../db');
 const crypto = require('crypto');
+const jaasService = require('../services/jaasService');
+const auditLogger = require('../services/auditLogger');
+const notificationService = require('../services/notificationService');
 
-// Helper to generate unique Librika Jitsi room code (e.g. LIBRIKA-42-A8F31C2D)
-function generateMeetingCode(id, prefix = 'LIBRIKA') {
-  const rand = crypto.randomUUID ? crypto.randomUUID().substring(0, 8).toUpperCase() : Math.random().toString(36).substring(2, 10).toUpperCase();
-  return `${prefix}-${id || Math.floor(Math.random() * 900 + 100)}-${rand}`;
-}
-
-// Helper to generate readable Meeting IDs like LIB-MERN-842
+// Helper to generate readable Meeting IDs
 function generateMeetingId(prefix = 'LIB') {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -18,61 +15,163 @@ function generateMeetingId(prefix = 'LIB') {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 0. STUDIO REST APIS (MEETING SCHEDULING, LIFECYCLE & ATTENDANCE)
+// 0. STUDIO REST APIS — JAAS 8X8.VC PRODUCTION INTEGRATION
 // ─────────────────────────────────────────────────────────────────────────────
-exports.getStudioMeetingsApi = async (req, res) => {
+
+/**
+ * List studio sessions with support for filters: upcoming, live, completed, mine, class
+ * GET /api/studio/sessions & GET /api/studio/meetings
+ */
+exports.getStudioSessionsApi = async (req, res) => {
   try {
     const schoolCode = (req.session && req.session.school_code) || 'DPS123';
+    const userId = req.session && req.session.user_id;
+    const userRole = (req.session && req.session.role) || 'student';
+    const userClass = (req.session && (req.session.class || req.session.class_name)) || '';
+    const filter = (req.query.filter || req.query.tab || 'all').toLowerCase();
+    const classFilter = req.query.class;
+
     const result = await query(
       `SELECT ss.*, 
         (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
        FROM studio_sessions ss
-       WHERE ss.school_code = $1 OR ss.school_code = 'DPS123'
+       WHERE (ss.school_code = $1 OR ss.school_code = 'DPS123' OR ss.school_code = 'GLOBAL')
        ORDER BY ss.scheduled_start ASC`,
       [schoolCode]
     ).catch(() => ({ rows: [] }));
 
-    const all = result.rows || [];
+    let all = result.rows || [];
     const now = new Date();
+
+    // Auto-recovery: If scheduled_end passed by over 2 hours and still marked LIVE, auto-complete
+    for (const s of all) {
+      if (s.status === 'LIVE' && s.scheduled_end && (now - new Date(s.scheduled_end)) > 2 * 3600 * 1000) {
+        s.status = 'COMPLETED';
+        query(`UPDATE studio_sessions SET status = 'COMPLETED' WHERE id = $1`, [s.id]).catch(() => {});
+      }
+    }
+
+    // Apply role-based filtering for students if class restriction exists
+    if (userRole === 'student' && userClass) {
+      all = all.filter(s => {
+        const sc = (s.class_name || '').toLowerCase();
+        return !sc || sc === 'all' || sc === 'all students' || sc === 'all classes' || sc === 'global' || sc.includes(userClass.toLowerCase());
+      });
+    }
+
+    if (classFilter && classFilter !== 'all') {
+      all = all.filter(s => (s.class_name || '').toLowerCase() === classFilter.toLowerCase());
+    }
+
     const upcoming = all.filter(m => m.status === 'SCHEDULED' || (!m.status && new Date(m.scheduled_start) >= now));
     const live = all.filter(m => m.status === 'LIVE' || m.status === 'live');
     const past = all.filter(m => m.status === 'COMPLETED' || m.status === 'CANCELLED' || (new Date(m.scheduled_start) < now && m.status !== 'LIVE'));
+    const mine = userId ? all.filter(m => Number(m.host_id) === Number(userId)) : [];
 
-    res.json({ success: true, meetings: all, upcoming, live, past });
+    let filteredList = all;
+    if (filter === 'upcoming') filteredList = upcoming;
+    else if (filter === 'live') filteredList = live;
+    else if (filter === 'completed' || filter === 'past' || filter === 'replays') filteredList = past;
+    else if (filter === 'mine') filteredList = mine;
+
+    res.json({
+      success: true,
+      meetings: all,
+      sessions: filteredList,
+      upcoming,
+      live,
+      past,
+      mine,
+      isJaasConfigured: jaasService.isJaasConfigured(),
+      jaasDomain: jaasService.getJaasConfig().domain
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+exports.getStudioMeetingsApi = exports.getStudioSessionsApi;
 
-exports.postCreateStudioMeeting = async (req, res) => {
+/**
+ * Create a new live class / studio meeting room
+ * POST /api/studio/sessions & POST /api/studio/meetings
+ */
+exports.postCreateStudioSession = async (req, res) => {
   try {
-    const { title, description, className, scheduledStart, scheduledEnd, durationMinutes } = req.body;
-    if (!title) {
-      return res.status(400).json({ success: false, message: 'Meeting title is required' });
+    if (!req.session || !req.session.user_id) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
     }
-    const hostId = (req.session && req.session.user_id) || 23;
-    const hostName = (req.session && req.session.name) || 'Mrs. Sharma';
-    const schoolCode = (req.session && req.session.school_code) || 'DPS123';
+
+    const userRole = (req.session.role || '').toLowerCase();
+    if (userRole === 'student') {
+      return res.status(403).json({ success: false, message: 'Students are not authorized to create live studio classes.' });
+    }
+
+    const { title, description, className, scheduledStart, scheduledEnd, durationMinutes, visibility } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, message: 'Class title is required' });
+    }
+
+    const hostId = req.session.user_id;
+    const hostName = req.session.name || req.session.user_name || 'Faculty Instructor';
+    const schoolCode = req.session.school_code || 'DPS123';
     const duration = parseInt(durationMinutes, 10) || 60;
 
     const startDt = scheduledStart ? new Date(scheduledStart) : new Date();
     const endDt = scheduledEnd ? new Date(scheduledEnd) : new Date(startDt.getTime() + duration * 60000);
 
-    const tempCode = `LIBRIKA-TMP-${Date.now().toString(36).toUpperCase()}`;
+    const tempCode = `LIB-${Date.now().toString(36).toUpperCase()}`;
 
     const insertRes = await query(
-      `INSERT INTO studio_sessions (title, description, host_id, host_name, meeting_code, scheduled_start, scheduled_end, duration_minutes, status, class_name, school_code)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'SCHEDULED', $9, $10)`,
-      [title, description || '', hostId, hostName, tempCode, startDt.toISOString().slice(0, 19).replace('T', ' '), endDt.toISOString().slice(0, 19).replace('T', ' '), duration, className || 'All Students', schoolCode]
+      `INSERT INTO studio_sessions (title, description, host_id, host_name, meeting_code, scheduled_start, scheduled_end, duration_minutes, status, class_name, visibility, school_code)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'SCHEDULED', $9, $10, $11)`,
+      [
+        title.trim(),
+        description || '',
+        hostId,
+        hostName,
+        tempCode,
+        startDt.toISOString().slice(0, 19).replace('T', ' '),
+        endDt.toISOString().slice(0, 19).replace('T', ' '),
+        duration,
+        className || 'All Students',
+        visibility || 'CLASS',
+        schoolCode
+      ]
     );
 
-    const newId = insertRes.insertId || (insertRes.rows && insertRes.rows[0] && insertRes.rows[0].id) || Math.floor(Math.random() * 8000 + 100);
-    const finalCode = generateMeetingCode(newId);
+    const newId = insertRes.lastId || insertRes.insertId || (insertRes.rows && insertRes.rows[0] && insertRes.rows[0].id) || Math.floor(Math.random() * 8000 + 100);
+    const jaasRoomName = jaasService.generateJaasRoomName(newId);
+    const finalCode = `LIB-${newId}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
-    await query('UPDATE studio_sessions SET meeting_code = $1 WHERE id = $2 OR meeting_code = $3', [finalCode, newId, tempCode]).catch(() => {});
+
+    await query(
+      `UPDATE studio_sessions SET meeting_code = $1, jaas_room_name = $2 WHERE id = $3 OR meeting_code = $4`,
+      [finalCode, jaasRoomName, newId, tempCode]
+    ).catch(() => {});
+
+    // Audit Logging
+    await auditLogger.logActivity(req, {
+      userId: hostId,
+      action: `Scheduled Live Studio Class: ${title} (${className || 'All Students'})`,
+      module: 'studio',
+      schoolCode,
+      details: { sessionId: newId, meetingCode: finalCode, jaasRoomName, scheduledStart: startDt }
+    });
 
     res.json({
       success: true,
+      message: 'Class scheduled successfully',
+      session: {
+        id: newId,
+        title,
+        meetingCode: finalCode,
+        jaasRoomName,
+        status: 'SCHEDULED',
+        scheduledStart: startDt,
+        scheduledEnd: endDt,
+        hostName,
+        className: className || 'All Students'
+      },
       meeting: {
         id: newId,
         title,
@@ -87,96 +186,410 @@ exports.postCreateStudioMeeting = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+exports.postCreateStudioMeeting = exports.postCreateStudioSession;
 
-exports.getStudioMeetingById = async (req, res) => {
+/**
+ * Get details & attendance roster for a specific studio session
+ * GET /api/studio/sessions/:id & GET /api/studio/meetings/:id
+ */
+exports.getStudioSessionById = async (req, res) => {
   try {
     const id = req.params.id;
     const result = await query(
-      `SELECT ss.* FROM studio_sessions ss WHERE ss.id = $1 OR ss.meeting_code = $1`,
+      `SELECT ss.* FROM studio_sessions ss WHERE ss.id = $1 OR ss.meeting_code = $1 OR ss.jaas_room_name = $1`,
       [id]
     );
     if (!result.rows || result.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Meeting not found' });
+      return res.status(404).json({ success: false, message: 'Meeting session not found' });
     }
-    const meeting = result.rows[0];
+    const session = result.rows[0];
     const attendanceRes = await query(
       `SELECT * FROM studio_attendance WHERE session_id = $1 ORDER BY joined_at DESC`,
-      [meeting.id]
+      [session.id]
     ).catch(() => ({ rows: [] }));
 
-    res.json({ success: true, meeting, attendance: attendanceRes.rows || [] });
+    const user = req.session || {};
+    const authCheck = jaasService.canJoinStudioSession(user, session);
+    const isModerator = jaasService.isSessionModerator(user, session);
+
+    res.json({
+      success: true,
+      session,
+      meeting: session,
+      attendance: attendanceRes.rows || [],
+      canJoin: authCheck.allowed,
+      isModerator,
+      isJaasConfigured: jaasService.isJaasConfigured()
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+exports.getStudioMeetingById = exports.getStudioSessionById;
 
-exports.postStartStudioMeeting = async (req, res) => {
+/**
+ * Update studio session metadata
+ * PATCH /api/studio/sessions/:id & POST /api/studio/sessions/:id/update
+ */
+exports.patchStudioSession = async (req, res) => {
   try {
+    if (!req.session || !req.session.user_id) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
     const id = req.params.id;
-    await query(`UPDATE studio_sessions SET status = 'LIVE' WHERE id = $1 OR meeting_code = $1`, [id]);
-    res.json({ success: true, status: 'LIVE' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
+    const existing = await query(`SELECT * FROM studio_sessions WHERE id = $1 OR meeting_code = $1`, [id]);
+    if (!existing.rows || existing.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Session not found' });
+    }
+    const session = existing.rows[0];
 
-exports.postEndStudioMeeting = async (req, res) => {
-  try {
-    const id = req.params.id;
-    await query(`UPDATE studio_sessions SET status = 'COMPLETED', scheduled_end = CURRENT_TIMESTAMP WHERE id = $1 OR meeting_code = $1`, [id]);
-    res.json({ success: true, status: 'COMPLETED' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
+    const isAuthorized = jaasService.isSessionModerator(req.session, session);
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to edit this session.' });
+    }
 
-exports.deleteStudioMeeting = async (req, res) => {
-  try {
-    const id = req.params.id;
-    await query(`DELETE FROM studio_sessions WHERE id = $1 OR meeting_code = $1`, [id]);
-    res.json({ success: true, message: 'Meeting deleted' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-exports.postRecordAttendanceJoin = async (req, res) => {
-  try {
-    const sessionId = req.params.id;
-    const memberId = (req.session && req.session.user_id) || req.body.memberId || 0;
-    const memberName = (req.session && (req.session.name || req.session.user_name)) || req.body.memberName || 'Participant';
-    const role = (req.session && req.session.role) || req.body.role || 'student';
+    const { title, description, className, scheduledStart, scheduledEnd, durationMinutes, visibility } = req.body;
+    const updatedTitle = title || session.title;
+    const updatedDesc = description !== undefined ? description : session.description;
+    const updatedClass = className || session.class_name;
+    const updatedVis = visibility || session.visibility || 'CLASS';
+    const updatedDuration = parseInt(durationMinutes, 10) || session.duration_minutes || 60;
+    const startDt = scheduledStart ? new Date(scheduledStart) : new Date(session.scheduled_start);
+    const endDt = scheduledEnd ? new Date(scheduledEnd) : new Date(startDt.getTime() + updatedDuration * 60000);
 
     await query(
-      `INSERT INTO studio_attendance (session_id, member_id, member_name, role, joined_at)
-       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
-      [sessionId, memberId, memberName, role]
-    ).catch(() => {});
+      `UPDATE studio_sessions 
+       SET title = $1, description = $2, class_name = $3, visibility = $4, duration_minutes = $5, scheduled_start = $6, scheduled_end = $7
+       WHERE id = $8`,
+      [
+        updatedTitle,
+        updatedDesc,
+        updatedClass,
+        updatedVis,
+        updatedDuration,
+        startDt.toISOString().slice(0, 19).replace('T', ' '),
+        endDt.toISOString().slice(0, 19).replace('T', ' '),
+        session.id
+      ]
+    );
 
-    res.json({ success: true });
+    await auditLogger.logActivity(req, {
+      userId: req.session.user_id,
+      action: `Updated Studio Session: ${updatedTitle}`,
+      module: 'studio',
+      details: { sessionId: session.id, title: updatedTitle }
+    });
+
+    res.json({ success: true, message: 'Session updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-exports.postRecordAttendanceLeave = async (req, res) => {
+/**
+ * Start live class (transition SCHEDULED -> LIVE)
+ * POST /api/studio/sessions/:id/start & POST /api/studio/meetings/:id/start
+ */
+exports.postStartStudioSession = async (req, res) => {
   try {
-    const sessionId = req.params.id;
-    const memberId = (req.session && req.session.user_id) || req.body.memberId || 0;
+    if (!req.session || !req.session.user_id) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
 
+    const id = req.params.id;
+    const existing = await query(`SELECT * FROM studio_sessions WHERE id = $1 OR meeting_code = $1`, [id]);
+    if (!existing.rows || existing.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Session not found' });
+    }
+    const session = existing.rows[0];
+
+    const isAuthorized = jaasService.isSessionModerator(req.session, session);
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: 'Only the host or faculty can start this live class.' });
+    }
+
+    await query(`UPDATE studio_sessions SET status = 'LIVE' WHERE id = $1`, [session.id]);
+
+    await auditLogger.logActivity(req, {
+      userId: req.session.user_id,
+      action: `Started Live Studio Class: ${session.title}`,
+      module: 'studio',
+      details: { sessionId: session.id, status: 'LIVE' }
+    });
+
+    res.json({ success: true, status: 'LIVE', message: 'Class is now live.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+exports.postStartStudioMeeting = exports.postStartStudioSession;
+
+/**
+ * Cancel live class (mark CANCELLED)
+ * POST /api/studio/sessions/:id/cancel
+ */
+exports.postCancelStudioSession = async (req, res) => {
+  try {
+    if (!req.session || !req.session.user_id) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    const id = req.params.id;
+    const existing = await query(`SELECT * FROM studio_sessions WHERE id = $1 OR meeting_code = $1`, [id]);
+    if (!existing.rows || existing.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Session not found' });
+    }
+    const session = existing.rows[0];
+
+    const isAuthorized = jaasService.isSessionModerator(req.session, session);
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to cancel this class.' });
+    }
+
+    await query(`UPDATE studio_sessions SET status = 'CANCELLED' WHERE id = $1`, [session.id]);
+
+    await auditLogger.logActivity(req, {
+      userId: req.session.user_id,
+      action: `Cancelled Studio Class: ${session.title}`,
+      module: 'studio',
+      details: { sessionId: session.id, status: 'CANCELLED' }
+    });
+
+    res.json({ success: true, status: 'CANCELLED', message: 'Class cancelled.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * End live class (transition LIVE -> COMPLETED)
+ * POST /api/studio/sessions/:id/end & POST /api/studio/meetings/:id/end
+ */
+exports.postEndStudioSession = async (req, res) => {
+  try {
+    if (!req.session || !req.session.user_id) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    const id = req.params.id;
+    const existing = await query(`SELECT * FROM studio_sessions WHERE id = $1 OR meeting_code = $1`, [id]);
+    if (!existing.rows || existing.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Session not found' });
+    }
+    const session = existing.rows[0];
+
+    const isAuthorized = jaasService.isSessionModerator(req.session, session);
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to conclude this class.' });
+    }
+
+    await query(
+      `UPDATE studio_sessions SET status = 'COMPLETED', scheduled_end = CURRENT_TIMESTAMP WHERE id = $1`,
+      [session.id]
+    );
+
+    // Finalize open attendance records
     await query(
       `UPDATE studio_attendance 
        SET left_at = CURRENT_TIMESTAMP, 
            duration_seconds = TIMESTAMPDIFF(SECOND, joined_at, CURRENT_TIMESTAMP)
-       WHERE session_id = $1 AND member_id = $2 AND left_at IS NULL`,
-      [sessionId, memberId]
+       WHERE session_id = $1 AND left_at IS NULL`,
+      [session.id]
     ).catch(async () => {
-      // SQLite fallback syntax
       await query(
         `UPDATE studio_attendance 
-         SET left_at = CURRENT_TIMESTAMP,
+         SET left_at = CURRENT_TIMESTAMP, 
              duration_seconds = (strftime('%s', 'now') - strftime('%s', joined_at))
-         WHERE session_id = $1 AND member_id = $2 AND left_at IS NULL`,
+         WHERE session_id = $1 AND left_at IS NULL`,
+        [session.id]
+      ).catch(() => {});
+    });
+
+    await auditLogger.logActivity(req, {
+      userId: req.session.user_id,
+      action: `Concluded Live Studio Class: ${session.title}`,
+      module: 'studio',
+      details: { sessionId: session.id, status: 'COMPLETED' }
+    });
+
+    res.json({ success: true, status: 'COMPLETED', message: 'Class concluded successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+exports.postEndStudioMeeting = exports.postEndStudioSession;
+
+/**
+ * Delete studio session record
+ * DELETE /api/studio/sessions/:id & DELETE /api/studio/meetings/:id
+ */
+exports.deleteStudioSession = async (req, res) => {
+  try {
+    if (!req.session || !req.session.user_id) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    const id = req.params.id;
+    const existing = await query(`SELECT * FROM studio_sessions WHERE id = $1 OR meeting_code = $1`, [id]);
+    if (!existing.rows || existing.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Session not found' });
+    }
+    const session = existing.rows[0];
+
+    const isAuthorized = jaasService.isSessionModerator(req.session, session);
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to delete this session.' });
+    }
+
+    await query(`DELETE FROM studio_attendance WHERE session_id = $1`, [session.id]).catch(() => {});
+    await query(`DELETE FROM studio_sessions WHERE id = $1`, [session.id]);
+
+    await auditLogger.logActivity(req, {
+      userId: req.session.user_id,
+      action: `Deleted Studio Session: ${session.title}`,
+      module: 'studio',
+      details: { sessionId: session.id }
+    });
+
+    res.json({ success: true, message: 'Session deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+exports.deleteStudioMeeting = exports.deleteStudioSession;
+
+/**
+ * Authenticate, Authorize, Record Attendance, and Generate short-lived JaaS RS256 JWT
+ * POST /api/studio/sessions/:id/join
+ */
+exports.postJoinStudioSession = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await query(
+      `SELECT ss.* FROM studio_sessions ss WHERE ss.id = $1 OR ss.meeting_code = $1 OR ss.jaas_room_name = $1`,
+      [id]
+    );
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Live class session not found.' });
+    }
+    const session = result.rows[0];
+
+    const user = req.session || {};
+    const authCheck = jaasService.canJoinStudioSession(user, session);
+    if (!authCheck.allowed) {
+      return res.status(403).json({ success: false, message: authCheck.reason || 'You are not authorized to join this live class.' });
+    }
+
+    const memberId = user.user_id || user.id || 0;
+    const memberName = user.name || user.user_name || req.body.memberName || 'Participant';
+    const isModerator = jaasService.isSessionModerator(user, session);
+    const role = isModerator ? 'host' : (user.role || 'student');
+
+    // 1. Ensure room name exists
+    if (!session.jaas_room_name) {
+      session.jaas_room_name = jaasService.generateJaasRoomName(session.id);
+      await query(`UPDATE studio_sessions SET jaas_room_name = $1 WHERE id = $2`, [session.jaas_room_name, session.id]).catch(() => {});
+    }
+
+    // 2. Record Attendance Join
+    if (memberId) {
+      await query(
+        `INSERT INTO studio_attendance (session_id, member_id, user_id, member_name, role, joined_at, last_heartbeat_at)
+         VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        [session.id, memberId, memberId, memberName, role]
+      ).catch(() => {});
+    }
+
+    // 3. Generate JaaS JWT if credentials configured
+    let jwtToken = null;
+    let jaasConfigured = jaasService.isJaasConfigured();
+    let jaasDomain = '8x8.vc';
+    let fullRoomName = session.jaas_room_name;
+    let appId = '';
+
+    if (jaasConfigured) {
+      try {
+        const tokenResult = jaasService.generateParticipantToken({
+          user: {
+            id: memberId,
+            name: memberName,
+            email: user.email || `${memberName.toLowerCase().replace(/\s+/g, '.')}@librika.in`,
+            avatar: user.profile_photo || user.avatar || '',
+            role: user.role
+          },
+          session,
+          durationMinutes: 30,
+          isModerator
+        });
+        jwtToken = tokenResult.token;
+        fullRoomName = tokenResult.fullRoomName;
+        jaasDomain = tokenResult.domain;
+        appId = tokenResult.appId;
+      } catch (tokenErr) {
+        console.warn('[JAAS JOIN] Token generation note:', tokenErr.message);
+      }
+    } else {
+      const cfg = jaasService.getJaasConfig();
+      appId = cfg.appId || 'vpaas-magic-cookie-demo';
+      fullRoomName = jaasService.formatFullJaasRoom(appId, session.jaas_room_name);
+    }
+
+    // 4. Audit Log Join
+    await auditLogger.logActivity(req, {
+      userId: memberId,
+      action: `Joined Live Studio Session: ${session.title}`,
+      module: 'studio',
+      details: { sessionId: session.id, role, isModerator }
+    });
+
+    res.json({
+      success: true,
+      sessionId: session.id,
+      title: session.title,
+      roomName: session.jaas_room_name,
+      fullRoomName,
+      domain: jaasDomain,
+      appId,
+      jwt: jwtToken,
+      isModerator,
+      isJaasConfigured: jaasConfigured,
+      displayName: memberName,
+      email: user.email || '',
+      sessionStatus: session.status
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * Attendance Heartbeat — Keeps student/host attendance alive and computes duration
+ * POST /api/studio/sessions/:id/heartbeat
+ */
+exports.postHeartbeatStudioSession = async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const memberId = (req.session && req.session.user_id) || req.body.memberId || 0;
+
+    if (!sessionId || !memberId) {
+      return res.json({ success: true, warning: 'No active session id' });
+    }
+
+    // Update heartbeat timestamp & duration on latest active attendance entry
+    await query(
+      `UPDATE studio_attendance 
+       SET last_heartbeat_at = CURRENT_TIMESTAMP,
+           duration_seconds = TIMESTAMPDIFF(SECOND, joined_at, CURRENT_TIMESTAMP)
+       WHERE session_id = $1 AND (member_id = $2 OR user_id = $2) AND left_at IS NULL
+       ORDER BY id DESC LIMIT 1`,
+      [sessionId, memberId]
+    ).catch(async () => {
+      await query(
+        `UPDATE studio_attendance 
+         SET last_heartbeat_at = CURRENT_TIMESTAMP,
+             duration_seconds = (strftime('%s', 'now') - strftime('%s', joined_at))
+         WHERE session_id = $1 AND (member_id = $2 OR user_id = $2) AND left_at IS NULL`,
         [sessionId, memberId]
       ).catch(() => {});
     });
@@ -186,6 +599,68 @@ exports.postRecordAttendanceLeave = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+/**
+ * Record participant leaving the room & calculate final duration
+ * POST /api/studio/sessions/:id/leave & POST /api/studio/meetings/:id/attendance/leave
+ */
+exports.postLeaveStudioSession = async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const memberId = (req.session && req.session.user_id) || req.body.memberId || 0;
+
+    if (sessionId && memberId) {
+      await query(
+        `UPDATE studio_attendance 
+         SET left_at = CURRENT_TIMESTAMP, 
+             duration_seconds = TIMESTAMPDIFF(SECOND, joined_at, CURRENT_TIMESTAMP)
+         WHERE session_id = $1 AND (member_id = $2 OR user_id = $2) AND left_at IS NULL
+         ORDER BY id DESC LIMIT 1`,
+        [sessionId, memberId]
+      ).catch(async () => {
+        await query(
+          `UPDATE studio_attendance 
+           SET left_at = CURRENT_TIMESTAMP,
+               duration_seconds = (strftime('%s', 'now') - strftime('%s', joined_at))
+           WHERE session_id = $1 AND (member_id = $2 OR user_id = $2) AND left_at IS NULL`,
+          [sessionId, memberId]
+        ).catch(() => {});
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+exports.postRecordAttendanceLeave = exports.postLeaveStudioSession;
+exports.postRecordAttendanceJoin = exports.postJoinStudioSession;
+
+/**
+ * Optional JaaS Webhook Endpoint
+ * POST /api/webhooks/jaas
+ */
+exports.postJaasWebhook = async (req, res) => {
+  try {
+    const event = req.body;
+    if (!event || !event.event_type) {
+      return res.status(400).json({ success: false, message: 'Invalid JaaS event payload' });
+    }
+
+    // Handle room end or participant leave events idempotently
+    if (event.event_type === 'ROOM_DESTROYED') {
+      const roomName = event.room_name;
+      if (roomName) {
+        await query(`UPDATE studio_sessions SET status = 'COMPLETED', scheduled_end = CURRENT_TIMESTAMP WHERE jaas_room_name = $1 OR meeting_code = $1`, [roomName]).catch(() => {});
+      }
+    }
+
+    res.json({ success: true, processed: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. INSTRUCTOR LIVE STUDIO DASHBOARD (/studio)
@@ -544,6 +1019,8 @@ exports.postScheduleSession = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. FULL-SCREEN INTERACTIVE LIVE VIDEO CLASSROOM (JITSI BACKEND ENGINE)
 // ─────────────────────────────────────────────────────────────────────────────
+// 4. FULL-SCREEN INTERACTIVE LIVE VIDEO CLASSROOM (JAAS 8X8.VC ENGINE)
+// ─────────────────────────────────────────────────────────────────────────────
 exports.getLiveClassroom = async (req, res) => {
   try {
     const rawMeetingId = req.params.meetingId || req.params.id || req.query.meeting_id || '';
@@ -551,12 +1028,12 @@ exports.getLiveClassroom = async (req, res) => {
 
     let session = null;
 
-    // 1. Try studio_sessions first (Primary Jitsi Meeting Table)
+    // 1. Try studio_sessions first (Primary JaaS Meeting Table)
     if (rawMeetingId) {
       const studioRes = await query(
         `SELECT ss.*, ss.meeting_code as meeting_id, ss.class_name as course_title, ss.host_name as course_instructor
          FROM studio_sessions ss
-         WHERE ss.id = $1 OR ss.meeting_code = $1`,
+         WHERE ss.id = $1 OR ss.meeting_code = $1 OR ss.jaas_room_name = $1`,
         [rawMeetingId]
       ).catch(() => ({ rows: [] }));
 
@@ -594,57 +1071,101 @@ exports.getLiveClassroom = async (req, res) => {
       }
     }
 
-    // 3. Fallback mock room for testing
+    // 3. Fallback for newly initiated or ad-hoc sessions
     if (!session) {
-      const generatedCode = rawMeetingId.startsWith('LIBRIKA-') ? rawMeetingId : `LIBRIKA-DEMO-${(rawMeetingId || 'ROOM').toUpperCase()}`;
+      const isNum = !isNaN(rawMeetingId);
+      const safeRoom = jaasService.generateJaasRoomName(rawMeetingId || 1);
+      const safeCode = rawMeetingId.startsWith('LIB-') ? rawMeetingId : `LIB-${(rawMeetingId || 'DEMO').toUpperCase()}`;
       session = {
-        id: 99,
-        meeting_id: generatedCode,
-        meeting_code: generatedCode,
+        id: isNum ? parseInt(rawMeetingId, 10) : 1,
+        meeting_id: safeCode,
+        meeting_code: safeCode,
+        jaas_room_name: safeRoom,
         title: rawMeetingId ? `Live Class: ${rawMeetingId}` : 'Interactive Live Studio Masterclass',
-        host_name: 'Mrs. Sharma (Faculty)',
-        course_title: 'Librika Studio Live Session',
+        host_name: 'Faculty Instructor',
+        course_title: 'Librika Live Studio',
         status: 'LIVE'
       };
     }
 
-    const meetingCode = session.meeting_code || session.meeting_id;
+    // Ensure session has jaas_room_name
+    if (!session.jaas_room_name) {
+      session.jaas_room_name = jaasService.generateJaasRoomName(session.id);
+      if (session.id && !isNaN(session.id)) {
+        await query(`UPDATE studio_sessions SET jaas_room_name = $1 WHERE id = $2`, [session.jaas_room_name, session.id]).catch(() => {});
+      }
+    }
+
+    const meetingCode = session.meeting_code || session.meeting_id || session.jaas_room_name;
     session.meeting_code = meetingCode;
     session.meeting_id = meetingCode;
 
-    const referer = req.headers.referer || '';
-    const fromStudio = referer.includes('/studio') || referer.includes('/admin');
+    const user = req.session || {};
+    const authCheck = jaasService.canJoinStudioSession(user, session);
+    if (!authCheck.allowed) {
+      if (req.flash) req.flash('error', authCheck.reason || 'You are not authorized to join this live classroom.');
+      return res.redirect(user.role === 'student' ? '/student/live-classes' : '/admin?module=studio');
+    }
 
-    const currentUserId = (req.session && req.session.user_id) || Math.floor(Math.random() * 8000 + 1000);
-    const currentUserName = (req.session && (req.session.name || req.session.user_name)) || req.query.guest_name || (fromStudio ? (session.host_name || 'Host Instructor') : 'Participant');
+    const currentUserId = user.user_id || user.id || 0;
+    const currentUserName = user.name || user.user_name || req.query.guest_name || 'Participant';
+    const isModerator = jaasService.isSessionModerator(user, session);
+    const role = isModerator ? 'host' : (user.role || 'student');
 
-    const sessionRole = (req.session && req.session.role) || '';
-    const isInstructorRole = ['admin', 'librarian', 'super_admin', 'teacher', 'instructor', 'faculty', 'staff', 'personal'].includes(sessionRole);
-    const isSessionOwner = req.session && req.session.user_id && (session.host_user_id === req.session.user_id || session.host_id === req.session.user_id);
-
-    const isExplicitHostQuery = req.query.role === 'host' || req.query.host === '1' || req.query.isHost === 'true' || (req.query.passcode && req.query.passcode === session.passcode);
-
-    const isHost = Boolean(isInstructorRole || isSessionOwner || isExplicitHostQuery || fromStudio);
-
-    // Automatically record attendance join if user is logged in
-    if (session.id && req.session && req.session.user_id) {
-      query(
-        `INSERT INTO studio_attendance (session_id, member_id, member_name, role, joined_at)
-         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
-        [session.id, currentUserId, currentUserName, isHost ? 'host' : 'student']
+    // Automatically record attendance join in database
+    if (session.id && currentUserId) {
+      await query(
+        `INSERT INTO studio_attendance (session_id, member_id, user_id, member_name, role, joined_at, last_heartbeat_at)
+         VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        [session.id, currentUserId, currentUserId, currentUserName, role]
       ).catch(() => {});
+    }
+
+    // Prepare JaaS JWT if configured
+    let jaasJwt = null;
+    const jaasConfigured = jaasService.isJaasConfigured();
+    const jaasConfig = jaasService.getJaasConfig();
+    const fullRoomName = jaasService.formatFullJaasRoom(jaasConfig.appId, session.jaas_room_name);
+
+    if (jaasConfigured) {
+      try {
+        const tokenRes = jaasService.generateParticipantToken({
+          user: {
+            id: currentUserId,
+            name: currentUserName,
+            email: user.email || `${currentUserName.toLowerCase().replace(/\s+/g, '.')}@librika.in`,
+            avatar: user.profile_photo || user.avatar || '',
+            role: user.role
+          },
+          session,
+          durationMinutes: 30,
+          isModerator
+        });
+        jaasJwt = tokenRes.token;
+      } catch (err) {
+        console.warn('[JAAS SSR] Could not pre-sign JWT:', err.message);
+      }
     }
 
     res.render('live_classroom', {
       layout: false,
       title: `Live Studio: ${session.title} - Librika Meet`,
       session,
-      isHost,
+      isHost: isModerator,
+      isModerator,
+      jaasConfig: {
+        domain: jaasConfig.domain || '8x8.vc',
+        appId: jaasConfig.appId,
+        fullRoomName,
+        rawRoomName: session.jaas_room_name,
+        isConfigured: jaasConfigured,
+        jwt: jaasJwt
+      },
       user: {
         id: currentUserId,
         name: currentUserName,
-        role: isHost ? 'host' : 'student',
-        email: (req.session && req.session.username) || `${currentUserName.toLowerCase().replace(/\s+/g, '.')}@librika.in`
+        role,
+        email: user.email || `${currentUserName.toLowerCase().replace(/\s+/g, '.')}@librika.in`
       }
     });
   } catch (err) {
@@ -652,6 +1173,7 @@ exports.getLiveClassroom = async (req, res) => {
     res.status(500).send('Error loading live classroom: ' + err.message);
   }
 };
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 5. STUDENT COURSE LEARNING HUB & LMS PLAYER (TEACHABLE / CLASSPLUS STYLE)

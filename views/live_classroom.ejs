@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title><%= title %></title>
   
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -52,11 +52,13 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
     }
 
     .ls-exit-btn {
       width: 36px;
       height: 36px;
+      min-width: 36px;
       border-radius: 10px;
       background: #1F2937;
       color: #94A3B8;
@@ -76,6 +78,7 @@
     .ls-meeting-meta {
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     .ls-meeting-title-row {
@@ -85,10 +88,14 @@
     }
 
     .ls-meeting-title {
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 800;
       color: #FFFFFF;
       margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 380px;
       letter-spacing: -0.02em;
     }
 
@@ -99,12 +106,13 @@
       background: rgba(220, 38, 38, 0.2);
       color: #F87171;
       border: 1px solid rgba(220, 38, 38, 0.4);
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 800;
       padding: 2px 7px;
       border-radius: 6px;
       letter-spacing: 0.05em;
       text-transform: uppercase;
+      flex-shrink: 0;
     }
 
     .ls-live-dot {
@@ -121,14 +129,32 @@
     }
 
     .ls-meeting-sub {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: #94A3B8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .ls-topbar-right {
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .ls-timer-pill {
+      background: rgba(31, 41, 55, 0.8);
+      border: 1px solid #374151;
+      color: #34D399;
+      font-family: monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     .ls-code-pill {
@@ -136,11 +162,11 @@
       border: 1px solid #374151;
       color: #60A5FA;
       font-family: monospace;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      padding: 5px 10px;
+      padding: 5px 9px;
       border-radius: 8px;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     .ls-action-btn {
@@ -150,9 +176,9 @@
       border-radius: 8px;
       padding: 6px 12px;
       font-size: 0.8rem;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 6px;
       text-decoration: none;
@@ -160,34 +186,36 @@
     }
     .ls-action-btn:hover {
       background: #374151;
-      border-color: #4B5563;
+      color: #FFFFFF;
     }
 
     .ls-badge-host {
-      background: linear-gradient(135deg, #059669 0%, #10B981 100%);
-      color: #FFFFFF;
+      background: rgba(91, 75, 219, 0.2);
+      border: 1px solid rgba(91, 75, 219, 0.5);
+      color: #A78BFA;
       font-size: 0.72rem;
       font-weight: 800;
-      padding: 4px 8px;
+      padding: 3px 8px;
       border-radius: 6px;
       letter-spacing: 0.05em;
     }
 
     .ls-badge-student {
-      background: #374151;
-      color: #E2E8F0;
+      background: rgba(11, 94, 215, 0.2);
+      border: 1px solid rgba(11, 94, 215, 0.5);
+      color: #60A5FA;
       font-size: 0.72rem;
-      font-weight: 700;
-      padding: 4px 8px;
+      font-weight: 800;
+      padding: 3px 8px;
       border-radius: 6px;
+      letter-spacing: 0.05em;
     }
 
-    /* Main Jitsi Container */
+    /* Video Meeting Stage */
     #jitsiContainer {
-      flex: 1;
-      width: 100%;
+      width: 100vw;
       height: calc(100vh - 60px);
-      background: #000000;
+      background: #0B0F19;
       position: relative;
     }
 
@@ -197,26 +225,24 @@
       border: none !important;
     }
 
-    /* Loading Overlay */
+    /* Loading and Status Overlays */
     .ls-loading-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: #0B0F19;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 10;
-      transition: opacity 0.3s ease;
+      z-index: 40;
+      text-align: center;
+      padding: 24px;
     }
 
     .ls-spinner {
       width: 44px;
       height: 44px;
-      border: 3px solid rgba(11, 94, 215, 0.2);
+      border: 3px solid rgba(255, 255, 255, 0.1);
       border-top-color: #0B5ED7;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
@@ -226,23 +252,47 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    .ls-config-card {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 520px;
+      text-align: left;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: 768px) {
+      .ls-meeting-sub { display: none; }
+      .ls-meeting-title { max-width: 180px; }
+      .ls-code-pill { display: none; }
+      .ls-timer-pill { display: none; }
+    }
   </style>
 
   <!-- Meeting Config Injection -->
   <script>
     window.MEETING_CONFIG = {
       id: <%= session.id || 0 %>,
-      meetingCode: '<%= session.meeting_code || session.meeting_id %>',
+      meetingCode: '<%= session.meeting_code || session.meeting_id || "" %>',
+      jaasRoomName: '<%= (jaasConfig && jaasConfig.rawRoomName) || session.jaas_room_name || "" %>',
+      fullRoomName: '<%= (jaasConfig && jaasConfig.fullRoomName) || "" %>',
       title: '<%= (session.title || "Live Studio Class").replace(/'/g, "\\'") %>',
       isHost: <%= isHost ? 'true' : 'false' %>,
+      isModerator: <%= isModerator ? 'true' : 'false' %>,
       userId: <%= user.id || 0 %>,
       userName: '<%= (user.name || "Participant").replace(/'/g, "\\'") %>',
-      userEmail: '<%= user.email || "" %>'
+      userEmail: '<%= user.email || "" %>',
+      jaasDomain: '<%= (jaasConfig && jaasConfig.domain) || "8x8.vc" %>',
+      jaasAppId: '<%= (jaasConfig && jaasConfig.appId) || "" %>',
+      isJaasConfigured: <%= (jaasConfig && jaasConfig.isConfigured) ? 'true' : 'false' %>,
+      preSignedJwt: '<%= (jaasConfig && jaasConfig.jwt) || "" %>'
     };
   </script>
 
-  <!-- Official Jitsi External API SDK -->
-  <script src="https://meet.jit.si/external_api.js"></script>
+  <!-- Official JaaS (8x8.vc) External API SDK -->
+  <script src="https://8x8.vc/external_api.js"></script>
 </head>
 <body>
 
@@ -251,7 +301,7 @@
     <!-- Top Bar -->
     <header class="ls-topbar">
       <div class="ls-topbar-left">
-        <a href="<%= isHost ? '/admin?module=studio' : '/student/live-classes' %>" class="ls-exit-btn" title="Leave & Return" onclick="recordAttendanceLeave()">
+        <a href="<%= isHost ? '/admin?module=studio' : '/student/studio' %>" class="ls-exit-btn" title="Leave & Return" onclick="recordAttendanceLeave()">
           <span class="material-symbols-outlined text-[20px]">arrow_back</span>
         </a>
 
@@ -264,12 +314,17 @@
             </span>
           </div>
           <div class="ls-meeting-sub">
-            <%= session.course_title || session.class_name || 'Classroom' %> &bull; Host: <strong><%= session.host_name || 'Mrs. Sharma' %></strong>
+            <%= session.course_title || session.class_name || 'Classroom' %> &bull; Host: <strong><%= session.host_name || 'Faculty Instructor' %></strong>
           </div>
         </div>
       </div>
 
       <div class="ls-topbar-right">
+        <div id="meetingTimer" class="ls-timer-pill" title="Elapsed Time">
+          <span class="material-symbols-outlined" style="font-size:15px;">schedule</span>
+          <span id="timerDigits">00:00</span>
+        </div>
+
         <span class="ls-code-pill"><%= session.meeting_code || session.meeting_id %></span>
 
         <button class="ls-action-btn" onclick="copyJoinLink()" title="Copy Meeting Link">
@@ -277,13 +332,13 @@
           <span id="copyBtnText">Copy Link</span>
         </button>
 
-        <% if (isHost) { %>
+        <% if (isHost || isModerator) { %>
           <span class="ls-badge-host">👑 HOST (INSTRUCTOR)</span>
         <% } else { %>
           <span class="ls-badge-student">STUDENT</span>
         <% } %>
 
-        <a href="<%= isHost ? '/admin?module=studio' : '/student/live-classes' %>" class="ls-action-btn" style="background:#DC2626;border-color:#DC2626;color:#FFFFFF;" onclick="recordAttendanceLeave()">
+        <a href="<%= isHost ? '/admin?module=studio' : '/student/studio' %>" class="ls-action-btn" style="background:#DC2626;border-color:#DC2626;color:#FFFFFF;" onclick="recordAttendanceLeave()">
           Leave Room
         </a>
       </div>
@@ -293,8 +348,8 @@
     <main id="jitsiContainer">
       <div id="jitsiLoading" class="ls-loading-overlay">
         <div class="ls-spinner"></div>
-        <h3 style="margin:0 0 6px 0;font-weight:700;">Connecting to Librika Studio...</h3>
-        <p style="margin:0;color:#94A3B8;font-size:0.85rem;">Securing audio, video & collaborative whiteboard room</p>
+        <h3 style="margin:0 0 6px 0;font-weight:700;font-size:1.15rem;">Connecting to Librika Studio...</h3>
+        <p id="loadingStatusText" style="margin:0;color:#94A3B8;font-size:0.88rem;">Securing JaaS 8x8.vc video classroom with RS256 token</p>
       </div>
     </main>
 
@@ -302,138 +357,225 @@
 
   <script>
     let jitsiApi = null;
+    let heartbeatInterval = null;
+    let elapsedSeconds = 0;
+    let timerInterval = null;
 
-    function initJitsiMeet() {
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        const mins = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+        const secs = String(elapsedSeconds % 60).padStart(2, '0');
+        const el = document.getElementById('timerDigits');
+        if (el) el.textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    async function initJaaSSession() {
       const config = window.MEETING_CONFIG;
       const container = document.getElementById('jitsiContainer');
       const loader = document.getElementById('jitsiLoading');
-
-      const domain = 'meet.jit.si';
-      const options = {
-        roomName: config.meetingCode,
-        width: '100%',
-        height: '100%',
-        parentNode: container,
-        userInfo: {
-          displayName: config.userName,
-          email: config.userEmail
-        },
-        configOverwrite: {
-          startWithAudioMuted: !config.isHost,
-          startWithVideoMuted: !config.isHost,
-          prejoinPageEnabled: false,
-          disableModeratorIndicator: false,
-          enableWelcomePage: false,
-          enableClosePage: false,
-          disableDeepLinking: true,
-          hideConferenceSubject: true,
-          subject: config.title,
-          toolbarButtons: [
-            'camera',
-            'chat',
-            'desktop',
-            'download',
-            'etherpad',
-            'filmstrip',
-            'fullscreen',
-            'hangup',
-            'help',
-            'highlight',
-            'microphone',
-            'noisesuppression',
-            'participants-pane',
-            'profile',
-            'raisehand',
-            'recording',
-            'security',
-            'select-background',
-            'settings',
-            'shareaudio',
-            'sharedvideo',
-            'shortcuts',
-            'stats',
-            'tileview',
-            'toggle-camera',
-            'videoquality',
-            'whiteboard'
-          ]
-        },
-        interfaceConfigOverwrite: {
-          SHOW_JITSI_WATERMARK: false,
-          SHOW_WATERMARK_FOR_GUEST: false,
-          SHOW_BRAND_WATERMARK: false,
-          BRAND_WATERMARK_LINK: '',
-          SHOW_POWERED_BY: false,
-          SHOW_PROMOTIONAL_CLOSE_PAGE: false,
-          DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
-          TILE_VIEW_MAX_COLUMNS: 4,
-          MOBILE_APP_PROMO: false
-        }
-      };
+      const statusText = document.getElementById('loadingStatusText');
 
       try {
+        let jwtToken = config.preSignedJwt;
+        let fullRoomName = config.fullRoomName;
+        let domain = config.jaasDomain || '8x8.vc';
+        let isModerator = config.isModerator;
+
+        // Fetch join authentication & short-lived token from backend
+        if (!jwtToken) {
+          if (statusText) statusText.textContent = 'Authenticating participant session...';
+          const joinRes = await fetch(`/api/studio/sessions/${config.id || config.meetingCode}/join`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              memberName: config.userName
+            })
+          });
+
+          if (!joinRes.ok) {
+            const errData = await joinRes.json().catch(() => ({}));
+            throw new Error(errData.message || `Access denied (${joinRes.status})`);
+          }
+
+          const joinData = await joinRes.json();
+          jwtToken = joinData.jwt;
+          fullRoomName = joinData.fullRoomName;
+          domain = joinData.domain || domain;
+          isModerator = joinData.isModerator;
+        }
+
+        // If JaaS is not configured in server environment, display informative setup guide
+        if (!jwtToken && !config.isJaasConfigured) {
+          loader.innerHTML = `
+            <div class="ls-config-card">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <div style="width:40px;height:40px;border-radius:10px;background:rgba(245,158,11,0.15);color:#F59E0B;display:flex;align-items:center;justify-content:center;font-size:22px;">⚙️</div>
+                <div>
+                  <h3 style="margin:0;font-weight:800;color:#FFFFFF;font-size:1.1rem;">JaaS (8x8.vc) Setup Required</h3>
+                  <p style="margin:0;color:#94A3B8;font-size:0.8rem;">Jitsi as a Service Integration</p>
+                </div>
+              </div>
+              <p style="color:#CBD5E1;font-size:0.88rem;line-height:1.5;margin-bottom:14px;">
+                To enable live classrooms on <strong>8x8.vc</strong>, please configure your JaaS developer credentials in your server's <code>.env</code> file:
+              </p>
+              <pre style="background:#030712;padding:12px;border-radius:8px;font-size:0.8rem;color:#60A5FA;overflow-x:auto;margin:0 0 16px 0;border:1px solid #1F2937;">JAAS_APP_ID=vpaas-magic-cookie-xxxx
+JAAS_API_KEY_ID=vpaas-magic-cookie-xxxx/xxxx
+JAAS_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
+JAAS_DOMAIN=8x8.vc</pre>
+              <div style="display:flex;gap:10px;">
+                <a href="${config.isHost ? '/admin?module=studio' : '/student/studio'}" class="ls-action-btn" style="background:#1F2937;border-color:#374151;">Back to Studio</a>
+                <button onclick="window.location.reload()" class="ls-action-btn" style="background:#0B5ED7;border-color:#0B5ED7;color:#FFFFFF;">Retry Connection</button>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (statusText) statusText.textContent = 'Joining JaaS classroom...';
+
+        // Check if JitsiMeetExternalAPI is loaded
+        if (typeof JitsiMeetExternalAPI === 'undefined') {
+          throw new Error('JaaS External API SDK script could not be loaded from 8x8.vc. Check your internet connection.');
+        }
+
+        const options = {
+          roomName: fullRoomName || `${config.jaasAppId}/${config.jaasRoomName}`,
+          jwt: jwtToken,
+          width: '100%',
+          height: '100%',
+          parentNode: container,
+          userInfo: {
+            displayName: config.userName,
+            email: config.userEmail
+          },
+          configOverwrite: {
+            startWithAudioMuted: !isModerator,
+            startWithVideoMuted: !isModerator,
+            prejoinPageEnabled: false,
+            disableModeratorIndicator: false,
+            enableWelcomePage: false,
+            enableClosePage: false,
+            disableDeepLinking: true,
+            hideConferenceSubject: false,
+            subject: config.title,
+            toolbarButtons: [
+              'camera',
+              'chat',
+              'desktop',
+              'filmstrip',
+              'fullscreen',
+              'hangup',
+              'microphone',
+              'noisesuppression',
+              'participants-pane',
+              'profile',
+              'raisehand',
+              'security',
+              'select-background',
+              'settings',
+              'shareaudio',
+              'sharedvideo',
+              'stats',
+              'tileview',
+              'toggle-camera',
+              'videoquality',
+              'whiteboard'
+            ]
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUEST: false,
+            SHOW_BRAND_WATERMARK: false,
+            SHOW_POWERED_BY: false,
+            SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+            DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
+            TILE_VIEW_MAX_COLUMNS: 4,
+            MOBILE_APP_PROMO: false
+          }
+        };
+
         jitsiApi = new JitsiMeetExternalAPI(domain, options);
 
+        // Conference Joined
         jitsiApi.addListener('videoConferenceJoined', (data) => {
-          console.log('[LIBRIKA STUDIO] Connected to room:', data);
+          console.log('[LIBRIKA JAAS] Connected to 8x8.vc room:', data);
           if (loader) loader.style.display = 'none';
-          recordAttendanceJoin();
+          startTimer();
+          startAttendanceHeartbeat();
         });
 
+        // Conference Left / Window Closed
         jitsiApi.addListener('readyToClose', () => {
-          console.log('[LIBRIKA STUDIO] Conference ended or closed by user.');
+          console.log('[LIBRIKA JAAS] Conference closed.');
           recordAttendanceLeave();
-          window.location.href = config.isHost ? '/admin?module=studio' : '/student/live-classes';
+          window.location.href = config.isHost ? '/admin?module=studio' : '/student/studio';
         });
 
-        jitsiApi.addListener('participantJoined', (participant) => {
-          console.log('[LIBRIKA STUDIO] Participant joined:', participant);
+        jitsiApi.addListener('videoConferenceLeft', () => {
+          console.log('[LIBRIKA JAAS] Left conference.');
+          recordAttendanceLeave();
         });
 
-        jitsiApi.addListener('participantLeft', (participant) => {
-          console.log('[LIBRIKA STUDIO] Participant left:', participant);
-        });
-
-        // Safety timeout to hide loader
+        // Fallback safety timeout for loader
         setTimeout(() => {
-          if (loader) loader.style.display = 'none';
-        }, 3500);
+          if (loader && loader.style.display !== 'none') {
+            loader.style.display = 'none';
+          }
+        }, 4000);
 
       } catch (err) {
-        console.error('[LIBRIKA STUDIO] Jitsi init error:', err);
+        console.error('[LIBRIKA JAAS] Init error:', err);
         if (loader) {
           loader.innerHTML = `
-            <div style="text-align:center;padding:24px;">
-              <h3 style="color:#F87171;">Could not load meeting room</h3>
-              <p style="color:#94A3B8;">${err.message}</p>
-              <button onclick="window.location.reload()" class="ls-action-btn" style="background:#0B5ED7;border-color:#0B5ED7;margin-top:12px;">Retry</button>
+            <div class="ls-config-card" style="text-align:center;">
+              <div style="font-size:32px;margin-bottom:10px;">⚠️</div>
+              <h3 style="color:#F87171;margin:0 0 8px 0;font-weight:700;">Could not connect to live class</h3>
+              <p style="color:#94A3B8;font-size:0.88rem;margin:0 0 16px 0;">${err.message}</p>
+              <div style="display:flex;justify-content:center;gap:10px;">
+                <a href="${config.isHost ? '/admin?module=studio' : '/student/studio'}" class="ls-action-btn">Exit</a>
+                <button onclick="window.location.reload()" class="ls-action-btn" style="background:#0B5ED7;border-color:#0B5ED7;color:#FFFFFF;">Try Again</button>
+              </div>
             </div>
           `;
         }
       }
     }
 
-    async function recordAttendanceJoin() {
-      if (!window.MEETING_CONFIG.id) return;
-      try {
-        await fetch(`/api/studio/meetings/${window.MEETING_CONFIG.id}/attendance/join`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            memberId: window.MEETING_CONFIG.userId,
-            memberName: window.MEETING_CONFIG.userName,
-            role: window.MEETING_CONFIG.isHost ? 'host' : 'student'
-          })
-        });
-      } catch(e) {}
+    function startAttendanceHeartbeat() {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      heartbeatInterval = setInterval(async () => {
+        const config = window.MEETING_CONFIG;
+        if (!config.id) return;
+        try {
+          await fetch(`/api/studio/sessions/${config.id}/heartbeat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: config.userId })
+          });
+        } catch(e) {}
+      }, 30000);
     }
 
     async function recordAttendanceLeave() {
-      if (!window.MEETING_CONFIG.id) return;
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      if (timerInterval) clearInterval(timerInterval);
+      const config = window.MEETING_CONFIG;
+      if (!config.id) return;
       try {
-        navigator.sendBeacon(`/api/studio/meetings/${window.MEETING_CONFIG.id}/attendance/leave`, JSON.stringify({
-          memberId: window.MEETING_CONFIG.userId
-        }));
+        const payload = JSON.stringify({ memberId: config.userId });
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(`/api/studio/sessions/${config.id}/leave`, payload);
+        } else {
+          fetch(`/api/studio/sessions/${config.id}/leave`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true
+          });
+        }
       } catch(e) {}
     }
 
@@ -448,7 +590,7 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', initJitsiMeet);
+    document.addEventListener('DOMContentLoaded', initJaaSSession);
   </script>
 </body>
 </html>

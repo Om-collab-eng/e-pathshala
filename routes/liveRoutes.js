@@ -2,8 +2,26 @@ const express = require('express');
 const router = express.Router();
 const liveController = require('../controllers/liveController');
 
-// ── 0. Studio Meeting REST API & Jitsi Meeting Routes ─────────────────────────
+// ── 0. JaaS Studio Session REST APIs & Meeting Routes ─────────────────────────
 router.get('/studio/meeting/:id', liveController.getLiveClassroom);
+router.get('/student/studio/meeting/:id', liveController.getLiveClassroom);
+router.get('/teacher/studio/meeting/:id', liveController.getLiveClassroom);
+
+// JaaS Studio Sessions REST API
+router.get('/api/studio/sessions', liveController.getStudioSessionsApi);
+router.post('/api/studio/sessions', liveController.postCreateStudioSession);
+router.get('/api/studio/sessions/:id', liveController.getStudioSessionById);
+router.patch('/api/studio/sessions/:id', liveController.patchStudioSession);
+router.post('/api/studio/sessions/:id/update', liveController.patchStudioSession);
+router.post('/api/studio/sessions/:id/start', liveController.postStartStudioSession);
+router.post('/api/studio/sessions/:id/end', liveController.postEndStudioSession);
+router.post('/api/studio/sessions/:id/cancel', liveController.postCancelStudioSession);
+router.delete('/api/studio/sessions/:id', liveController.deleteStudioSession);
+router.post('/api/studio/sessions/:id/join', liveController.postJoinStudioSession);
+router.post('/api/studio/sessions/:id/heartbeat', liveController.postHeartbeatStudioSession);
+router.post('/api/studio/sessions/:id/leave', liveController.postLeaveStudioSession);
+
+// Backwards compatibility aliases
 router.get('/api/studio/meetings', liveController.getStudioMeetingsApi);
 router.post('/api/studio/meetings', liveController.postCreateStudioMeeting);
 router.get('/api/studio/meetings/:id', liveController.getStudioMeetingById);
@@ -12,6 +30,10 @@ router.post('/api/studio/meetings/:id/end', liveController.postEndStudioMeeting)
 router.delete('/api/studio/meetings/:id', liveController.deleteStudioMeeting);
 router.post('/api/studio/meetings/:id/attendance/join', liveController.postRecordAttendanceJoin);
 router.post('/api/studio/meetings/:id/attendance/leave', liveController.postRecordAttendanceLeave);
+
+// Webhook
+router.post('/api/webhooks/jaas', liveController.postJaasWebhook);
+
 
 // ── 1. Instructor & Faculty Live Studio Dashboard ────────────────────────────
 router.get('/studio', liveController.getStudioDashboard);
