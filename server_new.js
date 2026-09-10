@@ -332,11 +332,22 @@ app.use('/', liveRoutes);
 const { initLiveTables } = require('./db/initLiveTables');
 initLiveTables().catch(err => console.warn('[LIVE STUDIO] Init warning:', err.message));
 
+// Initialize Librarian Relational Tables
+const { initLibrarianTables } = require('./db/initLibrarianTables');
+initLibrarianTables().catch(err => console.warn('[LIBRARIAN] Init warning:', err.message));
+
 // Auth routes
 app.use('/', require('./routes/authRoutes'));
 
-// Admin routes
+// Admin & Primary Librarian 9-Module routes
 app.use('/admin', require('./routes/admin'));
+app.use('/catalog', (req, res) => res.redirect('/admin/catalog'));
+app.use('/members', (req, res) => res.redirect('/admin/members'));
+app.use('/circulation', (req, res) => res.redirect('/admin/circulation'));
+app.use('/requests', (req, res) => res.redirect('/admin/requests'));
+app.use('/e-library', (req, res) => res.redirect('/admin/e-library'));
+app.use('/analytics', (req, res) => res.redirect('/admin/analytics'));
+app.use('/settings', (req, res) => res.redirect('/admin/settings'));
 app.use('/api', require('./routes/apiRoutes'));
 
 // Data Hub routes (Import / Export)

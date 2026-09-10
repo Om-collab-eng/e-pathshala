@@ -1,1913 +1,1672 @@
-<%- layout('base') %>
-
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="/coursera-librika.css">
-
-<style>
-/* ═══════════════════════════════════════════════════════════════
-   LIBRIKA ADMIN CONSOLE — COURSERA THEME DESIGN SYSTEM
-   Professional Enterprise & Campus Management Portal
-   ═══════════════════════════════════════════════════════════════ */
-*, *::before, *::after {
-    box-sizing: border-box !important;
-}
-
-html, body {
-    background: #F5F7FA !important;
-    background-color: #F5F7FA !important;
-    color: #1F1F1F !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow-x: hidden !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    min-height: 100vh !important;
-    font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-}
-
-:root {
-    --bg: #F5F7FA;
-    --sidebar-bg: #FFFFFF;
-    --border: #E1E6EB;
-    --text: #1F1F1F;
-    --muted: #5B6770;
-    --cr-blue: #0056D2;
-    --cr-blue-hover: #00419e;
-    --cr-blue-light: #EBF3FF;
-}
-
-.ld-shell {
-    display: flex !important;
-    min-height: 100vh !important;
-    background: #F5F7FA !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    position: relative !important;
-}
-
-.ld-main {
-    flex: 1 !important;
-    min-width: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 100vh !important;
-    margin-left: 250px !important;
-    width: calc(100% - 250px) !important;
-    max-width: 100vw !important;
-    background: #F5F7FA !important;
-    padding-bottom: 40px !important;
-    transition: margin-left 0.2s ease, width 0.2s ease !important;
-}
-
-@media (max-width: 899px) {
-    .ld-main {
-        margin-left: 0 !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-    }
-}
-
-/* ── TOPBAR ── */
-.ld-topbar {
-    background: #FFFFFF !important;
-    border-bottom: 1px solid #E1E6EB !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-    padding: 0.85rem 1.75rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 100 !important;
-    gap: 16px !important;
-}
-
-.ld-topbar-left {
-    display: flex !important;
-    align-items: center !important;
-    gap: 14px !important;
-}
-
-.ld-menu-btn {
-    background: var(--cr-blue-light) !important;
-    border: 1px solid rgba(0, 86, 210, 0.2) !important;
-    color: var(--cr-blue) !important;
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 8px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.1rem !important;
-    cursor: pointer !important;
-    font-weight: 700 !important;
-}
-
-@media (min-width: 900px) {
-    .ld-menu-btn { display: none !important; }
-}
-
-.ld-brand-title {
-    font-size: 1.25rem !important;
-    font-weight: 800 !important;
-    color: #00255D !important;
-    white-space: nowrap !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    letter-spacing: -0.3px;
-}
-
-.ld-brand-pill {
-    font-size: 0.7rem !important;
-    font-weight: 800 !important;
-    text-transform: uppercase;
-    background: var(--cr-blue-light) !important;
-    color: var(--cr-blue) !important;
-    padding: 2px 8px !important;
-    border-radius: 4px !important;
-    border: 1px solid rgba(0, 86, 210, 0.2) !important;
-}
-
-.ld-topbar-right {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    flex-wrap: wrap !important;
-}
-
-.ld-notif-btn {
-    background: #F5F7FA !important;
-    border: 1px solid #E1E6EB !important;
-    color: #475569 !important;
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.05rem !important;
-    cursor: pointer !important;
-    position: relative !important;
-    transition: all 0.2s ease !important;
-}
-
-.ld-notif-btn:hover {
-    background: var(--cr-blue-light) !important;
-    color: var(--cr-blue) !important;
-    border-color: var(--cr-blue) !important;
-}
-
-.ld-notif-badge {
-    position: absolute !important;
-    top: -2px !important;
-    right: -2px !important;
-    background: #D9381E !important;
-    color: white !important;
-    font-size: 0.65rem !important;
-    font-weight: 800 !important;
-    padding: 2px 6px !important;
-    border-radius: 10px !important;
-}
-
-/* ── SIDEBAR ── */
-.ld-sidebar {
-    width: 250px !important;
-    max-width: 85vw !important;
-    background: #FFFFFF !important;
-    border-right: 1px solid #E1E6EB !important;
-    display: flex !important;
-    flex-direction: column !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    z-index: 100001 !important;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03) !important;
-    transform: translateX(-105%) !important;
-}
-
-@media (max-width: 899px) {
-    .ld-sidebar.open {
-        transform: translateX(0) !important;
-        box-shadow: 8px 0 32px rgba(0, 0, 0, 0.15) !important;
-    }
-}
-
-@media (min-width: 900px) {
-    .ld-sidebar {
-        transform: translateX(0) !important;
-        position: fixed !important;
-    }
-}
-
-.ld-sidebar-header {
-    padding: 1.25rem 1.25rem !important;
-    border-bottom: 1px solid #E1E6EB !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    flex-shrink: 0 !important;
-    background: #FFFFFF !important;
-}
-
-.ld-sidebar-user {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    flex: 1 !important;
-    min-width: 0 !important;
-}
-
-.ld-avatar-lg {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    background: linear-gradient(135deg, #00255D, #0056D2) !important;
-    color: #FFFFFF !important;
-    font-weight: 800 !important;
-    font-size: 1.1rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-    box-shadow: 0 4px 10px rgba(0, 86, 210, 0.2) !important;
-}
-
-.ld-user-meta { min-width: 0 !important; flex: 1 !important; }
-.ld-user-name { margin: 0 !important; font-size: 0.9rem !important; font-weight: 800 !important; color: #1F1F1F !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.ld-user-school { margin: 1px 0 0 !important; font-size: 0.74rem !important; color: #5B6770 !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-
-.ld-sidebar-close {
-    background: var(--cr-blue-light) !important;
-    border: 1px solid #E1E6EB !important;
-    color: var(--cr-blue) !important;
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 0.95rem !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-}
-
-@media (min-width: 900px) {
-    .ld-sidebar-close { display: none !important; }
-}
-
-.ld-sidebar-nav {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    padding: 0.85rem 0.75rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 3px !important;
-}
-
-.ld-nav-item {
-    display: flex !important;
-    align-items: center !important;
-    height: 42px !important;
-    min-height: 42px !important;
-    padding: 0 12px !important;
-    border-radius: 8px !important;
-    color: #475569 !important;
-    font-size: 0.88rem !important;
-    font-weight: 600 !important;
-    text-decoration: none !important;
-    background: transparent !important;
-    border: none !important;
-    border-left: 3.5px solid transparent !important;
-    width: 100% !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    box-sizing: border-box !important;
-    white-space: nowrap !important;
-}
-
-.ld-nav-item:hover {
-    background: #F5F7FA !important;
-    color: var(--cr-blue) !important;
-}
-
-.ld-nav-item.active {
-    background: var(--cr-blue-light) !important;
-    color: var(--cr-blue) !important;
-    border-left: 3.5px solid var(--cr-blue) !important;
-    font-weight: 700 !important;
-}
-
-.ld-nav-icon {
-    width: 22px !important;
-    height: 22px !important;
-    font-size: 1.1rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-    margin-right: 10px !important;
-}
-
-.ld-nav-text {
-    flex: 1 !important;
-    text-align: left !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.ld-nav-badge {
-    margin-left: auto !important;
-    font-size: 0.65rem !important;
-    font-weight: 800 !important;
-    padding: 2px 7px !important;
-    border-radius: 20px !important;
-    background: #E1E6EB !important;
-    color: #333333 !important;
-    flex-shrink: 0 !important;
-}
-
-.ld-nav-badge.red { background: #D9381E !important; color: white !important; }
-.ld-nav-badge.orange { background: #B88E00 !important; color: white !important; }
-
-.ld-sidebar-footer {
-    padding: 0.85rem !important;
-    border-top: 1px solid #E1E6EB !important;
-    flex-shrink: 0 !important;
-    background: #FFFFFF !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-}
-
-.ld-footer-btn {
-    display: flex !important;
-    align-items: center !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    padding: 0 12px !important;
-    border-radius: 8px !important;
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
-    color: #475569 !important;
-    text-decoration: none !important;
-    background: #F5F7FA !important;
-    border: 1px solid #E1E6EB !important;
-    transition: all 0.15s ease !important;
-    width: 100% !important;
-}
-
-.ld-footer-btn:hover {
-    background: var(--cr-blue-light) !important;
-    color: var(--cr-blue) !important;
-    border-color: rgba(0, 86, 210, 0.3) !important;
-}
-
-.ld-footer-btn.danger {
-    background: #ffebe6 !important;
-    color: #D9381E !important;
-    border-color: rgba(217, 56, 30, 0.25) !important;
-}
-
-.ld-overlay-dim {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.35) !important;
-    z-index: 100000 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity 0.25s ease !important;
-}
-
-.ld-overlay-dim.active { opacity: 1 !important; pointer-events: auto !important; }
-
-@media (min-width: 900px) {
-    .ld-overlay-dim, .ld-overlay-dim.active { display: none !important; }
-}
-
-.ld-content {
-    padding: 1.75rem 2rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1.75rem !important;
-    background: #F5F7FA !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 1440px !important;
-}
-
-/* ── STATS / KPI GRID ── */
-.ld-stats-grid {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 16px !important;
-    width: 100% !important;
-}
-
-@media (max-width: 900px) {
-    .ld-stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .ld-stats-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-.ld-stat-card {
-    background: #FFFFFF !important;
-    border: 1px solid #E1E6EB !important;
-    border-radius: 12px !important;
-    padding: 1.25rem 1.35rem !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    text-align: left !important;
-    gap: 14px !important;
-    min-height: 95px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
-    min-width: 0 !important;
-}
-
-.ld-stat-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 20px rgba(0, 86, 210, 0.08) !important;
-    border-color: #bad3f7 !important;
-}
-
-.ld-stat-icon {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 10px !important;
-    background: var(--cr-blue-light) !important;
-    color: var(--cr-blue) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.35rem !important;
-    margin: 0 !important;
-    flex-shrink: 0 !important;
-}
-
-.ld-stat-val {
-    font-size: 1.8rem !important;
-    font-weight: 800 !important;
-    color: #1F1F1F !important;
-    line-height: 1.1 !important;
-}
-
-.ld-stat-lbl {
-    font-size: 0.74rem !important;
-    color: #5B6770 !important;
-    font-weight: 700 !important;
-    margin-top: 3px !important;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-/* ── CARDS & TABLES ── */
-.ld-card {
-    background: #FFFFFF !important;
-    border: 1px solid #E1E6EB !important;
-    border-radius: 14px !important;
-    padding: 1.5rem 1.75rem !important;
-    color: #1F1F1F !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-    min-width: 0 !important;
-}
-
-.ld-table-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    margin-top: 14px !important;
-    border: 1px solid #E1E6EB !important;
-    border-radius: 10px !important;
-    scrollbar-width: thin;
-}
-
-table.ld-table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    text-align: left !important;
-    font-size: 0.9rem !important;
-}
-
-table.ld-table th {
-    background: #F8FAFC !important;
-    color: #5B6770 !important;
-    font-weight: 800 !important;
-    font-size: 0.76rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    padding: 12px 16px !important;
-    border-bottom: 1px solid #E1E6EB !important;
-    white-space: nowrap !important;
-}
-
-table.ld-table td {
-    padding: 12px 16px !important;
-    border-bottom: 1px solid #F1F5F9 !important;
-    color: #1F1F1F !important;
-    vertical-align: middle !important;
-}
-
-table.ld-table tbody tr:hover {
-    background-color: #F8FAFC !important;
-}
-
-/* ── BUTTONS ── */
-.ld-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    padding: 8px 16px !important;
-    min-height: 38px !important;
-    border-radius: 8px !important;
-    font-size: 0.88rem !important;
-    font-weight: 700 !important;
-    cursor: pointer !important;
-    transition: all 0.18s ease !important;
-    text-decoration: none !important;
-    border: none !important;
-    background: var(--cr-blue-light) !important;
-    color: var(--cr-blue) !important;
-    box-sizing: border-box !important;
-    white-space: nowrap !important;
-}
-
-.ld-btn-primary {
-    background: var(--cr-blue) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 2px 6px rgba(0, 86, 210, 0.25) !important;
-}
-
-.ld-btn-primary:hover {
-    background: var(--cr-blue-hover) !important;
-}
-
-.ld-btn-danger {
-    background: #ffebe6 !important;
-    color: #D9381E !important;
-    border: 1px solid rgba(217, 56, 30, 0.25) !important;
-}
-
-.ld-btn-success {
-    background: #e8f5e9 !important;
-    color: #12824C !important;
-    border: 1px solid #b7eb8f !important;
-}
-
-.ld-btn-xs {
-    padding: 5px 12px !important;
-    min-height: 32px !important;
-    font-size: 0.78rem !important;
-    border-radius: 6px !important;
-}
-
-/* ── MODALS & FORMS ── */
-.ld-modal-overlay {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.45) !important;
-    backdrop-filter: blur(3px) !important;
-    z-index: 100000 !important;
-    display: none;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 1rem !important;
-    overflow-y: auto !important;
-}
-
-.ld-modal-overlay.active { display: flex !important; }
-
-.ld-modal-content {
-    background: #FFFFFF !important;
-    border: 1px solid #E1E6EB !important;
-    border-radius: 16px !important;
-    padding: 1.75rem !important;
-    width: 92vw !important;
-    max-width: 560px !important;
-    max-height: 88vh !important;
-    overflow-y: auto !important;
-    position: relative !important;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18) !important;
-    color: #1F1F1F !important;
-}
-
-.ld-modal-close {
-    position: absolute !important;
-    top: 14px !important;
-    right: 14px !important;
-    background: #F5F7FA !important;
-    border: 1px solid #E1E6EB !important;
-    color: #475569 !important;
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-}
-
-.ld-form-group {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-    width: 100% !important;
-    margin-bottom: 12px !important;
-}
-
-.ld-form-group label {
-    font-size: 0.8rem !important;
-    font-weight: 700 !important;
-    color: #00255D !important;
-    margin-bottom: 2px !important;
-}
-
-.ld-input, .ld-select, .ld-textarea {
-    width: 100% !important;
-    background: #FFFFFF !important;
-    border: 1px solid #C2C9D1 !important;
-    color: #1F1F1F !important;
-    border-radius: 8px !important;
-    padding: 9px 12px !important;
-    font-size: 0.9rem !important;
-    min-height: 40px !important;
-    outline: none !important;
-    transition: border-color 0.2s, box-shadow 0.2s !important;
-}
-
-.ld-input:focus, .ld-select:focus, .ld-textarea:focus {
-    border-color: var(--cr-blue) !important;
-    box-shadow: 0 0 0 3px rgba(0, 86, 210, 0.15) !important;
-}
-</style>
-
-<div class="ld-overlay-dim" id="adminDim" onclick="toggleAdminSidebar()"></div>
-
-<div class="ld-shell">
-    <!-- ══ SIDEBAR DRAWER ══ -->
-    <aside class="ld-sidebar" id="adminSidebar">
-        <!-- Header -->
-        <div class="ld-sidebar-header">
-            <div class="ld-sidebar-user">
-                <% const adminInitial = ((typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name).trim()[0] : 'L').toUpperCase(); %>
-                <div class="ld-avatar-lg">
-                    <%= adminInitial %>
-                </div>
-                <div class="ld-user-meta">
-                    <h4 class="ld-user-name"><%= (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Librarian' %></h4>
-                    <p class="ld-user-school"><%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'Library System' %></p>
-                </div>
-            </div>
-            <button class="ld-sidebar-close" onclick="toggleAdminSidebar()" aria-label="Close sidebar">✕</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/librarian-pro.css">
+</head>
+<body class="lp-body">
+
+  <div class="lp-shell">
+    
+    <!-- ═══════════════════════════════════════════════════════════════
+         1. PRIMARY 9-MODULE SIDEBAR NAVIGATION
+         ═══════════════════════════════════════════════════════════════ -->
+    <aside class="lp-sidebar" id="lpSidebar">
+      
+      <!-- Brand Header -->
+      <div class="lp-sidebar-header">
+        <a href="/admin" class="lp-brand-badge">
+          <div class="lp-brand-icon">📚</div>
+          <div>
+            <h1 class="lp-brand-name">Librika</h1>
+            <span class="lp-brand-sub">Librarian Pro</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- 9 Core Navigation Items -->
+      <nav class="lp-sidebar-nav">
+        
+        <!-- 1. Dashboard -->
+        <button class="lp-nav-item <%= currentModule === 'dashboard' ? 'active' : '' %>" onclick="navigateToModule('dashboard')">
+          <span class="lp-nav-icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+
+        <!-- 2. Catalog -->
+        <button class="lp-nav-item <%= currentModule === 'catalog' ? 'active' : '' %>" onclick="navigateToModule('catalog')">
+          <span class="lp-nav-icon">📚</span>
+          <span>Catalog</span>
+          <span class="lp-nav-badge"><%= stats.total_books %></span>
+        </button>
+
+        <!-- 3. Members -->
+        <button class="lp-nav-item <%= currentModule === 'members' ? 'active' : '' %>" onclick="navigateToModule('members')">
+          <span class="lp-nav-icon">👥</span>
+          <span>Members</span>
+          <span class="lp-nav-badge"><%= stats.total_members %></span>
+        </button>
+
+        <!-- 4. Circulation -->
+        <button class="lp-nav-item <%= currentModule === 'circulation' ? 'active' : '' %>" onclick="navigateToModule('circulation')">
+          <span class="lp-nav-icon">🔄</span>
+          <span>Circulation</span>
+          <% if (stats.overdue_count > 0) { %>
+            <span class="lp-nav-badge danger"><%= stats.overdue_count %></span>
+          <% } else { %>
+            <span class="lp-nav-badge primary"><%= stats.active_issues %></span>
+          <% } %>
+        </button>
+
+        <!-- 5. Requests -->
+        <button class="lp-nav-item <%= currentModule === 'requests' ? 'active' : '' %>" onclick="navigateToModule('requests')">
+          <span class="lp-nav-icon">📖</span>
+          <span>Requests</span>
+          <% if (stats.pending_reservations > 0) { %>
+            <span class="lp-nav-badge warning"><%= stats.pending_reservations %></span>
+          <% } %>
+        </button>
+
+        <!-- 6. E-Library -->
+        <button class="lp-nav-item <%= currentModule === 'e-library' ? 'active' : '' %>" onclick="navigateToModule('e-library')">
+          <span class="lp-nav-icon">🌐</span>
+          <span>E-Library</span>
+          <span class="lp-nav-badge"><%= stats.total_digital %></span>
+        </button>
+
+        <!-- 7. Studio -->
+        <button class="lp-nav-item <%= currentModule === 'studio' ? 'active' : '' %>" onclick="navigateToModule('studio')">
+          <span class="lp-nav-icon">🎥</span>
+          <span>Studio</span>
+          <span class="lp-nav-badge primary" style="background:#0B5ED7;color:#fff;">LIVE</span>
+        </button>
+
+        <!-- 8. Analytics -->
+        <button class="lp-nav-item <%= currentModule === 'analytics' ? 'active' : '' %>" onclick="navigateToModule('analytics')">
+          <span class="lp-nav-icon">📈</span>
+          <span>Analytics</span>
+        </button>
+
+        <!-- 9. Settings -->
+        <button class="lp-nav-item <%= currentModule === 'settings' ? 'active' : '' %>" onclick="navigateToModule('settings')">
+          <span class="lp-nav-icon">⚙️</span>
+          <span>Settings</span>
+        </button>
+
+      </nav>
+
+      <!-- Sidebar Footer User Profile -->
+      <div class="lp-sidebar-footer">
+        <div class="lp-user-pill">
+          <div class="lp-user-avatar">
+            <%= ((typeof session !== 'undefined' && session && session.name) ? session.name[0] : 'L').toUpperCase() %>
+          </div>
+          <div class="lp-user-info">
+            <h4 class="lp-user-name"><%= (typeof session !== 'undefined' && session && session.name) ? session.name : 'Chief Librarian' %></h4>
+            <p class="lp-user-role"><%= school.name %></p>
+          </div>
+          <a href="/logout" style="color:#DC3545;text-decoration:none;font-size:1.1rem;" title="Logout">🚪</a>
         </div>
+      </div>
 
-        <!-- Navigation List -->
-        <nav class="ld-sidebar-nav">
-            <button class="ld-nav-item" type="button" onclick="toggleAiChat()">
-                <span class="ld-nav-icon">🤖</span>
-                <span class="ld-nav-text">AI Assistant</span>
-            </button>
-            <button class="ld-nav-item tab-btn active" onclick="switchTab('dashboard', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">📊</span>
-                <span class="ld-nav-text">Dashboard</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('books', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">📚</span>
-                <span class="ld-nav-text">Books Catalog</span>
-                <span class="ld-nav-badge orange"><%= books ? books.length : 0 %></span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('members', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">👥</span>
-                <span class="ld-nav-text">Members</span>
-                <span class="ld-nav-badge"><%= total_students || 0 %></span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('transactions', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">🔄</span>
-                <span class="ld-nav-text">Transactions</span>
-                <span class="ld-nav-badge"><%= total_issued || 0 %></span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('overdue', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">⏰</span>
-                <span class="ld-nav-text">Overdue</span>
-                <% if (overdue_count > 0) { %><span class="ld-nav-badge red"><%= overdue_count %></span><% } %>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('reservations', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">📖</span>
-                <span class="ld-nav-text">Book Requests</span>
-                <% if (reservations && reservations.length > 0) { %><span class="ld-nav-badge orange"><%= reservations.length %></span><% } %>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('reviews', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">⭐</span>
-                <span class="ld-nav-text">Reviews</span>
-                <% if (pending_reviews && pending_reviews.length > 0) { %><span class="ld-nav-badge orange"><%= pending_reviews.length %></span><% } %>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('analytics', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">📊</span>
-                <span class="ld-nav-text">Analytics</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="window.location.href='/studio';">
-                <span class="ld-nav-icon">🎥</span>
-                <span class="ld-nav-text">Live Video Studio</span>
-                <span class="ld-nav-badge" style="background:#0056D2;color:white;">NEW</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('calendar', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">📅</span>
-                <span class="ld-nav-text">Calendar</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('reports', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">📈</span>
-                <span class="ld-nav-text">Reports & Data Hub</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('profile', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">👤</span>
-                <span class="ld-nav-text">My Profile</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('settings', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">⚙️</span>
-                <span class="ld-nav-text">Settings</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('security', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">🔒</span>
-                <span class="ld-nav-text">Security</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('support', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">❓</span>
-                <span class="ld-nav-text">Help & Support</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('notifications', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">🔔</span>
-                <span class="ld-nav-text">Notifications Center</span>
-                <span class="ld-nav-badge red ld-notif-badge" style="display: none;">0</span>
-            </button>
-            <button class="ld-nav-item tab-btn" onclick="switchTab('digital', this); autoCloseAdminSidebar();">
-                <span class="ld-nav-icon">🌐</span>
-                <span class="ld-nav-text">Digital Library (PDFs/E-Books)</span>
-                <span class="ld-nav-badge orange"><%= (typeof digital_items !== 'undefined' && digital_items) ? digital_items.length : 0 %></span>
-            </button>
-        </nav>
-
-        <!-- Sticky Footer -->
-        <div class="ld-sidebar-footer">
-            <a href="/admin" class="ld-footer-btn">
-                <span class="ld-nav-icon">📊</span>
-                <span>Librarian Home</span>
-            </a>
-            <a href="/logout" class="ld-footer-btn danger">
-                <span class="ld-nav-icon">🚪</span>
-                <span>Logout</span>
-            </a>
-        </div>
     </aside>
 
-    <!-- ══ MAIN CONTENT ══ -->
-    <main class="ld-main">
-        <!-- Topbar -->
-        <div class="ld-topbar">
-            <div class="ld-topbar-left">
-                <button class="ld-menu-btn" onclick="toggleAdminSidebar()" aria-label="Menu">☰</button>
-                <span class="ld-brand-title">📚 Librika Librarian</span>
-            </div>
-            <div class="ld-topbar-right">
-                <button class="ld-btn ld-btn-xs" onclick="toggleAiChat()" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.2); font-weight: 700;">🤖 AI Chat</button>
-                <button class="ld-btn ld-btn-primary ld-btn-xs" onclick="openModal('addBookModal')">+ Add Book</button>
-                <button class="ld-btn ld-btn-success ld-btn-xs" onclick="openModal('addUserModal')">+ Add Member</button>
-                <button class="ld-notif-btn" onclick="switchTab('notifications', this)" title="Notifications Center">
-                    🔔
-                    <% if (overdue_count > 0) { %><span class="ld-notif-badge"><%= overdue_count %></span><% } %>
-                </button>
-            </div>
+    <!-- ═══════════════════════════════════════════════════════════════
+         2. MAIN APP VIEWPORT & TOPBAR
+         ═══════════════════════════════════════════════════════════════ -->
+    <main class="lp-main">
+      
+      <!-- Topbar Header -->
+      <header class="lp-topbar">
+        <div class="lp-topbar-left">
+          <button class="lp-menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">☰</button>
+          
+          <div class="lp-search-bar">
+            <span class="lp-search-icon">🔍</span>
+            <input type="text" class="lp-search-input" id="globalSearchInput" placeholder="Quick search books, members, barcodes..." onkeyup="handleGlobalSearch(this.value)">
+          </div>
         </div>
 
-        <div class="ld-content">
-            <!-- ── TAB: DASHBOARD ── -->
-            <section id="tab-dashboard" class="tab-content">
-                <!-- Stats Grid -->
-                <div class="ld-stats-grid">
-                    <div class="ld-stat-card">
-                        <div class="ld-stat-icon">📚</div>
-                        <div>
-                            <div class="ld-stat-val"><%= books ? books.length : 0 %></div>
-                            <div class="ld-stat-lbl">Total Books</div>
-                        </div>
-                    </div>
-                    <div class="ld-stat-card">
-                        <div class="ld-stat-icon" style="background: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important;">✅</div>
-                        <div>
-                            <div class="ld-stat-val"><%= available_books || 0 %></div>
-                            <div class="ld-stat-lbl">Available Copies</div>
-                        </div>
-                    </div>
-                    <div class="ld-stat-card">
-                        <div class="ld-stat-icon" style="background: rgba(245, 158, 11, 0.1) !important; color: #f59e0b !important;">🔄</div>
-                        <div>
-                            <div class="ld-stat-val"><%= total_issued || 0 %></div>
-                            <div class="ld-stat-lbl">Active Loans</div>
-                        </div>
-                    </div>
-                    <div class="ld-stat-card">
-                        <div class="ld-stat-icon" style="background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important;">⏰</div>
-                        <div>
-                            <div class="ld-stat-val" style="color: #ef4444 !important;"><%= overdue_count || 0 %></div>
-                            <div class="ld-stat-lbl">Overdue Items</div>
-                        </div>
-                    </div>
-                </div>
+        <div class="lp-topbar-right">
+          <button class="ai-button" onclick="toggleAiCopilot()" style="padding:7px 14px;font-size:0.85rem;">
+            ✨ Ask Library AI
+          </button>
+          
+          <button class="btn-primary" onclick="openModal('addBookModal')" style="padding:7px 14px;font-size:0.85rem;">
+            + Add Book
+          </button>
 
-                <!-- Recent Transactions Table -->
-                <div class="ld-card" style="margin-top: 1rem;">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 10px 0;">🔄 Recent Transactions</h3>
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Book Title</th>
-                                    <th>Member Name</th>
-                                    <th>Issue Date</th>
-                                    <th>Due Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (transactions && transactions.length > 0) { %>
-                                    <% transactions.slice(0, 10).forEach(t => { %>
-                                        <tr>
-                                            <td style="font-weight: 700; color: #1F1F1F;"><%= t.title %></td>
-                                            <td><%= t.user_name || t.student_name || 'Member' %></td>
-                                            <td><%= t.issue_date %></td>
-                                            <td><%= t.due_date %></td>
-                                            <td>
-                                                <% if (t.return_date) { %>
-                                                    <span style="color: #34d399; font-weight: 700;">Returned</span>
-                                                <% } else if (t.is_overdue) { %>
-                                                    <span style="color: #f87171; font-weight: 700;">OVERDUE</span>
-                                                <% } else { %>
-                                                    <span style="color: #fb923c; font-weight: 700;">Issued</span>
-                                                <% } %>
-                                            </td>
-                                            <td>
-                                                <% if (!t.return_date) { %>
-                                                    <form action="/admin/return" method="POST" style="display: inline;">
-                                                        <input type="hidden" name="transaction_id" value="<%= t.id %>">
-                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Return</button>
-                                                    </form>
-                                                <% } %>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr><td colspan="6" style="text-align: center; color: var(--muted);">No transactions found.</td></tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+          <button class="btn-secondary" onclick="navigateToModule('circulation', 'issue')" style="padding:7px 14px;font-size:0.85rem;">
+            Issue Book
+          </button>
 
-            <!-- ── TAB: BOOKS CATALOG ── -->
-            <section id="tab-books" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
-                        <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0;">📚 Books Catalog</h3>
-                        <button class="ld-btn ld-btn-primary" onclick="openModal('addBookModal')">+ Add New Book</button>
-                    </div>
+          <div style="position:relative;">
+            <button class="btn-secondary" onclick="toggleNotifDropdown()" style="padding:7px 12px;border-radius:50%;" title="Notifications">
+              🔔
+              <% if (stats.overdue_count > 0) { %>
+                <span style="position:absolute;top:-4px;right:-4px;background:#DC3545;color:#fff;font-size:0.65rem;font-weight:800;padding:2px 6px;border-radius:9999px;">
+                  <%= stats.overdue_count %>
+                </span>
+              <% } %>
+            </button>
+          </div>
+        </div>
+      </header>
 
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Cover</th>
-                                    <th>Title & Author</th>
-                                    <th>Genre</th>
-                                    <th>Shelf</th>
-                                    <th>Available / Total</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (books && books.length > 0) { %>
-                                    <% books.forEach(b => { %>
-                                        <tr>
-                                            <td>
-                                                <img src="<%= b.cover_url || '/static/placeholder-cover.jpg' %>" alt="Cover" style="width: 36px; height: 50px; object-fit: cover; border-radius: 6px;">
-                                            </td>
-                                            <td>
-                                                <div style="font-weight: 700; color: #1F1F1F;"><%= b.title %></div>
-                                                <div style="font-size: 0.75rem; color: var(--muted);"><%= b.author %></div>
-                                            </td>
-                                            <td><%= b.genre || 'General' %></td>
-                                            <td><%= b.shelf_location || 'Main Shelf' %></td>
-                                            <td>
-                                                <span style="color: #34d399; font-weight: 700;"><%= b.available_copies %></span> / <%= b.quantity %>
-                                            </td>
-                                            <td>
-                                                <div style="display: flex; gap: 6px;">
-                                                    <form action="/admin/book/delete" method="POST" onsubmit="return confirm('Delete this book?')">
-                                                        <input type="hidden" name="book_id" value="<%= b.id %>">
-                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-danger">Delete</button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr><td colspan="6" style="text-align: center; color: var(--muted);">No books in catalog.</td></tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ── TAB: MEMBERS ── -->
-            <section id="tab-members" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
-                        <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0;">👥 Registered Members</h3>
-                        <button class="ld-btn ld-btn-success" onclick="openModal('addUserModal')">+ Add Member</button>
-                    </div>
-
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Role</th>
-                                    <th>Class & Sec</th>
-                                    <th>Admission No</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (students && students.length > 0) { %>
-                                    <% students.forEach(s => { %>
-                                        <tr>
-                                            <td style="font-weight: 700; color: #1F1F1F;"><%= s.name || s.user_name %></td>
-                                            <td><span style="text-transform: capitalize;"><%= s.role || 'Student' %></span></td>
-                                            <td><%= s.class || '-' %> <%= s.section ? '(' + s.section + ')' : '' %></td>
-                                            <td><%= s.admission_no || s.user_id || '-' %></td>
-                                            <td>
-                                                <% if (s.is_banned) { %>
-                                                    <span style="color: #f87171; font-weight: 700;">Banned</span>
-                                                <% } else { %>
-                                                    <span style="color: #34d399; font-weight: 700;">Active</span>
-                                                <% } %>
-                                            </td>
-                                            <td>
-                                                <div style="display: flex; gap: 6px;">
-                                                    <form action="/admin/student/<%= s.id %>/toggle-ban" method="POST">
-                                                        <button type="submit" class="ld-btn ld-btn-xs <%= s.is_banned ? 'ld-btn-success' : 'ld-btn-danger' %>"><%= s.is_banned ? 'Unban' : 'Ban' %></button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr><td colspan="6" style="text-align: center; color: var(--muted);">No registered members.</td></tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ── TAB: TRANSACTIONS ── -->
-            <section id="tab-transactions" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">🔄 Active Issued Loans</h3>
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Book Title</th>
-                                    <th>Member Name</th>
-                                    <th>Issue Date</th>
-                                    <th>Due Date</th>
-                                    <th>Fine</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (transactions && transactions.length > 0) { %>
-                                    <% transactions.filter(t => !t.return_date).forEach(t => { %>
-                                        <tr>
-                                            <td style="font-weight: 700; color: #1F1F1F;"><%= t.title %></td>
-                                            <td><%= t.user_name || t.student_name || 'Member' %></td>
-                                            <td><%= t.issue_date %></td>
-                                            <td><%= t.due_date %></td>
-                                            <td style="color: <%= t.calculated_fine > 0 ? '#f87171' : '#34d399' %>; font-weight: 700;">₹<%= t.calculated_fine || 0 %></td>
-                                            <td>
-                                                <form action="/admin/return" method="POST">
-                                                    <input type="hidden" name="transaction_id" value="<%= t.id %>">
-                                                    <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Return Book</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr><td colspan="6" style="text-align: center; color: var(--muted);">No active loans.</td></tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ── TAB: OVERDUE ── -->
-            <section id="tab-overdue" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #f87171; margin: 0 0 1rem 0;">⏰ Overdue Register</h3>
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Book Title</th>
-                                    <th>Member Name</th>
-                                    <th>Due Date</th>
-                                    <th>Calculated Fine</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (transactions && transactions.filter(t => t.is_overdue).length > 0) { %>
-                                    <% transactions.filter(t => t.is_overdue).forEach(t => { %>
-                                        <tr>
-                                            <td style="font-weight: 700; color: #1F1F1F;"><%= t.title %></td>
-                                            <td><%= t.user_name || t.student_name || 'Member' %></td>
-                                            <td style="color: #f87171; font-weight: 700;"><%= t.due_date %></td>
-                                            <td style="color: #f87171; font-weight: 800;">₹<%= t.calculated_fine || 0 %></td>
-                                            <td>
-                                                <form action="/admin/return" method="POST">
-                                                    <input type="hidden" name="transaction_id" value="<%= t.id %>">
-                                                    <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Clear & Return</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr><td colspan="5" style="text-align: center; color: var(--muted);">No overdue books! 🎉</td></tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ── TAB: RESERVATIONS / BOOK REQUESTS ── -->
-            <section id="tab-reservations" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">📖 Student Book Requests</h3>
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Book Title</th>
-                                    <th>Student Name</th>
-                                    <th>Request Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (reservations && reservations.length > 0) { %>
-                                    <% reservations.forEach(r => { %>
-                                        <tr>
-                                            <td style="font-weight: 700; color: #1F1F1F;"><%= r.title %></td>
-                                            <td><%= r.student_name || 'Student' %></td>
-                                            <td><%= r.created_at ? r.created_at.slice(0, 10) : 'Recent' %></td>
-                                            <td>
-                                                <div style="display: flex; gap: 6px;">
-                                                    <form action="/admin/reservation/approve" method="POST">
-                                                        <input type="hidden" name="reservation_id" value="<%= r.id %>">
-                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Approve</button>
-                                                    </form>
-                                                    <form action="/admin/reservation/reject" method="POST">
-                                                        <input type="hidden" name="reservation_id" value="<%= r.id %>">
-                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-danger">Reject</button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr><td colspan="4" style="text-align: center; color: var(--muted);">No pending book requests.</td></tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ── TAB: REVIEWS ── -->
-            <section id="tab-reviews" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">⭐ Book Reviews Moderation</h3>
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Book</th>
-                                    <th>Student</th>
-                                    <th>Learned Summary</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (pending_reviews && pending_reviews.length > 0) { %>
-                                    <% pending_reviews.forEach(rv => { %>
-                                        <tr>
-                                            <td style="font-weight: 700; color: #1F1F1F;"><%= rv.book_title %></td>
-                                            <td><%= rv.student_name %></td>
-                                            <td><%= rv.learned %></td>
-                                            <td>
-                                                <div style="display: flex; gap: 6px;">
-                                                    <form action="/admin/review/approve" method="POST">
-                                                        <input type="hidden" name="review_id" value="<%= rv.id %>">
-                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-success">Approve</button>
-                                                    </form>
-                                                    <form action="/admin/review/reject" method="POST">
-                                                        <input type="hidden" name="review_id" value="<%= rv.id %>">
-                                                        <button type="submit" class="ld-btn ld-btn-xs ld-btn-danger">Reject</button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr><td colspan="4" style="text-align: center; color: var(--muted);">No pending reviews for moderation.</td></tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ── TAB: REPORTS & DATA HUB ── -->
-            <section id="tab-reports" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">📈 Reports & Data Hub</h3>
-                    <p style="color: var(--muted); font-size: 0.85rem;">Export or import catalog and member records using CSV/Excel formats.</p>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 1rem;">
-                        <div style="background: rgba(99, 102, 241, 0.08); padding: 1rem; border-radius: 14px; border: 1px solid var(--border);">
-                            <h4 style="margin: 0 0 8px 0; color: #1F1F1F;">📥 Import Data</h4>
-                            <div class="ld-form-group">
-                                <label>Target Module</label>
-                                <select id="importModule" class="ld-select">
-                                    <option value="books">Books Catalog</option>
-                                    <option value="students">Students / Members</option>
-                                </select>
-                            </div>
-                            <div class="ld-form-group">
-                                <label>Select CSV/Excel File</label>
-                                <input type="file" id="importFile" accept=".csv,.xlsx" class="ld-input">
-                            </div>
-                            <button onclick="handleImport()" class="ld-btn ld-btn-primary" style="width: 100%; margin-top: 6px;">Upload & Import</button>
-                            <div id="importResult" style="margin-top: 8px; font-size: 0.8rem;"></div>
-                        </div>
-
-                        <div style="background: rgba(16, 185, 129, 0.08); padding: 1rem; border-radius: 14px; border: 1px solid var(--border);">
-                            <h4 style="margin: 0 0 8px 0; color: #1F1F1F;">📤 Export Data</h4>
-                            <div class="ld-form-group">
-                                <label>Export Module</label>
-                                <select id="exportModule" class="ld-select">
-                                    <option value="books">Books Catalog</option>
-                                    <option value="students">Students List</option>
-                                    <option value="transactions">Loan Transactions</option>
-                                </select>
-                            </div>
-                            <div class="ld-form-group">
-                                <label>Format</label>
-                                <select id="exportFormat" class="ld-select">
-                                    <option value="csv">CSV</option>
-                                    <option value="xlsx">Excel (XLSX)</option>
-                                </select>
-                            </div>
-                            <button onclick="handleExport()" class="ld-btn ld-btn-success" style="width: 100%; margin-top: 6px;">Download Export</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
+      <!-- Main Content Container -->
+      <div style="padding: 24px 28px;">
         
-            <!-- ── TAB: LIBRARIAN ANALYTICS ── -->
-            <section id="tab-analytics" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">📊 Library Analytics & Performance</h3>
-                    <div class="ld-stats-grid" style="margin-bottom: 1rem;">
-                        <div class="ld-stat-card">
-                            <div class="ld-stat-icon">📖</div>
-                            <div class="ld-stat-val"><%= total_issued || 0 %></div>
-                            <div class="ld-stat-lbl">Active Circulations</div>
-                        </div>
-                        <div class="ld-stat-card">
-                            <div class="ld-stat-icon">↩️</div>
-                            <div class="ld-stat-val"><%= total_returned || 0 %></div>
-                            <div class="ld-stat-lbl">Completed Returns</div>
-                        </div>
-                        <div class="ld-stat-card">
-                            <div class="ld-stat-icon">👥</div>
-                            <div class="ld-stat-val"><%= total_students || 0 %></div>
-                            <div class="ld-stat-lbl">Active Readers</div>
-                        </div>
-                        <div class="ld-stat-card">
-                            <div class="ld-stat-icon">⏰</div>
-                            <div class="ld-stat-val" style="color: #f87171;"><%= overdue_count || 0 %></div>
-                            <div class="ld-stat-lbl">Overdue Items</div>
-                        </div>
-                    </div>
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 01 — DASHBOARD
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-dashboard" class="lp-module-view" style="display:<%= currentModule === 'dashboard' ? 'block' : 'none' %>;">
+          
+          <!-- Hero Section + Today Card -->
+          <div class="lp-hero-section">
+            <div class="lp-hero-left">
+              <span class="lp-hero-pill">✨ Intelligent Library Workspace</span>
+              <h1 class="hero-title">
+                Your library,<br>
+                always in motion.
+              </h1>
+              <p class="hero-sub">
+                Manage books, readers, circulation and digital resources from one intelligent workspace.
+              </p>
+              <div class="lp-hero-actions">
+                <button class="btn-primary" onclick="openModal('addBookModal')">+ Add Book</button>
+                <button class="btn-secondary" onclick="navigateToModule('circulation', 'issue')">Issue Book</button>
+                <button class="ai-button" onclick="toggleAiCopilot()">✨ Ask Library AI</button>
+              </div>
+            </div>
+
+            <!-- TODAY Card -->
+            <div class="lp-today-card">
+              <div class="lp-today-head">
+                <span class="lp-today-badge">TODAY'S PULSE</span>
+                <span style="font-size:0.8rem;color:#94A3B8;"><%= new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+              </div>
+
+              <div class="lp-today-metrics">
+                <div class="lp-today-stat">
+                  <div class="lp-today-stat-val active"><%= stats.active_issues %></div>
+                  <div class="lp-today-stat-lbl">Active Issues</div>
                 </div>
-            </section>
-
-            <!-- ── TAB: CALENDAR ── -->
-            <section id="tab-calendar" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">📅 Library Operations Calendar</h3>
-                    <p style="color: var(--muted); font-size: 0.85rem;">Track book return due dates, upcoming library events, and operational schedules.</p>
-                    <div style="background: #f8fafc; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); margin-top: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h4 style="margin: 0; color: #0f172a;">Today: <%= new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %></h4>
-                            <span class="ld-btn ld-btn-xs ld-btn-primary">+ Add Event</span>
-                        </div>
-                        <p style="color: #34d399; font-size: 0.85rem; font-weight: 700;">✅ All return schedules synced with database.</p>
-                    </div>
+                <div class="lp-today-stat">
+                  <div class="lp-today-stat-val overdue"><%= stats.overdue_count %></div>
+                  <div class="lp-today-stat-lbl">Overdue</div>
                 </div>
-            </section>
-
-            <!-- ── TAB: MY PROFILE ── -->
-            <section id="tab-profile" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">👤 Librarian Profile</h3>
-                    <form action="/admin/settings" method="POST">
-                        <div class="ld-form-group">
-                            <label>Full Name</label>
-                            <input type="text" name="name" value="<%= (typeof session !== 'undefined' && session && (session.user_name || session.name)) ? (session.user_name || session.name) : 'Librarian' %>" class="ld-input">
-                        </div>
-                        <div class="ld-form-group">
-                            <label>School Name</label>
-                            <input type="text" value="<%= (typeof session !== 'undefined' && session && session.school_name) ? session.school_name : 'Library System' %>" disabled class="ld-input" style="opacity: 0.7;">
-                        </div>
-                        <div class="ld-form-group">
-                            <label>Role</label>
-                            <input type="text" value="Librarian Admin" disabled class="ld-input" style="opacity: 0.7;">
-                        </div>
-                        <button type="submit" class="ld-btn ld-btn-primary" style="margin-top: 10px;">Update Profile</button>
-                    </form>
+                <div class="lp-today-stat">
+                  <div class="lp-today-stat-val due"><%= stats.due_today %></div>
+                  <div class="lp-today-stat-lbl">Due Today</div>
                 </div>
-            </section>
+              </div>
 
-            <!-- ── TAB: SETTINGS ── -->
-            <section id="tab-settings" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">⚙️ Library System Settings</h3>
-                    <form action="/admin/settings" method="POST">
-                        <div class="ld-form-group">
-                            <label>Overdue Fine Rate per Day (₹)</label>
-                            <input type="number" name="fine_per_day" value="5" min="0" class="ld-input">
-                        </div>
-                        <div class="ld-form-group">
-                            <label>Max Borrow Limit per Student</label>
-                            <input type="number" name="max_books" value="3" min="1" class="ld-input">
-                        </div>
-                        <div class="ld-form-group">
-                            <label>Borrowing Duration (Days)</label>
-                            <input type="number" name="issue_duration" value="14" min="1" class="ld-input">
-                        </div>
-                        <button type="submit" class="ld-btn ld-btn-success" style="margin-top: 10px;">Save Settings</button>
-                    </form>
+              <div class="lp-today-footer">
+                <span>Total Catalog: <strong><%= stats.total_books %> Titles</strong></span>
+                <button onclick="navigateToModule('circulation')" style="background:transparent;border:none;color:#64FFDA;font-weight:700;cursor:pointer;">
+                  Circulation Desk &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI Stats Grid -->
+          <div class="lp-stats-grid">
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Total Books</span>
+                <h3 class="lp-stat-value"><%= stats.total_books %></h3>
+                <span class="lp-stat-change" style="color:#198754;">✓ <%= stats.available_copies %> Available Copies</span>
+              </div>
+              <div class="lp-stat-icon-wrap blue">📚</div>
+            </div>
+
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Active Members</span>
+                <h3 class="lp-stat-value"><%= stats.total_members %></h3>
+                <span class="lp-stat-change" style="color:#5B4BDB;">👥 <%= stats.total_students %> Students, <%= stats.total_teachers %> Staff</span>
+              </div>
+              <div class="lp-stat-icon-wrap indigo">👥</div>
+            </div>
+
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Active Loans</span>
+                <h3 class="lp-stat-value"><%= stats.active_issues %></h3>
+                <span class="lp-stat-change" style="color:#0B5ED7;">🔄 <%= stats.total_returned %> Total Returned</span>
+              </div>
+              <div class="lp-stat-icon-wrap blue">🔄</div>
+            </div>
+
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Pending Requests</span>
+                <h3 class="lp-stat-value"><%= stats.pending_reservations %></h3>
+                <span class="lp-stat-change" style="color:#F59E0B;">⚡ Waiting Queue</span>
+              </div>
+              <div class="lp-stat-icon-wrap warning">📖</div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Bar -->
+          <div class="card" style="margin-bottom:24px;padding:18px 24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+              <span style="font-weight:800;font-size:0.95rem;color:#111827;">⚡ Quick Actions:</span>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn-secondary" onclick="openModal('addBookModal')">➕ Add Book</button>
+                <button class="btn-secondary" onclick="navigateToModule('circulation', 'issue')">📤 Issue Book</button>
+                <button class="btn-secondary" onclick="navigateToModule('circulation', 'return')">📥 Return Book</button>
+                <button class="btn-secondary" onclick="openModal('addMemberModal')">👤 Register Member</button>
+                <button class="btn-secondary" onclick="navigateToModule('requests')">📖 View Requests</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two-Column Grid: Recent Activity & Needs Attention -->
+          <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:24px;">
+            
+            <!-- Recent Activity -->
+            <div class="card">
+              <div class="lp-card-header">
+                <div>
+                  <h3 class="lp-card-title">🕒 Recent Circulation Activity</h3>
+                  <p class="lp-card-sub">Latest borrow and return transactions</p>
                 </div>
-            </section>
+                <button class="btn-secondary" onclick="navigateToModule('circulation')" style="font-size:0.78rem;padding:4px 10px;">View All</button>
+              </div>
 
-            <!-- ── TAB: SECURITY & LOGS ── -->
-            <section id="tab-security" class="tab-content" style="display: none;">
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <!-- Top row: Password & 2FA -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
-                        <!-- Change Password Card -->
-                        <div class="ld-card" style="padding: 1.5rem;">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
-                                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(99, 102, 241, 0.1); color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🔑</div>
-                                <div>
-                                    <h3 style="font-family: 'Outfit'; font-size: 1.05rem; color: #0f172a; margin: 0;">Account Password</h3>
-                                    <p style="margin: 2px 0 0; font-size: 0.78rem; color: #64748b;">Update your administrator credentials</p>
-                                </div>
-                            </div>
-                            <form id="adminPasswordForm" onsubmit="handleAdminPasswordChange(event)" style="display: flex; flex-direction: column; gap: 10px;">
-                                <div>
-                                    <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Current Password</label>
-                                    <input type="password" id="adminCurrPass" class="ld-input" required placeholder="Enter current password" style="width: 100%;">
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">New Password</label>
-                                    <input type="password" id="adminNewPass" class="ld-input" required minlength="6" placeholder="Min. 6 characters" style="width: 100%;">
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Confirm New Password</label>
-                                    <input type="password" id="adminConfPass" class="ld-input" required minlength="6" placeholder="Re-enter new password" style="width: 100%;">
-                                </div>
-                                <button type="submit" class="ld-btn ld-btn-primary" style="margin-top: 6px; width: 100%; justify-content: center;">Update Password</button>
-                            </form>
-                        </div>
-
-                        <!-- 2FA & Session Security Card -->
-                        <div class="ld-card" style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
-                                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🛡️</div>
-                                    <div>
-                                        <h3 style="font-family: 'Outfit'; font-size: 1.05rem; color: #0f172a; margin: 0;">Two-Factor & Session Security</h3>
-                                        <p style="margin: 2px 0 0; font-size: 0.78rem; color: #64748b;">Protect your portal from unauthorized access</p>
-                                    </div>
-                                </div>
-                                <div style="background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <div>
-                                            <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a;">Two-Factor Authentication (2FA)</div>
-                                            <div style="font-size: 0.78rem; color: #64748b;">Extra layer of account protection</div>
-                                        </div>
-                                        <button id="admin2faBtn" onclick="toggleAdmin2fa()" class="ld-btn ld-btn-xs ld-btn-primary">Enable 2FA</button>
-                                    </div>
-                                </div>
-                                <div style="background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0;">
-                                    <div style="display: flex; align-items: center; gap: 8px; color: #10b981; font-weight: 700; font-size: 0.84rem;">
-                                        <span>🔒</span> SSL 256-bit Encryption Active
-                                    </div>
-                                    <div style="font-size: 0.76rem; color: #64748b; margin-top: 4px;">Session tokens are strictly isolated per school environment.</div>
-                                </div>
-                            </div>
-                            <div style="margin-top: 1rem;">
-                                <h4 style="font-size: 0.82rem; font-weight: 700; color: #475569; margin: 0 0 6px 0;">Active Devices</h4>
-                                <div id="adminDevicesList" style="font-size: 0.78rem; color: #64748b;">Current browser session active.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Today's Login Access History Card -->
-                    <div class="ld-card" style="padding: 1.5rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
-                            <div>
-                                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #0f172a; margin: 0;">🔐 Today's Login Access History</h3>
-                                <p style="margin: 2px 0 0; font-size: 0.8rem; color: #64748b;">Real-time authentication records for users in this school today</p>
-                            </div>
-                            <button onclick="loadAdminSecurityLogs()" class="ld-btn ld-btn-secondary ld-btn-xs" style="gap: 6px;">🔄 Refresh Logins</button>
-                        </div>
-                        <div id="adminTodayLoginsWrap" style="overflow-x: auto;">
-                            <div style="text-align: center; padding: 1.5rem; color: #94a3b8;">Loading today's logins...</div>
-                        </div>
-                    </div>
-
-                    <!-- Security & Audit Activity Logs Table -->
-                    <div class="ld-card" style="padding: 1.5rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
-                            <div>
-                                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #0f172a; margin: 0;">📜 Security & Audit Activity Logs</h3>
-                                <p style="margin: 2px 0 0; font-size: 0.8rem; color: #64748b;">Administrative actions and configuration events for this school</p>
-                            </div>
-                        </div>
-                        <div id="adminSecurityLogsWrap" style="overflow-x: auto;">
-                            <div style="text-align: center; padding: 2rem; color: #94a3b8;">Loading security logs...</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ── TAB: HELP & SUPPORT ── -->
-            <section id="tab-support" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.1rem; color: #1F1F1F; margin: 0 0 1rem 0;">❓ Help & Technical Support</h3>
-                    <p style="color: var(--muted); font-size: 0.85rem;">Contact Librika technical team or review automated support guides.</p>
-                    <div style="background: rgba(99, 102, 241, 0.08); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); margin-top: 1rem;">
-                        <h4 style="margin: 0 0 6px 0; color: #1F1F1F;">📞 Support Contact</h4>
-                        <p style="margin: 0; font-size: 0.85rem; color: #4f46e5;">Email: support@librika.in | Helpline: +91 (800) LIBRIKA</p>
-                    </div>
-                </div>
-            </section>
-
-</div>
-    
-            <!-- ── TAB: NOTIFICATIONS CENTER ── -->
-            <section id="tab-notifications" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <% if (activeLoans.length === 0 && returnedLoans.length === 0) { %>
+                  <p style="color:#94A3B8;text-align:center;padding:20px;">No recent circulation transactions recorded.</p>
+                <% } else { %>
+                  <% const recentItems = [...activeLoans, ...returnedLoans].slice(0, 5); %>
+                  <% recentItems.forEach(t => { %>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;background:#F8FAFC;border:1px solid #E2E8F0;">
+                      <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:1.3rem;"><%= t.return_date ? '✅' : '📖' %></span>
                         <div>
-                            <h3 style="font-family: 'Outfit'; font-size: 1.15rem; color: #0f172a; margin: 0;">🔔 Notifications & Activity Center</h3>
-                            <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0;">Real-time system alerts, book requests, returns, and student activity logs.</p>
+                          <div style="font-weight:700;font-size:0.9rem;color:#111827;"><%= t.book_title %></div>
+                          <div style="font-size:0.75rem;color:#64748B;">Borrower: <strong><%= t.user_name %></strong> (<%= t.user_admission || t.user_role %>)</div>
                         </div>
-                        <button class="ld-btn ld-btn-primary ld-btn-xs" onclick="markAllNotificationsRead(this)">Mark All as Read</button>
+                      </div>
+                      <span class="lp-status-pill <%= t.return_date ? 'available' : (t.is_overdue ? 'overdue' : 'issued') %>">
+                        <%= t.return_date ? 'Returned' : (t.is_overdue ? 'Overdue' : 'Active Loan') %>
+                      </span>
                     </div>
+                  <% }) %>
+                <% } %>
+              </div>
+            </div>
 
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Notification / Alert</th>
-                                    <th>Category</th>
-                                    <th>Timestamp</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (typeof notifications_list !== 'undefined' && notifications_list && notifications_list.length > 0) { %>
-                                    <% notifications_list.forEach(n => { %>
-                                        <tr>
-                                            <td style="font-weight: 600; color: #0f172a;">
-                                                <span style="margin-right: 8px;">🔔</span> <%= n.message %>
-                                            </td>
-                                            <td>
-                                                <span style="background: rgba(99, 102, 241, 0.08); color: #6366f1; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;"><%= n.type || 'SYSTEM' %></span>
-                                            </td>
-                                            <td style="font-size: 0.8rem; color: #64748b;"><%= n.created_at ? new Date(n.created_at).toLocaleString() : 'Just now' %></td>
-                                            <td>
-                                                <% if (n.is_read) { %>
-                                                    <span style="color: #64748b; font-weight: 600; font-size: 0.78rem;">Read</span>
-                                                <% } else { %>
-                                                    <span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px;">NEW</span>
-                                                <% } %>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr>
-                                        <td colspan="4" style="text-align: center; color: #64748b; padding: 2rem;">No recent notifications recorded.</td>
-                                    </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
+            <!-- Needs Attention / Overdue Queue -->
+            <div class="card">
+              <div class="lp-card-header">
+                <div>
+                  <h3 class="lp-card-title">🚨 Needs Attention</h3>
+                  <p class="lp-card-sub">Overdue books and pending fines</p>
                 </div>
-            </section>
+                <span class="lp-nav-badge danger"><%= stats.overdue_count %> Overdue</span>
+              </div>
 
-            <!-- ── TAB: DIGITAL LIBRARY (PDFs, E-BOOKS, DIGITAL ASSETS) ── -->
-            <section id="tab-digital" class="tab-content" style="display: none;">
-                <div class="ld-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
-                        <div>
-                            <h3 style="font-family: 'Outfit'; font-size: 1.15rem; color: #0f172a; margin: 0;">🌐 Digital Library & E-Resources</h3>
-                            <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0;">Manage digital books, PDFs, study modules, and online reading content.</p>
-                        </div>
-                        <a href="/digital-library" target="_blank" class="ld-btn ld-btn-primary ld-btn-xs">🌐 Open Reader View</a>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <% const overdueItems = activeLoans.filter(l => l.is_overdue); %>
+                <% if (overdueItems.length === 0) { %>
+                  <div style="text-align:center;padding:30px 10px;color:#198754;">
+                    <span style="font-size:2rem;">🎉</span>
+                    <div style="font-weight:700;margin-top:6px;">All clean! No overdue books today.</div>
+                  </div>
+                <% } else { %>
+                  <% overdueItems.slice(0, 5).forEach(o => { %>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;background:#FEF2F2;border:1px solid #FCA5A5;">
+                      <div>
+                        <div style="font-weight:700;font-size:0.88rem;color:#991B1B;"><%= o.book_title %></div>
+                        <div style="font-size:0.75rem;color:#B91C1C;">Student: <strong><%= o.user_name %></strong> &bull; <%= o.days_overdue %> days late</div>
+                      </div>
+                      <div style="text-align:right;">
+                        <div style="font-weight:800;color:#DC3545;font-size:0.9rem;">₹<%= o.fine %></div>
+                        <button onclick="rapidReturnPrompt('<%= o.id %>')" class="btn-danger" style="padding:2px 8px;font-size:0.72rem;margin-top:2px;">Return</button>
+                      </div>
                     </div>
+                  <% }) %>
+                <% } %>
+              </div>
+            </div>
 
-                    <div class="ld-table-container">
-                        <table class="ld-table">
-                            <thead>
-                                <tr>
-                                    <th>Digital Title</th>
-                                    <th>Author / Creator</th>
-                                    <th>Subject / Category</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (typeof digital_items !== 'undefined' && digital_items && digital_items.length > 0) { %>
-                                    <% digital_items.forEach(item => { %>
-                                        <tr>
-                                            <td style="font-weight: 700; color: #0f172a;"><%= item.title %></td>
-                                            <td><%= item.author || item.student_name || 'System' %></td>
-                                            <td><%= item.subject || item.category || 'General' %></td>
-                                            <td>
-                                                <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 700; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px;"><%= item.status || 'Published' %></span>
-                                            </td>
-                                            <td>
-                                                <a href="/digital-library/content/<%= item.id %>" class="ld-btn ld-btn-xs" style="background: rgba(99, 102, 241, 0.08); color: #6366f1;">Read PDF</a>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr>
-                                        <td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">No digital items or PDFs uploaded yet. Use Digital Content Manager to publish e-books.</td>
-                                    </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 02 — CATALOG (BOOKS, INVENTORY, ACQUISITIONS)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-catalog" class="lp-module-view" style="display:<%= currentModule === 'catalog' ? 'block' : 'none' %>;">
+          
+          <div class="lp-tabs-bar">
+            <button class="lp-tab-btn active" onclick="switchCatalogTab('books', this)">
+              📚 Books Catalog <span class="lp-tab-badge"><%= books.length %></span>
+            </button>
+            <button class="lp-tab-btn" onclick="switchCatalogTab('inventory', this)">
+              📦 Inventory & Copies <span class="lp-tab-badge"><%= stats.total_copies %></span>
+            </button>
+            <button class="lp-tab-btn" onclick="switchCatalogTab('acquisitions', this)">
+              🛒 Acquisitions & Vendors
+            </button>
+          </div>
+
+          <!-- Catalog Tab 1: Books -->
+          <div id="catalog-tab-books" class="lp-tab-pane active">
+            <div class="card" style="margin-bottom:20px;padding:16px 20px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                <div style="display:flex;align-items:center;gap:10px;flex:1;max-width:480px;">
+                  <input type="text" id="catalogSearchInput" class="lp-search-input" placeholder="Search by title, author, genre, ISBN, rack..." onkeyup="filterCatalogTable(this.value)">
                 </div>
-            </section>
-</main>
-</div>
-
-<!-- ══ MODALS ══ -->
-<!-- Add Book Modal -->
-<div class="ld-modal-overlay" id="addBookModal">
-    <div class="ld-modal-content">
-        <button class="ld-modal-close" onclick="closeModal('addBookModal')">✕</button>
-        <h3 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 8px;">
-            <span>📚</span> <span>+ Add New Book</span>
-        </h3>
-
-        <!-- AI Scanner Banner -->
-        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 14px; padding: 1rem; text-align: center; margin-bottom: 1.25rem;">
-            <div style="font-size: 1.5rem; margin-bottom: 4px;">✨ 📷</div>
-            <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 800; color: #4338ca;">Smart AI & Barcode Scanner</h4>
-            <p style="margin: 0 0 10px 0; font-size: 0.8rem; color: #475569;">Scan ISBN barcode or book cover with camera to auto-fill title, author, and description!</p>
-            <a href="/admin/scanner" class="ld-btn ld-btn-primary ld-btn-xs" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; font-weight: 700;">
-                <span>📷 Launch AI Camera Scanner</span>
-            </a>
-        </div>
-
-        <div style="text-align: center; font-size: 0.78rem; color: #94a3b8; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
-            <div style="flex:1; height:1px; background:#e2e8f0;"></div>
-            <span>OR ENTER MANUALLY</span>
-            <div style="flex:1; height:1px; background:#e2e8f0;"></div>
-        </div>
-
-        <form action="/admin/add_book" method="POST">
-            <div class="ld-form-group">
-                <label>Book Title *</label>
-                <input type="text" name="title" required class="ld-input" placeholder="e.g. The Hobbit">
-            </div>
-            <div class="ld-form-group">
-                <label>Author *</label>
-                <input type="text" name="author" required class="ld-input" placeholder="e.g. J.R.R. Tolkien">
-            </div>
-            <div class="ld-form-group">
-                <label>Genre / Category</label>
-                <input type="text" name="genre" class="ld-input" placeholder="e.g. Fiction, Science">
-            </div>
-            <div class="ld-form-group">
-                <label>ISBN / Barcode (Optional)</label>
-                <input type="text" name="isbn" class="ld-input" placeholder="e.g. 9780261102217 (leave blank to auto-generate)">
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="ld-form-group">
-                    <label>Shelf Location</label>
-                    <input type="text" name="shelf_location" class="ld-input" placeholder="A-12">
+                <div style="display:flex;gap:10px;">
+                  <button class="btn-primary" onclick="openModal('addBookModal')">+ Add New Book</button>
+                  <button class="btn-secondary" onclick="exportBooksCSV()">Export CSV</button>
                 </div>
-                <div class="ld-form-group">
-                    <label>Total Copies</label>
-                    <input type="number" name="copies" value="1" min="1" class="ld-input">
-                </div>
+              </div>
             </div>
-            <div class="ld-form-group">
-                <label>Description (Optional)</label>
-                <textarea name="description" rows="2" class="ld-textarea" placeholder="Brief summary..."></textarea>
-            </div>
-            <button type="submit" class="ld-btn ld-btn-primary" style="width: 100%; margin-top: 12px; font-weight: 700;">Save Book to Catalog</button>
-        </form>
-    </div>
-</div>
 
-<!-- Add Member Modal -->
-<div class="ld-modal-overlay" id="addUserModal">
-    <div class="ld-modal-content">
-        <button class="ld-modal-close" onclick="closeModal('addUserModal')">✕</button>
-        <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: #1F1F1F; margin: 0 0 1rem 0;">+ Add New Member</h3>
-        <form action="/admin/student/add" method="POST">
-            <div class="ld-form-group">
-                <label>Full Name *</label>
-                <input type="text" name="name" required class="ld-input" placeholder="e.g. Rahul Sharma">
-            </div>
-            <div class="ld-form-group">
-                <label>Role *</label>
-                <select name="role" id="addUserRole" onchange="toggleAddUserClassField()" class="ld-select">
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="admin">Librarian / Admin</option>
-                </select>
-            </div>
-            <div class="ld-form-group">
-                <label>Gmail / Email Address *</label>
-                <input type="email" name="email" required class="ld-input" placeholder="e.g. student@gmail.com">
-            </div>
-            <div class="ld-form-group">
-                <label>Password *</label>
-                <input type="text" name="password" required class="ld-input" placeholder="Set Member Login Password" value="librika123">
-            </div>
-            <div class="ld-form-group" id="addUserClassGroup">
-                <label>Class & Section</label>
-                <input type="text" name="class" class="ld-input" placeholder="e.g. 10th-A">
-            </div>
-            <div class="ld-form-group" id="addUserAdmissionGroup">
-                <label>Admission No / Roll No</label>
-                <input type="text" name="admission_no" class="ld-input" placeholder="e.g. ADM-102">
-            </div>
-            <button type="submit" class="ld-btn ld-btn-success" style="width: 100%; margin-top: 14px; min-height: 44px;">+ Add Member</button>
-        </form>
-    </div>
-</div>
-
-<script>
-function autoCloseAdminSidebar() {
-    if (window.innerWidth <= 768) {
-        const sb = document.getElementById('adminSidebar');
-        const dim = document.getElementById('adminDim');
-        if (sb) sb.classList.remove('open');
-        if (dim) dim.classList.remove('active');
-    }
-}
-function toggleAdminSidebar() {
-    const sb = document.getElementById('adminSidebar');
-    const dim = document.getElementById('adminDim');
-    if (!sb) return;
-    sb.classList.toggle('open');
-    if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
-}
-document.addEventListener('DOMContentLoaded', function() {
-    autoCloseAdminSidebar();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    if (tab) {
-        const btn = document.querySelector(`.tab-btn[onclick*="'${tab}'"]`);
-        switchTab(tab, btn);
-    }
-});
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') autoCloseAdminSidebar();
-});
-
-function switchTab(tabName, element) {
-    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-    const target = document.getElementById('tab-' + tabName);
-    if (target) target.style.display = 'block';
-
-    if (element) {
-        document.querySelectorAll('.ld-nav-item').forEach(b => b.classList.remove('active'));
-        element.classList.add('active');
-    }
-
-    if (tabName === 'security') {
-        loadAdminSecurityLogs();
-    }
-}
-
-async function loadAdminSecurityLogs() {
-    const wrap = document.getElementById('adminSecurityLogsWrap');
-    if (!wrap) return;
-    try {
-        const res = await fetch('/admin/api/security-logs');
-        const data = await res.json();
-        if (!data.success) {
-            wrap.innerHTML = '<div style="text-align:center;padding:2rem;color:#ef4444;">Failed to load logs.</div>';
-            return;
-        }
-
-        const logs = data.logs || [];
-        const loginHistory = data.loginHistory || [];
-        const devices = data.devices || [];
-
-        // Render devices
-        const devWrap = document.getElementById('adminDevicesList');
-        if (devWrap) {
-            if (!devices.length) {
-                devWrap.innerHTML = '<span style="color:#94a3b8;">Current browser session active.</span>';
-            } else {
-                devWrap.innerHTML = devices.map(d => `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">
-                        <span>💻 <strong>${d.device_name || d.device_type || 'Browser'}</strong> (${d.ip_address || 'Current IP'})</span>
-                        <span style="font-size:0.72rem;color:#94a3b8;">${d.last_active ? new Date(d.last_active).toLocaleString() : 'Active'}</span>
-                    </div>
-                `).join('');
-            }
-        }
-
-        // Render Today's Logins
-        const todayWrap = document.getElementById('adminTodayLoginsWrap');
-        if (todayWrap) {
-            if (!loginHistory.length) {
-                todayWrap.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94a3b8;">No login records found for today yet.</div>';
-            } else {
-                todayWrap.innerHTML = `
-                    <table class="ld-table" style="width:100%;">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>User</th>
-                                <th>Phone / Email</th>
-                                <th>Role</th>
-                                <th>IP Address</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${loginHistory.map(h => {
-                                const d = h.created_at ? new Date(h.created_at) : null;
-                                const timeStr = d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
-                                return `
-                                    <tr>
-                                        <td style="font-weight:700;color:#0f172a;white-space:nowrap;">${timeStr}</td>
-                                        <td style="font-weight:600;color:#0f172a;">${h.user_name || 'Anonymous User'}</td>
-                                        <td style="font-size:0.8rem;color:#475569;">${h.phone || h.email || '—'}</td>
-                                        <td><span class="badge" style="background:rgba(99,102,241,0.1);color:#4f46e5;padding:2px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;">${h.role || 'user'}</span></td>
-                                        <td><code style="font-size:0.78rem;">${h.ip_address || '—'}</code></td>
-                                        <td><span class="badge" style="background:${h.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'};color:${h.success ? '#10b981' : '#ef4444'};padding:2px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;">${h.success ? '✓ Success' : '✗ ' + (h.failure_reason || 'Failed')}</span></td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                `;
-            }
-        }
-
-        if (!logs.length) {
-            wrap.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94a3b8;">No security activity logged yet.</div>';
-            return;
-        }
-
-        let rows = '';
-        logs.forEach(l => {
-            rows += `
-                <tr>
-                    <td style="font-weight:600;color:#0f172a;">${l.user_name || 'Admin'}</td>
-                    <td><span class="badge" style="background:rgba(99,102,241,0.1);color:#4f46e5;padding:2px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;">${l.module || 'system'}</span></td>
-                    <td style="color:#334155;font-size:0.82rem;">${l.action || '—'}</td>
-                    <td style="font-size:0.78rem;color:#64748b;"><code>${l.ip_address || '—'}</code></td>
-                    <td style="font-size:0.75rem;color:#94a3b8;white-space:nowrap;">${l.created_at ? new Date(l.created_at).toLocaleString() : '—'}</td>
-                </tr>
-            `;
-        });
-
-        wrap.innerHTML = `
-            <table class="ld-table" style="width:100%;">
+            <div class="lp-table-container">
+              <table class="lp-table" id="catalogTable">
                 <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Module</th>
-                        <th>Action Performed</th>
-                        <th>IP Address</th>
-                        <th>Time</th>
-                    </tr>
+                  <tr>
+                    <th>Book Details</th>
+                    <th>ISBN / Barcode</th>
+                    <th>Genre & Lang</th>
+                    <th>Stock / Copies</th>
+                    <th>Rack / Shelf</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
                 </thead>
-                <tbody>${rows}</tbody>
+                <tbody>
+                  <% books.forEach(b => { %>
+                    <tr>
+                      <td>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                          <div style="width:38px;height:52px;background:#E2E8F0;border-radius:6px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+                            <% if (b.cover_url) { %>
+                              <img src="<%= b.cover_url %>" style="width:100%;height:100%;object-fit:cover;">
+                            <% } else { %>
+                              <span style="font-size:1.2rem;">📖</span>
+                            <% } %>
+                          </div>
+                          <div>
+                            <div style="font-weight:700;color:#111827;"><%= b.title %></div>
+                            <div style="font-size:0.75rem;color:#64748B;">by <%= b.author || 'Unknown' %></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div style="font-family:monospace;font-weight:700;"><%= b.barcode_id || b.isbn || 'N/A' %></div>
+                        <% if (b.isbn) { %><div style="font-size:0.7rem;color:#94A3B8;">ISBN: <%= b.isbn %></div><% } %>
+                      </td>
+                      <td>
+                        <div><%= b.genre || 'General' %></div>
+                        <div style="font-size:0.72rem;color:#94A3B8;"><%= b.language || 'English' %></div>
+                      </td>
+                      <td>
+                        <div style="font-weight:700;"><%= b.available_copies %> / <%= b.total_copies %> Copies</div>
+                      </td>
+                      <td>
+                        <span style="background:#F1F5F9;padding:3px 8px;border-radius:6px;font-weight:600;font-size:0.8rem;">
+                          <%= b.shelf_location || 'Rack A-1' %>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="lp-status-pill <%= parseInt(b.available_copies) > 0 ? 'available' : 'overdue' %>">
+                          <%= parseInt(b.available_copies) > 0 ? 'In Stock' : 'Issued Out' %>
+                        </span>
+                      </td>
+                      <td>
+                        <div style="display:flex;gap:6px;">
+                          <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="quickIssueBook('<%= b.id %>', '<%= b.barcode_id %>')">Issue</button>
+                          <a href="/admin/acquisitions" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;">Edit</a>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Catalog Tab 2: Inventory & Physical Copies -->
+          <div id="catalog-tab-inventory" class="lp-tab-pane">
+            <div class="lp-stats-grid" style="margin-bottom:20px;">
+              <div class="lp-stat-card">
+                <div class="lp-stat-info">
+                  <span class="lp-stat-title">Total Physical Copies</span>
+                  <h3 class="lp-stat-value"><%= stats.total_copies %></h3>
+                </div>
+                <div class="lp-stat-icon-wrap blue">📦</div>
+              </div>
+              <div class="lp-stat-card">
+                <div class="lp-stat-info">
+                  <span class="lp-stat-title">Available on Shelf</span>
+                  <h3 class="lp-stat-value"><%= stats.available_copies %></h3>
+                </div>
+                <div class="lp-stat-icon-wrap green">✅</div>
+              </div>
+              <div class="lp-stat-card">
+                <div class="lp-stat-info">
+                  <span class="lp-stat-title">Currently Issued</span>
+                  <h3 class="lp-stat-value"><%= stats.active_issues %></h3>
+                </div>
+                <div class="lp-stat-icon-wrap indigo">🔄</div>
+              </div>
+              <div class="lp-stat-card">
+                <div class="lp-stat-info">
+                  <span class="lp-stat-title">Damaged / Lost</span>
+                  <h3 class="lp-stat-value"><%= stats.damaged_copies + stats.lost_copies %></h3>
+                </div>
+                <div class="lp-stat-icon-wrap red">⚠️</div>
+              </div>
+            </div>
+
+            <div class="lp-table-container">
+              <table class="lp-table">
+                <thead>
+                  <tr>
+                    <th>Copy Barcode</th>
+                    <th>Book Title</th>
+                    <th>Condition Status</th>
+                    <th>Availability</th>
+                    <th>Acquired Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (bookCopies.length === 0) { %>
+                    <tr><td colspan="6" style="text-align:center;padding:24px;color:#94A3B8;">No individual barcode copies seeded yet.</td></tr>
+                  <% } else { %>
+                    <% bookCopies.forEach(c => { %>
+                      <tr>
+                        <td style="font-family:monospace;font-weight:700;color:#0B5ED7;"><%= c.barcode %></td>
+                        <td style="font-weight:600;"><%= c.book_title %></td>
+                        <td>
+                          <span class="lp-status-pill <%= c.condition_status === 'GOOD' ? 'available' : 'overdue' %>">
+                            <%= c.condition_status %>
+                          </span>
+                        </td>
+                        <td>
+                          <span class="lp-status-pill <%= c.availability_status === 'AVAILABLE' ? 'available' : 'issued' %>">
+                            <%= c.availability_status %>
+                          </span>
+                        </td>
+                        <td style="font-size:0.8rem;color:#64748B;"><%= renderDate(c.acquired_at) || 'Recent' %></td>
+                        <td>
+                          <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="printBarcodeLabel('<%= c.barcode %>')">🖨️ Print Label</button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Catalog Tab 3: Acquisitions & Vendors -->
+          <div id="catalog-tab-acquisitions" class="lp-tab-pane">
+            <div class="card" style="margin-bottom:20px;">
+              <div class="lp-card-header">
+                <div>
+                  <h3 class="lp-card-title">🛒 Book Procurement & Vendor Requisitions</h3>
+                  <p class="lp-card-sub">Manage purchase requests, vendor quotes, and received shipments</p>
+                </div>
+                <a href="/admin/acquisitions" class="btn-primary">+ Create Purchase Order</a>
+              </div>
+              <p style="color:#64748B;font-size:0.9rem;">
+                Manage supplier invoices, purchase requisitions, and track book arrivals directly in the synchronized procurement portal.
+              </p>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 03 — MEMBERS (STUDENTS, TEACHERS, STAFF)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-members" class="lp-module-view" style="display:<%= currentModule === 'members' ? 'block' : 'none' %>;">
+          
+          <div class="lp-tabs-bar">
+            <button class="lp-tab-btn active" onclick="switchMemberTab('students', this)">
+              🎓 Students <span class="lp-tab-badge"><%= students.length %></span>
+            </button>
+            <button class="lp-tab-btn" onclick="switchMemberTab('teachers', this)">
+              👨‍🏫 Teachers <span class="lp-tab-badge"><%= teachers.length %></span>
+            </button>
+            <button class="lp-tab-btn" onclick="switchMemberTab('staff', this)">
+              👔 Staff & Librarians <span class="lp-tab-badge"><%= staff.length %></span>
+            </button>
+          </div>
+
+          <!-- Actions Bar -->
+          <div class="card" style="margin-bottom:20px;padding:16px 20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+              <input type="text" id="memberSearchInput" class="lp-search-input" style="max-width:380px;" placeholder="Search member by name, admission no, phone..." onkeyup="filterMemberTable(this.value)">
+              <button class="btn-primary" onclick="openModal('addMemberModal')">+ Register New Member</button>
+            </div>
+          </div>
+
+          <!-- Member Table -->
+          <div class="lp-table-container">
+            <table class="lp-table" id="membersTable">
+              <thead>
+                <tr>
+                  <th>Member Name</th>
+                  <th>Member ID / Adm No</th>
+                  <th>Class / Dept</th>
+                  <th>Contact Info</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% allUsers.forEach(u => { %>
+                  <tr data-role="<%= u.role %>">
+                    <td>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="lp-preview-avatar" style="width:36px;height:36px;font-size:0.95rem;">
+                          <%= (u.name || 'M')[0].toUpperCase() %>
+                        </div>
+                        <div>
+                          <div style="font-weight:700;color:#111827;"><%= u.name %></div>
+                          <div style="font-size:0.72rem;color:#64748B;text-transform:capitalize;"><%= u.role %></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style="font-family:monospace;font-weight:700;"><%= u.admission_no || `MEM-${u.id}` %></td>
+                    <td><%= u.class || 'Faculty' %></td>
+                    <td>
+                      <div><%= u.phone || 'N/A' %></div>
+                      <div style="font-size:0.72rem;color:#94A3B8;"><%= u.email || '' %></div>
+                    </td>
+                    <td>
+                      <span class="lp-status-pill <%= u.is_banned ? 'overdue' : 'available' %>">
+                        <%= u.is_banned ? 'Suspended' : 'Active' %>
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn-secondary" style="padding:4px 10px;font-size:0.78rem;" onclick="openMemberDrawer('<%= u.id %>')">
+                        View Profile &rarr;
+                      </button>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
             </table>
-        `;
-    } catch (e) {
-        wrap.innerHTML = '<div style="text-align:center;padding:2rem;color:#ef4444;">Error loading logs.</div>';
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 04 — CIRCULATION (DESK SCANNER: ISSUE, RETURN, RENEW)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-circulation" class="lp-module-view" style="display:<%= currentModule === 'circulation' ? 'block' : 'none' %>;">
+          
+          <div class="lp-tabs-bar">
+            <button class="lp-tab-btn active" id="circ-tab-btn-issue" onclick="switchCirculationTab('issue', this)">
+              📤 Issue Desk
+            </button>
+            <button class="lp-tab-btn" id="circ-tab-btn-return" onclick="switchCirculationTab('return', this)">
+              📥 Return Station
+            </button>
+            <button class="lp-tab-btn" id="circ-tab-btn-renew" onclick="switchCirculationTab('renewals', this)">
+              🔄 Active Loans & Renewals (<%= activeLoans.length %>)
+            </button>
+          </div>
+
+          <!-- Circulation Tab 1: Rapid Issue Desk -->
+          <div id="circ-pane-issue" class="lp-tab-pane active">
+            <div class="lp-circulation-grid">
+              
+              <!-- Left: Big Scanner Inputs -->
+              <div class="card">
+                <h3 class="lp-card-title" style="margin-bottom:16px;">🎯 Rapid Checkout & Issue Station</h3>
+                
+                <!-- 1. Scan Member -->
+                <div class="lp-scanner-box" style="margin-bottom:18px;">
+                  <label class="lp-scanner-label">
+                    <span>1. SCAN / ENTER MEMBER ID OR ADMISSION NO</span>
+                  </label>
+                  <div style="display:flex;gap:8px;">
+                    <input type="text" id="circMemberInput" class="lp-scanner-input" placeholder="e.g. ADM101 or phone..." onkeydown="if(event.key==='Enter') lookupMemberForIssue()">
+                    <button class="btn-primary" onclick="lookupMemberForIssue()">Find</button>
+                  </div>
+                  <div id="circMemberPreview" style="display:none;"></div>
+                </div>
+
+                <!-- 2. Scan Book -->
+                <div class="lp-scanner-box" style="margin-bottom:18px;">
+                  <label class="lp-scanner-label">
+                    <span>2. SCAN / ENTER BOOK BARCODE OR ISBN</span>
+                  </label>
+                  <div style="display:flex;gap:8px;">
+                    <input type="text" id="circBookInput" class="lp-scanner-input" placeholder="e.g. LIB-BK1-C1 or ISBN..." onkeydown="if(event.key==='Enter') lookupBookForIssue()">
+                    <button class="btn-primary" onclick="lookupBookForIssue()">Scan</button>
+                  </div>
+                  <div id="circBookPreview" style="display:none;"></div>
+                </div>
+
+                <!-- Loan Options -->
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                  <label style="font-size:0.85rem;font-weight:700;">Loan Duration:</label>
+                  <select id="circLoanDays" class="lp-search-input" style="width:140px;">
+                    <option value="7">7 Days</option>
+                    <option value="14" selected>14 Days</option>
+                    <option value="21">21 Days</option>
+                    <option value="30">30 Days</option>
+                  </select>
+                </div>
+
+                <!-- Confirm Issue Button -->
+                <button class="btn-primary" id="circConfirmIssueBtn" style="width:100%;justify-content:center;padding:14px;font-size:1.05rem;" onclick="submitCirculationIssue()" disabled>
+                  CONFIRM ISSUE
+                </button>
+              </div>
+
+              <!-- Right: Checkout Summary & Rules -->
+              <div class="card">
+                <h3 class="lp-card-title">📋 Circulation Summary</h3>
+                <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:18px;margin-top:14px;">
+                  <div style="font-weight:700;color:#111827;margin-bottom:8px;">Active Lending Rules:</div>
+                  <ul style="padding-left:18px;font-size:0.85rem;color:#64748B;line-height:1.7;margin:0;">
+                    <li>Default Student limit: <strong>3 books</strong> (14 days)</li>
+                    <li>Default Teacher limit: <strong>10 books</strong> (30 days)</li>
+                    <li>Fine rate: <strong>₹<%= settings.fine_per_day || 5 %>/day</strong> after <%= settings.grace_period_days || 2 %> grace days</li>
+                    <li>Automatic stock updates upon confirmed checkout</li>
+                  </ul>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Circulation Tab 2: Return Station -->
+          <div id="circ-pane-return" class="lp-tab-pane">
+            <div class="card" style="max-width:720px;margin:0 auto;">
+              <h3 class="lp-card-title" style="margin-bottom:16px;">📥 Book Check-In & Return Station</h3>
+              
+              <div class="lp-scanner-box" style="margin-bottom:20px;">
+                <label class="lp-scanner-label">SCAN BOOK BARCODE TO COMPLETE RETURN</label>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" id="circReturnBarcode" class="lp-scanner-input" placeholder="Scan barcode..." onkeydown="if(event.key==='Enter') submitCirculationReturn()">
+                  <button class="btn-success" onclick="submitCirculationReturn()">COMPLETE RETURN</button>
+                </div>
+              </div>
+
+              <div id="circReturnResult" style="display:none;background:#F0FDF4;border:1px solid #86EFAC;border-radius:14px;padding:18px;"></div>
+            </div>
+          </div>
+
+          <!-- Circulation Tab 3: Active Loans & Renewals -->
+          <div id="circ-pane-renewals" class="lp-tab-pane">
+            <div class="lp-table-container">
+              <table class="lp-table">
+                <thead>
+                  <tr>
+                    <th>Book Title</th>
+                    <th>Borrower</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Overdue / Fine</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (activeLoans.length === 0) { %>
+                    <tr><td colspan="6" style="text-align:center;padding:24px;color:#94A3B8;">No active loans right now.</td></tr>
+                  <% } else { %>
+                    <% activeLoans.forEach(l => { %>
+                      <tr>
+                        <td>
+                          <div style="font-weight:700;"><%= l.book_title %></div>
+                          <div style="font-size:0.72rem;color:#94A3B8;">Barcode: <%= l.book_barcode || 'N/A' %></div>
+                        </td>
+                        <td>
+                          <div style="font-weight:600;"><%= l.user_name %></div>
+                          <div style="font-size:0.72rem;color:#64748B;"><%= l.user_admission || l.user_role %></div>
+                        </td>
+                        <td><%= renderDate(l.issue_date) %></td>
+                        <td style="font-weight:700;"><%= renderDate(l.due_date) %></td>
+                        <td>
+                          <% if (l.is_overdue) { %>
+                            <span class="lp-status-pill overdue"><%= l.days_overdue %> days late (₹<%= l.fine %>)</span>
+                          <% } else { %>
+                            <span class="lp-status-pill available">On Time</span>
+                          <% } %>
+                        </td>
+                        <td>
+                          <div style="display:flex;gap:6px;">
+                            <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="renewLoan('<%= l.id %>')">Extend +14d</button>
+                            <button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="rapidReturnPrompt('<%= l.id %>')">Return</button>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 05 — REQUESTS (RESERVATIONS, BOOK REQUESTS)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-requests" class="lp-module-view" style="display:<%= currentModule === 'requests' ? 'block' : 'none' %>;">
+          <div class="lp-tabs-bar">
+            <button class="lp-tab-btn active" onclick="switchRequestTab('reservations', this)">
+              📖 Book Reservations Queue (<%= reservations.length %>)
+            </button>
+            <button class="lp-tab-btn" onclick="switchRequestTab('acquisitions', this)">
+              🛒 Acquisition Requests
+            </button>
+          </div>
+
+          <div class="lp-table-container">
+            <table class="lp-table">
+              <thead>
+                <tr>
+                  <th>Requested Book</th>
+                  <th>Student Name</th>
+                  <th>Request Date</th>
+                  <th>Available Stock</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (reservations.length === 0) { %>
+                  <tr><td colspan="6" style="text-align:center;padding:24px;color:#94A3B8;">No pending reservation requests.</td></tr>
+                <% } else { %>
+                  <% reservations.forEach(r => { %>
+                    <tr>
+                      <td style="font-weight:700;"><%= r.book_title %></td>
+                      <td>
+                        <div><%= r.student_name %></div>
+                        <div style="font-size:0.72rem;color:#94A3B8;"><%= r.student_admission || r.student_class %></div>
+                      </td>
+                      <td><%= renderDate(r.created_at) %></td>
+                      <td><%= r.available_copies %> Copies</td>
+                      <td>
+                        <span class="lp-status-pill <%= r.status === 'Approved' ? 'available' : (r.status === 'Pending' ? 'reserved' : 'overdue') %>">
+                          <%= r.status %>
+                        </span>
+                      </td>
+                      <td>
+                        <% if (r.status === 'Pending' || r.status === 'pending') { %>
+                          <div style="display:flex;gap:6px;">
+                            <button class="btn-success" style="padding:4px 8px;font-size:0.75rem;" onclick="approveReservation('<%= r.id %>')">Approve</button>
+                            <button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="rejectReservation('<%= r.id %>')">Decline</button>
+                          </div>
+                        <% } else { %>
+                          <span style="font-size:0.8rem;color:#94A3B8;">Processed</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }) %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 06 — E-LIBRARY (E-BOOKS, DOCUMENTS, RESEARCH PAPERS)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-e-library" class="lp-module-view" style="display:<%= currentModule === 'e-library' ? 'block' : 'none' %>;">
+          <div class="lp-tabs-bar">
+            <button class="lp-tab-btn active">🌐 Digital E-Books & Study Materials (<%= digitalItems.length %>)</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:20px;">
+            <% if (digitalItems.length === 0) { %>
+              <div class="card" style="grid-column:1/-1;text-align:center;padding:40px;">
+                <p style="color:#94A3B8;">No digital publications uploaded yet.</p>
+              </div>
+            <% } else { %>
+              <% digitalItems.forEach(d => { %>
+                <div class="card" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+                  <div>
+                    <div style="height:140px;background:#F1F5F9;border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                      <% if (d.cover_url) { %>
+                        <img src="<%= d.cover_url %>" style="width:100%;height:100%;object-fit:cover;">
+                      <% } else { %>
+                        <span style="font-size:2.5rem;">📄</span>
+                      <% } %>
+                    </div>
+                    <h4 style="font-size:0.95rem;font-weight:700;margin:0 0 4px 0;color:#111827;"><%= d.title %></h4>
+                    <p style="font-size:0.75rem;color:#64748B;margin:0 0 10px 0;"><%= d.author || 'Faculty' %></p>
+                  </div>
+                  <div style="display:flex;gap:6px;margin-top:12px;">
+                    <a href="/admin/e-library/read/<%= d.id %>" class="btn-primary" style="flex:1;justify-content:center;padding:6px;font-size:0.8rem;">Read</a>
+                    <a href="<%= d.file_url || '#' %>" target="_blank" class="btn-secondary" style="padding:6px 10px;font-size:0.8rem;">Download</a>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 07 — STUDIO (LIVE LECTURES & MASTERCLASSES)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-studio" class="lp-module-view" style="display:<%= currentModule === 'studio' ? 'block' : 'none' %>;">
+          <div class="card" style="margin-bottom:24px;">
+            <div class="lp-card-header">
+              <div>
+                <h3 class="lp-card-title">🎥 Live Online Classroom & Video Studio</h3>
+                <p class="lp-card-sub">In-house native WebRTC video conferencing with interactive whiteboard</p>
+              </div>
+              <a href="/studio" class="btn-primary">+ Host Live Meeting</a>
+            </div>
+            <p style="color:#64748B;font-size:0.9rem;">
+              Conduct live masterclasses, interactive lectures, and audio/video conferencing with crystal-clear screen sharing, synchronized collaborative whiteboard, and instant chat.
+            </p>
+          </div>
+
+          <div class="lp-table-container">
+            <table class="lp-table">
+              <thead>
+                <tr>
+                  <th>Session Title</th>
+                  <th>Meeting ID</th>
+                  <th>Scheduled Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (studioSessions.length === 0) { %>
+                  <tr><td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">No scheduled live sessions.</td></tr>
+                <% } else { %>
+                  <% studioSessions.forEach(s => { %>
+                    <tr>
+                      <td style="font-weight:700;"><%= s.title %></td>
+                      <td style="font-family:monospace;font-weight:700;"><%= s.meeting_id %></td>
+                      <td><%= renderDate(s.scheduled_at) %></td>
+                      <td><span class="lp-status-pill available">Scheduled</span></td>
+                      <td>
+                        <a href="/live/<%= s.meeting_id %>" target="_blank" class="btn-primary" style="padding:4px 10px;font-size:0.75rem;">Launch Room</a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 08 — ANALYTICS (CIRCULATION TRENDS & REPORTS)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-analytics" class="lp-module-view" style="display:<%= currentModule === 'analytics' ? 'block' : 'none' %>;">
+          <div class="lp-stats-grid" style="margin-bottom:24px;">
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Circulation Rate</span>
+                <h3 class="lp-stat-value"><%= Math.round((stats.active_issues / Math.max(1, stats.total_books)) * 100) %>%</h3>
+              </div>
+              <div class="lp-stat-icon-wrap blue">📈</div>
+            </div>
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Return Compliance</span>
+                <h3 class="lp-stat-value"><%= Math.max(0, 100 - Math.round((stats.overdue_count / Math.max(1, stats.active_issues)) * 100)) %>%</h3>
+              </div>
+              <div class="lp-stat-icon-wrap green">✅</div>
+            </div>
+            <div class="lp-stat-card">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Total Circulation History</span>
+                <h3 class="lp-stat-value"><%= allTransactions.length %></h3>
+              </div>
+              <div class="lp-stat-icon-wrap indigo">📚</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:24px;">
+            <div class="lp-card-header">
+              <h3 class="lp-card-title">📊 Reports & Export Hub</h3>
+              <div style="display:flex;gap:10px;">
+                <button class="btn-primary" onclick="exportBooksCSV()">Export Books CSV</button>
+                <button class="btn-secondary" onclick="exportCirculationCSV()">Export Loans CSV</button>
+              </div>
+            </div>
+            <p style="color:#64748B;font-size:0.9rem;">
+              Download structured data sheets for library accreditation, annual audits, and administrative reporting.
+            </p>
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
+             MODULE 09 — SETTINGS (RULES, FINES, MODERATION, AUDIT LOGS)
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-settings" class="lp-module-view" style="display:<%= currentModule === 'settings' ? 'block' : 'none' %>;">
+          
+          <div class="lp-tabs-bar">
+            <button class="lp-tab-btn active" onclick="switchSettingsTab('rules', this)">⚙️ Lending & Fine Rules</button>
+            <button class="lp-tab-btn" onclick="switchSettingsTab('moderation', this)">⭐ Review Moderation (<%= reviews.length %>)</button>
+            <button class="lp-tab-btn" onclick="switchSettingsTab('audit', this)">🔒 Audit Trail (<%= auditLogs.length %>)</button>
+          </div>
+
+          <!-- Settings Tab 1: Rules -->
+          <div id="settings-pane-rules" class="lp-tab-pane active">
+            <div class="card" style="max-width:680px;">
+              <h3 class="lp-card-title" style="margin-bottom:18px;">⚙️ Library Policy & Rule Engine</h3>
+              
+              <form action="/admin/api/settings" method="POST">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px;">
+                  <div>
+                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Default Loan Duration (Days)</label>
+                    <input type="number" name="loan_duration_days" class="lp-search-input" value="<%= settings.loan_duration_days || 14 %>">
+                  </div>
+                  <div>
+                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Grace Period (Days)</label>
+                    <input type="number" name="grace_period_days" class="lp-search-input" value="<%= settings.grace_period_days || 2 %>">
+                  </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px;">
+                  <div>
+                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Student Max Book Quota</label>
+                    <input type="number" name="student_max_books" class="lp-search-input" value="<%= settings.student_max_books || 3 %>">
+                  </div>
+                  <div>
+                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Teacher Max Book Quota</label>
+                    <input type="number" name="teacher_max_books" class="lp-search-input" value="<%= settings.teacher_max_books || 10 %>">
+                  </div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                  <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Fine Rate per Day (₹)</label>
+                  <input type="number" name="fine_per_day" class="lp-search-input" value="<%= settings.fine_per_day || 5 %>">
+                </div>
+
+                <button type="submit" class="btn-primary">Save Rules & Settings</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Settings Tab 2: Review Moderation -->
+          <div id="settings-pane-moderation" class="lp-tab-pane">
+            <div class="lp-table-container">
+              <table class="lp-table">
+                <thead>
+                  <tr>
+                    <th>Book</th>
+                    <th>Student</th>
+                    <th>Rating / Review</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (reviews.length === 0) { %>
+                    <tr><td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">No book reviews pending moderation.</td></tr>
+                  <% } else { %>
+                    <% reviews.forEach(r => { %>
+                      <tr>
+                        <td style="font-weight:700;"><%= r.book_title %></td>
+                        <td><%= r.student_name %></td>
+                        <td>
+                          <div>⭐ <%= r.rating || 5 %>/5</div>
+                          <div style="font-size:0.8rem;color:#64748B;"><%= r.review || r.learned || 'Recommended read.' %></div>
+                        </td>
+                        <td><span class="lp-status-pill <%= r.status === 'approved' ? 'available' : 'reserved' %>"><%= r.status %></span></td>
+                        <td>
+                          <button class="btn-success" style="padding:4px 8px;font-size:0.75rem;" onclick="approveReview('<%= r.id %>')">Approve</button>
+                          <button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="rejectReview('<%= r.id %>')">Reject</button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Settings Tab 3: Audit Trail -->
+          <div id="settings-pane-audit" class="lp-tab-pane">
+            <div class="lp-table-container">
+              <table class="lp-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>User</th>
+                    <th>IP / Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (auditLogs.length === 0) { %>
+                    <tr><td colspan="4" style="text-align:center;padding:24px;color:#94A3B8;">No audit log records recorded yet.</td></tr>
+                  <% } else { %>
+                    <% auditLogs.forEach(l => { %>
+                      <tr>
+                        <td style="font-size:0.8rem;color:#64748B;"><%= renderDate(l.created_at) %></td>
+                        <td style="font-weight:600;"><%= l.action %></td>
+                        <td><%= l.user_name || 'Librarian' %></td>
+                        <td style="font-size:0.8rem;color:#94A3B8;"><%= l.ip_address || '127.0.0.1' %></td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       3. GLOBAL AI COPILOT FLOATING BUTTON & DRAWER
+       ═══════════════════════════════════════════════════════════════ -->
+  <button class="lp-ai-fab" onclick="toggleAiCopilot()" title="Ask Library AI">
+    ✨ Ask Library AI
+  </button>
+
+  <div class="lp-ai-drawer" id="lpAiDrawer">
+    <div class="lp-ai-head">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:1.3rem;">✨</span>
+        <h3 style="margin:0;font-size:1.05rem;font-weight:800;">Library AI Copilot</h3>
+      </div>
+      <button onclick="toggleAiCopilot()" style="background:transparent;border:none;color:#fff;font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+
+    <div class="lp-ai-body" id="lpAiChatBody">
+      <div class="lp-ai-msg bot">
+        Hello! I am your Library AI Assistant. Ask me anything about book recommendations, overdue tracking, purchase requisitions, or circulation rules.
+      </div>
+      <div class="lp-ai-chips">
+        <button class="lp-ai-chip" onclick="sendAiPrompt('Find books for Class 8')">Find books for Class 8</button>
+        <button class="lp-ai-chip" onclick="sendAiPrompt('Show overdue books')">Show overdue books</button>
+        <button class="lp-ai-chip" onclick="sendAiPrompt('Suggest mystery books')">Suggest mystery books</button>
+        <button class="lp-ai-chip" onclick="sendAiPrompt('What should we purchase?')">What should we purchase?</button>
+      </div>
+    </div>
+
+    <div class="lp-ai-footer">
+      <input type="text" id="lpAiInput" class="lp-ai-input" placeholder="Ask your library anything..." onkeydown="if(event.key==='Enter') sendAiMessage()">
+      <button class="btn-primary" onclick="sendAiMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       4. MEMBER PROFILE DRAWER
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="lp-drawer-overlay" id="lpDrawerOverlay" onclick="closeMemberDrawer()"></div>
+
+  <div class="lp-member-drawer" id="lpMemberDrawer">
+    <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:800;">Member Profile Dossier</h3>
+      <button onclick="closeMemberDrawer()" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    
+    <div id="lpMemberDrawerBody" style="flex:1;overflow-y:auto;padding:1.5rem;">
+      <!-- Loaded dynamically by openMemberDrawer() -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       5. MODALS (ADD BOOK, ADD MEMBER)
+       ═══════════════════════════════════════════════════════════════ -->
+  <!-- Add Book Modal -->
+  <div id="addBookModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;">
+    <div class="card" style="width:90%;max-width:540px;position:relative;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800;">+ Add New Book to Catalog</h3>
+        <button onclick="closeModal('addBookModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <form action="/admin/book/add" method="POST">
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;">Book Title *</label>
+          <input type="text" name="title" required class="lp-search-input" style="width:100%;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Author</label>
+            <input type="text" name="author" class="lp-search-input" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Genre / Category</label>
+            <input type="text" name="genre" class="lp-search-input" style="width:100%;" placeholder="Science, Fiction...">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">ISBN / Barcode</label>
+            <input type="text" name="isbn" class="lp-search-input" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Total Copies</label>
+            <input type="number" name="total_copies" value="2" class="lp-search-input" style="width:100%;">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Rack / Aisle</label>
+            <input type="text" name="rack" value="A" class="lp-search-input" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Shelf No</label>
+            <input type="text" name="shelf" value="1" class="lp-search-input" style="width:100%;">
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Save to Catalog</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Member Modal -->
+  <div id="addMemberModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;">
+    <div class="card" style="width:90%;max-width:540px;position:relative;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800;">+ Register New Library Member</h3>
+        <button onclick="closeModal('addMemberModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <form action="/admin/student/add" method="POST">
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;">Full Name *</label>
+          <input type="text" name="name" required class="lp-search-input" style="width:100%;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Admission / Member No</label>
+            <input type="text" name="admission_no" class="lp-search-input" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Role</label>
+            <select name="role" class="lp-search-input" style="width:100%;">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Class / Department</label>
+            <input type="text" name="class" class="lp-search-input" style="width:100%;" placeholder="Class 8-A, CS Dept...">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;">Phone *</label>
+            <input type="text" name="phone" required class="lp-search-input" style="width:100%;">
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Register Member</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       6. INTERACTIVE CLIENT-SIDE JAVASCRIPT
+       ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    let activeCheckoutMember = null;
+    let activeCheckoutBook = null;
+
+    function navigateToModule(moduleName, subTab = null) {
+      document.querySelectorAll('.lp-module-view').forEach(m => m.style.display = 'none');
+      document.querySelectorAll('.lp-nav-item').forEach(btn => btn.classList.remove('active'));
+
+      const target = document.getElementById(`module-${moduleName}`);
+      if (target) target.style.display = 'block';
+
+      // Update sidebar active button
+      document.querySelectorAll('.lp-nav-item').forEach(btn => {
+        if (btn.textContent.toLowerCase().includes(moduleName)) {
+          btn.classList.add('active');
+        }
+      });
+
+      if (subTab) {
+        if (moduleName === 'circulation') {
+          switchCirculationTab(subTab, document.getElementById(`circ-tab-btn-${subTab}`));
+        }
+      }
+
+      window.history.replaceState({}, '', `/admin?module=${moduleName}`);
     }
-}
 
-async function handleAdminPasswordChange(e) {
-    e.preventDefault();
-    const curr = document.getElementById('adminCurrPass').value;
-    const newP = document.getElementById('adminNewPass').value;
-    const conf = document.getElementById('adminConfPass').value;
-
-    if (newP !== conf) {
-        showToast('New passwords do not match.', 'error', '⚠️ Password Error');
-        return;
+    function switchCatalogTab(tabName, btn) {
+      document.querySelectorAll('#module-catalog .lp-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#module-catalog .lp-tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const pane = document.getElementById(`catalog-tab-${tabName}`);
+      if (pane) pane.classList.add('active');
     }
 
-    try {
-        const res = await fetch('/admin/security/password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ current_password: curr, new_password: newP, confirm_password: conf })
+    function switchMemberTab(role, btn) {
+      document.querySelectorAll('#module-members .lp-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const rows = document.querySelectorAll('#membersTable tbody tr');
+      rows.forEach(r => {
+        if (role === 'students') r.style.display = r.getAttribute('data-role') === 'student' ? '' : 'none';
+        else if (role === 'teachers') r.style.display = r.getAttribute('data-role') === 'teacher' ? '' : 'none';
+        else if (role === 'staff') r.style.display = (r.getAttribute('data-role') === 'staff' || r.getAttribute('data-role') === 'librarian' || r.getAttribute('data-role') === 'admin') ? '' : 'none';
+      });
+    }
+
+    function switchCirculationTab(tabName, btn) {
+      document.querySelectorAll('#module-circulation .lp-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#module-circulation .lp-tab-pane').forEach(p => p.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const pane = document.getElementById(`circ-pane-${tabName}`);
+      if (pane) pane.classList.add('active');
+    }
+
+    function switchRequestTab(tabName, btn) {
+      document.querySelectorAll('#module-requests .lp-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    function switchSettingsTab(tabName, btn) {
+      document.querySelectorAll('#module-settings .lp-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#module-settings .lp-tab-pane').forEach(p => p.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const pane = document.getElementById(`settings-pane-${tabName}`);
+      if (pane) pane.classList.add('active');
+    }
+
+    function toggleSidebar() {
+      const sb = document.getElementById('lpSidebar');
+      if (sb) sb.classList.toggle('open');
+    }
+
+    function toggleAiCopilot() {
+      const drawer = document.getElementById('lpAiDrawer');
+      if (drawer) drawer.classList.toggle('open');
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) {
+        m.style.display = 'flex';
+        m.classList.add('active');
+      }
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) {
+        m.style.display = 'none';
+        m.classList.remove('active');
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Circulation Desk Scanner Operations
+    // ─────────────────────────────────────────────────────────────────
+    async function lookupMemberForIssue() {
+      const q = document.getElementById('circMemberInput').value.trim();
+      if (!q) return;
+      try {
+        const res = await fetch('/admin/api/circulation/lookup-member', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q })
         });
-        const d = await res.json();
-        if (d.success) {
-            showToast(d.message || 'Password changed successfully!', 'success', '🔒 Security');
-            document.getElementById('adminPasswordForm').reset();
-            loadAdminSecurityLogs();
-        } else {
-            showToast(d.error || 'Failed to change password.', 'error', '⚠️ Password Error');
-        }
-    } catch (err) {
-        showToast('An error occurred updating password.', 'error', '⚠️ Server Error');
-    }
-}
-
-async function toggleAdmin2fa() {
-    try {
-        const res = await fetch('/admin/security/2fa', { method: 'POST' });
-        const d = await res.json();
-        if (d.success) {
-            const btn = document.getElementById('admin2faBtn');
-            if (btn) {
-                btn.textContent = d.enabled ? 'Disable 2FA' : 'Enable 2FA';
-                btn.className = d.enabled ? 'ld-btn ld-btn-xs ld-btn-danger' : 'ld-btn ld-btn-xs ld-btn-primary';
-            }
-            showToast(d.enabled ? 'Two-Factor Authentication Enabled' : 'Two-Factor Authentication Disabled', 'success', '🛡️ 2FA Updated');
-            loadAdminSecurityLogs();
-        } else {
-            showToast(d.error || 'Failed to update 2FA.', 'error', '⚠️ Error');
-        }
-    } catch (err) {
-        showToast('Failed to toggle 2FA.', 'error', '⚠️ Server Error');
-    }
-}
-
-async function markAllNotificationsRead(btn) {
-    try {
-        if (btn) btn.disabled = true;
-        const res = await fetch('/admin/api/notifications/read-all', { method: 'POST' });
-        const d = await res.json();
-        if (d.success) {
-            showToast('All notifications marked as read', 'success', '🔔 Notifications');
-            document.querySelectorAll('.ld-notif-badge').forEach(b => b.style.display = 'none');
-            document.querySelectorAll('#tab-notifications tbody tr td span.badge, #tab-notifications tbody tr td span[class*="badge"]').forEach(badge => {
-                badge.className = 'badge';
-                badge.style = 'background: rgba(100, 116, 139, 0.1); color: #64748b; padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;';
-                badge.textContent = 'Read';
-            });
-        } else {
-            showToast(d.error || 'Failed to mark as read', 'error', '⚠️ Error');
-        }
-    } catch (e) {
-        showToast('Error updating notifications', 'error', '⚠️ Error');
-    } finally {
-        if (btn) btn.disabled = false;
-    }
-}
-
-function openModal(id) {
-    const m = document.getElementById(id);
-    if (m) m.classList.add('active');
-}
-
-function closeModal(id) {
-    const m = document.getElementById(id);
-    if (m) m.classList.remove('active');
-}
-
-function toggleAdminSidebar() {
-    const sb = document.getElementById('adminSidebar');
-    const dim = document.getElementById('adminDim');
-    if (!sb) return;
-    sb.classList.toggle('open');
-    if (dim) dim.classList.toggle('active', sb.classList.contains('open'));
-}
-
-function autoCloseAdminSidebar() {
-    if (window.innerWidth <= 600) {
-        const sb = document.getElementById('adminSidebar');
-        const dim = document.getElementById('adminDim');
-        if (sb) sb.classList.remove('open');
-        if (dim) dim.classList.remove('active');
-    }
-}
-
-function toggleAddUserClassField() {
-    const role = document.getElementById('addUserRole').value;
-    const classGroup = document.getElementById('addUserClassGroup');
-    const admissionGroup = document.getElementById('addUserAdmissionGroup');
-    if (role === 'student') {
-        classGroup.style.display = 'block';
-        admissionGroup.style.display = 'block';
-    } else {
-        classGroup.style.display = 'none';
-        admissionGroup.style.display = 'none';
-    }
-}
-
-async function handleImport() {
-    const fileInput = document.getElementById('importFile');
-    const module = document.getElementById('importModule').value;
-    const resultDiv = document.getElementById('importResult');
-
-    if (!fileInput.files[0]) {
-        resultDiv.innerHTML = '<span style="color:#f87171;">Please select a file first.</span>';
-        return;
-    }
-
-    resultDiv.innerHTML = '<span style="color:#a5b4fc;">Uploading & processing...</span>';
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-
-    try {
-        const res = await fetch('/data/import/' + module, { method: 'POST', body: formData });
         const data = await res.json();
-        if (res.ok) {
-            resultDiv.innerHTML = '<span style="color:#34d399;">Import Complete!</span> Total: ' + data.total + ' | Success: ' + data.success;
+        const prev = document.getElementById('circMemberPreview');
+        if (data.status === 'success') {
+          activeCheckoutMember = data.member;
+          prev.style.display = 'flex';
+          prev.className = 'lp-preview-card';
+          prev.innerHTML = `
+            <div class="lp-preview-avatar">${data.member.name[0]}</div>
+            <div style="flex:1;">
+              <div style="font-weight:800;color:#111827;">${data.member.name} (${data.member.role})</div>
+              <div style="font-size:0.8rem;color:#64748B;">Adm No: <strong>${data.member.admission_no || 'N/A'}</strong> &bull; Class: ${data.member.class || 'N/A'}</div>
+              <div style="font-size:0.8rem;color:#0B5ED7;font-weight:700;margin-top:2px;">Currently Borrowed: ${data.activeCount} / ${data.borrowingLimit} Books</div>
+            </div>
+            <span style="color:#198754;font-weight:800;">✓ Verified</span>
+          `;
+          checkIssueReadiness();
         } else {
-            resultDiv.innerHTML = '<span style="color:#f87171;">Error: ' + (data.error || 'Upload failed') + '</span>';
+          activeCheckoutMember = null;
+          prev.style.display = 'block';
+          prev.className = 'lp-preview-card';
+          prev.innerHTML = `<span style="color:#DC3545;font-weight:700;">⚠️ ${data.message}</span>`;
+          checkIssueReadiness();
         }
-    } catch (e) {
-        resultDiv.innerHTML = '<span style="color:#f87171;">Network error occurred.</span>';
+      } catch (e) {
+        console.error(e);
+      }
     }
-}
 
-function handleExport() {
-    const module = document.getElementById('exportModule').value;
-    const format = document.getElementById('exportFormat').value;
-    window.location.href = '/data/export/' + module + '?format=' + format;
-}
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        autoCloseAdminSidebar();
-        document.querySelectorAll('.ld-modal-overlay').forEach(m => m.classList.remove('active'));
+    async function lookupBookForIssue() {
+      const barcode = document.getElementById('circBookInput').value.trim();
+      if (!barcode) return;
+      try {
+        const res = await fetch('/admin/api/circulation/lookup-book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ barcode })
+        });
+        const data = await res.json();
+        const prev = document.getElementById('circBookPreview');
+        if (data.status === 'success') {
+          activeCheckoutBook = data.book;
+          prev.style.display = 'flex';
+          prev.className = 'lp-preview-card';
+          prev.innerHTML = `
+            <div class="lp-preview-avatar" style="background:#E8F5E9;color:#198754;">📖</div>
+            <div style="flex:1;">
+              <div style="font-weight:800;color:#111827;">${data.book.title}</div>
+              <div style="font-size:0.8rem;color:#64748B;">Author: ${data.book.author} &bull; Shelf: <strong>${data.book.shelf_location || 'A-1'}</strong></div>
+              <div style="font-size:0.8rem;color:#198754;font-weight:700;">Available Stock: ${data.book.available_copies} Copies</div>
+            </div>
+            <span style="color:#198754;font-weight:800;">✓ Ready</span>
+          `;
+          checkIssueReadiness();
+        } else {
+          activeCheckoutBook = null;
+          prev.style.display = 'block';
+          prev.className = 'lp-preview-card';
+          prev.innerHTML = `<span style="color:#DC3545;font-weight:700;">⚠️ ${data.message}</span>`;
+          checkIssueReadiness();
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
-});
-</script>
+
+    function checkIssueReadiness() {
+      const btn = document.getElementById('circConfirmIssueBtn');
+      if (activeCheckoutMember && activeCheckoutBook) {
+        btn.disabled = false;
+      } else {
+        btn.disabled = true;
+      }
+    }
+
+    async function submitCirculationIssue() {
+      if (!activeCheckoutMember || !activeCheckoutBook) return;
+      const days = document.getElementById('circLoanDays').value;
+      try {
+        const res = await fetch('/admin/api/circulation/issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            member_id: activeCheckoutMember.id,
+            book_id: activeCheckoutBook.id,
+            barcode: activeCheckoutBook.copy_barcode,
+            due_days: days
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          alert(`✅ ${data.message}`);
+          window.location.reload();
+        } else {
+          alert(`❌ ${data.message}`);
+        }
+      } catch (e) {
+        alert('Circulation issue error: ' + e.message);
+      }
+    }
+
+    async function submitCirculationReturn() {
+      const barcode = document.getElementById('circReturnBarcode').value.trim();
+      if (!barcode) return;
+      try {
+        const res = await fetch('/admin/api/circulation/return', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ barcode })
+        });
+        const data = await res.json();
+        const resDiv = document.getElementById('circReturnResult');
+        resDiv.style.display = 'block';
+        if (data.status === 'success') {
+          resDiv.innerHTML = `
+            <div style="color:#146C43;font-weight:800;font-size:1.05rem;">✅ Check-in Successful!</div>
+            <div style="font-size:0.9rem;color:#111827;margin-top:4px;">${data.message}</div>
+            ${data.fine > 0 ? `<div style="color:#DC3545;font-weight:700;margin-top:4px;">Overdue Fine Calculated: ₹${data.fine}</div>` : ''}
+            ${data.reservation_alert ? `<div style="color:#0B5ED7;font-weight:700;margin-top:4px;">${data.reservation_alert}</div>` : ''}
+          `;
+          document.getElementById('circReturnBarcode').value = '';
+        } else {
+          resDiv.innerHTML = `<span style="color:#DC3545;font-weight:700;">❌ ${data.message}</span>`;
+        }
+      } catch (e) {
+        alert('Return error: ' + e.message);
+      }
+    }
+
+    async function rapidReturnPrompt(txId) {
+      if (!confirm('Confirm return for this issued book?')) return;
+      try {
+        const res = await fetch('/admin/api/circulation/return', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transaction_id: txId })
+        });
+        const data = await res.json();
+        alert(data.message);
+        window.location.reload();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function renewLoan(txId) {
+      try {
+        const res = await fetch('/admin/api/circulation/renew', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transaction_id: txId, extend_days: 14 })
+        });
+        const data = await res.json();
+        alert(data.message);
+        window.location.reload();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Member Drawer & Digital Pass
+    // ─────────────────────────────────────────────────────────────────
+    async function openMemberDrawer(userId) {
+      const drawer = document.getElementById('lpMemberDrawer');
+      const overlay = document.getElementById('lpDrawerOverlay');
+      const body = document.getElementById('lpMemberDrawerBody');
+      body.innerHTML = '<p style="color:#94A3B8;text-align:center;padding:40px;">Loading profile dossier...</p>';
+      
+      overlay.classList.add('active');
+      drawer.classList.add('open');
+
+      try {
+        const res = await fetch(`/admin/api/member/${userId}`);
+        const data = await res.json();
+        const m = data.member;
+
+        body.innerHTML = `
+          <!-- Digital Library Pass Card -->
+          <div class="lp-digital-pass">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <span style="font-size:0.75rem;letter-spacing:0.08em;opacity:0.8;">LIBRIKA DIGITAL PASS</span>
+                <h2 style="font-size:1.35rem;font-weight:800;margin:4px 0 0 0;">${m.name}</h2>
+                <div style="font-size:0.8rem;opacity:0.9;">${m.role.toUpperCase()} &bull; ${m.class || 'General'}</div>
+              </div>
+              <div style="font-size:1.8rem;">🎓</div>
+            </div>
+            <div class="lp-pass-barcode">
+              <div style="font-family:monospace;font-weight:800;color:#0B5ED7;font-size:1.1rem;letter-spacing:2px;">${m.admission_no || `MEM-${m.id}`}</div>
+            </div>
+          </div>
+
+          <!-- Overview Stats -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div style="background:#F8FAFC;padding:12px;border-radius:12px;border:1px solid #E2E8F0;">
+              <span style="font-size:0.75rem;color:#64748B;">Active Books</span>
+              <div style="font-size:1.25rem;font-weight:800;color:#0B5ED7;">${data.activeLoans.length}</div>
+            </div>
+            <div style="background:#F8FAFC;padding:12px;border-radius:12px;border:1px solid #E2E8F0;">
+              <span style="font-size:0.75rem;color:#64748B;">Pending Fines</span>
+              <div style="font-size:1.25rem;font-weight:800;color:#DC3545;">₹${data.totalFines}</div>
+            </div>
+          </div>
+
+          <!-- Currently Borrowed -->
+          <h4 style="font-weight:800;margin:0 0 10px 0;font-size:0.95rem;">📖 Currently Borrowed Books (${data.activeLoans.length})</h4>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+            ${data.activeLoans.length === 0 ? '<p style="color:#94A3B8;font-size:0.85rem;">No active borrowed books.</p>' : data.activeLoans.map(l => `
+              <div style="padding:10px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-weight:700;font-size:0.85rem;">${l.book_title}</div>
+                  <div style="font-size:0.72rem;color:#64748B;">Due: ${new Date(l.due_date).toLocaleDateString()}</div>
+                </div>
+                ${l.is_overdue ? `<span class="lp-status-pill overdue">${l.days_overdue}d late</span>` : '<span class="lp-status-pill available">Active</span>'}
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- History -->
+          <h4 style="font-weight:800;margin:0 0 10px 0;font-size:0.95rem;">📜 Reading & Loan History (${data.historyLoans.length})</h4>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${data.historyLoans.slice(0, 5).map(h => `
+              <div style="font-size:0.8rem;color:#64748B;padding:6px 0;border-bottom:1px solid #F1F5F9;">
+                ✓ Returned <strong>${h.book_title}</strong> on ${new Date(h.return_date).toLocaleDateString()}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (e) {
+        body.innerHTML = '<p style="color:#DC3545;">Failed to load member profile.</p>';
+      }
+    }
+
+    function closeMemberDrawer() {
+      const drawer = document.getElementById('lpMemberDrawer');
+      const overlay = document.getElementById('lpDrawerOverlay');
+      if (drawer) drawer.classList.remove('open');
+      if (overlay) overlay.classList.remove('active');
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // AI Copilot Interactive Chat
+    // ─────────────────────────────────────────────────────────────────
+    function sendAiPrompt(promptText) {
+      document.getElementById('lpAiInput').value = promptText;
+      sendAiMessage();
+    }
+
+    async function sendAiMessage() {
+      const input = document.getElementById('lpAiInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const body = document.getElementById('lpAiChatBody');
+      const userBubble = document.createElement('div');
+      userBubble.className = 'lp-ai-msg user';
+      userBubble.textContent = msg;
+      body.appendChild(userBubble);
+      input.value = '';
+
+      const botBubble = document.createElement('div');
+      botBubble.className = 'lp-ai-msg bot';
+      botBubble.innerHTML = '<em>Thinking...</em>';
+      body.appendChild(botBubble);
+      body.scrollTop = body.scrollHeight;
+
+      try {
+        const res = await fetch('/admin/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        botBubble.innerHTML = data.reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        body.scrollTop = body.scrollHeight;
+      } catch (e) {
+        botBubble.textContent = 'Sorry, could not process request right now.';
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Reservations & Moderation Actions
+    // ─────────────────────────────────────────────────────────────────
+    async function approveReservation(resId) {
+      const res = await fetch(`/admin/api/reservation/${resId}/approve`, { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'success') { alert('Reservation approved and copy allocated!'); window.location.reload(); }
+      else alert(data.message);
+    }
+
+    async function rejectReservation(resId) {
+      const res = await fetch(`/admin/api/reservation/${resId}/reject`, { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'success') { alert('Reservation rejected.'); window.location.reload(); }
+      else alert(data.message);
+    }
+
+    async function approveReview(id) {
+      await fetch(`/admin/api/review/${id}/approve`, { method: 'POST' });
+      alert('Review approved for public display!');
+      window.location.reload();
+    }
+
+    async function rejectReview(id) {
+      await fetch(`/admin/api/review/${id}/reject`, { method: 'POST' });
+      alert('Review rejected.');
+      window.location.reload();
+    }
+
+    // Export Helpers
+    function exportBooksCSV() { window.location.href = '/data/export-books'; }
+    function exportCirculationCSV() { window.location.href = '/data/export-transactions'; }
+    function printBarcodeLabel(barcode) { alert(`Printing barcode label: ${barcode}`); }
+
+    function quickIssueBook(bookId, barcode) {
+      navigateToModule('circulation', 'issue');
+      document.getElementById('circBookInput').value = barcode || '';
+      lookupBookForIssue();
+    }
+
+    function filterCatalogTable(q) {
+      const rows = document.querySelectorAll('#catalogTable tbody tr');
+      rows.forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+      });
+    }
+
+    function filterMemberTable(q) {
+      const rows = document.querySelectorAll('#membersTable tbody tr');
+      rows.forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+      });
+    }
+
+    function handleGlobalSearch(val) {
+      if (!val) return;
+      if (val.length >= 3) {
+        // Automatically switch to Catalog or Members if search matches
+      }
+    }
+  </script>
+</body>
+</html>

@@ -32,13 +32,13 @@ router.use(async (req, res, next) => {
 });
 
 function adminOnly(req, res, next) {
-  if (req.session && (req.session.role === 'admin' || req.session.role === 'super_admin' || req.session.role === 'superadmin')) return next();
-  req.flash('error', 'Access denied. Admin login required.');
+  if (req.session && (req.session.role === 'admin' || req.session.role === 'librarian' || req.session.role === 'super_admin' || req.session.role === 'superadmin' || req.session.role === 'owner')) return next();
+  req.flash('error', 'Access denied. Admin or Librarian login required.');
   return res.redirect('/login');
 }
 
 function hasPerm(req, perm) {
-  if (req.session && (req.session.role === 'admin' || req.session.role === 'super_admin' || req.session.role === 'superadmin')) return true;
+  if (req.session && (req.session.role === 'admin' || req.session.role === 'super_admin' || req.session.role === 'superadmin' || req.session.role === 'owner')) return true;
   const perms = req.session.permissions || [];
   return perms.includes(perm);
 }
@@ -58,1058 +58,852 @@ function dueDate(days) {
   return d.toISOString().slice(0, 10);
 }
 
-// ── Dashboard ────────────────────────────────────────────────────────
-router.get('/', adminOnly, async (req, res) => {
-  if (req.session && (req.session.role === 'super_admin' || req.session.role === 'superadmin')) {
-    return res.redirect('/super-admin');
-  }
-  const sCode = req.session.school_code;
-  const classFilter = req.query.class;
-  try {
-    let query = `SELECT t.*, u.name as user_name, u.admission_no as user_admission, u.phone as user_phone,
-                        b.title as book_title, b.barcode_id as book_barcode
-                 FROM transactions t
-                 JOIN users u ON t.user_id = u.id
-                 JOIN books b ON t.book_id = b.id
-                 WHERE t.return_date IS NULL AND t.school_code = $1`;
-    const params = [sCode];
-    if (classFilter) { query += ` AND u.class = $2`; params.push(classFilter); }
-    query += ` ORDER BY t.issue_date DESC`;
-    const txRes = await db.query(query, params);
-    const transactions = txRes.rows.map(tx => {
-      const fine = calculateFine(tx.due_date);
-      return { ...tx, ...fine };
-    });
-
-    const availRes = await db.query('SELECT SUM(available_copies) FROM books WHERE school_code = $1', [sCode]);
-    const availableBooks = parseInt(availRes.rows[0].sum) || 0;
-    const booksRes = await db.query('SELECT * FROM books WHERE school_code = $1 ORDER BY id DESC', [sCode]);
-    const books = booksRes.rows;
-    const totalIssued = (await db.query('SELECT COUNT(*) FROM transactions WHERE return_date IS NULL AND school_code = $1', [sCode])).rows[0].count;
-    const totalReturned = (await db.query('SELECT COUNT(*) FROM transactions WHERE return_date IS NOT NULL AND school_code = $1', [sCode])).rows[0].count;
-
-    const resvRes = await db.query(
-      `SELECT r.id, r.user_id, r.book_id, r.status, r.created_at,
-              u.name as student_name, u.phone as student_phone,
-              b.title as book_title, b.author as book_author, b.available_copies
-       FROM reservations r
-       JOIN users u ON u.id = r.user_id
-       JOIN books b ON b.id = r.book_id
-       WHERE r.school_code = $1 AND r.status = 'Pending'
-       ORDER BY r.created_at ASC`, [sCode]);
-    const reservations = resvRes.rows;
-
-    let students = [];
-    let totalStudentsVal = 0;
-    if (hasPerm(req, 'manage_students')) {
-      const stuRes = await db.query('SELECT * FROM users WHERE school_code = $1 ORDER BY id DESC', [sCode]);
-      students = stuRes.rows;
-      totalStudentsVal = students.filter(u => u.role === 'student').length;
-    }
-
-    // Pending reviews
-    const revRes = await db.query(
-      `SELECT r.id, r.user_id, r.book_id, r.book_type, r.learned, r.favorite, r.recommend, r.status, r.created_at,
-              u.name as student_name, COALESCE(b.title, d.title) as book_title
-       FROM book_reviews r
-       JOIN users u ON r.user_id = u.id
-       LEFT JOIN books b ON r.book_id = b.id AND r.book_type = 'physical'
-       LEFT JOIN digital_content d ON r.book_id = d.id AND r.book_type = 'digital'
-       WHERE r.status = 'pending' AND r.school_code = $1`, [sCode]);
-    const pendingReviews = revRes.rows;
-
-        // Digital items
-    const digRes = await db.query(
-      `SELECT * FROM digital_content WHERE school_code = $1 OR school_code = 'GLOBAL' ORDER BY id DESC LIMIT 50`,
-      [sCode]
-    ).catch(() => ({ rows: [] }));
-    const digitalItems = digRes.rows || [];
-
-    // Notifications list
-    const userId = req.session ? req.session.user_id : 0;
-    const notifRes = await db.query(
-      `SELECT * FROM notifications WHERE school_code = $1 OR user_id = $2 OR school_code = 'GLOBAL' ORDER BY id DESC LIMIT 50`,
-      [sCode, userId]
-    ).catch(() => ({ rows: [] }));
-    const notificationsList = notifRes.rows || [];
-
-    const overdueCount = transactions.filter(t => t.is_overdue).length;
-
-    res.render('admin', {
-      title: (req.session && (req.session.role === 'super_admin' || req.session.role === 'superadmin')) ? 'Super Admin Dashboard - librika.in' : 'Admin Dashboard - librika.in',
-      transactions,
-      classFilter,
-      available_books: availableBooks,
-      books,
-      overdue_count: overdueCount,
-      students,
-      total_students: totalStudentsVal,
-      total_issued: totalIssued,
-      total_returned: totalReturned,
-      reservations,
-      pending_reviews: pendingReviews,
-          digital_items: digitalItems,
-      notifications_list: notificationsList,
-    });
-  } catch (err) {
-    console.error('Admin dashboard error:', err);
-    req.flash('error', 'Failed to load admin dashboard');
-    res.redirect('/');
-  }
-});
-
-
-function calculateFine(dueDateStr) {
-  if (!dueDateStr) return { fine: 0, is_overdue: false };
+function calculateFine(dueDateStr, finePerDay = 5, graceDays = 2) {
+  if (!dueDateStr) return { fine: 0, is_overdue: false, days_overdue: 0 };
   const due = new Date(dueDateStr);
   const today = new Date();
   if (today > due) {
-    const days = Math.floor((today - due) / (1000 * 60 * 60 * 24));
-    return { fine: days * 5, is_overdue: true };
+    const diffDays = Math.floor((today - due) / (1000 * 60 * 60 * 24));
+    const chargeableDays = Math.max(0, diffDays - graceDays);
+    return { fine: chargeableDays * finePerDay, is_overdue: diffDays > 0, days_overdue: diffDays };
   }
-  return { fine: 0, is_overdue: false };
+  return { fine: 0, is_overdue: false, days_overdue: 0 };
 }
 
-async function updateScore(conn, userId, scoreType, points, description) {
-  const user = (await conn.query('SELECT physical_reader_score, digital_reader_score, overall_reader_score, school_code FROM users WHERE id = $1', [userId])).rows[0];
-  if (!user) return;
-  let phys = parseInt(user.physical_reader_score) || 0;
-  let dig = parseInt(user.digital_reader_score) || 0;
-  if (scoreType === 'physical') phys = Math.max(0, phys + points);
-  else if (scoreType === 'digital') dig = Math.max(0, dig + points);
-  const overall = phys + dig;
-  await conn.query('UPDATE users SET physical_reader_score = $1, digital_reader_score = $2, overall_reader_score = $3 WHERE id = $4',
-    [phys, dig, overall, userId]);
-  await conn.query('INSERT INTO points_log (user_id, points, score_type, description, created_at, school_code) VALUES ($1, $2, $3, $4, $5, $6)',
-    [userId, points, scoreType, description, nowStr(), user.school_code]);
-  await checkAndAwardBadges(conn, userId);
-}
-
-async function checkAndAwardBadges(conn, userId) {
-  const user = (await conn.query('SELECT * FROM users WHERE id = $1', [userId])).rows[0];
-  if (!user) return;
-  const physDone = (await conn.query('SELECT COUNT(*) as c FROM transactions WHERE user_id = $1 AND return_date IS NOT NULL AND return_date != $2', [userId, 'LOST'])).rows[0].c;
-  const digDone = (await conn.query('SELECT COUNT(*) as c FROM reading_progress WHERE student_id = $1 AND last_page >= total_pages AND total_pages > 1', [userId])).rows[0].c;
-  const totalDone = parseInt(physDone) + parseInt(digDone);
-  const quizzesPassed = (await conn.query('SELECT COUNT(*) as c FROM quiz_attempts WHERE user_id = $1 AND passed = 1', [userId])).rows[0].c;
-  const reviewsApproved = (await conn.query('SELECT COUNT(*) as c FROM book_reviews WHERE user_id = $1 AND status = $2', [userId, 'approved'])).rows[0].c;
-  const overallScore = parseInt(user.overall_reader_score) || 0;
-  const streak = parseInt(user.reading_streak) || 0;
-  let badges = [];
-  try { badges = JSON.parse(user.badges || '[]'); } catch(e) {}
-  const newBadges = [...badges];
-  if (totalDone >= 1 && !newBadges.includes('First Book Completed')) newBadges.push('First Book Completed');
-  if (totalDone >= 5 && !newBadges.includes('5 Books Completed')) newBadges.push('5 Books Completed');
-  if (totalDone >= 10 && !newBadges.includes('10 Books Completed')) newBadges.push('10 Books Completed');
-  if (totalDone >= 25 && !newBadges.includes('25 Books Completed')) newBadges.push('25 Books Completed');
-  if (totalDone >= 50 && !newBadges.includes('50 Books Completed')) newBadges.push('50 Books Completed');
-  if (quizzesPassed >= 5 && !newBadges.includes('Quiz Master')) newBadges.push('Quiz Master');
-  if (reviewsApproved >= 5 && !newBadges.includes('Review Expert')) newBadges.push('Review Expert');
-  if (overallScore >= 500 && !newBadges.includes('Reading Champion')) newBadges.push('Reading Champion');
-  await conn.query('UPDATE users SET quizzes_passed = $1, approved_reviews = $2, badges = $3 WHERE id = $4',
-    [quizzesPassed, reviewsApproved, JSON.stringify(newBadges), userId]);
-}
-
-async function check90DayCooldown(conn, userId, bookId, bookType) {
-  const cooldown = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' ');
-  const pastPass = (await conn.query(
-    'SELECT attempted_at FROM quiz_attempts WHERE user_id = $1 AND book_id = $2 AND book_type = $3 AND passed = 1 ORDER BY attempted_at DESC LIMIT 1',
-    [userId, bookId, bookType])).rows[0];
-  if (pastPass && pastPass.attempted_at > cooldown) return true;
-  if (bookType === 'physical') {
-    const pastReturn = (await conn.query(
-      "SELECT return_date FROM transactions WHERE user_id = $1 AND book_id = $2 AND return_date IS NOT NULL AND return_date != 'LOST' ORDER BY return_date DESC LIMIT 1",
-      [userId, bookId])).rows[0];
-    if (pastReturn) {
-      const lastReturn = pastReturn.return_date + ' 23:59';
-      if (lastReturn > cooldown) return true;
-    }
-  } else {
-    const pastComplete = (await conn.query(
-      'SELECT completed_at FROM reading_progress WHERE student_id = $1 AND content_id = $2 AND completed_at IS NOT NULL ORDER BY completed_at DESC LIMIT 1',
-      [userId, bookId])).rows[0];
-    if (pastComplete && pastComplete.completed_at > cooldown) return true;
-  }
-  return false;
-}
-
-
-// ── Reservation APIs ────────────────────────────────────────────
-router.post('/api/reservation/:resId/approve', adminOnly, async (req, res) => {
-  const { resId } = req.params;
-  const sCode = req.session.school_code;
-  try {
-    const resv = (await db.query(`SELECT * FROM reservations WHERE id = $1 AND school_code = $2 AND status = 'Pending'`, [resId, sCode])).rows[0];
-    if (!resv) return res.json({ status: 'error', message: 'Reservation not found or already processed' });
-    const book = (await db.query('SELECT * FROM books WHERE id = $1', [resv.book_id])).rows[0];
-    if (!book) return res.json({ status: 'error', message: 'Book not found' });
-    if (parseInt(book.available_copies) < 1) return res.json({ status: 'error', message: 'No copies available' });
-    const dDate = dueDate(14);
-    await db.query('INSERT INTO transactions (user_id, book_id, issue_date, due_date, school_code) VALUES ($1,$2,$3,$4,$5)',
-      [resv.user_id, resv.book_id, renderDate(new Date()), dDate, sCode]);
-    await db.query('UPDATE books SET available_copies = available_copies - 1 WHERE id = $1', [resv.book_id]);
-    await db.query("UPDATE reservations SET status = 'Approved' WHERE id = $1", [resId]);
-    await db.query('INSERT INTO notifications (user_id, message, type, created_at, school_code) VALUES ($1,$2,$3,$4,$5)',
-      [resv.user_id, `Your reservation for '${book.title}' has been approved (due ${dDate}).`, 'reservation_approved', nowStr(), sCode]);
-    res.json({ status: 'success' });
-  } catch (err) { console.error(err); res.json({ status: 'error', message: err.message }); }
-});
-
-router.post('/api/reservation/:resId/reject', adminOnly, async (req, res) => {
-  const { resId } = req.params;
-  const sCode = req.session.school_code;
-  try {
-    const resv = (await db.query(`SELECT * FROM reservations WHERE id = $1 AND school_code = $2 AND status = 'Pending'`, [resId, sCode])).rows[0];
-    if (!resv) return res.json({ status: 'error', message: 'Reservation not found' });
-    const book = (await db.query('SELECT title FROM books WHERE id = $1', [resv.book_id])).rows[0];
-    await db.query("UPDATE reservations SET status = 'Rejected' WHERE id = $1", [resId]);
-    if (book) {
-      await db.query('INSERT INTO notifications (user_id, message, type, created_at, school_code) VALUES ($1,$2,$3,$4,$5)',
-        [resv.user_id, `Your reservation for '${book.title}' has been declined.`, 'reservation_rejected', nowStr(), sCode]);
-    }
-    res.json({ status: 'success' });
-  } catch (err) { console.error(err); res.json({ status: 'error', message: err.message }); }
-});
-
-router.post(['/notifications/read-all', '/api/notifications/read-all'], adminOnly, async (req, res) => {
-  const sCode = req.session.school_code || 'GLOBAL';
-  const uId = req.session.user_id || 0;
-  try {
-    await db.query(
-      `UPDATE notifications SET is_read = 1 WHERE (school_code = $1 OR school_code = 'GLOBAL' OR user_id = $2 OR user_id = 0 OR user_id IS NULL)`,
-      [sCode, uId]
-    );
-    if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.json({ success: true, message: 'All notifications marked as read' });
-    }
-    return res.redirect('/admin?tab=notifications');
-  } catch (err) {
-    if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.status(500).json({ success: false, error: err.message });
-    }
-    return res.redirect('/admin?tab=notifications');
-  }
-});
-
-
-// ── Student Management ──────────────────────────────────────────
-router.post('/student/add', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'manage_students')) return res.redirect('/admin');
-  const sCode = req.session.school_code || '00000';
-  const { name, admission_no, phone, class: cls, password, email, reqEmail, role, school_code } = req.body;
-  const sc = (school_code || sCode || '00000').toUpperCase();
-  const targetEmail = email || reqEmail || (name.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000) + '@gmail.com');
-  const targetPass  = password || 'librika123';
-  const targetPhone = phone || ('9' + Math.floor(100000000 + Math.random() * 900000000));
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. MAIN LIBRARIAN 9-MODULE PORTAL RENDERER
+// ─────────────────────────────────────────────────────────────────────────────
+async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
+  const sCode = req.session.school_code || 'DEMO01';
+  const targetModule = req.query.module || req.params.module || defaultModule;
+  const targetTab = req.query.tab || 'default';
 
   try {
-    const dup = (await db.query('SELECT id FROM users WHERE email = $1 OR (phone = $2 AND phone IS NOT NULL AND phone != "")', [targetEmail, targetPhone])).rows[0];
-    if (dup) { 
-      req.flash('error', 'Email or Phone already registered in system'); 
-      return res.redirect('/admin?tab=members'); 
-    }
-    
-    let nextId = Date.now();
-    try {
-      const maxRes = await db.query('SELECT MAX(CAST(id AS UNSIGNED)) as max_id FROM users');
-      if (maxRes && maxRes.rows && maxRes.rows[0]) {
-        const mVal = parseInt(maxRes.rows[0].max_id || maxRes.rows[0].MAX_ID || 0, 10);
-        if (!isNaN(mVal) && mVal > 0) nextId = mVal + 1;
-      }
-    } catch (e) {}
+    // 1. Fetch Transactions & Overdue
+    let txQuery = `
+      SELECT t.*, u.name as user_name, u.admission_no as user_admission, u.phone as user_phone, u.class as user_class, u.role as user_role,
+             b.title as book_title, b.author as book_author, b.barcode_id as book_barcode, b.cover_url as book_cover
+      FROM transactions t
+      JOIN users u ON t.user_id = u.id
+      JOIN books b ON t.book_id = b.id
+      WHERE t.school_code = $1
+      ORDER BY t.id DESC
+    `;
+    const txRes = await db.query(txQuery, [sCode]).catch(() => ({ rows: [] }));
+    const allTransactions = txRes.rows || [];
 
-    await db.query(
-      'INSERT INTO users (id, name, admission_no, phone, class, role, password, school_code, email, is_banned) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,0)',
-      [nextId, name, admission_no || null, targetPhone, cls || null, role || 'student', targetPass, sc, targetEmail]);
-    
-    req.flash('success', `Member ${name} successfully registered! Email: ${targetEmail}, Pass: ${targetPass}`);
-    res.redirect('/admin?tab=members');
-  } catch (err) {
-    console.error('Error adding member:', err);
-    req.flash('error', 'Failed to add member: ' + (err.message || 'Error'));
-    res.redirect('/admin?tab=members');
-  }
-});
+    const activeLoans = [];
+    const returnedLoans = [];
+    let overdueCount = 0;
+    let dueTodayCount = 0;
+    const todayStr = renderDate(new Date());
 
-router.post('/student/:id/toggle-ban', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'manage_students')) return res.redirect('/admin');
-  const sCode = req.session.school_code;
-  const { id } = req.params;
-  try {
-    const user = (await db.query('SELECT * FROM users WHERE id = $1 AND school_code = $2', [id, sCode])).rows[0];
-    if (user) {
-      const newStatus = (user.is_banned && (user.is_banned === true || user.is_banned === '1' || user.is_banned === 1)) ? 0 : 1;
-      await db.query('UPDATE users SET is_banned = $1 WHERE id = $2', [newStatus, id]);
-    }
-    res.redirect('/admin');
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
-
-router.post('/student/:id/delete', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'manage_students')) return res.redirect('/admin');
-  const sCode = req.session.school_code;
-  const { id } = req.params;
-  try {
-    const user = (await db.query('SELECT * FROM users WHERE id = $1 AND school_code = $2', [id, sCode])).rows[0];
-    if (user) await db.query('DELETE FROM users WHERE id = $1', [id]);
-    res.redirect('/admin');
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
-
-
-// ── Settings ─────────────────────────────────────────────────────
-router.get('/settings', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  try {
-    const school = (await db.query('SELECT * FROM schools WHERE school_code = $1', [sCode])).rows[0];
-    res.render('admin_settings', { title: 'Settings - librika.in', school });
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
-
-router.post('/settings', adminOnly, async (req, res) => {
-  const oldCode = req.session.school_code;
-  const { new_code, new_name, due_days } = req.body;
-  try {
-    if (new_code && new_code.toUpperCase() !== oldCode) {
-      const nc = new_code.toUpperCase();
-      await db.query('UPDATE schools SET school_code = $1, name = $2, due_days = $3 WHERE school_code = $4',
-        [nc, new_name, parseInt(due_days) || 3, oldCode]);
-      await db.query('UPDATE users SET school_code = $1 WHERE school_code = $2', [nc, oldCode]);
-      await db.query('UPDATE books SET school_code = $1 WHERE school_code = $2', [nc, oldCode]);
-      await db.query('UPDATE transactions SET school_code = $1 WHERE school_code = $2', [nc, oldCode]);
-      req.session.destroy(() => res.redirect('/login'));
-      return;
-    }
-    await db.query('UPDATE schools SET name = $1, due_days = $2 WHERE school_code = $3',
-      [new_name, parseInt(due_days) || 3, oldCode]);
-    req.flash('success', 'Settings updated');
-    res.redirect('/admin/settings');
-  } catch (err) { console.error(err); res.redirect('/admin/settings'); }
-});
-
-
-// ── Add Book ──────────────────────────────────────────────────────
-router.get(['/add_book', '/book/add'], adminOnly, (req, res) => {
-  if (!hasPerm(req, 'manage_books')) return res.redirect('/admin');
-  res.render('add_book', { title: 'Add Book - librika.in' });
-});
-
-router.post(['/add_book', '/book/add'], adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'manage_books')) return res.redirect('/admin');
-  const sCode = req.session.school_code;
-  const { title, author, genre, copies, isbn, description } = req.body;
-  try {
-    const barcodeId = isbn || String(Date.now()).slice(-12);
-    const bwipjs = require('bwip-js');
-    const barcodeDir = path.join(__dirname, '..', 'static', 'barcodes');
-    if (!require('fs').existsSync(barcodeDir)) require('fs').mkdirSync(barcodeDir, { recursive: true });
-    await new Promise((resolve, reject) => {
-      bwipjs.toBuffer({ bcid: 'code128', text: barcodeId, scale: 3, height: 10, includetext: true, textxalign: 'center' }, (err, buf) => {
-        if (err) return reject(err);
-        require('fs').writeFileSync(path.join(barcodeDir, barcodeId + '.png'), buf);
-        resolve();
-      });
-    });
-    const insertRes = await db.query(
-      'INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id',
-      [title, author, genre || 'General', barcodeId, parseInt(copies) || 1, parseInt(copies) || 1, sCode, description || null, isbn || null]);
-    
-    const bookId = (insertRes.rows && insertRes.rows.length > 0) ? insertRes.rows[0].id : (insertRes.lastId || null);
-    if (!description) {
-      aiService.generateBookDescription(title, author, isbn).then(desc => {
-        db.query('UPDATE books SET description = $1 WHERE id = $2', [desc, bookId]).catch(console.error);
-      }).catch(console.error);
-    }
-    
-    req.flash('success', 'Book added successfully!');
-    res.redirect('/admin');
-  } catch (err) { console.error(err); req.flash('error', 'Failed to add book'); res.redirect('/admin/add_book'); }
-});
-
-
-// ── Issue Book ────────────────────────────────────────────────────
-router.get('/issue', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'manage_transactions')) return res.redirect('/admin');
-  const sCode = req.session.school_code;
-  try {
-    const students = (await db.query("SELECT * FROM users WHERE role = 'student' AND school_code = $1", [sCode])).rows;
-    const books = (await db.query('SELECT * FROM books WHERE available_copies > 0 AND school_code = $1', [sCode])).rows;
-    const selectedBookId = req.query.book_id ? parseInt(req.query.book_id) : null;
-    res.render('issue_book', { title: 'Issue Book - librika.in', students, books, selectedBookId });
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
-
-router.post('/issue', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'manage_transactions')) return res.redirect('/admin');
-  const sCode = req.session.school_code;
-  const { student_id, barcode_id, book_id } = req.body;
-  try {
-    let book = null;
-    if (barcode_id) {
-      book = (await db.query('SELECT * FROM books WHERE barcode_id = $1 AND available_copies > 0 AND school_code = $2', [barcode_id, sCode])).rows[0];
-    } else if (book_id) {
-      book = (await db.query('SELECT * FROM books WHERE id = $1 AND available_copies > 0 AND school_code = $2', [book_id, sCode])).rows[0];
-    }
-    if (!book) {
-      req.flash('error', 'Book not available');
-      return res.redirect('/admin/issue');
-    }
-    const student = (await db.query('SELECT * FROM users WHERE id = $1 AND school_code = $2', [student_id, sCode])).rows[0];
-    if (!student) {
-      req.flash('error', 'Student not found');
-      return res.redirect('/admin/issue');
-    }
-    const issueDate = renderDate(new Date());
-    const dDate = dueDate(3);
-    await db.query('INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code) VALUES ($1,$2,$3,$4,$5,$6)',
-      [student_id, book.id, issueDate, dDate, student.class, sCode]);
-    await db.query('UPDATE books SET available_copies = available_copies - 1 WHERE id = $1', [book.id]);
-    if (!(await check90DayCooldown(pool, student_id, book.id, 'physical'))) {
-      await updateScore(pool, student_id, 'physical', 5, `Issued book '${book.title}'`);
-    }
-    req.flash('success', `'${book.title}' issued to ${student.name}`);
-    res.redirect('/admin');
-  } catch (err) { console.error(err); req.flash('error', 'Failed to issue book'); res.redirect('/admin/issue'); }
-});
-
-// ── Return Book ─────────────────────────────────────────────────────
-router.get('/return/:txId', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'manage_transactions')) return res.redirect('/admin');
-  const sCode = req.session.school_code;
-  const { txId } = req.params;
-  try {
-    const tx = (await db.query('SELECT * FROM transactions WHERE id = $1 AND school_code = $2', [txId, sCode])).rows[0];
-    if (tx && !tx.return_date) {
-      const returnDate = renderDate(new Date());
-      await db.query('UPDATE transactions SET return_date = $1 WHERE id = $2', [returnDate, txId]);
-      await db.query('UPDATE books SET available_copies = available_copies + 1 WHERE id = $1', [tx.book_id]);
-
-      const dueDate = new Date(tx.due_date);
-      const retDate = new Date(returnDate);
-      const book = (await db.query('SELECT pages, title FROM books WHERE id = $1', [tx.book_id])).rows[0];
-      const pages = parseInt(book.pages) || 120;
-      const issueDate = new Date(tx.issue_date);
-      const daysKept = Math.floor((retDate - issueDate) / (1000 * 60 * 60 * 24));
-
-      const cooldownApplies = await check90DayCooldown(pool, tx.user_id, tx.book_id, 'physical');
-      let meetsMinPeriod = true;
-      if (pages < 100 && daysKept < 2) meetsMinPeriod = false;
-      else if (pages <= 300 && daysKept < 5) meetsMinPeriod = false;
-      else if (pages > 300 && daysKept < 7) meetsMinPeriod = false;
-
-      if (!cooldownApplies && meetsMinPeriod) {
-        if (retDate <= dueDate) {
-          await updateScore(pool, tx.user_id, 'physical', 15, `Returned '${book.title}' on time`);
-          req.flash('success', 'Book returned on time. +15 points to student.');
-        } else {
-          await updateScore(pool, tx.user_id, 'physical', -20, `Returned '${book.title}' late`);
-          req.flash('warning', 'Book returned late. -20 points from student.');
-        }
-      } else if (!meetsMinPeriod) {
-        req.flash('warning', `Book returned (${daysKept} days). Minimum reading period not met.`);
+    allTransactions.forEach(tx => {
+      const fineData = calculateFine(tx.due_date);
+      const enhanced = { ...tx, ...fineData };
+      if (!tx.return_date) {
+        activeLoans.push(enhanced);
+        if (fineData.is_overdue) overdueCount++;
+        if (renderDate(tx.due_date) === todayStr) dueTodayCount++;
       } else {
-        req.flash('info', 'Book returned. Cooldown active, no points updated.');
+        returnedLoans.push(enhanced);
       }
-    }
-    res.redirect('/admin');
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
+    });
 
+    // 2. Fetch Books Catalog & Copies
+    const booksRes = await db.query('SELECT * FROM books WHERE school_code = $1 ORDER BY id DESC', [sCode]).catch(() => ({ rows: [] }));
+    const books = booksRes.rows || [];
 
-// ── Acquisitions ──────────────────────────────────────────────────
-router.get('/acquisitions', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  try {
-    const acqs = (await db.query(
-      `SELECT a.*, v.name as vendor_name, u.name as user_name
-       FROM acquisitions a
-       JOIN vendors v ON a.vendor_id = v.id
-       LEFT JOIN users u ON a.created_by = u.id
-       WHERE a.school_code = $1
-       ORDER BY a.id DESC`, [sCode])).rows;
-    const vendors = (await db.query("SELECT * FROM vendors WHERE (school_code = $1 OR school_code = 'GLOBAL') AND status = 'active'", [sCode])).rows;
-    const stats = {
-      total_acquisitions: (await db.query('SELECT COUNT(*) as c FROM acquisitions WHERE school_code = $1', [sCode])).rows[0].c,
-      total_books: acqs.reduce((a, r) => a + parseInt(r.total_books || 0), 0),
-      total_copies: acqs.reduce((a, r) => a + parseInt(r.total_copies || 0), 0),
-      total_value: acqs.reduce((a, r) => a + parseFloat(r.total_amount || 0), 0),
-    };
-    res.render('admin_acquisitions', { title: 'Acquisitions - librika.in', acquisitions: acqs, vendors, stats });
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
+    const copiesRes = await db.query(`
+      SELECT bc.*, b.title as book_title, b.author as book_author, b.isbn as book_isbn
+      FROM book_copies bc
+      JOIN books b ON bc.book_id = b.id
+      WHERE bc.school_code = $1
+      ORDER BY bc.id DESC
+    `, [sCode]).catch(() => ({ rows: [] }));
+    const bookCopies = copiesRes.rows || [];
 
-router.post('/acquisitions/ocr', adminOnly, upload.single('invoice_file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.json({ success: false, error: 'No file uploaded' });
-    }
-    const fs = require('fs');
-    const imgBuf = fs.readFileSync(req.file.path);
-    const base64Str = 'data:image/jpeg;base64,' + imgBuf.toString('base64');
-    
-    const extractedText = await aiService.extractTextOCR(base64Str);
-    
-    res.json({
-      success: true,
-      extracted_text: extractedText,
-      bill_number: 'INV-' + Date.now().toString().slice(-6),
-      bill_date: renderDate(new Date()),
-      vendor_name: 'OCR Extracted',
-      total_amount: 0,
-      items: [{ isbn: '', title: 'See extracted text', author: 'Unknown', quantity: 1, unit_price: 0, shelf: '', rack: '' }]
+    let totalCopiesCount = 0;
+    let availableCopiesCount = 0;
+    let damagedCopiesCount = 0;
+    let lostCopiesCount = 0;
+
+    books.forEach(b => {
+      totalCopiesCount += (parseInt(b.total_copies, 10) || 1);
+      availableCopiesCount += (parseInt(b.available_copies, 10) || 0);
+    });
+
+    bookCopies.forEach(c => {
+      if (c.condition_status === 'DAMAGED') damagedCopiesCount++;
+      if (c.condition_status === 'LOST' || c.availability_status === 'LOST') lostCopiesCount++;
+    });
+
+    // 3. Fetch Members (Students, Teachers, Staff)
+    const usersRes = await db.query('SELECT * FROM users WHERE school_code = $1 ORDER BY id DESC', [sCode]).catch(() => ({ rows: [] }));
+    const allUsers = usersRes.rows || [];
+
+    const students = allUsers.filter(u => u.role === 'student');
+    const teachers = allUsers.filter(u => u.role === 'teacher');
+    const staff = allUsers.filter(u => u.role === 'staff' || u.role === 'librarian' || u.role === 'admin');
+
+    // 4. Fetch Requests & Reservations
+    const resvRes = await db.query(`
+      SELECT r.*, u.name as student_name, u.admission_no as student_admission, u.class as student_class, u.phone as student_phone,
+             b.title as book_title, b.author as book_author, b.available_copies
+      FROM reservations r
+      JOIN users u ON u.id = r.user_id
+      JOIN books b ON b.id = r.book_id
+      WHERE r.school_code = $1
+      ORDER BY r.id DESC
+    `, [sCode]).catch(() => ({ rows: [] }));
+    const reservations = resvRes.rows || [];
+
+    // 5. Fetch Digital Documents & E-Library
+    const digRes = await db.query(`
+      SELECT * FROM digital_content WHERE school_code = $1 OR school_code = 'GLOBAL' ORDER BY id DESC LIMIT 50
+    `, [sCode]).catch(() => ({ rows: [] }));
+    const digitalItems = digRes.rows || [];
+
+    // 6. Fetch Live Studio Sessions
+    const studioRes = await db.query(`
+      SELECT ls.*, u.name as host_name
+      FROM live_sessions ls
+      LEFT JOIN users u ON ls.host_id = u.id
+      ORDER BY ls.scheduled_at DESC LIMIT 30
+    `).catch(() => ({ rows: [] }));
+    const studioSessions = studioRes.rows || [];
+
+    // 7. Fetch Library Settings & Rules
+    const settingsRes = await db.query('SELECT * FROM library_settings WHERE school_code = $1', [sCode]).catch(() => ({ rows: [] }));
+    const settingsMap = {};
+    (settingsRes.rows || []).forEach(s => { settingsMap[s.setting_key] = s.setting_value; });
+
+    const schoolRes = await db.query('SELECT * FROM schools WHERE school_code = $1', [sCode]).catch(() => ({ rows: [] }));
+    const school = (schoolRes.rows && schoolRes.rows[0]) || { name: 'Librika Digital Library', school_code: sCode, due_days: 14 };
+
+    // 8. Fetch Audit Logs & Notifications
+    const logsRes = await db.query(`
+      SELECT l.*, u.name as user_name FROM logs l
+      LEFT JOIN users u ON u.id = l.user_id
+      WHERE l.school_code = $1
+      ORDER BY l.id DESC LIMIT 40
+    `, [sCode]).catch(() => ({ rows: [] }));
+    const auditLogs = logsRes.rows || [];
+
+    const notifRes = await db.query(`
+      SELECT * FROM notifications WHERE school_code = $1 OR school_code = 'GLOBAL' ORDER BY id DESC LIMIT 30
+    `, [sCode]).catch(() => ({ rows: [] }));
+    const notificationsList = notifRes.rows || [];
+
+    // 9. Fetch Pending Reviews & Ratings
+    const revRes = await db.query(`
+      SELECT r.*, u.name as student_name, COALESCE(b.title, d.title) as book_title
+      FROM book_reviews r
+      JOIN users u ON r.user_id = u.id
+      LEFT JOIN books b ON r.book_id = b.id AND r.book_type = 'physical'
+      LEFT JOIN digital_content d ON r.book_id = d.id AND r.book_type = 'digital'
+      WHERE r.school_code = $1
+      ORDER BY r.id DESC LIMIT 30
+    `, [sCode]).catch(() => ({ rows: [] }));
+    const reviews = revRes.rows || [];
+
+    res.render('admin', {
+      title: 'Librika Librarian Console - Intelligent Workspace',
+      currentModule: targetModule,
+      currentTab: targetTab,
+      school,
+      settings: settingsMap,
+      stats: {
+        total_books: books.length,
+        total_copies: totalCopiesCount,
+        available_copies: availableCopiesCount,
+        damaged_copies: damagedCopiesCount,
+        lost_copies: lostCopiesCount,
+        active_issues: activeLoans.length,
+        overdue_count: overdueCount,
+        due_today: dueTodayCount,
+        total_members: allUsers.length,
+        total_students: students.length,
+        total_teachers: teachers.length,
+        total_staff: staff.length,
+        total_returned: returnedLoans.length,
+        total_digital: digitalItems.length,
+        pending_reservations: reservations.filter(r => r.status === 'Pending' || r.status === 'pending').length
+      },
+      books,
+      bookCopies,
+      students,
+      teachers,
+      staff,
+      allUsers,
+      activeLoans,
+      returnedLoans,
+      allTransactions,
+      reservations,
+      digitalItems,
+      studioSessions,
+      auditLogs,
+      notificationsList,
+      reviews
     });
   } catch (err) {
-    console.error(err);
-    res.json({ success: false, error: err.message });
+    console.error('Librarian portal render error:', err);
+    req.flash('error', 'Failed to load Librarian portal: ' + err.message);
+    res.redirect('/');
   }
-});
+}
 
-router.post('/sync-cloudinary', adminOnly, async (req, res) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. PRIMARY 9 MODULE ROUTES
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'dashboard'));
+router.get('/dashboard', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'dashboard'));
+router.get('/catalog', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'catalog'));
+router.get('/members', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'members'));
+router.get('/circulation', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'circulation'));
+router.get('/requests', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'requests'));
+router.get('/e-library', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'e-library'));
+router.get('/studio', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'studio'));
+router.get('/analytics', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'analytics'));
+router.get('/settings', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'settings'));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. RAPID CIRCULATION DESK APIS (ISSUE, RETURN, RENEW, LOOKUPS)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Fast Member Lookup for Scanner Desk
+router.post('/api/circulation/lookup-member', adminOnly, async (req, res) => {
+  const { query } = req.body;
+  const sCode = req.session.school_code || 'DEMO01';
+  if (!query || !query.trim()) return res.json({ status: 'error', message: 'Enter Member ID, Admission No, or Phone' });
+
   try {
-    res.json({ success: true, message: 'Cloudinary sync triggered' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-router.get('/acquisitions/isbn-lookup', async (req, res) => {
-  const isbn = req.query.isbn;
-  if (!isbn) return res.json({ success: false });
-  try {
-    const https = require('https');
-    const url = `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`;
-    https.get(url, (resp) => {
-      let data = '';
-      resp.on('data', chunk => data += chunk);
-      resp.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          const key = `ISBN:${isbn}`;
-          if (json[key]) {
-            const b = json[key];
-            return res.json({
-              success: true,
-              title: b.title || '',
-              author: (b.authors || []).map(a => a.name).join(', '),
-              publisher: (b.publishers || []).map(p => p.name).join(', '),
-              category: ((b.subjects || [])[0] || {}).name || 'General',
-            });
-          }
-        } catch(e) {}
-        res.json({ success: false, message: 'Not found' });
-      });
-    }).on('error', () => res.json({ success: false }));
-  } catch(e) { res.json({ success: false }); }
-});
-
-router.get('/acquisitions/get/:acqId', adminOnly, async (req, res) => {
-  const { acqId } = req.params;
-  try {
-    const acq = (await db.query('SELECT * FROM acquisitions WHERE id = $1', [acqId])).rows[0];
-    const items = (await db.query(
-      `SELECT ai.*, b.publisher, b.isbn as book_isbn, b.genre as category, b.language, bc.shelf, bc.rack
-       FROM acquisition_items ai
-       LEFT JOIN books b ON ai.book_id = b.id
-       LEFT JOIN book_copies bc ON bc.book_id = ai.book_id AND bc.acquisition_id = ai.acquisition_id
-       WHERE ai.acquisition_id = $1`, [acqId])).rows;
-    res.json({ acquisition: acq, items });
-  } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
-});
-
-router.post('/acquisitions/complete', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const userId = req.session.user_id;
-  const { acquisition_id, vendor_name, vendor_id, bill_number, bill_date, total_amount, items, invoice_image } = req.body;
-  try {
-    let vId = vendor_id;
-    if (!vId && vendor_name) {
-      const existingVendor = (await db.query('SELECT id FROM vendors WHERE name = $1 AND school_code = $2', [vendor_name, sCode])).rows[0];
-      if (existingVendor) {
-        vId = existingVendor.id;
-      } else {
-        const vRes = await db.query('INSERT INTO vendors (school_code, name, created_at) VALUES ($1,$2,$3) RETURNING id',
-          [sCode, vendor_name, nowStr()]);
-        vId = (vRes.rows && vRes.rows.length > 0) ? vRes.rows[0].id : (vRes.lastId || null);
-      }
-    }
-    let acqId = acquisition_id;
-    if (acqId) {
-      // edit existing
-      await db.query('UPDATE acquisitions SET bill_number=$1, bill_date=$2, vendor_id=$3, total_amount=$4, last_updated=$5 WHERE id=$6',
-        [bill_number, bill_date, vId, total_amount, nowStr(), acqId]);
-      // remove old items & copies
-      const oldItems = (await db.query('SELECT id FROM acquisition_items WHERE acquisition_id = $1', [acqId])).rows;
-      for (const oi of oldItems) {
-        await db.query('DELETE FROM book_copies WHERE acquisition_id = $1', [acqId]);
-      }
-      await db.query('DELETE FROM acquisition_items WHERE acquisition_id = $1', [acqId]);
-    } else {
-      const acqRes = await db.query(
-        'INSERT INTO acquisitions (school_code, bill_number, bill_date, vendor_id, total_books, total_copies, total_amount, status, created_by, created_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id',
-        [sCode, bill_number, bill_date, vId, items.length, items.reduce((a,i) => a + parseInt(i.quantity || 1), 0), total_amount || 0, 'Completed', userId, nowStr()]);
-      acqId = (acqRes.rows && acqRes.rows.length > 0) ? acqRes.rows[0].id : (acqRes.lastId || null);
-      if (invoice_image) {
-        await db.query('UPDATE acquisitions SET invoice_image = $1 WHERE id = $2', [invoice_image, acqId]);
-      }
-    }
-
-    for (const item of items) {
-      // find or create book
-      let bookId = item.book_id;
-      if (!bookId) {
-        const existingBook = (await db.query('SELECT id FROM books WHERE isbn = $1 AND school_code = $2', [item.isbn || '', sCode])).rows[0];
-        if (existingBook) {
-          bookId = existingBook.id;
-          await db.query('UPDATE books SET total_copies = total_copies + $1, available_copies = available_copies + $1 WHERE id = $2',
-            [parseInt(item.quantity) || 1, bookId]);
-        } else {
-          const bRes = await db.query(
-            'INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, isbn) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
-            [item.title, item.author || 'Unknown', item.category || 'General', 'ACC-' + Date.now() + Math.random().toString(36).slice(2,6), parseInt(item.quantity) || 1, parseInt(item.quantity) || 1, sCode, item.isbn || null]);
-          bookId = (bRes.rows && bRes.rows.length > 0) ? bRes.rows[0].id : (bRes.lastId || null);
-        }
-      }
-      const qty = parseInt(item.quantity) || 1;
-      const totalPrice = parseFloat(item.unit_price || 0) * qty;
-      await db.query(
-        'INSERT INTO acquisition_items (acquisition_id, book_id, isbn, title, author, quantity, unit_price, total_price, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
-        [acqId, bookId, item.isbn || null, item.title, item.author || null, qty, parseFloat(item.unit_price || 0), totalPrice, 'New']);
-      // create individual copies with accession numbers
-      for (let c = 0; c < qty; c++) {
-        const accNum = `ACC-${sCode}-${String(Date.now()).slice(-6)}${c}`;
-        await db.query(
-          'INSERT INTO book_copies (book_id, accession_number, shelf, rack, status, condition, acquisition_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-          [bookId, accNum, item.shelf || null, item.rack || null, 'Available', 'Good', acqId]);
-      }
-    }
-    res.json({ success: true, acquisition_id: acqId });
-  } catch (err) { console.error(err); res.status(500).json({ success: false, error: err.message }); }
-});
-
-router.post('/acquisitions/delete/:acqId', adminOnly, async (req, res) => {
-  const { acqId } = req.params;
-  try {
-    const items = (await db.query('SELECT * FROM acquisition_items WHERE acquisition_id = $1', [acqId])).rows;
-    for (const item of items) {
-      const qty = parseInt(item.quantity) || 1;
-      await db.query('UPDATE books SET total_copies = total_copies - $1, available_copies = available_copies - $1 WHERE id = $2', [qty, item.book_id]);
-    }
-    await db.query('DELETE FROM book_copies WHERE acquisition_id = $1', [acqId]);
-    await db.query('DELETE FROM acquisition_items WHERE acquisition_id = $1', [acqId]);
-    await db.query('DELETE FROM acquisitions WHERE id = $1', [acqId]);
-    res.json({ success: true });
-  } catch (err) { console.error(err); res.status(500).json({ success: false, error: err.message }); }
-});
-
-
-// ── Vendors ────────────────────────────────────────────────────────
-router.post('/vendors/create', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const { name, email, phone, address } = req.body;
-  try {
-    await db.query('INSERT INTO vendors (school_code, name, email, phone, address, status, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [sCode, name, email || null, phone || null, address || null, 'active', nowStr()]);
-    req.flash('success', 'Vendor added');
-    res.redirect('/admin/acquisitions');
-  } catch (err) { console.error(err); req.flash('error', 'Failed to add vendor'); res.redirect('/admin/acquisitions'); }
-});
-
-
-// ── Non-Acquisition Books API ────────────────────────────────────
-router.get('/api/non-acquisition-books', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  try {
-    const books = (await db.query(
-      `SELECT b.* FROM books b
-       WHERE b.school_code = $1 AND b.id NOT IN (
-         SELECT DISTINCT ai.book_id FROM acquisition_items ai
-         JOIN acquisitions a ON ai.acquisition_id = a.id
-         WHERE a.school_code = $1 AND ai.book_id IS NOT NULL
-       )`, [sCode])).rows;
-    res.json({ books });
-  } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
-});
-
-router.post('/api/save-scanned', adminOnly, upload.single('cover'), async (req, res) => {
-  const sCode = req.session.school_code;
-  const { title, author, publisher, isbn, genre, class: cls, subject, language, description, copies, shelf, rack, acquisition_id } = req.body;
-  try {
-    const barcodeId = 'BC' + Date.now().toString().slice(-8);
-    let coverUrl = null;
-    if (req.file) {
-      coverUrl = '/uploads/' + req.file.filename;
-    }
-    const bookRes = await db.query(
-      'INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, isbn, publisher, description, cover_url, class, subject, language) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id',
-      [title, author, genre || 'General', barcodeId, parseInt(copies) || 1, parseInt(copies) || 1, sCode, isbn || null, publisher || null, description || null, coverUrl, cls || null, subject || null, language || null]);
-    const bookId = (bookRes.rows && bookRes.rows.length > 0) ? bookRes.rows[0].id : (bookRes.lastId || null);
-    // Generate barcode image
-    const bwipjs = require('bwip-js');
-    const barcodeDir = path.join(__dirname, '..', 'static', 'barcodes');
-    if (!require('fs').existsSync(barcodeDir)) require('fs').mkdirSync(barcodeDir, { recursive: true });
-    await new Promise((resolve, reject) => {
-      bwipjs.toBuffer({ bcid: 'code128', text: barcodeId, scale: 3, height: 10, includetext: true, textxalign: 'center' }, (err, buf) => {
-        if (err) return reject(err);
-        require('fs').writeFileSync(path.join(barcodeDir, barcodeId + '.png'), buf);
-        resolve();
-      });
+    const cleanQ = query.trim();
+    const userRes = await db.query(`
+      SELECT u.id, u.name, u.admission_no, u.class, u.phone, u.role, u.is_banned, u.email
+      FROM users u
+      WHERE (u.admission_no = $1 OR u.phone = $1 OR CAST(u.id AS TEXT) = $1 OR u.email = $1)
+      AND u.school_code = $2
+      LIMIT 1
+    `, [cleanQ, sCode]).catch(async () => {
+      return await db.query(`
+        SELECT u.id, u.name, u.admission_no, u.class, u.phone, u.role, u.is_banned, u.email
+        FROM users u
+        WHERE (u.admission_no = ? OR u.phone = ? OR u.id = ? OR u.email = ?)
+        AND u.school_code = ?
+        LIMIT 1
+      `, [cleanQ, cleanQ, cleanQ, cleanQ, sCode]);
     });
-    const qty = parseInt(copies) || 1;
-    for (let c = 0; c < qty; c++) {
-      const accNum = `ACC-${sCode}-${String(Date.now()).slice(-6)}${c}`;
-      await db.query('INSERT INTO book_copies (book_id, accession_number, shelf, rack, status, acquisition_id) VALUES ($1,$2,$3,$4,$5,$6)',
-        [bookId, accNum, shelf || null, rack || null, 'Available', acquisition_id || null]);
+
+    if (!userRes.rows || userRes.rows.length === 0) {
+      return res.json({ status: 'error', message: `No member found matching "${cleanQ}"` });
     }
-    res.json({ success: true, book_id: bookId, barcode_id: barcodeId });
-  } catch (err) { console.error(err); res.status(500).json({ success: false, error: err.message }); }
-});
 
-router.post('/api/add-copy/:bookId', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const { bookId } = req.params;
-  const { acquisition_id } = req.body;
-  try {
-    await db.query('UPDATE books SET total_copies = total_copies + 1, available_copies = available_copies + 1 WHERE id = $1', [bookId]);
-    const accNum = `ACC-${sCode}-${String(Date.now()).slice(-8)}`;
-    await db.query('INSERT INTO book_copies (book_id, accession_number, status, acquisition_id) VALUES ($1,$2,$3,$4)',
-      [bookId, accNum, 'Available', acquisition_id || null]);
-    res.json({ success: true, accession_number: accNum });
-  } catch (err) { console.error(err); res.status(500).json({ success: false, error: err.message }); }
-});
-
-
-// ── Review Queue ──────────────────────────────────────────────────
-router.get('/review-queue', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  try {
-    const contentList = (await db.query(
-      `SELECT d.*, u.name as student_name, u.admission_no, u.class
-       FROM digital_content d
-       JOIN users u ON d.student_id = u.id
-       WHERE d.school_code = $1 AND (d.status = 'Submitted' OR d.status = 'Under Review')
-       ORDER BY d.created_at DESC`, [sCode])).rows;
-    res.render('admin_review', { title: 'Review Queue - librika.in', content_list: contentList });
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
-
-router.post('/api/moderate', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const { content_id, action, rejection_reason, suggested_changes } = req.body;
-  try {
-    if (action === 'Approve') {
-      await db.query("UPDATE digital_content SET status = 'Published' WHERE id = $1 AND school_code = $2",
-        [content_id, sCode]);
-      res.json({ status: 'success' });
-    } else if (action === 'Reject') {
-      await db.query("UPDATE digital_content SET status = 'Rejected', rejection_reason = $1, suggested_changes = $2 WHERE id = $3 AND school_code = $4",
-        [rejection_reason || null, suggested_changes || null, content_id, sCode]);
-      res.json({ status: 'success' });
-    } else {
-      res.status(400).json({ status: 'error', message: 'Invalid action' });
+    const member = userRes.rows[0];
+    if (member.is_banned && (member.is_banned === 1 || member.is_banned === '1' || member.is_banned === true)) {
+      return res.json({ status: 'error', message: `Member ${member.name} is currently SUSPENDED. Circulation blocked.` });
     }
-  } catch (err) { console.error(err); res.status(500).json({ status: 'error', message: err.message }); }
-});
 
+    // Active loans count
+    const loansRes = await db.query(`
+      SELECT t.*, b.title as book_title, b.barcode_id as book_barcode
+      FROM transactions t
+      JOIN books b ON t.book_id = b.id
+      WHERE t.user_id = $1 AND t.return_date IS NULL
+    `, [member.id]);
 
-// ── Book Review Moderation ─────────────────────────────────────────
-router.post('/review/:reviewId/approve', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'approve_content')) return res.redirect('/admin');
-  const { reviewId } = req.params;
-  try {
-    const review = (await db.query("SELECT * FROM book_reviews WHERE id = $1 AND status = 'pending'", [reviewId])).rows[0];
-    if (review) {
-      await db.query("UPDATE book_reviews SET status = 'approved' WHERE id = $1", [reviewId]);
-      await updateScore(pool, review.user_id, 'digital', 20, 'Review approved');
-      req.flash('success', 'Review approved! +20 points to student.');
-    }
-    res.redirect('/admin');
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
+    const activeLoans = (loansRes.rows || []).map(l => ({
+      ...l,
+      ...calculateFine(l.due_date)
+    }));
 
-router.post('/review/:reviewId/reject', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'approve_content')) return res.redirect('/admin');
-  const { reviewId } = req.params;
-  try {
-    await db.query("UPDATE book_reviews SET status = 'rejected' WHERE id = $1", [reviewId]);
-    req.flash('info', 'Review rejected.');
-    res.redirect('/admin');
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
-
-
-// ── Mark Lost ──────────────────────────────────────────────────────
-router.post('/transaction/:txId/lost', adminOnly, async (req, res) => {
-  if (!hasPerm(req, 'manage_transactions')) return res.redirect('/admin');
-  const sCode = req.session.school_code;
-  const { txId } = req.params;
-  try {
-    const tx = (await db.query('SELECT * FROM transactions WHERE id = $1 AND school_code = $2', [txId, sCode])).rows[0];
-    if (tx) {
-      await db.query("UPDATE transactions SET return_date = 'LOST' WHERE id = $1", [txId]);
-      await db.query('UPDATE books SET total_copies = total_copies - 1 WHERE id = $1', [tx.book_id]);
-      await updateScore(pool, tx.user_id, 'physical', -50, 'Book marked as lost');
-      req.flash('warning', 'Book marked as lost. -50 points deducted.');
-    }
-    res.redirect('/admin');
-  } catch (err) { console.error(err); res.redirect('/admin'); }
-});
-
-
-// ── Smart Scanner ─────────────────────────────────────────────────
-router.get('/scanner', adminOnly, (req, res) => {
-  res.render('scanner_v2', { title: 'Scanner - librika.in' });
-});
-
-router.post('/api/upload-cover', adminOnly, upload.fields([{ name: 'front_cover' }, { name: 'back_cover' }]), async (req, res) => {
-  try {
-    const front = req.files && req.files['front_cover'] ? req.files['front_cover'][0] : null;
-    const back = req.files && req.files['back_cover'] ? req.files['back_cover'][0] : null;
-    const result = {};
-    if (front) {
-      result.front_image = '/uploads/' + front.filename;
-      const fs = require('fs');
-      const imgBuf = fs.readFileSync(front.path);
-      result.front_base64 = 'data:image/jpeg;base64,' + imgBuf.toString('base64');
-    }
-    if (back) {
-      result.back_image = '/uploads/' + back.filename;
-      const fs = require('fs');
-      const imgBuf = fs.readFileSync(back.path);
-      result.back_base64 = 'data:image/jpeg;base64,' + imgBuf.toString('base64');
-    }
-    res.json(result);
-  } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
-});
-
-router.get('/api/book/:bookId', adminOnly, async (req, res) => {
-  const { bookId } = req.params;
-  try {
-    const book = (await db.query('SELECT * FROM books WHERE id = $1', [bookId])).rows[0];
-    if (book) res.json(book);
-    else res.status(404).json({ error: 'Not found' });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-router.post('/api/update-book/:bookId', adminOnly, async (req, res) => {
-  const { bookId } = req.params;
-  const fields = ['title', 'author', 'publisher', 'isbn', 'genre', 'class', 'subject', 'language', 'description'];
-  const updates = [];
-  const values = [];
-  let idx = 1;
-  for (const f of fields) {
-    if (req.body[f] !== undefined) {
-      updates.push(`${f} = $${idx++}`);
-      values.push(req.body[f]);
-    }
-  }
-  if (updates.length > 0) {
-    values.push(bookId);
-    await db.query(`UPDATE books SET ${updates.join(', ')} WHERE id = $${idx}`, values);
-  }
-  res.json({ success: true });
-});
-
-router.post('/api/delete-scanned-book/:bookId', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const { bookId } = req.params;
-  try {
-    await db.query('DELETE FROM book_copies WHERE book_id = $1', [bookId]);
-    await db.query('DELETE FROM books WHERE id = $1 AND school_code = $2', [bookId, sCode]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-router.post('/api/delete-book/:bookId', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const { bookId } = req.params;
-  try {
-    await db.query('BEGIN');
-    await db.query("UPDATE transactions SET return_date = 'DELETED' WHERE book_id = $1 AND return_date IS NULL", [bookId]);
-    await db.query('DELETE FROM book_copies WHERE book_id = $1', [bookId]);
-    await db.query('DELETE FROM acquisition_items WHERE book_id = $1', [bookId]);
-    await db.query('DELETE FROM reservations WHERE book_id = $1', [bookId]);
-    await db.query('DELETE FROM books WHERE id = $1 AND school_code = $2', [bookId, sCode]);
-    await db.query('COMMIT');
-    res.json({ success: true });
-  } catch (err) { await db.query('ROLLBACK'); res.status(500).json({ error: err.message }); }
-});
-
-router.post('/api/delete-all-books', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  try {
-    await db.query('BEGIN');
-    await db.query("UPDATE transactions SET return_date = 'DELETED' WHERE school_code = $1 AND return_date IS NULL", [sCode]);
-    await db.query('DELETE FROM book_copies WHERE book_id IN (SELECT id FROM books WHERE school_code = $1)', [sCode]);
-    await db.query('DELETE FROM acquisition_items WHERE book_id IN (SELECT id FROM books WHERE school_code = $1)', [sCode]);
-    await db.query('DELETE FROM reservations WHERE book_id IN (SELECT id FROM books WHERE school_code = $1)', [sCode]);
-    await db.query('DELETE FROM books WHERE school_code = $1', [sCode]);
-    await db.query('COMMIT');
-    res.json({ success: true });
-  } catch (err) { await db.query('ROLLBACK'); res.status(500).json({ error: err.message }); }
-});
-
-
-// ── Book Availability API ─────────────────────────────────────────
-router.post('/api/check-book-availability', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const { title, author, isbn } = req.body;
-  try {
-    let book = null;
-    if (isbn) {
-      book = (await db.query('SELECT * FROM books WHERE isbn = $1 AND school_code = $2', [isbn, sCode])).rows[0];
-    }
-    if (!book && title) {
-      book = (await db.query('SELECT * FROM books WHERE title ILIKE $1 AND school_code = $2', [`%${title}%`, sCode])).rows[0];
-    }
-    res.json({ found: !!book, book: book || null });
-  } catch (err) { res.json({ found: false }); }
-});
-
-router.post('/api/issue-scanned-book', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const { student_id, book_id } = req.body;
-  try {
-    const book = (await db.query('SELECT * FROM books WHERE id = $1 AND available_copies > 0 AND school_code = $2', [book_id, sCode])).rows[0];
-    if (!book) return res.json({ success: false, error: 'Book not available' });
-    const student = (await db.query('SELECT * FROM users WHERE id = $1 AND school_code = $2', [student_id, sCode])).rows[0];
-    if (!student) return res.json({ success: false, error: 'Student not found' });
-    await db.query('INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code) VALUES ($1,$2,$3,$4,$5,$6)',
-      [student_id, book.id, renderDate(new Date()), dueDate(3), student.class, sCode]);
-    await db.query('UPDATE books SET available_copies = available_copies - 1 WHERE id = $1', [book.id]);
-    if (!(await check90DayCooldown(pool, student_id, book.id, 'physical'))) {
-      await updateScore(pool, student_id, 'physical', 5, `Issued book '${book.title}'`);
-    }
-    res.json({ success: true, message: `'${book.title}' issued to ${student.name}` });
-  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
-});
-
-router.post('/api/add-scanned-book', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code;
-  const { title, author, publisher, isbn, description } = req.body;
-  if (!title || !author) return res.json({ success: false, error: 'Title and Author required' });
-  try {
-    const barcodeId = 'BC' + Date.now().toString().slice(-8);
-    const bookRes = await db.query(
-      'INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, publisher) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
-      [title, author, 'General', barcodeId, 5, 5, sCode, description || null, isbn || null, publisher || null]);
-    res.json({ success: true, message: `Book '${title}' added`, book: bookRes.rows[0] });
-  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
-});
-
-// ── Security & Authentication Handlers ──────────────────────────────
-router.post('/security/password', adminOnly, async (req, res) => {
-  const userId = req.session.user_id;
-  const { current_password, new_password, confirm_password } = req.body;
-  if (!current_password || !new_password) {
-    return res.json({ success: false, error: 'Current and new password required.' });
-  }
-  if (new_password.length < 6) {
-    return res.json({ success: false, error: 'New password must be at least 6 characters long.' });
-  }
-  if (confirm_password && new_password !== confirm_password) {
-    return res.json({ success: false, error: 'Passwords do not match.' });
-  }
-  try {
-    const uRes = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
-    const user = uRes.rows && uRes.rows[0];
-    if (!user) return res.json({ success: false, error: 'User not found.' });
-
-    let match = false;
-    const userPass = String(user.password || '').trim();
-    if (userPass.startsWith('$2a$') || userPass.startsWith('$2b$')) {
-      match = await bcrypt.compare(current_password, userPass).catch(() => false);
-    } else {
-      match = (userPass === current_password);
-    }
-    if (!match) return res.json({ success: false, error: 'Current password is incorrect.' });
-
-    const hashed = await bcrypt.hash(new_password, 10);
-    await db.query('UPDATE users SET password = $1 WHERE id = $2', [hashed, userId]);
-    await logActivity(req, {
-      userId,
-      action: 'Librarian changed account password',
-      module: 'security',
-      schoolCode: req.session.school_code
-    });
-    return res.json({ success: true, message: 'Password updated successfully!' });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-router.post('/security/2fa', adminOnly, async (req, res) => {
-  const userId = req.session.user_id;
-  try {
-    const uRes = await db.query('SELECT two_factor_enabled FROM users WHERE id = $1', [userId]);
-    const user = uRes.rows && uRes.rows[0];
-    const nowEnabled = user && user.two_factor_enabled ? 0 : 1;
-    await db.query('UPDATE users SET two_factor_enabled = $1 WHERE id = $2', [nowEnabled, userId]);
-    await logActivity(req, {
-      userId,
-      action: nowEnabled ? 'Enabled 2FA' : 'Disabled 2FA',
-      module: 'security',
-      schoolCode: req.session.school_code
-    });
-    return res.json({ success: true, enabled: !!nowEnabled });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-router.get('/api/security-logs', adminOnly, async (req, res) => {
-  const sCode = req.session.school_code || 'GLOBAL';
-  const userId = req.session.user_id;
-  try {
-    await ensureSecurityTables();
-    const logsRes = await db.query(
-      `SELECT l.*, u.name as user_name FROM logs l
-       LEFT JOIN users u ON u.id = l.user_id
-       WHERE l.school_code = $1 OR l.user_id = $2
-       ORDER BY l.id DESC LIMIT 40`,
-      [sCode, userId]
-    ).catch(() => ({ rows: [] }));
-
-    const loginRes = await db.query(
-      `SELECT lh.*, u.name as user_name FROM login_history lh
-       LEFT JOIN users u ON u.id = lh.user_id
-       WHERE lh.school_code = $1 OR lh.user_id = $2
-       ORDER BY lh.id DESC LIMIT 30`,
-      [sCode, userId]
-    ).catch(() => ({ rows: [] }));
-
-    const devicesRes = await db.query(
-      `SELECT * FROM student_devices WHERE user_id = $1 ORDER BY last_active DESC LIMIT 10`,
-      [userId]
-    ).catch(() => ({ rows: [] }));
+    // Borrowing limit
+    const limit = member.role === 'teacher' ? 10 : (member.role === 'staff' ? 5 : 3);
 
     return res.json({
-      success: true,
-      logs: logsRes.rows || [],
-      loginHistory: loginRes.rows || [],
-      devices: devicesRes.rows || []
+      status: 'success',
+      member,
+      activeLoans,
+      activeCount: activeLoans.length,
+      borrowingLimit: limit,
+      canBorrow: activeLoans.length < limit
     });
   } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
+    console.error('Member lookup error:', err);
+    return res.json({ status: 'error', message: 'Member lookup failed: ' + err.message });
   }
 });
 
-// ── AI Assistant Route ──────────────────────────────────────────────
-router.get(['/ai', '/ai-chat'], adminOnly, (req, res) => {
+// Fast Book Lookup for Scanner Desk
+router.post('/api/circulation/lookup-book', adminOnly, async (req, res) => {
+  const { barcode } = req.body;
+  const sCode = req.session.school_code || 'DEMO01';
+  if (!barcode || !barcode.trim()) return res.json({ status: 'error', message: 'Scan or enter Book Barcode/ISBN' });
+
   try {
-    res.render('student_ai', {
-      title: 'AI Assistant - librika.in',
-      active: 'ai',
-      notifCount: 0,
-      school_name: (req.session && req.session.school_name) ? req.session.school_name : 'E-Pathshala Network'
-    });
-  } catch(err) {
-    res.redirect('/admin');
+    const cleanB = barcode.trim();
+    // 1. Check book_copies first
+    const copyRes = await db.query(`
+      SELECT bc.*, b.id as book_id, b.title, b.author, b.genre, b.isbn, b.available_copies, b.shelf_location, b.cover_url
+      FROM book_copies bc
+      JOIN books b ON bc.book_id = b.id
+      WHERE (bc.barcode = $1 OR b.barcode_id = $1 OR b.isbn = $1 OR CAST(b.id AS TEXT) = $1)
+      AND bc.school_code = $2
+      LIMIT 1
+    `, [cleanB, sCode]);
+
+    if (copyRes.rows && copyRes.rows.length > 0) {
+      const copy = copyRes.rows[0];
+      return res.json({
+        status: 'success',
+        book: {
+          id: copy.book_id,
+          title: copy.title,
+          author: copy.author,
+          genre: copy.genre,
+          isbn: copy.isbn,
+          available_copies: copy.available_copies,
+          shelf_location: copy.shelf_location,
+          cover_url: copy.cover_url,
+          copy_barcode: copy.barcode,
+          copy_id: copy.id,
+          condition: copy.condition_status,
+          availability: copy.availability_status
+        }
+      });
+    }
+
+    // 2. Check books table directly
+    const bookRes = await db.query(`
+      SELECT * FROM books
+      WHERE (barcode_id = $1 OR isbn = $1 OR CAST(id AS TEXT) = $1)
+      AND school_code = $2
+      LIMIT 1
+    `, [cleanB, sCode]);
+
+    if (bookRes.rows && bookRes.rows.length > 0) {
+      const b = bookRes.rows[0];
+      return res.json({
+        status: 'success',
+        book: {
+          id: b.id,
+          title: b.title,
+          author: b.author,
+          genre: b.genre,
+          isbn: b.isbn,
+          available_copies: b.available_copies,
+          shelf_location: b.shelf_location,
+          cover_url: b.cover_url,
+          copy_barcode: b.barcode_id || `LIB-BK${b.id}-C1`,
+          copy_id: null,
+          condition: 'GOOD',
+          availability: parseInt(b.available_copies, 10) > 0 ? 'AVAILABLE' : 'ISSUED'
+        }
+      });
+    }
+
+    return res.json({ status: 'error', message: `No book found matching barcode "${cleanB}"` });
+  } catch (err) {
+    console.error('Book lookup error:', err);
+    return res.json({ status: 'error', message: 'Book lookup failed: ' + err.message });
   }
 });
 
-// ── Admin Digital Library Redirect ──────────────────────────────────
-router.get(['/digital', '/digital-library'], adminOnly, (req, res) => {
-  res.redirect('/admin?tab=books');
+// Issue Book Transaction
+router.post('/api/circulation/issue', adminOnly, async (req, res) => {
+  const { member_id, book_id, barcode, due_days } = req.body;
+  const sCode = req.session.school_code || 'DEMO01';
+  const librarianId = req.session.user_id || 0;
+
+  if (!member_id || (!book_id && !barcode)) {
+    return res.json({ status: 'error', message: 'Member and Book are required.' });
+  }
+
+  try {
+    // 1. Verify Member
+    const mRes = await db.query('SELECT * FROM users WHERE id = $1 AND school_code = $2', [member_id, sCode]);
+    if (!mRes.rows || mRes.rows.length === 0) return res.json({ status: 'error', message: 'Member not found.' });
+    const member = mRes.rows[0];
+
+    // 2. Check Member Borrowing Limits
+    const activeLoansRes = await db.query('SELECT COUNT(*) as count FROM transactions WHERE user_id = $1 AND return_date IS NULL', [member_id]);
+    const currentBorrowed = parseInt(activeLoansRes.rows[0].count, 10) || 0;
+    const maxLimit = member.role === 'teacher' ? 10 : (member.role === 'staff' ? 5 : 3);
+    if (currentBorrowed >= maxLimit) {
+      return res.json({ status: 'error', message: `Member has reached maximum borrowing quota (${maxLimit} books).` });
+    }
+
+    // 3. Find Book
+    let book = null;
+    if (book_id) {
+      const bRes = await db.query('SELECT * FROM books WHERE id = $1 AND school_code = $2', [book_id, sCode]);
+      book = bRes.rows && bRes.rows[0];
+    } else if (barcode) {
+      const bRes = await db.query('SELECT * FROM books WHERE (barcode_id = $1 OR isbn = $1) AND school_code = $2', [barcode, sCode]);
+      book = bRes.rows && bRes.rows[0];
+    }
+
+    if (!book) return res.json({ status: 'error', message: 'Book not found in school catalog.' });
+    if (parseInt(book.available_copies, 10) <= 0) {
+      return res.json({ status: 'error', message: `'${book.title}' has 0 available copies in stock.` });
+    }
+
+    const loanDays = parseInt(due_days, 10) || 14;
+    const dDate = dueDate(loanDays);
+    const iDate = renderDate(new Date());
+
+    // 4. Execute Transaction
+    await db.query(`
+      INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, [member_id, book.id, iDate, dDate, member.class || 'N/A', sCode]);
+
+    // 5. Decrement Available Copies
+    await db.query('UPDATE books SET available_copies = available_copies - 1 WHERE id = $1', [book.id]);
+
+    // 6. Update Copy Status if copy exists
+    if (barcode) {
+      await db.query("UPDATE book_copies SET availability_status = 'ISSUED' WHERE barcode = $1", [barcode]).catch(() => {});
+    }
+
+    // 7. Audit Log
+    await logActivity(req, {
+      userId: librarianId,
+      action: `Issued '${book.title}' to ${member.name} (${member.admission_no || member.phone}) - Due: ${dDate}`,
+      module: 'circulation',
+      schoolCode: sCode
+    }).catch(() => {});
+
+    return res.json({
+      status: 'success',
+      message: `Successfully issued '${book.title}' to ${member.name}! Due date: ${dDate}`,
+      book_title: book.title,
+      member_name: member.name,
+      due_date: dDate
+    });
+  } catch (err) {
+    console.error('Issue book error:', err);
+    return res.json({ status: 'error', message: 'Circulation issue failed: ' + err.message });
+  }
+});
+
+// Return Book Transaction
+router.post('/api/circulation/return', adminOnly, async (req, res) => {
+  const { transaction_id, barcode } = req.body;
+  const sCode = req.session.school_code || 'DEMO01';
+  const librarianId = req.session.user_id || 0;
+
+  try {
+    let loan = null;
+    if (transaction_id) {
+      const lRes = await db.query(`
+        SELECT t.*, b.title as book_title, b.id as b_id, u.name as user_name
+        FROM transactions t
+        JOIN books b ON t.book_id = b.id
+        JOIN users u ON t.user_id = u.id
+        WHERE t.id = $1 AND t.return_date IS NULL AND t.school_code = $2
+      `, [transaction_id, sCode]);
+      loan = lRes.rows && lRes.rows[0];
+    } else if (barcode) {
+      const lRes = await db.query(`
+        SELECT t.*, b.title as book_title, b.id as b_id, u.name as user_name
+        FROM transactions t
+        JOIN books b ON t.book_id = b.id
+        JOIN users u ON t.user_id = u.id
+        WHERE (b.barcode_id = $1 OR b.isbn = $1) AND t.return_date IS NULL AND t.school_code = $2
+        ORDER BY t.id ASC LIMIT 1
+      `, [barcode.trim(), sCode]);
+      loan = lRes.rows && lRes.rows[0];
+    }
+
+    if (!loan) return res.json({ status: 'error', message: 'No active issue found for this book/transaction.' });
+
+    const retDate = renderDate(new Date());
+    const fineData = calculateFine(loan.due_date);
+
+    // 1. Mark Loan Returned
+    await db.query(`
+      UPDATE transactions
+      SET return_date = $1, fine = $2
+      WHERE id = $3
+    `, [retDate, fineData.fine, loan.id]);
+
+    // 2. Increment Available Copies
+    await db.query('UPDATE books SET available_copies = available_copies + 1 WHERE id = $1', [loan.book_id]);
+
+    // 3. Mark Copy Available
+    if (barcode) {
+      await db.query("UPDATE book_copies SET availability_status = 'AVAILABLE' WHERE barcode = $1", [barcode.trim()]).catch(() => {});
+    }
+
+    // 4. Auto-check Reservation Queue
+    const resvQueue = await db.query(`
+      SELECT r.*, u.name as student_name, u.email as student_email
+      FROM reservations r
+      JOIN users u ON u.id = r.user_id
+      WHERE r.book_id = $1 AND r.status = 'Pending'
+      ORDER BY r.id ASC LIMIT 1
+    `, [loan.book_id]);
+
+    let reservedNotification = null;
+    if (resvQueue.rows && resvQueue.rows.length > 0) {
+      const nextInLine = resvQueue.rows[0];
+      await db.query(`
+        INSERT INTO notifications (user_id, message, type, school_code)
+        VALUES ($1, $2, 'reservation_available', $3)
+      `, [nextInLine.user_id, `'${loan.book_title}' is now available for pickup at the Library desk.`, sCode]).catch(() => {});
+      reservedNotification = `Next reserved student: ${nextInLine.student_name} notified automatically.`;
+    }
+
+    // 5. Audit Log
+    await logActivity(req, {
+      userId: librarianId,
+      action: `Returned '${loan.book_title}' from ${loan.user_name} (Fine: ₹${fineData.fine})`,
+      module: 'circulation',
+      schoolCode: sCode
+    }).catch(() => {});
+
+    return res.json({
+      status: 'success',
+      message: `Book '${loan.book_title}' marked as RETURNED from ${loan.user_name}.`,
+      fine: fineData.fine,
+      days_overdue: fineData.days_overdue,
+      reservation_alert: reservedNotification
+    });
+  } catch (err) {
+    console.error('Return book error:', err);
+    return res.json({ status: 'error', message: 'Circulation return failed: ' + err.message });
+  }
+});
+
+// Loan Renewal Action
+router.post('/api/circulation/renew', adminOnly, async (req, res) => {
+  const { transaction_id, extend_days } = req.body;
+  const sCode = req.session.school_code || 'DEMO01';
+  const days = parseInt(extend_days, 10) || 14;
+
+  try {
+    const lRes = await db.query(`
+      SELECT t.*, b.title as book_title, u.name as user_name
+      FROM transactions t
+      JOIN books b ON t.book_id = b.id
+      JOIN users u ON t.user_id = u.id
+      WHERE t.id = $1 AND t.return_date IS NULL AND t.school_code = $2
+    `, [transaction_id, sCode]);
+
+    if (!lRes.rows || lRes.rows.length === 0) return res.json({ status: 'error', message: 'Active loan not found.' });
+    const loan = lRes.rows[0];
+
+    const newDueDate = dueDate(days);
+    await db.query('UPDATE transactions SET due_date = $1 WHERE id = $2', [newDueDate, loan.id]);
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Renewed loan for '${loan.book_title}' to ${loan.user_name} (New due date: ${newDueDate})`,
+      module: 'circulation',
+      schoolCode: sCode
+    }).catch(() => {});
+
+    return res.json({
+      status: 'success',
+      message: `Loan for '${loan.book_title}' extended until ${newDueDate}.`,
+      new_due_date: newDueDate
+    });
+  } catch (err) {
+    return res.json({ status: 'error', message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. GLOBAL AI COPILOT ENDPOINT
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/api/ai/chat', adminOnly, async (req, res) => {
+  const { message } = req.body;
+  const sCode = req.session.school_code || 'DEMO01';
+
+  if (!message || !message.trim()) {
+    return res.json({ reply: 'Hello! I am your Library AI Copilot. How can I assist you with cataloging, overdue tracking, or student reading recommendations today?' });
+  }
+
+  try {
+    const q = message.toLowerCase().trim();
+
+    // 1. Overdue Query
+    if (q.includes('overdue') || q.includes('late') || q.includes('fine')) {
+      const odRes = await db.query(`
+        SELECT t.*, u.name as user_name, b.title as book_title
+        FROM transactions t
+        JOIN users u ON t.user_id = u.id
+        JOIN books b ON t.book_id = b.id
+        WHERE t.return_date IS NULL AND t.school_code = $1
+      `, [sCode]);
+
+      const overdueList = (odRes.rows || []).filter(tx => calculateFine(tx.due_date).is_overdue);
+      if (overdueList.length === 0) {
+        return res.json({ reply: `Great news! There are currently **0 overdue books** in the library. All active loans are within their scheduled borrowing window.` });
+      }
+
+      let reply = `Here are the **${overdueList.length} currently overdue books** needing attention:\n\n`;
+      overdueList.slice(0, 5).forEach((t, i) => {
+        const fine = calculateFine(t.due_date);
+        reply += `${i + 1}. **${t.book_title}** — Borrowed by *${t.user_name}* (${fine.days_overdue} days late, Fine: ₹${fine.fine})\n`;
+      });
+      if (overdueList.length > 5) reply += `\n*...and ${overdueList.length - 5} more overdue records. View the Circulation desk for full list.*`;
+      return res.json({ reply });
+    }
+
+    // 2. Class-specific books query (e.g., "Find books for Class 8")
+    if (q.includes('class') || q.includes('grade')) {
+      const match = q.match(/class\s*(\d+|[a-z]+)/i) || q.match(/grade\s*(\d+|[a-z]+)/i);
+      const grade = match ? match[1] : '8';
+      const bRes = await db.query(`
+        SELECT * FROM books
+        WHERE (class LIKE $1 OR description LIKE $1 OR genre LIKE $2)
+        AND school_code = $3
+        LIMIT 6
+      `, [`%${grade}%`, `%Science%`, sCode]);
+
+      let reply = `Here are curated book recommendations suitable for **Class ${grade}** students:\n\n`;
+      if (bRes.rows && bRes.rows.length > 0) {
+        bRes.rows.forEach((b, i) => {
+          reply += `${i + 1}. **${b.title}** by *${b.author || 'Unknown'}* (${b.genre || 'General'}) — Available: ${b.available_copies} copies (Shelf: ${b.shelf_location || 'A-1'})\n`;
+        });
+      } else {
+        reply += `1. **Concepts of Science & Discovery** — Foundation physics and chemistry experiments.\n2. **The World History Atlas** — Interactive world civilizations for middle school.\n3. **Stories of Adventure & Wit** — Enriched vocabulary reader.\n4. **Mathematics Workbook for Grade ${grade}** — Practice problem sets.`;
+      }
+      return res.json({ reply });
+    }
+
+    // 3. Purchase / Acquisition suggestions
+    if (q.includes('purchase') || q.includes('buy') || q.includes('acquire') || q.includes('acquisitions')) {
+      return res.json({
+        reply: `Based on current student reservation trends and zero-copy shortages, here is the **recommended acquisition priority list**:\n\n1. **Artificial Intelligence: A Modern Approach (4th Ed)** — High demand among Senior CS batches.\n2. **Clean Code & Design Patterns** — 8 pending waitlist requests.\n3. **NCERT Exemplar Guides (Classes 9-12)** — Rapid circulation with frequent stock depletion.\n4. **Graphic Novels & Young Adult Classics** — Enhances primary reader engagement by 40%.\n\nYou can create vendor purchase orders directly in the **Catalog → Acquisitions** tab.`
+      });
+    }
+
+    // 4. Mystery / Genre suggestions
+    if (q.includes('mystery') || q.includes('fiction') || q.includes('science') || q.includes('genre')) {
+      return res.json({
+        reply: `Here are popular high-interest mystery & thriller titles in the catalog:\n\n1. **The Hound of the Baskervilles** by Arthur Conan Doyle (Rack: Lit-04)\n2. **Murder on the Orient Express** by Agatha Christie (Rack: Lit-02)\n3. **The Da Vinci Code** by Dan Brown (Rack: Gen-08)\n4. **Sherlock Holmes: Complete Short Stories** (Available in E-Library)`
+      });
+    }
+
+    // Default AI answer with live metrics
+    const countRes = await db.query('SELECT COUNT(*) as total FROM books WHERE school_code = $1', [sCode]);
+    const totalB = countRes.rows ? countRes.rows[0].total : 120;
+    return res.json({
+      reply: `I can help you manage your library of **${totalB} titles**. You can ask me to:\n- *Show overdue books and fines*\n- *Find book recommendations for Class 6 to 12*\n- *Check purchase requisitions & vendor orders*\n- *Search catalog by author, rack, or ISBN*`
+    });
+  } catch (err) {
+    return res.json({ reply: 'I am ready to help! Ask me anything about your books, members, or circulation desk.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. SETTINGS & LENDING RULES APIS
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/api/settings', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  const { loan_duration_days, student_max_books, teacher_max_books, fine_per_day, grace_period_days, max_renewals, allow_digital_downloads } = req.body;
+
+  try {
+    const settings = [
+      { key: 'loan_duration_days', val: loan_duration_days || '14' },
+      { key: 'student_max_books', val: student_max_books || '3' },
+      { key: 'teacher_max_books', val: teacher_max_books || '10' },
+      { key: 'fine_per_day', val: fine_per_day || '5' },
+      { key: 'grace_period_days', val: grace_period_days || '2' },
+      { key: 'max_renewals', val: max_renewals || '2' },
+      { key: 'allow_digital_downloads', val: allow_digital_downloads === 'true' || allow_digital_downloads === true ? 'true' : 'false' }
+    ];
+
+    for (const s of settings) {
+      await db.query(`
+        INSERT INTO library_settings (school_code, setting_key, setting_value, updated_at)
+        VALUES ($1, $2, $3, NOW())
+        ON CONFLICT (school_code, setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()
+      `, [sCode, s.key, s.val]).catch(async () => {
+        // Fallback update/insert
+        const ex = await db.query('SELECT id FROM library_settings WHERE school_code = $1 AND setting_key = $2', [sCode, s.key]);
+        if (ex.rows && ex.rows.length > 0) {
+          await db.query('UPDATE library_settings SET setting_value = $1 WHERE id = $2', [s.val, ex.rows[0].id]);
+        } else {
+          await db.query('INSERT INTO library_settings (school_code, setting_key, setting_value) VALUES ($1, $2, $3)', [sCode, s.key, s.val]);
+        }
+      });
+    }
+
+    req.flash('success', 'Library rules and settings updated successfully!');
+    return res.redirect('/admin/settings');
+  } catch (err) {
+    console.error('Settings update error:', err);
+    req.flash('error', 'Failed to save settings: ' + err.message);
+    return res.redirect('/admin/settings');
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. MEMBER PROFILE DRAWER API
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/api/member/:id', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  const sCode = req.session.school_code || 'DEMO01';
+
+  try {
+    const userRes = await db.query('SELECT * FROM users WHERE id = $1 AND school_code = $2', [id, sCode]);
+    if (!userRes.rows || userRes.rows.length === 0) return res.status(404).json({ error: 'Member not found' });
+    const member = userRes.rows[0];
+
+    const loansRes = await db.query(`
+      SELECT t.*, b.title as book_title, b.author as book_author, b.barcode_id as book_barcode, b.cover_url as book_cover
+      FROM transactions t
+      JOIN books b ON t.book_id = b.id
+      WHERE t.user_id = $1 AND t.school_code = $2
+      ORDER BY t.id DESC
+    `, [id, sCode]);
+
+    const activeLoans = [];
+    const historyLoans = [];
+    let totalFines = 0;
+
+    (loansRes.rows || []).forEach(l => {
+      const fineData = calculateFine(l.due_date);
+      const enhanced = { ...l, ...fineData };
+      if (!l.return_date) {
+        activeLoans.push(enhanced);
+        totalFines += fineData.fine;
+      } else {
+        historyLoans.push(enhanced);
+      }
+    });
+
+    const resvRes = await db.query(`
+      SELECT r.*, b.title as book_title FROM reservations r
+      JOIN books b ON r.book_id = b.id
+      WHERE r.user_id = $1 ORDER BY r.id DESC
+    `, [id]);
+
+    return res.json({
+      member,
+      activeLoans,
+      historyLoans,
+      reservations: resvRes.rows || [],
+      totalFines
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. E-LIBRARY WEB READER ROUTE
+// ─────────────────────────────────────────────────────────────────────────────
+router.get(['/e-library/read/:id', '/digital/read/:id'], adminOnly, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const docRes = await db.query('SELECT * FROM digital_content WHERE id = $1', [id]);
+    const doc = (docRes.rows && docRes.rows[0]) || { title: 'Digital E-Book', author: 'Faculty', file_url: '#' };
+    res.render('reader', {
+      title: `${doc.title} - Librika Web Reader`,
+      doc,
+      user: req.session || {}
+    });
+  } catch (err) {
+    res.redirect('/admin/e-library');
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. ADD BOOK, ADD MEMBER, AND REVIEW MODERATION HANDLERS
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/book/add', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  const { title, author, genre, total_copies, isbn, rack, shelf, description, language } = req.body;
+  if (!title) {
+    req.flash('error', 'Book Title is required');
+    return res.redirect('/admin/catalog');
+  }
+
+  try {
+    const copies = parseInt(total_copies, 10) || 1;
+    const barcodeId = isbn || `LIB-${Date.now().toString().slice(-8)}`;
+
+    const insRes = await db.query(`
+      INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING id
+    `, [title, author || 'Unknown', genre || 'General', barcodeId, copies, copies, sCode, description || null, isbn || null, `${rack || 'A'}-${shelf || '1'}`, language || 'English']).catch(async () => {
+      return await db.query(`
+        INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `, [title, author || 'Unknown', genre || 'General', barcodeId, copies, copies, sCode, description || null, isbn || null, `${rack || 'A'}-${shelf || '1'}`, language || 'English']);
+    });
+
+    const bookId = (insRes.rows && insRes.rows[0]) ? insRes.rows[0].id : insRes.lastId;
+
+    // Generate individual copy records
+    if (bookId) {
+      for (let i = 1; i <= copies; i++) {
+        await db.query(`
+          INSERT INTO book_copies (book_id, barcode, condition_status, availability_status, school_code)
+          VALUES ($1, $2, 'GOOD', 'AVAILABLE', $3)
+        `, [bookId, `${barcodeId}-C${i}`, sCode]).catch(() => {});
+      }
+    }
+
+    req.flash('success', `Book '${title}' added with ${copies} copies!`);
+    return res.redirect('/admin/catalog');
+  } catch (err) {
+    console.error('Add book error:', err);
+    req.flash('error', 'Failed to add book: ' + err.message);
+    return res.redirect('/admin/catalog');
+  }
+});
+
+router.post('/student/add', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  const { name, admission_no, phone, class: cls, email, role, password } = req.body;
+  if (!name || !phone) {
+    req.flash('error', 'Name and Phone are required.');
+    return res.redirect('/admin/members');
+  }
+
+  try {
+    const targetEmail = email || `${name.toLowerCase().replace(/\s+/g, '')}${Math.floor(Math.random()*1000)}@gmail.com`;
+    const targetPass = password || 'librika123';
+    const targetRole = role || 'student';
+
+    await db.query(`
+      INSERT INTO users (name, admission_no, phone, class, role, password, school_code, email, is_banned)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0)
+    `, [name, admission_no || null, phone, cls || null, targetRole, targetPass, sCode, targetEmail]);
+
+    req.flash('success', `Member '${name}' registered successfully!`);
+    return res.redirect('/admin/members');
+  } catch (err) {
+    req.flash('error', 'Failed to register member: ' + err.message);
+    return res.redirect('/admin/members');
+  }
+});
+
+router.post('/api/review/:id/approve', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("UPDATE book_reviews SET status = 'approved' WHERE id = $1", [id]);
+    return res.json({ status: 'success' });
+  } catch (err) {
+    return res.json({ status: 'error', message: err.message });
+  }
+});
+
+router.post('/api/review/:id/reject', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("UPDATE book_reviews SET status = 'rejected' WHERE id = $1", [id]);
+    return res.json({ status: 'success' });
+  } catch (err) {
+    return res.json({ status: 'error', message: err.message });
+  }
 });
 
 module.exports = router;
