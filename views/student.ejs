@@ -1122,6 +1122,13 @@
 
             <!-- Books Grid -->
             <div class="sp-grid-4" id="catalogGrid">
+              <% if (catalogBooks.length === 0) { %>
+                <div style="grid-column:1/-1;text-align:center;padding:48px 20px;background:var(--surface-sub);border-radius:var(--radius-md);border:1px dashed var(--border);">
+                  <div style="font-size:2.4rem;margin-bottom:12px;">📚</div>
+                  <h4 style="margin:0 0 6px 0;font-weight:800;color:var(--text-primary);">No Books in Catalog</h4>
+                  <p style="margin:0;font-size:0.85rem;color:var(--text-secondary);">The physical catalog has been reset. New book acquisitions will appear here.</p>
+                </div>
+              <% } %>
               <% catalogBooks.forEach(b => { %>
                 <div class="sp-book-card" data-genre="<%= (b.genre || '').toLowerCase() %>" data-title="<%= (b.title || '').toLowerCase() %>" data-author="<%= (b.author || '').toLowerCase() %>">
                   <div class="sp-book-cover-wrap">
@@ -1279,6 +1286,13 @@
 
             <!-- E-Library Grid -->
             <div class="sp-grid-4">
+              <% if (elibraryItems.length === 0) { %>
+                <div style="grid-column:1/-1;text-align:center;padding:48px 20px;background:var(--surface-sub);border-radius:var(--radius-md);border:1px dashed var(--border);">
+                  <div style="font-size:2.4rem;margin-bottom:12px;">📖</div>
+                  <h4 style="margin:0 0 6px 0;font-weight:800;color:var(--text-primary);">Digital Vault is Empty</h4>
+                  <p style="margin:0;font-size:0.85rem;color:var(--text-secondary);">No digital textbooks or e-resources uploaded yet.</p>
+                </div>
+              <% } %>
               <% elibraryItems.forEach(doc => { %>
                 <div class="sp-book-card">
                   <div class="sp-book-cover-wrap" style="background:#1E293B;">
