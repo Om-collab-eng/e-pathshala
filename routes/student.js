@@ -607,4 +607,6 @@ router.get('/studio/meeting/:id', studentOnly, (req, res) => {
   res.redirect(`/studio/meeting/${req.params.id}`);
 });
 
+router.fetchStudentPortalData = fetchStudentPortalData;
 module.exports = router;
+
