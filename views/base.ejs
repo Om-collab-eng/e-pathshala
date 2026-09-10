@@ -989,6 +989,26 @@ For searching books: {"type": "search_book", "query": "..."}
         document.addEventListener('DOMContentLoaded', () => {
             pollNewNotifications();
             setInterval(pollNewNotifications, 1500); // 1.5 Second Fast Interval
+
+            // ── Real-Time Online Presence Heartbeat ──
+            function pingPresence() {
+                if (navigator.onLine) {
+                    fetch('/api/presence/heartbeat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    }).catch(() => {});
+                }
+            }
+            // Send initial ping and periodic heartbeat every 40s
+            pingPresence();
+            setInterval(pingPresence, 40000);
+
+            // Notify offline on tab close / exit
+            window.addEventListener('beforeunload', () => {
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon('/api/presence/offline');
+                }
+            });
         });
 </script>
 

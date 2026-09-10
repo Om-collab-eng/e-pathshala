@@ -51,18 +51,25 @@ try {
 } catch (e) {}
 
 const sessionConfig = {
-  secret: process.env.SESSION_SECRET || 'librika_session_secret',
-  resave: true,
-  saveUninitialized: true,
-  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
+  secret: process.env.SESSION_SECRET || 'librika_super_secret_session_2026',
+  resave: false,
+  saveUninitialized: false,
+  rolling: true,
+  cookie: {
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days persistence
+    httpOnly: true,
+    secure: false, // seamless over HTTP & HTTPS behind reverse proxy
+    sameSite: 'lax',
+    path: '/'
+  },
 };
 
 if (db.mysqlPool && MySQLStore) {
   try {
     sessionConfig.store = new MySQLStore({
       clearExpired: true,
-      checkExpirationInterval: 900000,
-      expiration: 86400000,
+      checkExpirationInterval: 900000, // 15 mins
+      expiration: 30 * 24 * 60 * 60 * 1000, // 30 days
       createDatabaseTable: true,
       schema: {
         tableName: 'sessions',
@@ -92,12 +99,24 @@ app.use(superAdminIsolation);
 app.use(async (req, res, next) => {
   if (req.session && req.session.user_id) {
     try {
-      const uRes = await db.query('SELECT id, name, role, school_code FROM users WHERE id = $1', [req.session.user_id]);
+      const uRes = await db.query('SELECT id, name, role, school_code, is_banned FROM users WHERE id = $1', [req.session.user_id]);
       if (uRes && uRes.rows && uRes.rows.length > 0) {
         const u = uRes.rows[0];
+        if (u.is_banned === 1 || u.is_banned === '1' || u.is_banned === true) {
+          req.session.destroy(() => {});
+          return res.redirect('/login?error=account_suspended');
+        }
         req.session.role = u.role || req.session.role;
         req.session.name = u.name || req.session.name;
         req.session.user_name = u.name || req.session.user_name;
+        req.session.school_code = u.school_code || req.session.school_code;
+
+        // Presence heartbeat: update last_active_at every 30s per active session
+        const now = Date.now();
+        if (!req.session.last_presence || (now - req.session.last_presence > 30000)) {
+          req.session.last_presence = now;
+          db.query('UPDATE users SET last_active_at = CURRENT_TIMESTAMP, is_online = 1 WHERE id = $1', [u.id]).catch(() => {});
+        }
       }
     } catch (e) {}
   }
@@ -138,7 +157,7 @@ app.use(async (req, res, next) => {
   res.locals.school_limits = (req.session && req.session.school_limits) || {
     studentLimit: 999999,
     bookLimit: 999999,
-    staffLimit: 999999
+    storageLimitGB: 999
   };
 
   next();

@@ -138,9 +138,19 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
       if (c.condition_status === 'LOST' || c.availability_status === 'LOST') lostCopiesCount++;
     });
 
-    // 3. Fetch Members (Students, Teachers, Staff)
+    // 3. Fetch Members (Students, Teachers, Staff) with Real-Time Online Status
     const usersRes = await db.query('SELECT * FROM users WHERE school_code = $1 ORDER BY id DESC', [sCode]).catch(() => ({ rows: [] }));
-    const allUsers = usersRes.rows || [];
+    const nowMs = Date.now();
+    const allUsers = (usersRes.rows || []).map(u => {
+      const lastActiveMs = u.last_active_at ? new Date(u.last_active_at).getTime() : 0;
+      // Online if active within last 4 minutes or explicitly marked online
+      const isOnline = Boolean((nowMs - lastActiveMs <= 4 * 60 * 1000) || (u.is_online === 1 || u.is_online === '1'));
+      return {
+        ...u,
+        isOnline,
+        lastActiveFormatted: u.last_active_at ? new Date(u.last_active_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Never'
+      };
+    });
 
     const students = allUsers.filter(u => u.role === 'student');
     const teachers = allUsers.filter(u => u.role === 'teacher');

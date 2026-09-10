@@ -490,4 +490,66 @@ router.post('/notifications/read-all', async (req, res) => {
   }
 });
 
+// ── Real-Time Online Presence & Heartbeat ─────────────────────────────
+router.post('/presence/heartbeat', async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.json({ status: 'unauthenticated', online: false });
+    }
+    const db = require('../db');
+    await db.query(
+      `UPDATE users SET last_active_at = CURRENT_TIMESTAMP, is_online = 1 WHERE id = $1`,
+      [userId]
+    ).catch(() => {});
+
+    res.json({ status: 'success', online: true, timestamp: Date.now() });
+  } catch (err) {
+    res.json({ status: 'error', message: err.message });
+  }
+});
+
+router.post('/presence/offline', async (req, res) => {
+  try {
+    const userId = getUserId(req) || (req.body && req.body.userId);
+    if (userId) {
+      const db = require('../db');
+      await db.query(`UPDATE users SET is_online = 0 WHERE id = $1`, [userId]).catch(() => {});
+    }
+    res.json({ status: 'success', online: false });
+  } catch (err) {
+    res.json({ status: 'error', message: err.message });
+  }
+});
+
+router.get('/presence/online-users', async (req, res) => {
+  try {
+    const sCode = (req.session && req.session.school_code) || req.query.school_code || 'DPS123';
+    const db = require('../db');
+    // Active within last 3 minutes
+    const result = await db.query(
+      `SELECT id, name, role, class, last_active_at, is_online,
+              CASE WHEN last_active_at >= NOW() - INTERVAL 3 MINUTE THEN 1 ELSE 0 END as is_active_now
+       FROM users
+       WHERE school_code = $1 OR school_code = 'GLOBAL'
+       ORDER BY last_active_at DESC`,
+      [sCode]
+    ).catch(async () => {
+      // SQLite fallback
+      return await db.query(
+        `SELECT id, name, role, class, last_active_at, is_online,
+                CASE WHEN datetime(last_active_at) >= datetime('now', '-3 minutes') THEN 1 ELSE 0 END as is_active_now
+         FROM users
+         WHERE school_code = $1 OR school_code = 'GLOBAL'
+         ORDER BY last_active_at DESC`,
+        [sCode]
+      ).catch(() => ({ rows: [] }));
+    });
+
+    res.json({ status: 'success', users: result.rows || [] });
+  } catch (err) {
+    res.json({ status: 'error', users: [] });
+  }
+});
+
 module.exports = router;

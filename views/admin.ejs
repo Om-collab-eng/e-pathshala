@@ -594,7 +594,8 @@
                   <th>Member ID / Adm No</th>
                   <th>Class / Dept</th>
                   <th>Contact Info</th>
-                  <th>Status</th>
+                  <th>Online Presence</th>
+                  <th>Account Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -603,11 +604,18 @@
                   <tr data-role="<%= u.role %>">
                     <td>
                       <div style="display:flex;align-items:center;gap:10px;">
-                        <div class="lp-preview-avatar" style="width:36px;height:36px;font-size:0.95rem;">
-                          <%= (u.name || 'M')[0].toUpperCase() %>
+                        <div style="position:relative;">
+                          <div class="lp-preview-avatar" style="width:36px;height:36px;font-size:0.95rem;">
+                            <%= (u.name || 'M')[0].toUpperCase() %>
+                          </div>
+                          <% if (u.isOnline) { %>
+                            <span style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:#10B981;border:2px solid #FFFFFF;border-radius:50%;box-shadow:0 0 6px rgba(16,185,129,0.8);" title="Currently Online"></span>
+                          <% } %>
                         </div>
                         <div>
-                          <div style="font-weight:700;color:#111827;"><%= u.name %></div>
+                          <div style="font-weight:700;color:#111827;display:flex;align-items:center;gap:6px;">
+                            <%= u.name %>
+                          </div>
                           <div style="font-size:0.72rem;color:#64748B;text-transform:capitalize;"><%= u.role %></div>
                         </div>
                       </div>
@@ -617,6 +625,18 @@
                     <td>
                       <div><%= u.phone || 'N/A' %></div>
                       <div style="font-size:0.72rem;color:#94A3B8;"><%= u.email || '' %></div>
+                    </td>
+                    <td>
+                      <% if (u.isOnline) { %>
+                        <span class="lp-status-pill" style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);font-weight:800;display:inline-flex;align-items:center;gap:5px;">
+                          <span style="width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 6px #10B981;animation:pulse 1.5s infinite;"></span>
+                          Online
+                        </span>
+                      <% } else { %>
+                        <span class="lp-status-pill" style="background:#F1F5F9;color:#64748B;font-weight:600;" title="Last active: <%= u.lastActiveFormatted || 'Never' %>">
+                          ⚪ Offline
+                        </span>
+                      <% } %>
                     </td>
                     <td>
                       <% const isBanned = (u.is_banned === 1 || u.is_banned === '1' || u.is_banned === true || u.is_banned === 'true'); %>
