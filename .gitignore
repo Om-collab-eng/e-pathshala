@@ -38,9 +38,11 @@ ads/
 android/
 _legacy/
 static/Librika.apk
-*_cookie.txt
-*_cookies.txt
+*cookie*.txt
+cookies.txt
 std_test.txt
 test_sep.txt
 t_cookies.txt
 valid_cookies.txt
+.stfolder/
+
