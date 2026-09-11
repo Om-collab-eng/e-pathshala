@@ -84,9 +84,17 @@ The following files are excluded in `.gitignore` to prevent credential exposure:
 
 ### ⚠️ Transfer Checklist for Laptop B:
 When setting up Laptop B for the first time:
-- Clone repo: `git clone git@github.com:Om-collab-eng/e-pathshala.git` (or HTTPS clone).
-- Securely copy `.env` and `jaas_private_key.pk` from Laptop A to Laptop B (via AirDrop, encrypted USB, or 1Password/Bitwarden).
-- Run `npm install`.
+1. Clone repo: `git clone git@github.com:Om-collab-eng/e-pathshala.git`
+2. **Fetch all secrets directly from the MilesWeb production server via SCP**:
+   ```bash
+   scp librika_1@45.199.139.18:public_html/.env ./
+   scp librika_1@45.199.139.18:public_html/jaas_private_key.pk ./
+   scp librika_1@45.199.139.18:public_html/PROJECT_CREDENTIALS_AND_CONFIG.md ./
+   # (Password: Kalatota@123)
+   ```
+   *Alternatively, copy `.env` and `jaas_private_key.pk` via AirDrop or USB.*
+3. Run `npm install`.
+
 
 ---
 
