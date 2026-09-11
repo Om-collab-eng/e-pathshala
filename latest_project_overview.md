@@ -19,24 +19,57 @@ flowchart LR
     G --> H[Handoff Complete to other laptop]
 ```
 
-### 1. Starting Work (On Either Laptop)
+### 1. Step-by-Step BEFORE Every Change (The Pull Ritual)
+Run these commands in order before touching any file:
 ```bash
-# Always pull the freshest code and overview before opening any code editors:
+# Step 1: Ensure your local working tree is clean
 git status
-git pull origin main
-```
-*Read this file (`latest_project_overview.md`) to see what was completed last and what's next.*
 
-### 2. Ending Work (On Either Laptop)
-```bash
-# 1. Update this file (latest_project_overview.md) with what you did and next tasks
-# 2. Stage changes (ensure no secret keys or cookies are added)
-git add .
-# 3. Commit with a clear descriptive message
-git commit -m "feat/fix: descriptive commit message"
-# 4. Push to GitHub
-git push origin main
+# Step 2: (Optional) If you have uncommitted quick edits you want to keep:
+git stash
+
+# Step 3: Fetch and merge latest code pushed from the other laptop
+git pull origin main
+
+# Step 4: (Optional) If you stashed edits in Step 2:
+git stash pop
+
+# Step 5: Verify the latest commit message and author
+git log -1 --stat
+
+# Step 6: Read latest_project_overview.md to know the exact state and next goals!
+cat latest_project_overview.md
 ```
+
+### 2. Step-by-Step AFTER Every Change (The Push Ritual)
+Run these commands in order once changes are tested and ready to hand off:
+```bash
+# Step 1: Update 'latest_project_overview.md' with:
+#   - What was added, fixed, or modified in the Changelog section
+#   - Updated list of Next Steps / Active Tasks
+
+# Step 2: Check modified and untracked files
+git status
+
+# Step 3: Review your exact code diff to catch unintended changes
+git diff
+
+# Step 4: Stage all modified and new files (secrets are protected by .gitignore)
+git add .
+
+# Step 5: Commit with a meaningful conventional commit message
+git commit -m "feat/fix(module-name): descriptive summary of changes"
+
+# Step 6: Safety check - rebase with remote in case other laptop pushed meanwhile
+git pull origin main --rebase
+
+# Step 7: Push to GitHub so the other laptop can pull it immediately
+git push origin main
+
+# Step 8: Verify that working tree is clean and up to date
+git status
+```
+
 
 ---
 
