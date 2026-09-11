@@ -1,0 +1,5 @@
+# This directory is a Syncthing folder marker.
+# Do not delete.
+
+folderID: jzabr-vjtz3
+created: 2026-09-07T18:31:14+05:30

@@ -8,6 +8,8 @@
     "dev": "nodemon app.js",
     "init-db": "node initDB.js",
     "seed": "node initDB.js --seed",
+    "pull": "bash pull_from_milesweb.sh",
+    "push": "bash push_to_milesweb.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

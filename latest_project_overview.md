@@ -4,71 +4,48 @@
 
 ---
 
-## 🔄 Cross-Laptop Development Workflow
+## 🔄 Cross-Laptop Development Workflow (Via MilesWeb)
 
-To seamlessly work on this project across multiple laptops via GitHub, follow this strict protocol:
+MilesWeb (`45.199.139.18`) acts as the central production sync hub between Laptop A and Laptop B. All code changes, configurations, `.env`, credentials, and this overview document sync directly via high-speed delta rsync.
 
 ```mermaid
 flowchart LR
-    A[Start Session] --> B[git pull origin main]
+    A[Start Session] --> B["npm run pull (or ./pull_from_milesweb.sh)"]
     B --> C[Review latest_project_overview.md]
-    C --> D[Develop & Test Changes]
+    C --> D[Develop & Test Locally on http://localhost:3000]
     D --> E[Update latest_project_overview.md]
-    E --> F[git add . & git commit]
-    F --> G[git push origin main]
-    G --> H[Handoff Complete to other laptop]
+    E --> F["npm run push (or ./push_to_milesweb.sh)"]
+    F --> G[MilesWeb Live & Updated!]
+    G --> H[Other laptop can pull immediately!]
 ```
 
 ### 1. Step-by-Step BEFORE Every Change (The Pull Ritual)
-Run these commands in order before touching any file:
+Run this command before touching any file:
 ```bash
-# Step 1: Ensure your local working tree is clean
-git status
+# Pull latest code, credentials, and overview from MilesWeb:
+./pull_from_milesweb.sh
+# (or: npm run pull)
 
-# Step 2: (Optional) If you have uncommitted quick edits you want to keep:
-git stash
-
-# Step 3: Fetch and merge latest code pushed from the other laptop
-git pull origin main
-
-# Step 4: (Optional) If you stashed edits in Step 2:
-git stash pop
-
-# Step 5: Verify the latest commit message and author
-git log -1 --stat
-
-# Step 6: Read latest_project_overview.md to know the exact state and next goals!
+# Read this file to review recent updates & active roadmap:
 cat latest_project_overview.md
 ```
 
 ### 2. Step-by-Step AFTER Every Change (The Push Ritual)
-Run these commands in order once changes are tested and ready to hand off:
+Once you finish and test your work:
 ```bash
-# Step 1: Update 'latest_project_overview.md' with:
-#   - What was added, fixed, or modified in the Changelog section
-#   - Updated list of Next Steps / Active Tasks
+# 1. Update 'latest_project_overview.md':
+#    - Add what was completed to the Changelog section
+#    - Update the Next Steps / Active Tasks section
 
-# Step 2: Check modified and untracked files
-git status
-
-# Step 3: Review your exact code diff to catch unintended changes
-git diff
-
-# Step 4: Stage all modified and new files (secrets are protected by .gitignore)
-git add .
-
-# Step 5: Commit with a meaningful conventional commit message
-git commit -m "feat/fix(module-name): descriptive summary of changes"
-
-# Step 6: Safety check - rebase with remote in case other laptop pushed meanwhile
-git pull origin main --rebase
-
-# Step 7: Push to GitHub so the other laptop can pull it immediately
-git push origin main
-
-# Step 8: Verify that working tree is clean and up to date
-git status
+# 2. Push to MilesWeb:
+./push_to_milesweb.sh
+# (or: npm run push)
 ```
+*What `push_to_milesweb.sh` does automatically:*
+- Syncs all updated code and overview to MilesWeb in seconds.
+- Automatically executes database migrations (`initMeetingTables.js`, `initAdsMigration.js`, `initStudentPortalTables.js`).
+- Automatically restarts the Node.js production service on `https://librika.in`.
+
 
 
 ---
