@@ -1009,8 +1009,7 @@ For searching books: {"type": "search_book", "query": "..."}
 
         // 2. Initialize Service Worker & Web Push Subscription
         async function initWebPush() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                console.log('[Push] Service Worker or Push not supported on this browser.');
+            if (!('serviceWorker' in navigator)) {
                 return;
             }
 
@@ -1018,23 +1017,34 @@ For searching books: {"type": "search_book", "query": "..."}
                 swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
                 console.log('[Push] Service Worker registered with scope:', swRegistration.scope);
 
-                // Check if user is logged in
-                if (!CURRENT_USER_ID) return;
-
-                // Check notification permission
-                if (Notification.permission === 'granted') {
+                // Auto-subscribe if already granted
+                if ('Notification' in window && Notification.permission === 'granted') {
                     await subscribeUserToPush();
-                } else if (Notification.permission === 'default') {
-                    // Show a non-intrusive prompt banner to enable notifications on this device
-                    showPushEnablePrompt();
+                } else if ('Notification' in window && Notification.permission === 'default') {
+                    // Trigger native browser permission prompt on first user gesture (click or tap)
+                    setupPermissionTrigger();
                 }
             } catch (err) {
                 console.warn('[Push] Service Worker registration failed:', err.message);
             }
         }
 
+        function setupPermissionTrigger() {
+            if (!('Notification' in window) || Notification.permission !== 'default') return;
+
+            const triggerPrompt = () => {
+                document.removeEventListener('click', triggerPrompt);
+                document.removeEventListener('touchstart', triggerPrompt);
+                window.enableDevicePushNotifications();
+            };
+
+            // Modern browsers require a user interaction (click/tap) to show the native prompt
+            document.addEventListener('click', triggerPrompt, { once: true });
+            document.addEventListener('touchstart', triggerPrompt, { once: true });
+        }
+
         async function subscribeUserToPush() {
-            if (!swRegistration) return;
+            if (!swRegistration || !('PushManager' in window)) return;
             try {
                 // Get VAPID public key from backend
                 const keyRes = await fetch('/api/notifications/vapid-public-key');
@@ -1071,7 +1081,7 @@ For searching books: {"type": "search_book", "query": "..."}
                     })
                 });
 
-                console.log(`[Push] Device registered (${deviceType}) for user ${CURRENT_USER_ID}`);
+                console.log(`[Push] Device registered (${deviceType})`);
             } catch (e) {
                 console.warn('[Push] Subscription failed:', e.message);
             }
@@ -1086,12 +1096,21 @@ For searching books: {"type": "search_book", "query": "..."}
                 if (permission === 'granted') {
                     await subscribeUserToPush();
                     playNotificationChime();
-                    showToast('Device notifications active.', 'success', '🔔 Notifications Active');
+                    showToast('Notifications enabled for this device!', 'success', '🔔 Notifications Active');
                 }
             } catch (err) {
                 console.error('Error enabling notifications:', err);
             }
         };
+
+        // Also bind directly to any notification bell clicks
+        document.addEventListener('click', (e) => {
+            const bell = e.target.closest('[title*="notification" i], .sp-top-btn, .ld-notif-btn, .st-notif-badge');
+            if (bell && 'Notification' in window && Notification.permission === 'default') {
+                window.enableDevicePushNotifications();
+            }
+        });
+
 
 
         // 3. Socket.IO Real-Time Notification Receiver

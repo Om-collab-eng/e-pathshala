@@ -20,10 +20,8 @@ router.get('/vapid-public-key', (req, res) => {
 // 2. Register / Subscribe device push endpoint
 router.post('/push-subscribe', async (req, res) => {
   try {
-    const userId = req.session ? (req.session.user_id || req.session.id) : null;
-    if (!userId) {
-      return res.status(401).json({ status: 'error', message: 'Authentication required to subscribe devices.' });
-    }
+    const userId = req.session ? (req.session.user_id || req.session.id || 0) : 0;
+
 
     const { subscription, deviceType, userAgent } = req.body;
     if (!subscription || !subscription.endpoint || !subscription.keys) {
