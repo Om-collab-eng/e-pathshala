@@ -1,166 +1,339 @@
-<%- layout("base") %>
-<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Quiz Results - Librika' %></title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
-<% contentFor("title") %>Quiz Results - librika.in
-
-<% contentFor("head") %>
-<style>
+  <style>
     :root {
-        --sp-purple: #5c3cf3;
-        --sp-purple-light: #f0eeff;
-        --sp-white: #ffffff;
-        --sp-bg-light: #f8fafc;
-        --sp-text-dark: #0f172a;
-        --sp-text-muted: #64748b;
-        --success: #10b981;
-        --error: #ef4444;
+      --primary: #0B5ED7;
+      --primary-dark: #084298;
+      --primary-light: #EAF3FF;
+      --indigo: #5B4BDB;
+      --indigo-light: #EEF2FF;
+      --success: #198754;
+      --success-light: #D1E7DD;
+      --danger: #DC3545;
+      --danger-light: #F8D7DA;
+      --background: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-sub: #F1F5F9;
+      --text-primary: #111827;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 12px 30px rgba(16, 24, 40, 0.08);
     }
 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-        background-color: var(--sp-bg-light);
-        font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .qz-navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .qz-brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .qz-brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--indigo));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.15rem;
+      box-shadow: 0 4px 12px rgba(11, 94, 215, 0.25);
+    }
+    .qz-brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text-primary);
     }
 
     .res-container {
-        max-width: 600px;
-        margin: 5rem auto;
-        padding: 0 1.5rem;
+      max-width: 860px;
+      width: 100%;
+      margin: 32px auto;
+      padding: 0 20px 60px 20px;
+      flex: 1;
     }
 
-    .res-card {
-        background: var(--sp-white);
-        border-radius: 28px;
-        padding: 3rem;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.04);
-        text-align: center;
+    /* Score Summary Hero Card */
+    .res-hero-card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: 36px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .res-badge {
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 6px 16px;
+      border-radius: 100px;
+      display: inline-block;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .res-badge.passed {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    .res-badge.failed {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+    .res-score-number {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3.8rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .res-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
     }
 
-    .res-emoji {
-        font-size: 5rem;
-        margin-bottom: 1.5rem;
-        animation: bounce 1s infinite alternate;
+    .res-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .res-stat-box {
+      background: var(--surface-sub);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+    .res-stat-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .res-stat-lbl {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 4px;
     }
 
-    .res-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 0.5rem;
+    /* Questions Breakdown List */
+    .res-section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+    .res-q-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+    }
+    .res-q-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .res-q-status {
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .res-q-status.correct { background: var(--success-light); color: var(--success); }
+    .res-q-status.incorrect { background: var(--danger-light); color: var(--danger); }
+
+    .res-q-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      line-height: 1.4;
     }
 
-    .res-status-success {
-        color: var(--success);
+    .res-answer-box {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .res-your-answer {
+      background: var(--surface-sub);
+      color: var(--text-primary);
+    }
+    .res-correct-answer {
+      background: var(--success-light);
+      color: #0f5132;
+      font-weight: 700;
+    }
+    .res-explanation {
+      background: #F0FDF4;
+      border-left: 4px solid var(--success);
+      padding: 12px 16px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      font-size: 0.88rem;
+      color: #166534;
+      margin-top: 12px;
+      line-height: 1.5;
     }
 
-    .res-status-fail {
-        color: var(--error);
+    .res-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 36px;
     }
-
-    .res-message {
-        font-size: 1.1rem;
-        color: var(--sp-text-muted);
-        margin-bottom: 2rem;
-        line-height: 1.5;
+    .btn-return {
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: var(--radius-md);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(11, 94, 215, 0.25);
     }
-
-    .res-details {
-        background: var(--sp-bg-light);
-        border-radius: 20px;
-        padding: 1.5rem;
-        margin-bottom: 2.5rem;
-        display: flex;
-        justify-content: space-around;
+    .btn-leaderboard {
+      background: var(--surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: var(--radius-md);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
     }
+  </style>
+</head>
+<body>
 
-    .res-detail-item {
-        display: flex;
-        flex-direction: column;
-    }
+  <header class="qz-navbar">
+    <a href="/student?module=learn" class="qz-brand-wrap">
+      <div class="qz-brand-icon">L</div>
+      <div class="qz-brand-title">Librika Quizzes</div>
+    </a>
+    <a href="/student?module=learn" style="text-decoration:none;font-weight:700;font-size:0.9rem;color:var(--text-secondary);">
+      &larr; Back to Learning Hub
+    </a>
+  </header>
 
-    .res-detail-val {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: var(--sp-text-dark);
-    }
+  <main class="res-container">
+    <!-- Hero Score Summary -->
+    <div class="res-hero-card">
+      <span class="res-badge <%= attempt.passed ? 'passed' : 'failed' %>">
+        <%= attempt.passed ? '🎉 PASSED' : '❌ NOT PASSED' %>
+      </span>
+      <div class="res-score-number"><%= Math.round(attempt.percentage || 0) %>%</div>
+      <p class="res-subtitle">
+        <%= attempt.passed 
+            ? 'Awesome work! You mastered this comprehension quiz and earned 50 Leaderboard Points!' 
+            : 'Keep reviewing the book and try again to improve your score!' %>
+      </p>
 
-    .res-detail-lbl {
-        font-size: 0.78rem;
-        color: var(--sp-text-muted);
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-top: 4px;
-    }
-
-    .back-btn {
-        background: var(--sp-purple);
-        color: white;
-        border: none;
-        padding: 14px 28px;
-        border-radius: 16px;
-        font-weight: 800;
-        font-size: 1rem;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        transition: opacity 0.2s;
-        box-shadow: 0 8px 16px rgba(92, 60, 243, 0.15);
-    }
-
-    .back-btn:hover {
-        opacity: 0.9;
-    }
-
-    @keyframes bounce {
-        from { transform: translateY(0); }
-        to { transform: translateY(-10px); }
-    }
-</style>
-<% contentFor("head") %>
-
-<% contentFor("content") %>
-<div class="sp-page">
-  <div class="sp-layout">
-    <%- include('partials/student_sidebar', { active: 'browse' }) %>
-    <div class="sp-main">
-      <%- include('partials/student_topbar', { title: 'Quiz Results' }) %>
-      <main class="sp-content">
-<div class="res-container">
-    <div class="res-card">
-        <% if (passed) { %>
-            <div class="res-emoji">🎉</div>
-            <h1 class="res-title res-status-success">Quiz Passed!</h1>
-            <p class="res-message">Outstanding! You have successfully passed the comprehension quiz for <strong><%= book.title %></strong>.</p>
-        <% } else { %>
-            <div class="res-emoji">😢</div>
-            <h1 class="res-title res-status-fail">Quiz Failed</h1>
-            <p class="res-message">Unfortunately, you did not meet the 70% passing requirement for <strong><%= book.title %></strong>.</p>
-        <% } %>
-
-        <div class="res-details">
-            <div class="res-detail-item">
-                <div class="res-detail-val"><%= Math.round(score) %>%</div>
-                <div class="res-detail-lbl">Your Score</div>
-            </div>
-            <div class="res-detail-item">
-                <div class="res-detail-val"><%= correct %> / <%= total %></div>
-                <div class="res-detail-lbl">Correct Answers</div>
-            </div>
-            <div class="res-detail-item">
-                <div class="res-detail-val">+<%= points %></div>
-                <div class="res-detail-lbl">Points Awarded</div>
-            </div>
+      <div class="res-stats-row">
+        <div class="res-stat-box">
+          <div class="res-stat-val"><%= attempt.score %> / <%= attempt.total_marks %></div>
+          <div class="res-stat-lbl">Marks Scored</div>
         </div>
-
-        <% if (cooldown) { %>
-            <p style="font-size:0.8rem; color:var(--error); margin-bottom:1.5rem; font-weight:700;">⚠️ Cooldown Active: You completed this book in the last 90 days, so no leaderboard points were added.</p>
-        <% } %>
-
-        <a href="/student" class="back-btn">Go to Dashboard</a>
+        <div class="res-stat-box">
+          <div class="res-stat-val"><%= Math.round((attempt.time_taken_seconds || 0) / 60) %> mins</div>
+          <div class="res-stat-lbl">Time Taken</div>
+        </div>
+        <div class="res-stat-box">
+          <div class="res-stat-val"><%= attempt.passed ? '+50 pts' : '0 pts' %></div>
+          <div class="res-stat-lbl">Points Awarded</div>
+        </div>
+      </div>
     </div>
-</div>
 
-      </main>
+    <!-- Questions Detailed Review -->
+    <h2 class="res-section-title">Question Breakdown &amp; Explanations</h2>
+
+    <% if (questions && questions.length > 0) { %>
+      <% questions.forEach((q, idx) => { %>
+        <div class="res-q-card">
+          <div class="res-q-header">
+            <span style="font-size:0.8rem;font-weight:800;color:var(--text-muted);">QUESTION <%= idx + 1 %></span>
+            <span class="res-q-status <%= q.is_correct ? 'correct' : 'incorrect' %>">
+              <%= q.is_correct ? '✓ Correct' : '✗ Incorrect' %>
+            </span>
+          </div>
+          <h3 class="res-q-title"><%= q.question %></h3>
+
+          <div class="res-answer-box res-your-answer">
+            <strong>Your Answer:</strong> <%= q.selected_answer || 'No answer provided' %>
+          </div>
+
+          <% if (!q.is_correct) { %>
+            <div class="res-answer-box res-correct-answer">
+              <strong>Correct Answer:</strong> <%= q.correct_answer %>
+            </div>
+          <% } %>
+
+          <% if (q.explanation) { %>
+            <div class="res-explanation">
+              💡 <strong>Explanation:</strong> <%= q.explanation %>
+            </div>
+          <% } %>
+        </div>
+      <% }) %>
+    <% } %>
+
+    <div class="res-actions">
+      <a href="/student?module=learn" class="btn-return">Continue Learning</a>
+      <a href="/leaderboard" class="btn-leaderboard">View Leaderboard 🏆</a>
     </div>
-  </div>
-</div>
+  </main>
+
+</body>
+</html>

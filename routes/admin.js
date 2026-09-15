@@ -177,26 +177,35 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     `, [sCode]).catch(() => ({ rows: [] }));
     const digitalItems = digRes.rows || [];
 
-    // 6. Fetch Live Studio Sessions (Jitsi-Powered Architecture)
+    // 6. Fetch Live Studio Sessions (Production Meetings & Legacy Jitsi)
     const studioRes = await db.query(`
-      SELECT ss.id, ss.title, ss.description, ss.host_id, ss.host_name, ss.meeting_code, ss.meeting_code as meeting_id,
+      SELECT m.id, m.uid, m.title, m.description, m.host_user_id as host_id, m.host_name, m.meeting_code, m.meeting_code as meeting_id,
+             m.jaas_room_name, m.scheduled_start, m.scheduled_end, m.duration_minutes, m.status,
+             m.class_name, m.meeting_type as visibility, m.school_code,
+             (SELECT COUNT(*) FROM meeting_sessions ms WHERE ms.meeting_id = m.id AND ms.left_at IS NULL) as attendee_count
+      FROM meetings m
+      WHERE (LOWER(m.school_code) = LOWER($1) OR m.school_code = 'DPS123' OR m.school_code = 'GLOBAL' OR m.school_code IS NULL OR m.school_code = '')
+      UNION ALL
+      SELECT ss.id, '' as uid, ss.title, ss.description, ss.host_id, ss.host_name, ss.meeting_code, ss.meeting_code as meeting_id,
              ss.jaas_room_name, ss.scheduled_start, ss.scheduled_end, ss.duration_minutes, ss.status,
              ss.class_name, ss.visibility, ss.school_code,
              (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
       FROM studio_sessions ss
       WHERE (LOWER(ss.school_code) = LOWER($1) OR ss.school_code = 'DPS123' OR ss.school_code = 'GLOBAL' OR ss.school_code IS NULL OR ss.school_code = '')
+        AND NOT EXISTS (SELECT 1 FROM meetings m2 WHERE m2.meeting_code = ss.meeting_code OR (m2.jaas_room_name = ss.jaas_room_name AND ss.jaas_room_name IS NOT NULL))
       UNION ALL
-      SELECT ls.id + 100000 as id, ls.title, '' as description, ls.host_user_id as host_id, ls.host_name,
+      SELECT ls.id + 100000 as id, '' as uid, ls.title, '' as description, ls.host_user_id as host_id, ls.host_name,
              ls.meeting_id as meeting_code, ls.meeting_id, ls.meeting_id as jaas_room_name,
              ls.scheduled_start, ls.scheduled_end, ls.duration_minutes, ls.status,
              'All Students' as class_name, 'CLASS' as visibility, ls.school_code,
              0 as attendee_count
       FROM live_sessions ls
       WHERE (LOWER(ls.school_code) = LOWER($1) OR ls.school_code = 'DPS123' OR ls.school_code = 'GLOBAL' OR ls.school_code IS NULL OR ls.school_code = '')
+        AND NOT EXISTS (SELECT 1 FROM meetings m3 WHERE m3.meeting_code = ls.meeting_id OR m3.title = ls.title)
         AND NOT EXISTS (SELECT 1 FROM studio_sessions s2 WHERE s2.meeting_code = ls.meeting_id OR s2.title = ls.title)
       ORDER BY scheduled_start DESC LIMIT 40
     `, [sCode]).catch(async () => {
-      return await db.query(`SELECT * FROM studio_sessions ORDER BY id DESC LIMIT 30`).catch(() => ({ rows: [] }));
+      return await db.query(`SELECT *, '' as uid FROM studio_sessions ORDER BY id DESC LIMIT 30`).catch(() => ({ rows: [] }));
     });
     const studioSessions = studioRes.rows || [];
 
@@ -476,15 +485,42 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
       return res.json({ status: 'error', message: `'${book.title}' has 0 available copies in stock.` });
     }
 
-    const loanDays = parseInt(due_days, 10) || 14;
+    // Determine borrowing days based on book_size
+    let bookSize = (book.book_size || 'MEDIUM').toUpperCase();
+    let defaultDays = 15;
+    if (bookSize === 'SMALL') defaultDays = 7;
+    else if (bookSize === 'BIG') defaultDays = 25;
+    else defaultDays = 15;
+
+    const loanDays = parseInt(due_days, 10) || parseInt(book.offline_borrowing_days, 10) || defaultDays;
     const dDate = dueDate(loanDays);
     const iDate = renderDate(new Date());
 
     // 4. Execute Transaction
+    const txRes = await db.query(`
+      INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code, book_size, allowed_days, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ISSUED')
+    `, [member_id, book.id, iDate, dDate, member.class || 'N/A', sCode, bookSize, loanDays]);
+
+    let transactionId = null;
+    if (txRes && txRes.rows && txRes.rows[0] && txRes.rows[0].id) {
+      transactionId = txRes.rows[0].id;
+    } else {
+      // Fallback: lookup the newly created transaction
+      const lastTx = await db.query(
+        'SELECT id FROM transactions WHERE user_id = $1 AND book_id = $2 ORDER BY id DESC LIMIT 1',
+        [member_id, book.id]
+      );
+      if (lastTx && lastTx.rows && lastTx.rows[0]) transactionId = lastTx.rows[0].id;
+    }
+
+    // 4b. Record in offline_book_readings with quiz_status = 'LOCKED'
     await db.query(`
-      INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code)
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `, [member_id, book.id, iDate, dDate, member.class || 'N/A', sCode]);
+      INSERT INTO offline_book_readings (student_id, book_id, transaction_id, school_code, issue_date, due_date, return_status, quiz_status)
+      VALUES ($1, $2, $3, $4, $5, $6, 'ISSUED', 'LOCKED')
+    `, [member_id, book.id, transactionId, sCode, iDate, dDate]).catch(err => {
+      console.warn('[CIRCULATION] offline_book_readings insert warning:', err.message);
+    });
 
     // 5. Decrement Available Copies
     await db.query('UPDATE books SET available_copies = available_copies - 1 WHERE id = $1', [book.id]);
@@ -549,12 +585,37 @@ router.post('/api/circulation/return', adminOnly, async (req, res) => {
     const retDate = renderDate(new Date());
     const fineData = calculateFine(loan.due_date);
 
+    // Calculate return status and late days
+    const isLate = fineData.is_overdue || false;
+    const lateDays = isLate ? (fineData.days_overdue || 0) : 0;
+    const returnStatus = isLate ? 'RETURNED_LATE' : 'RETURNED_ON_TIME';
+
     // 1. Mark Loan Returned
     await db.query(`
       UPDATE transactions
-      SET return_date = $1, fine = $2
-      WHERE id = $3
-    `, [retDate, fineData.fine, loan.id]);
+      SET return_date = $1, fine = $2, status = $3, late_days = $4
+      WHERE id = $5
+    `, [retDate, fineData.fine, returnStatus, lateDays, loan.id]);
+
+    // 1b. Update offline_book_readings and unlock quiz
+    const nowTimestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    await db.query(`
+      UPDATE offline_book_readings
+      SET return_date = $1, return_status = $2, late_days = $3, quiz_status = 'ELIGIBLE', quiz_eligible_at = $4
+      WHERE (transaction_id = $5 OR (student_id = $6 AND book_id = $7 AND return_date IS NULL))
+    `, [retDate, returnStatus, lateDays, nowTimestamp, loan.id, loan.user_id, loan.book_id]).catch(err => {
+      console.warn('[CIRCULATION] offline_book_readings return update warning:', err.message);
+    });
+
+    // Notify student about unlocked quiz
+    await db.query(`
+      INSERT INTO notifications (user_id, message, type, school_code)
+      VALUES ($1, $2, 'quiz_unlocked', $3)
+    `, [
+      loan.user_id,
+      `🎉 You returned '${loan.book_title}'! The offline book quiz is now UNLOCKED in your Student Portal.`,
+      sCode
+    ]).catch(() => {});
 
     // 2. Increment Available Copies
     await db.query('UPDATE books SET available_copies = available_copies + 1 WHERE id = $1', [loan.book_id]);

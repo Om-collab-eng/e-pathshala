@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .pulse-dot {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+    }
+    .mirror-video {
+      transform: scaleX(-1);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="w-full border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-6 py-3.5 flex items-center justify-between sticky top-0 z-30">
+    <div class="flex items-center gap-3">
+      <a href="<%= user.role === 'student' ? '/student' : '/admin' %>" class="flex items-center gap-2.5 text-white hover:text-blue-400 transition">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/25">L</div>
+        <span class="font-bold text-lg tracking-tight">Librika <span class="text-blue-400 text-xs uppercase px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 font-semibold ml-1">Meet</span></span>
+      </a>
+      <span class="text-slate-600">/</span>
+      <span class="text-xs text-slate-400 font-mono"><%= meeting.meeting_code %></span>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 text-xs bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-full">
+        <span class="w-2 h-2 rounded-full <%= meeting.status === 'LIVE' ? 'bg-emerald-500 pulse-dot' : (meeting.status === 'ENDED' ? 'bg-slate-500' : 'bg-amber-500') %>"></span>
+        <span class="font-medium uppercase tracking-wider text-[11px] <%= meeting.status === 'LIVE' ? 'text-emerald-400' : 'text-slate-300' %>"><%= meeting.status %></span>
+      </div>
+
+      <div class="flex items-center gap-2 pl-3 border-l border-slate-800">
+        <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 text-blue-400 flex items-center justify-center text-xs font-semibold">
+          <%= (user.name || 'U').charAt(0).toUpperCase() %>
+        </div>
+        <span class="text-xs font-medium text-slate-300 hidden sm:inline"><%= user.name %></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Pre-Join Section -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+      
+      <!-- Left 7 Cols: Camera & Mic Device Preview -->
+      <div class="lg:col-span-7 flex flex-col items-center">
+        
+        <!-- Video Feed Container -->
+        <div class="relative w-full aspect-video bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center group">
+          <video id="previewVideo" autoplay playsinline muted class="w-full h-full object-cover mirror-video hidden"></video>
+          
+          <!-- Avatar Fallback (when camera off) -->
+          <div id="cameraOffFallback" class="flex flex-col items-center justify-center p-6 text-center">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white text-3xl font-bold shadow-xl mb-3">
+              <%= (user.name || 'U').charAt(0).toUpperCase() %>
+            </div>
+            <p class="text-sm text-slate-400 font-medium">Camera is turned off</p>
+          </div>
+
+          <!-- Bottom Device Controls Overlay -->
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-700/60 shadow-lg z-10">
+            <!-- Mic Button -->
+            <button id="toggleMicBtn" onclick="toggleAudio()" class="w-11 h-11 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition shadow focus:outline-none" title="Toggle Microphone">
+              <span id="micIcon" class="material-symbols-outlined text-[20px]">mic</span>
+            </button>
+
+            <!-- Video Button -->
+            <button id="toggleCamBtn" onclick="toggleVideo()" class="w-11 h-11 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition shadow focus:outline-none" title="Toggle Camera">
+              <span id="camIcon" class="material-symbols-outlined text-[20px]">videocam_off</span>
+            </button>
+
+            <!-- Mic Level Indicator -->
+            <div class="h-6 w-2 bg-slate-800 rounded-full overflow-hidden flex flex-col justify-end ml-1" title="Microphone Level">
+              <div id="audioLevelBar" class="w-full bg-emerald-500 transition-all duration-75" style="height: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Device Selector Row -->
+        <div class="w-full mt-4 flex flex-col sm:flex-row items-center gap-3 text-xs text-slate-400">
+          <div class="flex-1 w-full flex items-center gap-2 bg-slate-900/50 border border-slate-800 px-3 py-2 rounded-xl">
+            <span class="material-symbols-outlined text-[18px] text-slate-400">videocam</span>
+            <select id="cameraSelect" onchange="changeCamera()" class="bg-transparent text-slate-300 w-full focus:outline-none cursor-pointer">
+              <option value="">Default Camera</option>
+            </select>
+          </div>
+
+          <div class="flex-1 w-full flex items-center gap-2 bg-slate-900/50 border border-slate-800 px-3 py-2 rounded-xl">
+            <span class="material-symbols-outlined text-[18px] text-slate-400">mic</span>
+            <select id="micSelect" onchange="changeMic()" class="bg-transparent text-slate-300 w-full focus:outline-none cursor-pointer">
+              <option value="">Default Microphone</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right 5 Cols: Meeting Metadata & Join CTA -->
+      <div class="lg:col-span-5 flex flex-col justify-center">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl">
+          
+          <!-- Badges Row -->
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            <span class="text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <%= meeting.session_type || 'CLASS' %>
+            </span>
+            <span class="text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+              <%= meeting.meeting_type === 'BROADCAST' ? '📢 OPEN BROADCAST' : '🔒 INVITE ONLY' %>
+            </span>
+            <% if (isModerator) { %>
+              <span class="text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                👑 HOST
+              </span>
+            <% } %>
+          </div>
+
+          <!-- Meeting Title -->
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white leading-tight mb-2">
+            <%= meeting.title %>
+          </h1>
+          
+          <% if (meeting.description) { %>
+            <p class="text-sm text-slate-400 line-clamp-2 mb-4"><%= meeting.description %></p>
+          <% } %>
+
+          <!-- Meeting Specs List -->
+          <div class="space-y-2.5 my-5 text-xs text-slate-300 border-y border-slate-800/80 py-4">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">person</span> Host</span>
+              <span class="font-medium text-slate-200"><%= meeting.host_name || 'Faculty Instructor' %></span>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">schedule</span> Scheduled Time</span>
+              <span class="font-medium text-slate-200">
+                <%= new Date(meeting.scheduled_start || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+                (<%= meeting.duration_minutes || 60 %> mins)
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">group</span> Currently Inside</span>
+              <span class="font-medium text-emerald-400 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <%= activeCount %> participant<%= activeCount === 1 ? '' : 's' %>
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Buttons based on User Role & Status -->
+          <div class="space-y-3">
+            
+            <% if (!isInvited && meeting.meeting_type === 'INVITE_ONLY' && !isModerator) { %>
+              <!-- Uninvited to private meeting -->
+              <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs leading-relaxed">
+                <div class="font-semibold mb-1 flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[18px]">lock</span> Private Meeting
+                </div>
+                You have not been invited to this session. Only approved students and instructors may enter.
+              </div>
+              <a href="<%= user.role === 'student' ? '/student' : '/admin' %>" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-sm flex items-center justify-center transition">
+                Return to Dashboard
+              </a>
+
+            <% } else if (meeting.status === 'ENDED' || meeting.status === 'COMPLETED') { %>
+              <!-- Concluded meeting -->
+              <div class="p-4 rounded-xl bg-slate-800/80 border border-slate-700 text-slate-400 text-xs text-center">
+                This meeting has ended. No new participants can join.
+              </div>
+              <a href="<%= user.role === 'student' ? '/student' : '/admin' %>" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-sm flex items-center justify-center transition">
+                Return to Dashboard
+              </a>
+
+            <% } else if (meeting.meeting_type === 'BROADCAST' && meeting.lobby_enabled && !isModerator && lobbyStatus === 'pending') { %>
+              <!-- Waiting in Lobby -->
+              <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs text-center space-y-2">
+                <div class="flex items-center justify-center gap-2 font-semibold">
+                  <span class="w-2 h-2 rounded-full bg-amber-400 pulse-dot"></span>
+                  Waiting in Lobby
+                </div>
+                <p class="text-slate-300 text-[11px]">The host has been notified. You will be automatically admitted once approved.</p>
+              </div>
+              <button onclick="checkLobbyStatus()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-medium text-xs flex items-center justify-center gap-1.5 transition">
+                <span class="material-symbols-outlined text-[16px]">refresh</span> Check Status
+              </button>
+
+            <% } else if (meeting.meeting_type === 'BROADCAST' && meeting.lobby_enabled && !isModerator && lobbyStatus === 'rejected') { %>
+              <!-- Declined by host -->
+              <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs text-center">
+                Your request to join this session was declined by the host.
+              </div>
+
+            <% } else if (meeting.meeting_type === 'BROADCAST' && meeting.lobby_enabled && !isModerator && lobbyStatus === 'none') { %>
+              <!-- Request to enter lobby -->
+              <button onclick="requestLobbyEntry()" id="requestEntryBtn" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition">
+                <span class="material-symbols-outlined text-[20px]">door_open</span> Request to Join
+              </button>
+
+            <% } else { %>
+              <!-- Authorized to enter room -->
+              <% if (isModerator && meeting.status !== 'LIVE') { %>
+                <button onclick="startAndEnterMeeting()" id="enterRoomBtn" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition">
+                  <span class="material-symbols-outlined text-[20px]">play_arrow</span> Start & Enter Meeting
+                </button>
+              <% } else { %>
+                <a href="/meet/<%= meeting.uid %>/classroom" id="enterRoomBtn" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition">
+                  <span class="material-symbols-outlined text-[20px]">video_call</span> Join Meeting Now
+                </a>
+              <% } %>
+            <% } %>
+
+            <!-- Copy Link Button -->
+            <button onclick="copyMeetingLink()" class="w-full py-2.5 bg-slate-900/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition">
+              <span class="material-symbols-outlined text-[16px]">content_copy</span>
+              <span id="copyText">Copy Invite Link</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-900">
+    Librika Meet &bull; Powered by JaaS 8x8.vc Enterprise Video Engine
+  </footer>
+
+  <!-- Pre-Join Audio/Video Logic -->
+  <script>
+    let localStream = null;
+    let isVideoEnabled = false;
+    let isAudioEnabled = true;
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
+    let javascriptNode = null;
+
+    const previewVideo = document.getElementById('previewVideo');
+    const cameraOffFallback = document.getElementById('cameraOffFallback');
+    const micIcon = document.getElementById('micIcon');
+    const camIcon = document.getElementById('camIcon');
+    const toggleMicBtn = document.getElementById('toggleMicBtn');
+    const toggleCamBtn = document.getElementById('toggleCamBtn');
+    const audioLevelBar = document.getElementById('audioLevelBar');
+    const cameraSelect = document.getElementById('cameraSelect');
+    const micSelect = document.getElementById('micSelect');
+
+    // Enumerate devices and request permissions
+    async function initDevicePreview() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true
+        });
+
+        localStream = stream;
+        previewVideo.srcObject = stream;
+        previewVideo.classList.remove('hidden');
+        cameraOffFallback.classList.add('hidden');
+        isVideoEnabled = true;
+        camIcon.textContent = 'videocam';
+        toggleCamBtn.classList.add('bg-blue-600', 'text-white');
+        toggleCamBtn.classList.remove('bg-slate-800');
+
+        setupAudioAnalyser(stream);
+        populateDeviceSelectors();
+      } catch (err) {
+        console.warn('Media preview permission note:', err.message);
+        // If camera failed, try audio only
+        try {
+          const audioOnly = await navigator.mediaDevices.getUserMedia({ audio: true });
+          localStream = audioOnly;
+          setupAudioAnalyser(audioOnly);
+        } catch (aErr) {}
+      }
+    }
+
+    async function populateDeviceSelectors() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        cameraSelect.innerHTML = '';
+        micSelect.innerHTML = '';
+
+        devices.forEach(device => {
+          const opt = document.createElement('option');
+          opt.value = device.deviceId;
+          if (device.kind === 'videoinput') {
+            opt.text = device.label || `Camera ${cameraSelect.length + 1}`;
+            cameraSelect.appendChild(opt);
+          } else if (device.kind === 'audioinput') {
+            opt.text = device.label || `Microphone ${micSelect.length + 1}`;
+            micSelect.appendChild(opt);
+          }
+        });
+      } catch (e) {}
+    }
+
+    function setupAudioAnalyser(stream) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioCtx();
+        analyser = audioContext.createAnalyser();
+        microphone = audioContext.createMediaStreamSource(stream);
+        javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+        analyser.smoothingTimeConstant = 0.8;
+        analyser.fftSize = 1024;
+
+        microphone.connect(analyser);
+        analyser.connect(javascriptNode);
+        javascriptNode.connect(audioContext.destination);
+
+        javascriptNode.onaudioprocess = function() {
+          if (!isAudioEnabled) {
+            if (audioLevelBar) audioLevelBar.style.height = '0%';
+            return;
+          }
+          const array = new Uint8Array(analyser.frequencyBinCount);
+          analyser.getByteFrequencyData(array);
+          let values = 0;
+          const length = array.length;
+          for (let i = 0; i < length; i++) values += array[i];
+          const average = values / length;
+          const pct = Math.min(100, Math.round((average / 40) * 100));
+          if (audioLevelBar) audioLevelBar.style.height = pct + '%';
+        };
+      } catch (e) {}
+    }
+
+    function toggleVideo() {
+      if (!localStream) {
+        initDevicePreview();
+        return;
+      }
+      isVideoEnabled = !isVideoEnabled;
+      localStream.getVideoTracks().forEach(track => track.enabled = isVideoEnabled);
+      if (isVideoEnabled) {
+        previewVideo.classList.remove('hidden');
+        cameraOffFallback.classList.add('hidden');
+        camIcon.textContent = 'videocam';
+        toggleCamBtn.classList.add('bg-blue-600');
+        toggleCamBtn.classList.remove('bg-slate-800');
+      } else {
+        previewVideo.classList.add('hidden');
+        cameraOffFallback.classList.remove('hidden');
+        camIcon.textContent = 'videocam_off';
+        toggleCamBtn.classList.remove('bg-blue-600');
+        toggleCamBtn.classList.add('bg-slate-800');
+      }
+    }
+
+    function toggleAudio() {
+      if (!localStream) return;
+      isAudioEnabled = !isAudioEnabled;
+      localStream.getAudioTracks().forEach(track => track.enabled = isAudioEnabled);
+      if (isAudioEnabled) {
+        micIcon.textContent = 'mic';
+        toggleMicBtn.classList.remove('bg-red-600');
+        toggleMicBtn.classList.add('bg-slate-800');
+      } else {
+        micIcon.textContent = 'mic_off';
+        toggleMicBtn.classList.remove('bg-slate-800');
+        toggleMicBtn.classList.add('bg-red-600');
+      }
+    }
+
+    async function changeCamera() {
+      if (!cameraSelect.value) return;
+      if (localStream) {
+        localStream.getVideoTracks().forEach(t => t.stop());
+      }
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: cameraSelect.value } }
+        });
+        const videoTrack = newStream.getVideoTracks()[0];
+        if (localStream) {
+          localStream.removeTrack(localStream.getVideoTracks()[0]);
+          localStream.addTrack(videoTrack);
+        }
+        previewVideo.srcObject = localStream;
+      } catch (e) {}
+    }
+
+    async function changeMic() {
+      if (!micSelect.value) return;
+      if (localStream) {
+        localStream.getAudioTracks().forEach(t => t.stop());
+      }
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          audio: { deviceId: { exact: micSelect.value } }
+        });
+        const audioTrack = newStream.getAudioTracks()[0];
+        if (localStream) {
+          localStream.removeTrack(localStream.getAudioTracks()[0]);
+          localStream.addTrack(audioTrack);
+        }
+        setupAudioAnalyser(localStream);
+      } catch (e) {}
+    }
+
+    function copyMeetingLink() {
+      const url = window.location.origin + '/meet/<%= meeting.uid %>';
+      navigator.clipboard.writeText(url).then(() => {
+        const text = document.getElementById('copyText');
+        text.textContent = 'Copied Link!';
+        setTimeout(() => text.textContent = 'Copy Invite Link', 2500);
+      });
+    }
+
+    async function requestLobbyEntry() {
+      const btn = document.getElementById('requestEntryBtn');
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch('/api/meetings/<%= meeting.uid %>/join-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Could not request lobby entry.');
+          if (btn) btn.disabled = false;
+        }
+      } catch (err) {
+        alert('Network error requesting lobby entry');
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function checkLobbyStatus() {
+      try {
+        const res = await fetch('/api/meetings/<%= meeting.uid %>');
+        const data = await res.json();
+        window.location.reload();
+      } catch (e) {}
+    }
+
+    async function startAndEnterMeeting() {
+      try {
+        await fetch('/api/meetings/<%= meeting.uid %>/start', { method: 'POST' });
+        window.location.href = '/meet/<%= meeting.uid %>/classroom';
+      } catch (e) {
+        window.location.href = '/meet/<%= meeting.uid %>/classroom';
+      }
+    }
+
+    // Initialize device preview on load
+    window.addEventListener('DOMContentLoaded', initDevicePreview);
+
+    // Auto-poll lobby status every 5 seconds if waiting
+    <% if (meeting.meeting_type === 'BROADCAST' && meeting.lobby_enabled && !isModerator && lobbyStatus === 'pending') { %>
+      setInterval(async () => {
+        try {
+          const res = await fetch('/api/meetings/<%= meeting.uid %>/join', { method: 'POST' });
+          if (res.ok) {
+            window.location.href = '/meet/<%= meeting.uid %>/classroom';
+          }
+        } catch (e) {}
+      }, 5000);
+    <% } %>
+  </script>
+
+</body>
+</html>

@@ -240,7 +240,33 @@ async function initMeetingTables() {
   // ────────────────────────────────────────────
   // 6. USER UID MIGRATION
   // ────────────────────────────────────────────
-  console.log('[MEETING DB] Ensuring user uid column exists...');
+  console.log('[MEETING DB] Ensuring users table and uid column exist...');
+  await query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      uid VARCHAR(30) UNIQUE,
+      name VARCHAR(255),
+      email VARCHAR(255),
+      phone VARCHAR(50),
+      role VARCHAR(50) DEFAULT 'student',
+      school_code VARCHAR(50) DEFAULT 'DPS123',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `).catch(async () => {
+    await query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uid TEXT UNIQUE,
+        name TEXT,
+        email TEXT,
+        phone TEXT,
+        role TEXT DEFAULT 'student',
+        school_code TEXT DEFAULT 'DPS123',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+  });
+
   await query(`ALTER TABLE users ADD COLUMN uid VARCHAR(30) UNIQUE`).catch(() => {});
 
   const usersWithoutUid = await query(

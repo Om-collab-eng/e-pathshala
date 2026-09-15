@@ -11,10 +11,10 @@ echo "  ⬆️  Pushing changes to MilesWeb server..."
 echo "=================================================="
 
 if command -v sshpass >/dev/null 2>&1; then
-  R_SSH="sshpass -p $PASS ssh -p $PORT -o StrictHostKeyChecking=no"
+  R_SSH="sshpass -p $PASS ssh -p $PORT -o StrictHostKeyChecking=no -o PubkeyAuthentication=no"
 else
   echo "(If prompted for password, enter: $PASS)"
-  R_SSH="ssh -p $PORT -o StrictHostKeyChecking=no"
+  R_SSH="ssh -p $PORT -o StrictHostKeyChecking=no -o PubkeyAuthentication=no"
 fi
 
 echo "[1/2] Syncing changed files to MilesWeb via rsync..."
@@ -35,13 +35,15 @@ rsync -avz --progress \
 
 echo "[2/2] Restarting service & running DB migrations on MilesWeb..."
 if command -v sshpass >/dev/null 2>&1; then
-  sshpass -p "$PASS" ssh -p "$PORT" -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" << 'REMOTE_SCRIPT'
+  sshpass -p "$PASS" ssh -p "$PORT" -o StrictHostKeyChecking=no -o PubkeyAuthentication=no "$SERVER_USER@$SERVER_IP" << 'REMOTE_SCRIPT'
 cd public_html
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 node db/initStudentPortalTables.js || true
 node db/initAdsMigration.js || true
 node db/initMeetingTables.js || true
+node db/initQuizTables.js || true
+node db/initPushSubscriptionsTable.js || true
 
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
 mkdir -p tmp
@@ -49,13 +51,16 @@ touch tmp/restart.txt
 echo "MilesWeb server updated & restarted."
 REMOTE_SCRIPT
 else
-  ssh -p "$PORT" -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" << 'REMOTE_SCRIPT'
+  ssh -p "$PORT" -o StrictHostKeyChecking=no -o PubkeyAuthentication=no "$SERVER_USER@$SERVER_IP" << 'REMOTE_SCRIPT'
 cd public_html
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 node db/initStudentPortalTables.js || true
 node db/initAdsMigration.js || true
 node db/initMeetingTables.js || true
+node db/initQuizTables.js || true
+node db/initPushSubscriptionsTable.js || true
+
 
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
 mkdir -p tmp

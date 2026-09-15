@@ -1,11 +1,52 @@
 const express = require('express');
 const router = express.Router();
 const liveController = require('../controllers/liveController');
+const meetingController = require('../controllers/meetingController');
 
-// ── 0. JaaS Studio Session REST APIs & Meeting Routes ─────────────────────────
-router.get('/studio/meeting/:id', liveController.getLiveClassroom);
-router.get('/student/studio/meeting/:id', liveController.getLiveClassroom);
-router.get('/teacher/studio/meeting/:id', liveController.getLiveClassroom);
+// ── 0. Production Online Meeting Routes (JaaS 8x8.vc) ───────────────────────
+router.get('/meet/:uid', meetingController.getMeetingLobby);
+router.get('/meet/:uid/classroom', meetingController.getMeetingClassroom);
+
+// Production Meeting REST APIs
+router.post('/api/meetings', meetingController.postCreateMeeting);
+router.get('/api/meetings', meetingController.getMeetingsApi);
+router.get('/api/meetings/calendar', meetingController.getCalendarEventsApi);
+router.get('/api/meetings/:uid', meetingController.getMeetingByUid);
+router.post('/api/meetings/:uid/start', meetingController.postStartMeeting);
+router.post('/api/meetings/:uid/end', meetingController.postEndMeeting);
+router.post('/api/meetings/:uid/cancel', meetingController.postCancelMeeting);
+router.delete('/api/meetings/:uid', meetingController.deleteMeeting);
+
+// Participant & Lobby Management APIs
+router.post('/api/meetings/:uid/invite', meetingController.postInviteParticipants);
+router.post('/api/meetings/:uid/join-request', meetingController.postJoinRequest);
+router.post('/api/meetings/:uid/approve/:userId', meetingController.postApproveJoinRequest);
+router.post('/api/meetings/:uid/reject/:userId', meetingController.postRejectJoinRequest);
+
+// Meeting Session, JaaS JWT & Attendance APIs
+router.post('/api/meetings/:uid/join', meetingController.postJoinMeetingApi);
+router.post('/api/meetings/:uid/heartbeat', meetingController.postHeartbeatMeetingApi);
+router.post('/api/meetings/:uid/leave', meetingController.postLeaveMeetingApi);
+
+// ── Legacy JaaS Studio Session REST APIs & Meeting Routes ───────────────────
+router.get('/studio/meeting/:id', (req, res, next) => {
+  if (req.params.id && req.params.id.startsWith('mtg_')) {
+    return res.redirect(`/meet/${req.params.id}`);
+  }
+  return liveController.getLiveClassroom(req, res, next);
+});
+router.get('/student/studio/meeting/:id', (req, res, next) => {
+  if (req.params.id && req.params.id.startsWith('mtg_')) {
+    return res.redirect(`/meet/${req.params.id}`);
+  }
+  return liveController.getLiveClassroom(req, res, next);
+});
+router.get('/teacher/studio/meeting/:id', (req, res, next) => {
+  if (req.params.id && req.params.id.startsWith('mtg_')) {
+    return res.redirect(`/meet/${req.params.id}`);
+  }
+  return liveController.getLiveClassroom(req, res, next);
+});
 
 // JaaS Studio Sessions REST API
 router.get('/api/studio/sessions', liveController.getStudioSessionsApi);

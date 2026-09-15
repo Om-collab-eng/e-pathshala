@@ -1,98 +1,84 @@
-<%- layout("base") %>
-<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Quiz Locked - Librika' %></title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<% contentFor("title") %>Quiz Locked - librika.in
-
-<% contentFor("head") %>
-<style>
+  <style>
     :root {
-        --sp-purple: #5c3cf3;
-        --sp-purple-light: #f0eeff;
-        --sp-white: #ffffff;
-        --sp-bg-light: #f8fafc;
-        --sp-text-dark: #0f172a;
-        --sp-text-muted: #64748b;
-        --error: #ef4444;
+      --primary: #0B5ED7;
+      --indigo: #5B4BDB;
+      --background: #F8FAFC;
+      --surface: #FFFFFF;
+      --text-primary: #111827;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+      --radius-xl: 24px;
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-        background-color: var(--sp-bg-light);
-        font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
     }
-
-    .lk-container {
-        max-width: 600px;
-        margin: 5rem auto;
-        padding: 0 1.5rem;
+    .lock-card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: 48px 36px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-md);
     }
-
-    .lk-card {
-        background: var(--sp-white);
-        border-radius: 28px;
-        padding: 3rem;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.04);
-        text-align: center;
+    .lock-icon {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+      display: inline-block;
     }
-
-    .lk-icon {
-        font-size: 5rem;
-        margin-bottom: 1.5rem;
-        color: var(--sp-purple);
+    .lock-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
     }
-
-    .lk-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-        color: var(--sp-text-dark);
+    .lock-message {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 28px;
     }
-
-    .lk-message {
-        font-size: 1.1rem;
-        color: var(--sp-text-muted);
-        margin-bottom: 2.5rem;
-        line-height: 1.5;
+    .btn-back {
+      background: linear-gradient(135deg, var(--primary), var(--indigo));
+      color: white;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-block;
     }
-
-    .back-btn {
-        background: var(--sp-purple);
-        color: white;
-        border: none;
-        padding: 14px 28px;
-        border-radius: 16px;
-        font-weight: 800;
-        font-size: 1rem;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        transition: opacity 0.2s;
-        box-shadow: 0 8px 16px rgba(92, 60, 243, 0.15);
-    }
-
-    .back-btn:hover {
-        opacity: 0.9;
-    }
-</style>
-<% contentFor("head") %>
-
-<% contentFor("content") %>
-<div class="sp-page">
-  <div class="sp-layout">
-    <%- include('partials/student_sidebar', { active: 'browse' }) %>
-    <div class="sp-main">
-      <%- include('partials/student_topbar', { title: 'Quiz Locked' }) %>
-      <main class="sp-content">
-<div class="lk-container">
-    <div class="lk-card">
-        <div class="lk-icon">🔒</div>
-        <h1 class="lk-title">Quiz is Locked</h1>
-        <p class="lk-message"><%= message %></p>
-        <a href="/student" class="back-btn">Return to Dashboard</a>
-    </div>
-</div>
-
-      </main>
-    </div>
+  </style>
+</head>
+<body>
+  <div class="lock-card">
+    <div class="lock-icon">🔒</div>
+    <h1 class="lock-title">Quiz Locked</h1>
+    <p class="lock-message"><%= message || 'You are not yet eligible to take this quiz. Complete the required reading or return the physical book to unlock.' %></p>
+    <a href="/student?module=learn" class="btn-back">&larr; Back to Learning Hub</a>
   </div>
-</div>
+</body>
+</html>

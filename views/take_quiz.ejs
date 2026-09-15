@@ -1,215 +1,439 @@
-<%- layout("base") %>
-<% block('head').append('<link rel="stylesheet" href="/student.css">') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Take Quiz - Librika' %></title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
-<% contentFor("title") %>Book Quiz: <%= book.title %> - librika.in
-
-<% contentFor("head") %>
-<style>
+  <style>
     :root {
-        --sp-purple: #5c3cf3;
-        --sp-purple-light: #f0eeff;
-        --sp-white: #ffffff;
-        --sp-bg-light: #f8fafc;
-        --sp-text-dark: #0f172a;
-        --sp-text-muted: #64748b;
+      --primary: #0B5ED7;
+      --primary-dark: #084298;
+      --primary-light: #EAF3FF;
+      --indigo: #5B4BDB;
+      --indigo-light: #EEF2FF;
+      --success: #198754;
+      --warning: #F59E0B;
+      --danger: #DC3545;
+      --background: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-sub: #F1F5F9;
+      --text-primary: #111827;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+      --shadow-lg: 0 12px 30px rgba(16, 24, 40, 0.08);
     }
 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-        background-color: var(--sp-bg-light);
-        font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
+    /* Top Sticky Navigation Bar */
+    .qz-navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+    .qz-brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .qz-brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--indigo));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.15rem;
+      box-shadow: 0 4px 12px rgba(11, 94, 215, 0.25);
+    }
+    .qz-brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+    .qz-timer-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-light);
+      border: 1px solid rgba(11, 94, 215, 0.2);
+      color: var(--primary);
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .qz-timer-pill.urgent {
+      background: #FEE2E2;
+      border-color: #F87171;
+      color: var(--danger);
+      animation: pulseAlert 1s infinite alternate;
+    }
+    @keyframes pulseAlert {
+      from { transform: scale(1); }
+      to { transform: scale(1.04); }
+    }
+
+    /* Main Content Layout */
     .qz-container {
-        max-width: 700px;
-        margin: 4rem auto;
-        padding: 0 1.5rem;
+      max-width: 860px;
+      width: 100%;
+      margin: 32px auto;
+      padding: 0 20px 60px 20px;
+      flex: 1;
     }
 
-    .qz-card {
-        background: var(--sp-white);
-        border-radius: 28px;
-        padding: 2.5rem;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.04);
+    .qz-header-card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: 28px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-
-    .qz-header {
-        text-align: center;
-        margin-bottom: 2rem;
+    .qz-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-
-    .qz-badge {
-        background: var(--sp-purple-light);
-        color: var(--sp-purple);
-        padding: 6px 16px;
-        border-radius: 100px;
-        font-weight: 800;
-        font-size: 0.8rem;
-        display: inline-block;
-        margin-bottom: 1rem;
-        text-transform: uppercase;
+    .qz-pill {
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
-
+    .qz-pill.indigo { background: var(--indigo-light); color: var(--indigo); }
+    .qz-pill.blue { background: var(--primary-light); color: var(--primary); }
     .qz-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: var(--sp-text-dark);
-        margin: 0;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      line-height: 1.25;
+    }
+    .qz-desc {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
     }
 
-    .qz-meta {
-        font-size: 0.9rem;
-        color: var(--sp-text-muted);
-        margin-top: 5px;
-        font-weight: 500;
-    }
-
+    /* Question Cards */
     .qz-question-card {
-        margin-bottom: 2.5rem;
-        border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 2rem;
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: 28px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+    .qz-question-card:focus-within {
+      border-color: var(--primary);
+    }
+    .qz-qnum {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .qz-qtext {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      line-height: 1.4;
     }
 
-    .qz-question-card:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .qz-question-text {
-        font-weight: 800;
-        font-size: 1.1rem;
-        color: var(--sp-text-dark);
-        margin-bottom: 1rem;
-        line-height: 1.4;
-    }
-
+    /* Options List */
     .qz-options-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-
     .qz-option-label {
-        background: var(--sp-bg-light);
-        border: 2px solid #e2e8f0;
-        padding: 14px 20px;
-        border-radius: 16px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        color: var(--sp-text-dark);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--surface-sub);
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      transition: all 0.15s ease;
+      user-select: none;
     }
-
     .qz-option-label:hover {
-        border-color: var(--sp-purple);
-        background: var(--sp-purple-light);
+      background: #EAF2FF;
+      border-color: rgba(11, 94, 215, 0.3);
+    }
+    .qz-option-label input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .qz-option-label.selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
     }
 
-    .qz-option-radio {
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border: 2px solid #cbd5e1;
-        border-radius: 50%;
-        outline: none;
-        transition: all 0.2s;
-        position: relative;
-        flex-shrink: 0;
+    /* Bottom Action Bar */
+    .qz-submit-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
     }
-
-    .qz-option-radio:checked {
-        border-color: var(--sp-purple);
-        background: var(--sp-purple);
+    .btn-submit {
+      background: linear-gradient(135deg, var(--primary), var(--indigo));
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: var(--radius-md);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(11, 94, 215, 0.3);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
-
-    .qz-option-radio:checked::after {
-        content: '';
-        position: absolute;
-        top: 4px;
-        left: 4px;
-        width: 8px;
-        height: 8px;
-        background: white;
-        border-radius: 50%;
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(11, 94, 215, 0.4);
     }
-
-    .qz-option-label.checked {
-        border-color: var(--sp-purple);
-        background: var(--sp-purple-light);
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
     }
+  </style>
+</head>
+<body>
 
-    .submit-btn {
-        background: var(--sp-purple);
-        color: white;
-        border: none;
-        width: 100%;
-        padding: 16px;
-        border-radius: 18px;
-        font-weight: 800;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: opacity 0.2s;
-        margin-top: 1.5rem;
-        box-shadow: 0 10px 20px rgba(92, 60, 243, 0.15);
-    }
+  <!-- Top Sticky Navigation -->
+  <header class="qz-navbar">
+    <a href="/student?module=learn" class="qz-brand-wrap">
+      <div class="qz-brand-icon">L</div>
+      <div class="qz-brand-title">Librika Quizzes</div>
+    </a>
+    <div id="quizTimerPill" class="qz-timer-pill">
+      <span>⏱️</span>
+      <span id="timerDisplay">--:--</span>
+    </div>
+  </header>
 
-    .submit-btn:hover {
-        opacity: 0.95;
-    }
-</style>
-<% contentFor("head") %>
-
-<% contentFor("content") %>
-<div class="sp-page">
-  <div class="sp-layout">
-    <%- include('partials/student_sidebar', { active: 'browse' }) %>
-    <div class="sp-main">
-      <%- include('partials/student_topbar', { title: 'Book Quiz' }) %>
-      <main class="sp-content">
-<div class="qz-container">
-    <div class="qz-card">
-        <div class="qz-header">
-            <span class="qz-badge">💡 Comprehension Challenge</span>
-            <h1 class="qz-title"><%= book.title %></h1>
-            <p class="qz-meta">Answer all 5 questions correctly to pass (70% score required to pass).</p>
+  <!-- Main Quiz Container -->
+  <main class="qz-container">
+    <div class="qz-header-card">
+      <div class="qz-meta-row">
+        <span class="qz-pill <%= (quiz.library_type || 'OFFLINE').toUpperCase() === 'OFFLINE' ? 'blue' : 'indigo' %>">
+          <%= quiz.library_type || 'OFFLINE' %> QUIZ
+        </span>
+        <span class="qz-pill blue"><%= quiz.difficulty || 'MEDIUM' %></span>
+        <span style="font-size:0.85rem;color:var(--text-secondary);">
+          Passing: <strong><%= quiz.passing_percentage || 60 %>%</strong> · Time Limit: <strong><%= quiz.time_limit || 15 %> mins</strong>
+        </span>
+      </div>
+      <h1 class="qz-title"><%= quiz.title %></h1>
+      <% if (quiz.book_title || quiz.digital_title) { %>
+        <div style="font-size:0.95rem;color:var(--text-secondary);font-weight:600;">
+          📖 Based on: <em><%= quiz.book_title || quiz.digital_title %></em>
         </div>
+      <% } %>
+      <% if (quiz.description) { %>
+        <p class="qz-desc"><%= quiz.description %></p>
+      <% } %>
+    </div>
 
-        <form method="POST">
-            <% questions.forEach(function(q, qIdx) { %>
-            <div class="qz-question-card">
-                <div class="qz-question-text"><%= (qIdx + 1) %>. <%= q.question %></div>
-                <div class="qz-options-list">
-                    <% q.options.forEach(function(opt, optIdx) { %>
-                    <label class="qz-option-label" onclick="selectOption(this)">
-                        <input type="radio" name="q<%= qIdx %>" value="<%= optIdx %>" class="qz-option-radio" required>
-                        <span><%= opt %></span>
-                    </label>
-                    <% }); %>
-                </div>
+    <!-- Questions Form -->
+    <form id="quizForm">
+      <% if (questions && questions.length > 0) { %>
+        <% questions.forEach((q, idx) => { %>
+          <div class="qz-question-card" data-question-id="<%= q.id %>">
+            <div class="qz-qnum">Question <%= idx + 1 %> of <%= questions.length %> · <%= q.marks || 1 %> Mark</div>
+            <h2 class="qz-qtext"><%= q.question %></h2>
+
+            <div class="qz-options-list">
+              <% if (Array.isArray(q.options)) { %>
+                <% q.options.forEach((opt, oIdx) => { %>
+                  <label class="qz-option-label" onclick="selectOption(this)">
+                    <input type="radio" name="q_<%= q.id %>" value="<%= opt %>" required>
+                    <span><%= opt %></span>
+                  </label>
+                <% }) %>
+              <% } %>
             </div>
-            <% }); %>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="qz-question-card" style="text-align:center;padding:48px;">
+          <p style="color:var(--text-muted);">No questions found for this quiz.</p>
+        </div>
+      <% } %>
 
-            <button type="submit" class="submit-btn">Submit Quiz</button>
-        </form>
-    </div>
-</div>
+      <div class="qz-submit-bar">
+        <a href="/student?module=learn" style="text-decoration:none;color:var(--text-secondary);font-weight:700;font-size:0.95rem;">
+          &larr; Exit Quiz
+        </a>
+        <button type="button" id="submitQuizBtn" class="btn-submit" onclick="submitQuiz()">
+          Submit Quiz Answers &rarr;
+        </button>
+      </div>
+    </form>
+  </main>
 
-<script>
-    function selectOption(label) {
-        // Remove checked class from all labels in this question block
-        const container = label.closest('.qz-options-list');
-        container.querySelectorAll('.qz-option-label').forEach(lbl => lbl.classList.remove('checked'));
-        
-        // Add checked class to current label
-        label.classList.add('checked');
+  <script>
+    const QUIZ_ID = <%= quiz.id %>;
+    const ATTEMPT_ID = <%= attempt.id %>;
+    let secondsLeft = <%= secondsRemaining %>;
+    const totalDurationSeconds = <%= (quiz.time_limit || 15) * 60 %>;
+    const startTime = Date.now();
+    let timerInterval = null;
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
-</script>
 
-      </main>
-    </div>
-  </div>
-</div>
+    function updateTimerDisplay() {
+      const display = document.getElementById('timerDisplay');
+      const pill = document.getElementById('quizTimerPill');
+      if (!display || !pill) return;
+
+      display.textContent = formatTime(secondsLeft);
+
+      if (secondsLeft <= 60) {
+        pill.classList.add('urgent');
+      } else {
+        pill.classList.remove('urgent');
+      }
+
+      if (secondsLeft <= 0) {
+        clearInterval(timerInterval);
+        display.textContent = '00:00';
+        alert('Time is up! Your quiz will now be auto-submitted.');
+        submitQuiz(true);
+      } else {
+        secondsLeft--;
+      }
+    }
+
+    function selectOption(labelElement) {
+      const parent = labelElement.closest('.qz-options-list');
+      if (parent) {
+        parent.querySelectorAll('.qz-option-label').forEach(l => l.classList.remove('selected'));
+      }
+      labelElement.classList.add('selected');
+      const radio = labelElement.querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+    }
+
+    async function submitQuiz(autoSubmitted = false) {
+      const btn = document.getElementById('submitQuizBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Evaluating Answers...';
+      }
+
+      // Gather answers
+      const answers = {};
+      const questionCards = document.querySelectorAll('.qz-question-card[data-question-id]');
+      questionCards.forEach(card => {
+        const qId = card.getAttribute('data-question-id');
+        const checked = card.querySelector('input[type="radio"]:checked');
+        if (checked) {
+          answers[qId] = checked.value;
+        }
+      });
+
+      const timeTaken = Math.round((Date.now() - startTime) / 1000);
+
+      try {
+        const res = await fetch(`/api/quizzes/${QUIZ_ID}/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            attempt_id: ATTEMPT_ID,
+            answers: answers,
+            time_taken_seconds: timeTaken,
+            auto_submitted: autoSubmitted
+          })
+        });
+
+        const data = await res.json();
+        if (data.status === 'success' && data.redirect_url) {
+          window.location.href = data.redirect_url;
+        } else {
+          alert(data.message || 'Quiz submission failed.');
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Submit Quiz Answers →';
+          }
+        }
+      } catch (err) {
+        console.error('Quiz submit error:', err);
+        alert('Submission failed: ' + err.message);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Submit Quiz Answers →';
+        }
+      }
+    }
+
+    // Start timer on page load
+    updateTimerDisplay();
+    timerInterval = setInterval(updateTimerDisplay, 1000);
+  </script>
+</body>
+</html>

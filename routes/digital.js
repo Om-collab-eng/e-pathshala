@@ -644,6 +644,76 @@ router.post('/api/save-progress', loggedIn, async (req, res) => {
       );
     }
 
+    // ── DIGITAL QUIZ ELIGIBILITY & DIGITAL_BOOK_READINGS TRACKING ─────────
+    try {
+      const sCode = req.session.school_code || 'DPS123';
+      const readSeconds = Math.min(Math.max(parseInt(req.body.reading_seconds, 10) || 30, 0), 300); // 30s default heartbeat, capped at 5 mins per ping
+
+      // Find or create digital_book_readings record
+      const dbrRow = (await pool.query(
+        'SELECT * FROM digital_book_readings WHERE student_id = $1 AND content_id = $2',
+        [userId, content_id]
+      )).rows[0];
+
+      let newTotalTime = readSeconds;
+      let newSessions = 1;
+      let currentQuizStatus = 'LOCKED';
+
+      if (dbrRow) {
+        newTotalTime = (parseInt(dbrRow.total_reading_time, 10) || 0) + readSeconds;
+        newSessions = parseInt(dbrRow.reading_sessions, 10) || 1;
+        // If last read was > 30 minutes ago, consider it a new session
+        const lastReadTime = new Date(dbrRow.last_read_at).getTime();
+        if (Date.now() - lastReadTime > 30 * 60 * 1000) {
+          newSessions += 1;
+        }
+        currentQuizStatus = dbrRow.quiz_status || 'LOCKED';
+      }
+
+      const isEligibleNow = (percent >= 80) && (newTotalTime >= 1200); // >= 80% and >= 20 minutes
+      let updatedQuizStatus = currentQuizStatus;
+      let newlyUnlocked = false;
+
+      if (isEligibleNow && currentQuizStatus === 'LOCKED') {
+        updatedQuizStatus = 'ELIGIBLE';
+        newlyUnlocked = true;
+      }
+
+      const readingStatus = percent >= 100 ? 'COMPLETED' : 'READING';
+
+      if (dbrRow) {
+        await pool.query(`
+          UPDATE digital_book_readings
+          SET last_read_at = $1, total_reading_time = $2, pages_read = $3, total_pages = $4,
+              progress_percentage = $5, reading_sessions = $6, reading_status = $7,
+              quiz_status = $8, quiz_eligible_at = CASE WHEN $9 = 1 THEN $1 ELSE quiz_eligible_at END
+          WHERE id = $10
+        `, [now, newTotalTime, page, total_pages, percent, newSessions, readingStatus, updatedQuizStatus, newlyUnlocked ? 1 : 0, dbrRow.id]);
+      } else {
+        await pool.query(`
+          INSERT INTO digital_book_readings
+          (student_id, content_id, school_code, started_at, last_read_at, total_reading_time, pages_read, total_pages, progress_percentage, reading_sessions, reading_status, quiz_status, quiz_eligible_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        `, [userId, content_id, sCode, now, now, newTotalTime, page, total_pages, percent, newSessions, readingStatus, updatedQuizStatus, newlyUnlocked ? now : null]);
+      }
+
+      // If just unlocked, notify student
+      if (newlyUnlocked) {
+        const contentInfo = (await pool.query('SELECT title FROM digital_content WHERE id = $1', [content_id])).rows[0];
+        const contentTitle = contentInfo ? contentInfo.title : 'digital book';
+        await pool.query(`
+          INSERT INTO notifications (user_id, message, type, school_code)
+          VALUES ($1, $2, 'quiz_unlocked', $3)
+        `, [
+          userId,
+          `📖 Great reading! You've unlocked the Digital Quiz for '${contentTitle}'!`,
+          sCode
+        ]).catch(() => {});
+      }
+    } catch (dbrErr) {
+      console.warn('[DIGITAL] digital_book_readings tracking error:', dbrErr.message);
+    }
+
     res.json({ status: 'success' });
   } catch (err) {
     console.error('Save progress error:', err);

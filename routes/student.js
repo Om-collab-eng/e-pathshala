@@ -150,27 +150,36 @@ async function fetchStudentPortalData(userId, sCode) {
   ).catch(() => ({ rows: [] }));
   const elibraryItems = elibRes.rows || [];
 
-  // 6. Live Studio Sessions (Jitsi)
+  // 6. Live Studio Sessions (Production Meetings & Legacy Jitsi)
   const studioRes = await pool.query(
-    `SELECT ss.id, ss.title, ss.description, ss.host_id, ss.host_name, ss.meeting_code, ss.meeting_code as meeting_id,
+    `SELECT m.id, m.uid, m.title, m.description, m.host_user_id as host_id, m.host_name, m.meeting_code, m.meeting_code as meeting_id,
+            m.jaas_room_name, m.scheduled_start, m.scheduled_end, m.duration_minutes, m.status,
+            m.class_name, m.meeting_type as visibility, m.school_code,
+            (SELECT COUNT(*) FROM meeting_sessions ms WHERE ms.meeting_id = m.id AND ms.left_at IS NULL) as attendee_count
+     FROM meetings m
+     WHERE (LOWER(m.school_code) = LOWER($1) OR m.school_code = 'GLOBAL' OR m.school_code = 'DPS123' OR m.school_code IS NULL OR m.school_code = '')
+     UNION ALL
+     SELECT ss.id, '' as uid, ss.title, ss.description, ss.host_id, ss.host_name, ss.meeting_code, ss.meeting_code as meeting_id,
             ss.jaas_room_name, ss.scheduled_start, ss.scheduled_end, ss.duration_minutes, ss.status,
             ss.class_name, ss.visibility, ss.school_code,
             (SELECT COUNT(*) FROM studio_attendance sa WHERE sa.session_id = ss.id) as attendee_count
      FROM studio_sessions ss
      WHERE (LOWER(ss.school_code) = LOWER($1) OR ss.school_code = 'GLOBAL' OR ss.school_code = 'DPS123' OR ss.school_code IS NULL OR ss.school_code = '')
+       AND NOT EXISTS (SELECT 1 FROM meetings m2 WHERE m2.meeting_code = ss.meeting_code OR (m2.jaas_room_name = ss.jaas_room_name AND ss.jaas_room_name IS NOT NULL))
      UNION ALL
-     SELECT ls.id + 100000 as id, ls.title, '' as description, ls.host_user_id as host_id, ls.host_name,
+     SELECT ls.id + 100000 as id, '' as uid, ls.title, '' as description, ls.host_user_id as host_id, ls.host_name,
             ls.meeting_id as meeting_code, ls.meeting_id, ls.meeting_id as jaas_room_name,
             ls.scheduled_start, ls.scheduled_end, ls.duration_minutes, ls.status,
             'All Students' as class_name, 'CLASS' as visibility, ls.school_code,
             0 as attendee_count
      FROM live_sessions ls
      WHERE (LOWER(ls.school_code) = LOWER($1) OR ls.school_code = 'GLOBAL' OR ls.school_code = 'DPS123' OR ls.school_code IS NULL OR ls.school_code = '')
+       AND NOT EXISTS (SELECT 1 FROM meetings m3 WHERE m3.meeting_code = ls.meeting_id OR m3.title = ls.title)
        AND NOT EXISTS (SELECT 1 FROM studio_sessions s2 WHERE s2.meeting_code = ls.meeting_id OR s2.title = ls.title)
      ORDER BY scheduled_start ASC`,
     [sCode]
   ).catch(async () => {
-    return await pool.query(`SELECT * FROM studio_sessions ORDER BY id DESC LIMIT 30`).catch(() => ({ rows: [] }));
+    return await pool.query(`SELECT *, '' as uid FROM studio_sessions ORDER BY id DESC LIMIT 30`).catch(() => ({ rows: [] }));
   });
   const studioSessions = studioRes.rows || [];
 

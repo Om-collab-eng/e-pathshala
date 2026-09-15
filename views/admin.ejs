@@ -1012,10 +1012,10 @@
                         </td>
                         <td>
                           <div style="display:flex;gap:6px;align-items:center;">
-                            <a href="/studio/meeting/<%= s.id || mCode %>" target="_blank" class="btn-primary" style="padding:5px 10px;font-size:0.78rem;text-decoration:none;">
+                            <a href="<%= (s.uid ? '/meet/' + s.uid : '/studio/meeting/' + (s.id || mCode)) %>" target="_blank" class="btn-primary" style="padding:5px 10px;font-size:0.78rem;text-decoration:none;">
                               🚀 Launch Room
                             </a>
-                            <button class="btn-secondary" onclick="copyStudioLink('<%= mCode %>', '<%= s.id %>')" style="padding:5px 10px;font-size:0.78rem;" title="Copy Invite Link">
+                            <button class="btn-secondary" onclick="copyStudioLink('<%= mCode %>', '<%= s.id %>', '<%= s.uid || '' %>')" style="padding:5px 10px;font-size:0.78rem;" title="Copy Invite Link">
                               📋 Copy Link
                             </button>
                             <button class="btn-secondary" onclick="deleteStudioMeeting('<%= s.id %>')" style="padding:5px 8px;font-size:0.78rem;color:#ef4444;" title="Cancel Session">
@@ -1069,10 +1069,10 @@
                         </td>
                         <td>
                           <div style="display:flex;gap:6px;align-items:center;">
-                            <a href="/studio/meeting/<%= s.id || mCode %>" target="_blank" class="btn-primary" style="padding:5px 10px;font-size:0.78rem;background:#ef4444;border-color:#ef4444;text-decoration:none;">
+                            <a href="<%= (s.uid ? '/meet/' + s.uid : '/studio/meeting/' + (s.id || mCode)) %>" target="_blank" class="btn-primary" style="padding:5px 10px;font-size:0.78rem;background:#ef4444;border-color:#ef4444;text-decoration:none;">
                               🔴 Join as Host
                             </a>
-                            <button class="btn-secondary" onclick="copyStudioLink('<%= mCode %>', '<%= s.id %>')" style="padding:5px 10px;font-size:0.78rem;">
+                            <button class="btn-secondary" onclick="copyStudioLink('<%= mCode %>', '<%= s.id %>', '<%= s.uid || '' %>')" style="padding:5px 10px;font-size:0.78rem;">
                               📋 Copy Link
                             </button>
                             <button class="btn-secondary" onclick="endStudioMeeting('<%= s.id %>')" style="padding:5px 10px;font-size:0.78rem;color:#ef4444;" title="End Meeting for all">
@@ -1888,12 +1888,12 @@
       if (btn) btn.classList.add('active');
     }
 
-    function copyStudioLink(mCode, mId) {
-      const roomSlug = mId || mCode;
-      const url = `${window.location.origin}/studio/meeting/${encodeURIComponent(roomSlug)}`;
+    function copyStudioLink(mCode, mId, mUid) {
+      const roomSlug = mUid ? `meet/${mUid}` : (mId && String(mId).startsWith('mtg_') ? `meet/${mId}` : `studio/meeting/${encodeURIComponent(mId || mCode)}`);
+      const url = `${window.location.origin}/${roomSlug}`;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
-          alert(`📋 Join link copied to clipboard!\n\nLink: ${url}\nMeeting Code: ${mCode}`);
+          alert(`📋 Meeting invite link copied to clipboard!\n\nLink: ${url}\nMeeting Code: ${mCode}`);
         }).catch(() => {
           prompt('Copy this meeting link:', url);
         });
@@ -1948,7 +1948,7 @@
       }
 
       try {
-        const res = await fetch('/api/studio/sessions', {
+        const res = await fetch('/api/meetings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1956,13 +1956,15 @@
             className,
             scheduledStart,
             durationMinutes,
-            description
+            description,
+            meetingType: 'CLASS',
+            sessionType: 'CLASS'
           })
         });
         const data = await res.json();
         if (data.success) {
-          const m = data.session || data.meeting;
-          alert(`✅ Meeting scheduled successfully!\n\nMeeting Code: ${m.meetingCode}\nHost: ${m.hostName}`);
+          const m = data.meeting;
+          alert(`✅ Meeting scheduled successfully!\n\nMeeting Code: ${m.meetingCode}\nShare Link: ${m.shareUrl || '/meet/' + m.uid}`);
           closeModal('scheduleStudioModal');
           window.location.href = '/admin?module=studio';
         } else {

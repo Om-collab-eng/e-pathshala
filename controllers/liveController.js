@@ -715,7 +715,21 @@ exports.postJaasWebhook = async (req, res) => {
     if (event.event_type === 'ROOM_DESTROYED') {
       const roomName = event.room_name;
       if (roomName) {
+        await query(`UPDATE meetings SET status = 'ENDED', actual_end = CURRENT_TIMESTAMP WHERE jaas_room_name = $1 OR meeting_code = $1`, [roomName]).catch(() => {});
         await query(`UPDATE studio_sessions SET status = 'COMPLETED', scheduled_end = CURRENT_TIMESTAMP WHERE jaas_room_name = $1 OR meeting_code = $1`, [roomName]).catch(() => {});
+      }
+    } else if (event.event_type === 'RECORDING_UPLOADED') {
+      const roomName = event.room_name;
+      const downloadUrl = event.data && (event.data.download_url || event.data.url);
+      if (roomName && downloadUrl) {
+        const mRes = await query(`SELECT id, uid FROM meetings WHERE jaas_room_name = $1 OR meeting_code = $1`, [roomName]).catch(() => ({ rows: [] }));
+        if (mRes.rows && mRes.rows[0]) {
+          await query(
+            `INSERT INTO meeting_recordings (meeting_id, meeting_uid, recording_url, duration_seconds, file_size_bytes, status)
+             VALUES ($1, $2, $3, $4, $5, 'ready')`,
+            [mRes.rows[0].id, mRes.rows[0].uid, downloadUrl, event.data.duration || 0, event.data.size || 0]
+          ).catch(() => {});
+        }
       }
     }
 
@@ -1159,21 +1173,33 @@ exports.getLiveClassroom = async (req, res) => {
       }
     }
 
-    // 3. Fallback for newly initiated or ad-hoc sessions
+    // 3. Check meetings table
+    if (!session && rawMeetingId) {
+      const mtgRes = await query(
+        `SELECT * FROM meetings WHERE uid = $1 OR meeting_code = $1 OR CAST(id AS CHAR) = $1`,
+        [rawMeetingId]
+      ).catch(() => ({ rows: [] }));
+      if (mtgRes.rows && mtgRes.rows.length > 0) {
+        return res.redirect(`/meet/${mtgRes.rows[0].uid}/classroom`);
+      }
+    }
+
+    // 4. If session not found, return 404 Not Found (Security fix: never create ad-hoc rooms for arbitrary IDs)
     if (!session) {
-      const isNum = !isNaN(rawMeetingId);
-      const safeRoom = jaasService.generateJaasRoomName(rawMeetingId || 1);
-      const safeCode = rawMeetingId.startsWith('LIB-') ? rawMeetingId : `LIB-${(rawMeetingId || 'DEMO').toUpperCase()}`;
-      session = {
-        id: isNum ? parseInt(rawMeetingId, 10) : 1,
-        meeting_id: safeCode,
-        meeting_code: safeCode,
-        jaas_room_name: safeRoom,
-        title: rawMeetingId ? `Live Class: ${rawMeetingId}` : 'Interactive Live Studio Masterclass',
-        host_name: 'Faculty Instructor',
-        course_title: 'Librika Live Studio',
-        status: 'LIVE'
-      };
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Classroom Not Found - Librika</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"></script></head>
+        <body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-6">
+          <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md w-full text-center">
+            <div class="w-16 h-16 bg-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl font-bold">✕</div>
+            <h1 class="text-xl font-bold mb-2">Classroom Not Found</h1>
+            <p class="text-slate-400 text-sm mb-6">The requested live session does not exist or has been removed.</p>
+            <a href="/student/live-classes" class="inline-block px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-medium text-sm transition">Back to Live Classes</a>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     // Ensure session has jaas_room_name

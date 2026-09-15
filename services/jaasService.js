@@ -117,7 +117,7 @@ function formatFullJaasRoom(appId, roomName) {
 }
 
 /**
- * Verifies if a user is authorized to join a specific studio session
+ * Verifies if a user is authorized to join a specific studio session or meeting
  */
 function canJoinStudioSession(user, session) {
   const userId = user && (user.id || user.user_id);
@@ -126,11 +126,15 @@ function canJoinStudioSession(user, session) {
   }
 
   if (!session) {
-    return { allowed: false, reason: 'Live session not found.' };
+    return { allowed: false, reason: 'Meeting or live session not found.' };
   }
 
-  if (session.status === 'CANCELLED') {
+  const status = (session.status || '').toUpperCase();
+  if (status === 'CANCELLED') {
     return { allowed: false, reason: 'This live session has been cancelled.' };
+  }
+  if (status === 'ENDED' || status === 'COMPLETED') {
+    return { allowed: false, reason: 'This meeting has already ended.' };
   }
 
   const role = String((user && user.role) || '').toLowerCase();
@@ -140,9 +144,11 @@ function canJoinStudioSession(user, session) {
     return { allowed: true };
   }
 
+  const hostId = session.host_user_id || session.host_id;
+
   // Teachers / Instructors can join their own or school classes
   if (role === 'teacher' || role === 'instructor') {
-    if (session.host_id && Number(session.host_id) === Number(userId)) {
+    if (hostId && Number(hostId) === Number(userId)) {
       return { allowed: true };
     }
     const userSchool = (user.school_code || '').toUpperCase();
@@ -185,6 +191,8 @@ function canJoinStudioSession(user, session) {
   return { allowed: true };
 }
 
+const canJoinMeeting = canJoinStudioSession;
+
 /**
  * Determines whether a user should be granted JaaS moderator permissions
  * Security rule: Students can NEVER receive moderator status.
@@ -194,8 +202,10 @@ function isSessionModerator(user, session) {
   if (!userId) return false;
   const role = String((user && user.role) || '').toLowerCase();
 
+  const hostId = session && (session.host_user_id || session.host_id);
+
   // Explicit host is always moderator
-  if (session && session.host_id && Number(session.host_id) === Number(userId)) {
+  if (hostId && Number(hostId) === Number(userId)) {
     return true;
   }
 
@@ -207,6 +217,8 @@ function isSessionModerator(user, session) {
   // Student accounts NEVER receive moderator privileges
   return false;
 }
+
+const isMeetingModerator = isSessionModerator;
 
 
 /**
@@ -290,6 +302,8 @@ module.exports = {
   generateJaasRoomName,
   formatFullJaasRoom,
   canJoinStudioSession,
+  canJoinMeeting,
   isSessionModerator,
+  isMeetingModerator,
   generateParticipantToken
 };

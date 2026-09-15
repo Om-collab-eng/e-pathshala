@@ -19,6 +19,11 @@ const server = http.createServer(app);
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5001;
 
+// Initialize Live Socket.IO engine and attach to app for multi-device broadcasts
+const io = initLiveSocket(server, db);
+app.set('io', io);
+
+
 const usePostgres = !!process.env.DATABASE_URL && process.env.USE_SQLITE !== '1';
 
 let pool;
@@ -46,8 +51,17 @@ app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use('/static', express.static(path.join(__dirname, 'static'), { index: false }));
 app.use('/uploads', express.static(path.join(__dirname, 'static', 'uploads'), { index: false }));
 app.use('/digital_content', express.static(path.join(__dirname, 'static', 'digital_content'), { index: false }));
+
+// Root Service Worker route with root scope authorization for Web Push
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.sendFile(path.join(__dirname, 'static', 'sw.js'));
+});
+
 app.use(express.json({ limit: '35mb' }));
 app.use(express.urlencoded({ extended: true, limit: '35mb' }));
+
 app.use(expressLayouts);
 
 
@@ -360,6 +374,14 @@ app.use('/', liveRoutes);
 const { initLiveTables } = require('./db/initLiveTables');
 initLiveTables().catch(err => console.warn('[LIVE STUDIO] Init warning:', err.message));
 
+// Initialize Meeting System Tables (JaaS Production System)
+const { initMeetingTables } = require('./db/initMeetingTables');
+initMeetingTables().catch(err => console.warn('[MEETINGS] Init warning:', err.message));
+
+// Initialize Book-Based Quiz System Tables
+const { initQuizTables } = require('./db/initQuizTables');
+initQuizTables().catch(err => console.warn('[QUIZ] Init warning:', err.message));
+
 // Initialize Librarian Relational Tables
 const { initLibrarianTables } = require('./db/initLibrarianTables');
 initLibrarianTables().catch(err => console.warn('[LIBRARIAN] Init warning:', err.message));
@@ -376,7 +398,11 @@ app.use('/requests', (req, res) => res.redirect('/admin/requests'));
 app.use('/e-library', (req, res) => res.redirect('/admin/e-library'));
 app.use('/analytics', (req, res) => res.redirect('/admin/analytics'));
 app.use('/settings', (req, res) => res.redirect('/admin/settings'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+
 app.use('/api', require('./routes/apiRoutes'));
+
+
 
 // Data Hub routes (Import / Export)
 app.use('/data', require('./routes/dataRoutes'));
@@ -395,6 +421,9 @@ const digitalRoutes = require('./routes/digital');
 app.use('/digital-library', digitalRoutes);
 app.use('/author', digitalRoutes);
 app.use('/leaderboard', digitalRoutes);
+
+// Book-Based Quiz System routes (Student & Admin)
+app.use('/', require('./routes/quizRoutes'));
 
 // Public Advertisement & E-Library Ticker API Endpoints
 const handleGetAdvertisements = async (req, res) => {
@@ -518,12 +547,11 @@ app.use((err, req, res, next) => {
   }
 });
 
-// ── Server Startup & WebRTC Signaling ─────────────────────────────
-initLiveSocket(server, db);
-
+// ── Server Startup ────────────────────────────────────────────────
 server.listen(PORT, () => {
   console.log(`Librika server & Live Meeting WebRTC engine running on http://localhost:${PORT}`);
   startJobs();
 });
+
 
 module.exports = { app, server };

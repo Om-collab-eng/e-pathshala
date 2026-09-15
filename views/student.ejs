@@ -1264,7 +1264,7 @@
                       ⏰ <%= renderDate(nextSession.scheduled_start) %> (<%= nextSession.duration_minutes || 60 %> mins)
                     </div>
 
-                    <a href="/studio/meeting/<%= nextSession.id || nextSession.meeting_code || nextSession.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
+                    <a href="<%= (nextSession.uid ? '/meet/' + nextSession.uid : '/studio/meeting/' + (nextSession.id || nextSession.meeting_code || nextSession.meeting_id)) %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
                       <%= isLive ? '🔴 JOIN LIVE CLASS NOW' : '🚀 Join Meeting Room' %>
                     </a>
                   </div>
@@ -1792,11 +1792,11 @@
                     </div>
 
                     <% if (isPast) { %>
-                      <a href="/studio/meeting/<%= s.id || s.meeting_code || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;background:#4B5563;border-color:#4B5563;">
+                      <a href="<%= (s.uid ? '/meet/' + s.uid : '/studio/meeting/' + (s.id || s.meeting_code || s.meeting_id)) %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;background:#4B5563;border-color:#4B5563;">
                         📼 View Session Archive
                       </a>
                     <% } else { %>
-                      <a href="/studio/meeting/<%= s.id || s.meeting_code || s.meeting_id %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
+                      <a href="<%= (s.uid ? '/meet/' + s.uid : '/studio/meeting/' + (s.id || s.meeting_code || s.meeting_id)) %>" target="_blank" class="btn-primary" style="width:100%;justify-content:center;<%= isLive ? 'background:#DC2626;border-color:#DC2626;' : '' %>">
                         <%= isLive ? '🔴 JOIN LIVE CLASS NOW' : '🚀 Launch Classroom' %>
                       </a>
                     <% } %>
@@ -1825,23 +1825,37 @@
             </button>
           </div>
 
-          <!-- Tab 1: Quizzes -->
+          <!-- Tab 1: Quizzes Partitioned into Offline & Digital -->
           <div id="learn-tab-quizzes" class="learn-tab-pane">
-            <div class="sp-grid-3">
-              <% quizzes.forEach(q => { %>
-                <div class="sp-card" style="margin-bottom:0;">
-                  <span class="sp-pill indigo" style="margin-bottom:8px;"><%= q.subject || 'General' %></span>
-                  <h4 style="margin:0 0 6px 0;font-size:1rem;font-weight:800;"><%= q.title %></h4>
-                  <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px 0;"><%= q.description %></p>
-                  <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px;">
-                    ⏱️ <%= q.duration_minutes || 15 %> Minutes · 🏆 <%= q.total_marks || 10 %> Marks
-                  </div>
-                  <button class="btn-primary" style="width:100%;justify-content:center;" onclick="openQuizModal('<%= q.id %>', '<%= q.title %>')">
-                    <%= q.my_status === 'COMPLETED' ? 'Retake Quiz' : 'Start Quiz' %>
-                  </button>
-                </div>
-              <% }) %>
+            
+            <!-- Sub-tabs: Offline vs Digital Quizzes -->
+            <div style="display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;">
+              <button id="subtab-btn-offline" class="sp-tab-btn active" style="padding:8px 16px;font-size:0.88rem;" onclick="switchQuizSubTab('offline', this)">
+                📚 Offline Book Quizzes
+              </button>
+              <button id="subtab-btn-digital" class="sp-tab-btn" style="padding:8px 16px;font-size:0.88rem;" onclick="switchQuizSubTab('digital', this)">
+                📱 Digital Library Quizzes
+              </button>
             </div>
+
+            <!-- Offline Quizzes Pane -->
+            <div id="quiz-subpane-offline">
+              <div id="offlineQuizGrid" class="sp-grid-3">
+                <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:36px;color:var(--text-muted);">
+                  Loading Offline Book Quizzes...
+                </div>
+              </div>
+            </div>
+
+            <!-- Digital Quizzes Pane -->
+            <div id="quiz-subpane-digital" style="display:none;">
+              <div id="digitalQuizGrid" class="sp-grid-3">
+                <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:36px;color:var(--text-muted);">
+                  Loading Digital Library Quizzes...
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <!-- Tab 2: Assignments -->
@@ -2469,27 +2483,98 @@
       }
     }
 
-    function openQuizModal(quizId, title) {
-      document.getElementById('activeQuizId').value = quizId;
-      document.getElementById('quizModalTitle').textContent = '🎯 ' + title;
-      openModal('quizAttemptModal');
+    function switchQuizSubTab(tab, btn) {
+      document.querySelectorAll('#learn-tab-quizzes .sp-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const offPane = document.getElementById('quiz-subpane-offline');
+      const digPane = document.getElementById('quiz-subpane-digital');
+      if (tab === 'offline') {
+        if (offPane) offPane.style.display = 'block';
+        if (digPane) digPane.style.display = 'none';
+      } else {
+        if (offPane) offPane.style.display = 'none';
+        if (digPane) digPane.style.display = 'block';
+      }
     }
 
-    async function submitQuizAttempt() {
-      const quizId = document.getElementById('activeQuizId').value;
+    async function loadStudentQuizzes() {
       try {
-        const res = await fetch(`/student/learn/quiz/${quizId}/attempt`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers: {} })
-        });
+        const res = await fetch('/api/quizzes/student');
         const data = await res.json();
-        alert(data.message || 'Quiz completed!');
-        closeModal('quizAttemptModal');
-        window.location.reload();
-      } catch (e) {
-        alert('Error: ' + e.message);
+        if (data.status !== 'success') return;
+
+        const offGrid = document.getElementById('offlineQuizGrid');
+        const digGrid = document.getElementById('digitalQuizGrid');
+
+        const renderQuizCards = (list, isOffline) => {
+          if (!list || list.length === 0) {
+            return `
+              <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:48px;">
+                <span style="font-size:2.5rem;display:block;margin-bottom:8px;">${isOffline ? '📚' : '📱'}</span>
+                <h4 style="margin:0 0 6px 0;font-size:1.1rem;font-weight:800;">No Quizzes Available</h4>
+                <p style="margin:0;font-size:0.88rem;color:var(--text-secondary);">
+                  ${isOffline ? 'Borrow physical books from the library to unlock comprehension quizzes!' : 'Read e-books and PDFs in the E-Library to unlock digital quizzes!'}
+                </p>
+              </div>
+            `;
+          }
+
+          return list.map(q => {
+            let statusPill = '';
+            let actionBtn = '';
+
+            if (q.card_status === 'PASSED') {
+              statusPill = `<span class="sp-pill green" style="margin-bottom:8px;">🎉 Passed (${q.best_score}%)</span>`;
+              actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;display:block;">Review / Retake</a>`;
+            } else if (q.card_status === 'IN_PROGRESS') {
+              statusPill = `<span class="sp-pill yellow" style="margin-bottom:8px;">⏳ In Progress</span>`;
+              actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-primary" style="width:100%;text-align:center;text-decoration:none;display:block;">Resume Quiz &rarr;</a>`;
+            } else if (q.card_status === 'AVAILABLE') {
+              statusPill = `<span class="sp-pill indigo" style="margin-bottom:8px;">✨ Available</span>`;
+              actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-primary" style="width:100%;text-align:center;text-decoration:none;display:block;">Start Quiz &rarr;</a>`;
+            } else if (q.card_status === 'MAX_ATTEMPTS_REACHED') {
+              statusPill = `<span class="sp-pill red" style="margin-bottom:8px;">⛔ Max Attempts Used</span>`;
+              actionBtn = `<button class="btn-secondary" style="width:100%;opacity:0.6;cursor:not-allowed;" disabled>No Attempts Left</button>`;
+            } else {
+              statusPill = `<span class="sp-pill red" style="margin-bottom:8px;">🔒 Locked</span>`;
+              actionBtn = `<button class="btn-secondary" style="width:100%;opacity:0.6;cursor:not-allowed;" title="${q.lock_reason || 'Locked'}" disabled>🔒 Locked</button>`;
+            }
+
+            return `
+              <div class="sp-card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  ${statusPill}
+                  <h4 style="margin:0 0 6px 0;font-size:1.05rem;font-weight:800;line-height:1.3;">${q.title}</h4>
+                  <div style="font-size:0.82rem;color:var(--text-secondary);font-weight:600;margin-bottom:8px;">
+                    📖 ${q.book_title || 'Book Quiz'}
+                  </div>
+                  ${q.card_status === 'LOCKED' ? `
+                    <div style="font-size:0.75rem;color:#b91c1c;background:#fee2e2;padding:6px 10px;border-radius:8px;margin-bottom:12px;line-height:1.4;">
+                      ℹ️ ${q.lock_reason}
+                    </div>
+                  ` : `
+                    <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:14px;">
+                      ⏱️ ${q.time_limit} Mins · 🏆 Pass: ${q.passing_percentage}% · 🔄 ${q.attempts_remaining} attempts left
+                    </div>
+                  `}
+                </div>
+                <div>
+                  ${actionBtn}
+                </div>
+              </div>
+            `;
+          }).join('');
+        };
+
+        if (offGrid) offGrid.innerHTML = renderQuizCards(data.offlineQuizzes, true);
+        if (digGrid) digGrid.innerHTML = renderQuizCards(data.digitalQuizzes, false);
+      } catch (err) {
+        console.warn('Load quizzes error:', err);
       }
+    }
+
+    function openQuizModal(quizId, title) {
+      window.location.href = `/quizzes/${quizId}/take`;
     }
 
     async function handleProfileUpdate(e) {
@@ -2724,6 +2809,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       loadElibraryTicker();
+      loadStudentQuizzes();
     });
   </script>
 

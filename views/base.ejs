@@ -944,8 +944,290 @@ For searching books: {"type": "search_book", "query": "..."}
     </script>
     <%- defineContent('scripts') %>
 
+    <!-- Socket.IO Client for Real-Time Multi-Device Sync -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Cross-Device Real-Time & Web Push Notification Engine -->
     <script>
-        // Real-time Top-Down Notification Pop-Up Poller (1-Second Fast Poll)
+    (function() {
+        const CURRENT_USER_ID = <%= (session && (session.user_id || session.id)) ? (session.user_id || session.id) : 0 %>;
+        const SCHOOL_CODE = '<%= (session && session.school_code) ? session.school_code : "GLOBAL" %>';
+
+        // 1. Synthetic Web Audio API Chime (Pleasant 2-tone chime)
+        function playNotificationChime() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+                const now = ctx.currentTime;
+                
+                // First Tone (High clean sine wave)
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(880, now); // A5
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.35);
+
+                // Second Tone (Higher harmonious bell tone)
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1174.66, now + 0.12); // D6
+                gain2.gain.setValueAtTime(0.25, now + 0.12);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(now + 0.12);
+                osc2.stop(now + 0.6);
+            } catch (e) {
+                // Silently ignore if browser blocks un-interacted audio
+            }
+        }
+        window.playNotificationChime = playNotificationChime;
+
+        // Helper: Convert URL-safe base64 to Uint8Array for VAPID key
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        let swRegistration = null;
+
+        // 2. Initialize Service Worker & Web Push Subscription
+        async function initWebPush() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                console.log('[Push] Service Worker or Push not supported on this browser.');
+                return;
+            }
+
+            try {
+                swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                console.log('[Push] Service Worker registered with scope:', swRegistration.scope);
+
+                // Check if user is logged in
+                if (!CURRENT_USER_ID) return;
+
+                // Check notification permission
+                if (Notification.permission === 'granted') {
+                    await subscribeUserToPush();
+                } else if (Notification.permission === 'default') {
+                    // Show a non-intrusive prompt banner to enable notifications on this device
+                    showPushEnablePrompt();
+                }
+            } catch (err) {
+                console.warn('[Push] Service Worker registration failed:', err.message);
+            }
+        }
+
+        async function subscribeUserToPush() {
+            if (!swRegistration) return;
+            try {
+                // Get VAPID public key from backend
+                const keyRes = await fetch('/api/notifications/vapid-public-key');
+                const keyData = await keyRes.json();
+                if (!keyData || !keyData.publicKey) return;
+
+                const applicationServerKey = urlBase64ToUint8Array(keyData.publicKey);
+                let subscription = await swRegistration.pushManager.getSubscription();
+
+                if (!subscription) {
+                    subscription = await swRegistration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey
+                    });
+                }
+
+                // Detect device type (phone, tablet, laptop/desktop)
+                let deviceType = 'desktop_laptop';
+                const ua = navigator.userAgent || '';
+                if (/iPad|tablet|android(?!.*mobile)/i.test(ua)) {
+                    deviceType = 'tablet';
+                } else if (/Mobi|Android|iPhone|iPod/i.test(ua)) {
+                    deviceType = 'mobile_phone';
+                }
+
+                // Send subscription to server
+                await fetch('/api/notifications/push-subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subscription,
+                        deviceType,
+                        userAgent: ua
+                    })
+                });
+
+                console.log(`[Push] Device registered (${deviceType}) for user ${CURRENT_USER_ID}`);
+                hidePushEnablePrompt();
+            } catch (e) {
+                console.warn('[Push] Subscription failed:', e.message);
+            }
+        }
+
+        window.enableDevicePushNotifications = async function() {
+            if (!('Notification' in window)) {
+                alert('Notifications are not supported in this browser.');
+                return;
+            }
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    await subscribeUserToPush();
+                    playNotificationChime();
+                    showToast('Device notifications enabled successfully!', 'success', '🔔 Notifications Active');
+                    
+                    // Show a local test notification
+                    if (swRegistration && swRegistration.showNotification) {
+                        swRegistration.showNotification('🔔 Librika Notifications Active', {
+                            body: 'You will now receive instant alerts on this device.',
+                            icon: '/logo.png',
+                            badge: '/favicon-32x32.png'
+                        });
+                    } else {
+                        new Notification('🔔 Librika Notifications Active', {
+                            body: 'You will now receive instant alerts on this device.',
+                            icon: '/logo.png'
+                        });
+                    }
+                } else {
+                    showToast('Notification permission was blocked in browser settings.', 'warning', '⚠️ Blocked');
+                }
+            } catch (err) {
+                console.error('Error enabling notifications:', err);
+            }
+        };
+
+        function showPushEnablePrompt() {
+            if (sessionStorage.getItem('librika_notif_prompt_dismissed') || !CURRENT_USER_ID) return;
+            if (document.getElementById('librika-push-banner')) return;
+
+            const banner = document.createElement('div');
+            banner.id = 'librika-push-banner';
+            banner.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; z-index: 999999;
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                color: #ffffff; border: 1px solid rgba(255,255,255,0.15);
+                border-radius: 16px; padding: 14px 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+                display: flex; align-items: center; gap: 14px; max-width: 360px;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            `;
+            banner.innerHTML = `
+                <div style="font-size: 1.6rem; flex-shrink: 0;">🔔</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 2px;">Enable Device Alerts</div>
+                    <div style="font-size: 0.76rem; color: #94a3b8; line-height: 1.3;">Get meeting, test & book updates instantly on your phone or laptop.</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <button onclick="window.enableDevicePushNotifications()" style="background: #2563eb; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Enable</button>
+                    <button onclick="dismissPushPrompt()" style="background: transparent; color: #64748b; border: none; padding: 2px; font-size: 0.7rem; cursor: pointer;">Later</button>
+                </div>
+            `;
+            document.body.appendChild(banner);
+        }
+
+        window.dismissPushPrompt = function() {
+            sessionStorage.setItem('librika_notif_prompt_dismissed', 'true');
+            hidePushEnablePrompt();
+        };
+
+        function hidePushEnablePrompt() {
+            const b = document.getElementById('librika-push-banner');
+            if (b) b.remove();
+        }
+
+        // 3. Socket.IO Real-Time Notification Receiver
+        let socket = null;
+        function initRealtimeSocket() {
+            if (typeof io === 'undefined') return;
+            try {
+                socket = io();
+                if (CURRENT_USER_ID) {
+                    socket.emit('register-user-notifications', {
+                        userId: CURRENT_USER_ID,
+                        schoolCode: SCHOOL_CODE
+                    });
+                }
+
+                socket.on('new-notification', (notif) => {
+                    console.log('⚡ Real-time notification received via Socket.IO:', notif);
+                    
+                    // 1. Play audio chime
+                    playNotificationChime();
+
+                    // 2. Show in-app animated toast
+                    showToast(notif.message, notif.type || 'info', notif.title || '🔔 Notification');
+
+                    // 3. Increment badges across portal
+                    document.querySelectorAll('.sp-notif-count, .st-notif-badge, .sp-badge-dot, .ld-notif-badge').forEach(b => {
+                        let cur = parseInt(b.textContent.trim(), 10) || 0;
+                        cur += 1;
+                        b.textContent = cur > 99 ? '99+' : cur;
+                        b.style.display = 'inline-flex';
+                    });
+
+                    // 4. Trigger system notification if window/tab is in background
+                    if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+                        if (swRegistration && swRegistration.showNotification) {
+                            swRegistration.showNotification(notif.title || 'Librika Alert', {
+                                body: notif.message,
+                                icon: '/logo.png',
+                                badge: '/favicon-32x32.png',
+                                data: { url: notif.url || '/student' }
+                            });
+                        } else {
+                            new Notification(notif.title || 'Librika Alert', {
+                                body: notif.message,
+                                icon: '/logo.png'
+                            });
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn('[Socket] Realtime notification init note:', e.message);
+            }
+        }
+
+        // 4. Test Notification Trigger (For User Verification)
+        window.testDeviceNotifications = async function() {
+            try {
+                const res = await fetch('/api/notifications/test', { method: 'POST' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showToast(data.message, 'success', '🚀 Test Triggered');
+                } else {
+                    showToast(data.message || 'Error triggering test', 'error', '⚠️ Error');
+                }
+            } catch (e) {
+                showToast('Failed to trigger test notification: ' + e.message, 'error', '⚠️ Error');
+            }
+        };
+
+        // Bootstrap on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initWebPush();
+            initRealtimeSocket();
+        });
+    })();
+    </script>
+
+    <script>
+        // Real-time Top-Down Notification Pop-Up Poller (Fallback Sync)
+
         let lastNotifId = 0;
         let isPollingNotifs = false;
 

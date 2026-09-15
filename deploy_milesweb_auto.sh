@@ -19,11 +19,11 @@ zip -q -r "$ZIP_PATH" . -x "*node_modules/*" "*venv/*" "*my_mac_env/*" "android/
 
 # Step 2: SCP upload
 echo "[2/3] Uploading package to MilesWeb ($SERVER_IP)..."
-sshpass -p "$PASS" scp -P "$PORT" -o StrictHostKeyChecking=no "$ZIP_PATH" "$SERVER_USER@$SERVER_IP:$REMOTE_PATH/"
+sshpass -p "$PASS" scp -P "$PORT" -o StrictHostKeyChecking=no -o PubkeyAuthentication=no "$ZIP_PATH" "$SERVER_USER@$SERVER_IP:$REMOTE_PATH/"
 
 # Step 3: Unzip and restart on server
 echo "[3/3] Extracting files and restarting service..."
-sshpass -p "$PASS" ssh -p "$PORT" -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" << 'EOF'
+sshpass -p "$PASS" ssh -p "$PORT" -o StrictHostKeyChecking=no -o PubkeyAuthentication=no "$SERVER_USER@$SERVER_IP" << 'EOF'
 cd public_html
 unzip -o librika_upload.zip
 rm -f librika_upload.zip
@@ -38,6 +38,11 @@ npm install --silent || true
 # Run DB schema sync
 node db/initStudentPortalTables.js || true
 node db/initAdsMigration.js || true
+node db/initMeetingTables.js || true
+node db/migrateMeetingData.js || true
+node db/initQuizTables.js || true
+node db/initPushSubscriptionsTable.js || true
+
 
 # Kill running node instance so supervisor cleanly restarts server
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true

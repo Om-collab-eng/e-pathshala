@@ -425,18 +425,26 @@
     });
 
     // Auto-Save Reading Progress
+    // Auto-Save Reading Progress with Active Time Tracking
     let saveTimeout = null;
-    function saveProgress(page) {
+    let lastSaveTime = Date.now();
+
+    function saveProgress(page, overrideSeconds = null) {
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(async () => {
         try {
+          const now = Date.now();
+          const elapsedSeconds = overrideSeconds !== null ? overrideSeconds : Math.round((now - lastSaveTime) / 1000);
+          lastSaveTime = now;
+
           await fetch('/digital-library/api/save-progress', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               content_id: contentId,
               page: page,
-              total_pages: pdfDoc ? pdfDoc.numPages : 1
+              total_pages: pdfDoc ? pdfDoc.numPages : 1,
+              reading_seconds: Math.min(Math.max(elapsedSeconds, 5), 180)
             })
           });
           const toast = document.getElementById('toast');
@@ -447,6 +455,13 @@
         } catch (e) {}
       }, 1200);
     }
+
+    // Active reading heartbeat every 30 seconds (only if document is visible)
+    setInterval(() => {
+      if (!document.hidden && pdfDoc && currentPage) {
+        saveProgress(currentPage, 30);
+      }
+    }, 30000);
 
     document.addEventListener('DOMContentLoaded', initPdfReader);
   </script>

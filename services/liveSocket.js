@@ -1,6 +1,8 @@
 /**
- * Librika Live WebRTC Signaling & Collaborative Classroom Socket Engine
- * Pure Native Meeting Software - No third-party Jitsi dependencies
+ * Librika Live Collaborative In-Meeting Socket Engine
+ * Real-time audio/video is handled securely by JaaS (8x8.vc).
+ * This socket engine powers collaborative features: Live In-Class Chat,
+ * Multi-user Whiteboard synchronization, Hand-Raising, and Host Lobby Approvals.
  */
 
 const { Server } = require('socket.io');
@@ -63,48 +65,13 @@ function initLiveSocket(httpServer, db) {
 
       // Broadcast new user to everyone else in room
       socket.to(meetingId).emit('user-joined', currentUserData);
-
-      // Track attendance in database if available
-      try {
-        if (db && userId && !isNaN(parseInt(userId))) {
-          const sessRes = await db.query('SELECT id FROM live_sessions WHERE meeting_id = $1', [meetingId]);
-          if (sessRes && sessRes.rows && sessRes.rows.length > 0) {
-            const sessionId = sessRes.rows[0].id;
-            await db.query(
-              `INSERT INTO session_attendance (session_id, student_id, joined_at)
-               VALUES ($1, $2, NOW())
-               ON CONFLICT DO NOTHING`,
-              [sessionId, parseInt(userId)]
-            ).catch(() => {});
-          }
-        }
-      } catch (err) {
-        console.error('Attendance track error:', err.message);
-      }
     });
 
-    // 2. WebRTC Peer-to-Peer Signaling
-    socket.on('signal-offer', ({ targetSocketId, offer }) => {
-      io.to(targetSocketId).emit('signal-offer', {
-        callerSocketId: socket.id,
-        callerData: currentUserData,
-        offer
-      });
-    });
-
-    socket.on('signal-answer', ({ targetSocketId, answer }) => {
-      io.to(targetSocketId).emit('signal-answer', {
-        responderSocketId: socket.id,
-        answer
-      });
-    });
-
-    socket.on('ice-candidate', ({ targetSocketId, candidate }) => {
-      io.to(targetSocketId).emit('ice-candidate', {
-        fromSocketId: socket.id,
-        candidate
-      });
-    });
+    // 2. Real-Time Media Signaling: Delegated to JaaS (8x8.vc)
+    // Custom peer-to-peer WebRTC is bypassed in favor of JaaS high-definition SFU infrastructure.
+    socket.on('signal-offer', () => {});
+    socket.on('signal-answer', () => {});
+    socket.on('ice-candidate', () => {});
 
     // 3. Media State Updates (Mute / Video Toggle / Screen Sharing)
     socket.on('media-state-change', ({ isMuted, isVideoOff, isScreenSharing }) => {
@@ -197,6 +164,18 @@ function initLiveSocket(httpServer, db) {
       }
     });
 
+    // 9. Multi-Device User Notification Channel Registration (Phone, Laptop, Tablet)
+    socket.on('register-user-notifications', ({ userId, schoolCode }) => {
+      if (userId) {
+        const userRoom = `user_${userId}`;
+        socket.join(userRoom);
+        if (schoolCode && schoolCode !== 'GLOBAL') {
+          socket.join(`school_${schoolCode}`);
+        }
+        socket.emit('notifications-registered', { status: 'connected', userRoom });
+      }
+    });
+
     // 8. Disconnect Cleanup
     socket.on('disconnect', () => {
       if (currentMeetingId && rooms.has(currentMeetingId)) {
@@ -218,4 +197,28 @@ function initLiveSocket(httpServer, db) {
   return io;
 }
 
-module.exports = { initLiveSocket };
+/**
+ * Emit real-time notification to user across all their connected devices (phone, laptop, etc.)
+ */
+function emitLiveNotification(io, { userId, schoolCode, title, message, type = 'info', url = '/student', data = {} }) {
+  if (!io) return;
+  const payload = {
+    title: title || 'Librika Alert',
+    message: message || '',
+    type,
+    url,
+    data,
+    timestamp: Date.now()
+  };
+
+  if (userId) {
+    io.to(`user_${userId}`).emit('new-notification', payload);
+  } else if (schoolCode && schoolCode !== 'GLOBAL') {
+    io.to(`school_${schoolCode}`).emit('new-notification', payload);
+  } else {
+    io.emit('new-notification', payload);
+  }
+}
+
+module.exports = { initLiveSocket, emitLiveNotification };
+

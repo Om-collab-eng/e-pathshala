@@ -390,8 +390,12 @@ async function initLiveTables() {
       `).catch(() => {});
 
       // Seed Studio Sessions (Jitsi Powered)
+      const today = now;
+
       await query(`
         INSERT INTO studio_sessions (title, description, host_id, host_name, meeting_code, scheduled_start, scheduled_end, duration_minutes, status, class_name, school_code) VALUES
+
+
         ('Class 10 Advanced Mathematics - Calculus & Trigonometry', 'Live interactive algebra & trigonometry derivation marathon.', 23, 'Mrs. Sharma', 'LIBRIKA-10MATH-7A8B9C', '${fmt(today)}', '${fmt(new Date(today.getTime() + 60 * 60 * 1000))}', 60, 'LIVE', 'Class 10-A', 'DPS123'),
         ('Class 9 Science - Physics Laws of Motion & Gravitation', 'Concept clarity, live whiteboard problem solving and Q&A.', 23, 'Mrs. Sharma', 'LIBRIKA-9SCI-42A8F31C', '${fmt(tomorrow)}', '${fmt(new Date(tomorrow.getTime() + 45 * 60 * 1000))}', 45, 'SCHEDULED', 'Class 9-B', 'DPS123'),
         ('Artificial Intelligence & Modern Web Bootcamp Live Lab', 'Hands-on live coding workshop with React and APIs.', 23, 'Prof. Vikram Malhotra', 'LIBRIKA-AIWEB-99C1D2', '${fmt(dayAfter)}', '${fmt(new Date(dayAfter.getTime() + 90 * 60 * 1000))}', 90, 'SCHEDULED', 'Technology Lab', 'DPS123')

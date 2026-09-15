@@ -275,6 +275,7 @@
   <script>
     window.MEETING_CONFIG = {
       id: <%= session.id || 0 %>,
+      uid: '<%= (session && session.uid) || "" %>',
       meetingCode: '<%= session.meeting_code || session.meeting_id || "" %>',
       jaasRoomName: '<%= (jaasConfig && jaasConfig.rawRoomName) || session.jaas_room_name || "" %>',
       fullRoomName: '<%= (jaasConfig && jaasConfig.fullRoomName) || "" %>',
@@ -282,6 +283,7 @@
       isHost: <%= isHost ? 'true' : 'false' %>,
       isModerator: <%= isModerator ? 'true' : 'false' %>,
       userId: <%= user.id || 0 %>,
+      userUid: '<%= (user && user.uid) || "" %>',
       userName: '<%= (user.name || "Participant").replace(/'/g, "\\'") %>',
       userEmail: '<%= user.email || "" %>',
       jaasDomain: '<%= (jaasConfig && jaasConfig.domain) || "8x8.vc" %>',
@@ -548,28 +550,35 @@ JAAS_DOMAIN=8x8.vc</pre>
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       heartbeatInterval = setInterval(async () => {
         const config = window.MEETING_CONFIG;
-        if (!config.id) return;
         try {
-          await fetch(`/api/studio/sessions/${config.id}/heartbeat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberId: config.userId })
-          });
+          if (config.uid) {
+            await fetch(`/api/meetings/${config.uid}/heartbeat`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: config.userId })
+            });
+          } else if (config.id) {
+            await fetch(`/api/studio/sessions/${config.id}/heartbeat`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ memberId: config.userId })
+            });
+          }
         } catch(e) {}
-      }, 30000);
+      }, 25000);
     }
 
     async function recordAttendanceLeave() {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       if (timerInterval) clearInterval(timerInterval);
       const config = window.MEETING_CONFIG;
-      if (!config.id) return;
       try {
-        const payload = JSON.stringify({ memberId: config.userId });
+        const payload = JSON.stringify({ memberId: config.userId, userId: config.userId });
+        const endpoint = config.uid ? `/api/meetings/${config.uid}/leave` : `/api/studio/sessions/${config.id}/leave`;
         if (navigator.sendBeacon) {
-          navigator.sendBeacon(`/api/studio/sessions/${config.id}/leave`, payload);
+          navigator.sendBeacon(endpoint, payload);
         } else {
-          fetch(`/api/studio/sessions/${config.id}/leave`, {
+          fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: payload,
@@ -582,12 +591,32 @@ JAAS_DOMAIN=8x8.vc</pre>
     window.addEventListener('beforeunload', recordAttendanceLeave);
 
     function copyJoinLink() {
-      const url = window.location.href;
+      const config = window.MEETING_CONFIG;
+      const url = config.uid ? `${window.location.origin}/meet/${config.uid}` : window.location.href;
       navigator.clipboard.writeText(url).then(() => {
         const txt = document.getElementById('copyBtnText');
         txt.textContent = 'Copied!';
         setTimeout(() => { txt.textContent = 'Copy Link'; }, 2000);
       });
+    }
+
+    // Multi-tab active session coordination
+    if (typeof BroadcastChannel !== 'undefined') {
+      const config = window.MEETING_CONFIG;
+      const channelName = 'librika_meeting_' + (config.uid || config.meetingCode || config.id);
+      const meetingChannel = new BroadcastChannel(channelName);
+      meetingChannel.postMessage({ type: 'TAB_JOINED', userId: config.userId, timestamp: Date.now() });
+
+      meetingChannel.onmessage = (event) => {
+        if (event.data && event.data.type === 'TAB_JOINED' && event.data.userId === config.userId) {
+          console.warn('[LIBRIKA] Detected duplicate meeting tab for user.');
+          const note = document.createElement('div');
+          note.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#F59E0B;color:#000;font-weight:600;font-size:12px;padding:8px 16px;border-radius:20px;z-index:99999;box-shadow:0 10px 25px rgba(0,0,0,0.4);';
+          note.textContent = '⚠️ This meeting is open in another browser tab.';
+          document.body.appendChild(note);
+          setTimeout(() => note.remove(), 6000);
+        }
+      };
     }
 
     document.addEventListener('DOMContentLoaded', initJaaSSession);
