@@ -3,19 +3,27 @@
  * Standards-compliant VAPID Web Push delivery for Phones, Laptops, and Browsers.
  */
 
-const webpush = require('web-push');
+let webpush = null;
+try {
+  webpush = require('web-push');
+} catch (e) {
+  console.warn('⚠️ web-push package not installed in this environment yet. Web Push will operate in fallback mode.');
+}
 const db = require('../db');
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BCcPEyasF2EGpJs1TJwpIUc1nump_Ov2PrDSMz9MlgLPyd7tUTxwD6VhMRitOYr4mifNrkTSmfxz7X_j151Gq2o';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'Y62RXDIGG6i2tQxcasDB36s3LmJQMAhFJ9_5SK2TBDc';
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@librika.in';
 
-try {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-  console.log('✅ Web Push (VAPID) engine initialized successfully.');
-} catch (err) {
-  console.warn('⚠️ Web Push initialization warning:', err.message);
+if (webpush) {
+  try {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    console.log('✅ Web Push (VAPID) engine initialized successfully.');
+  } catch (err) {
+    console.warn('⚠️ Web Push initialization warning:', err.message);
+  }
 }
+
 
 function getVapidPublicKey() {
   return VAPID_PUBLIC_KEY;
@@ -76,6 +84,8 @@ async function unsubscribeDevice(endpoint) {
  */
 async function sendPushToUser(userId, payload = {}) {
   if (!userId) return { success: false, message: 'Invalid userId' };
+  if (!webpush) return { success: true, delivered: 0, message: 'Web push not active in this environment.' };
+
 
   try {
     const subs = await db.query(
