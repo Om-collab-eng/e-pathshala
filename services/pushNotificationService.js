@@ -169,10 +169,47 @@ async function sendPushToSchool(schoolCode, payload = {}) {
   }
 }
 
+/**
+ * Send Web Push notification to all devices belonging to users with a specific role
+ */
+async function sendPushToRole(role, payload = {}) {
+  try {
+    const users = await db.query('SELECT DISTINCT id FROM users WHERE role = $1', [role]);
+    if (!users.rows || users.rows.length === 0) return { success: true, delivered: 0 };
+
+    const promises = users.rows.map(u => sendPushToUser(u.id, payload));
+    const allResults = await Promise.all(promises);
+    return { success: true, totalUsers: users.rows.length, details: allResults };
+  } catch (err) {
+    console.error('Error sending push to role:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Send Web Push notification to all devices belonging to all users
+ */
+async function sendPushToAll(payload = {}) {
+  try {
+    const users = await db.query('SELECT DISTINCT id FROM users');
+    if (!users.rows || users.rows.length === 0) return { success: true, delivered: 0 };
+
+    const promises = users.rows.map(u => sendPushToUser(u.id, payload));
+    const allResults = await Promise.all(promises);
+    return { success: true, totalUsers: users.rows.length, details: allResults };
+  } catch (err) {
+    console.error('Error sending push to all users:', err);
+    return { success: false, error: err.message };
+  }
+}
+
 module.exports = {
   getVapidPublicKey,
   subscribeDevice,
   unsubscribeDevice,
   sendPushToUser,
-  sendPushToSchool
+  sendPushToSchool,
+  sendPushToRole,
+  sendPushToAll
 };
+

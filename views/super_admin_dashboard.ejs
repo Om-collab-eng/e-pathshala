@@ -550,6 +550,38 @@ html, body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.sa-scope-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+.sa-scope-btn {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--surface-sub);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.sa-scope-btn:hover {
+  background: #E2E8F0;
+  color: var(--text-primary);
+}
+.sa-scope-btn.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.12);
+}
+
 /* ── STAT / KPI CARDS ── */
 .sa-stats-grid {
   display: grid;
@@ -1685,6 +1717,10 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
             </div>
           </div>
           <div id="notifScopeFields"></div>
+          <div class="sa-form-group">
+            <label>Title (Optional)</label>
+            <input type="text" class="sa-input" id="notifTitle" placeholder="e.g. 📢 Campus Announcement">
+          </div>
           <div class="sa-form-group">
             <label>Message *</label>
             <textarea class="sa-textarea" id="notifMessage" placeholder="Write your announcement or notification message here..." rows="4"></textarea>
@@ -3031,10 +3067,15 @@ function renderPagination(containerId, page, total, limit, onPage) {
 // ═══════════════════════════════════════
 //  API HELPER
 // ═══════════════════════════════════════
+async function apiGet(url) {
+  const r = await fetch(url, { method:'GET', headers:{'Accept':'application/json'} });
+  return r.json();
+}
 async function apiPost(url, data) {
   const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
   return r.json();
 }
+
 
 // ═══════════════════════════════════════
 //  SCHOOLS
@@ -4075,15 +4116,21 @@ function setNotifScope(scope, btn) {
 }
 
 async function sendNotification(){
+  const title=document.getElementById('notifTitle')?.value.trim() || '';
   const message=document.getElementById('notifMessage').value.trim();
   const type=document.getElementById('notifType').value;
   if(!message) return showToast('Message is required','error');
-  const body={message,type,scope:SA.notifScope};
+  const body={title,message,type,scope:SA.notifScope};
   if(SA.notifScope==='school') body.school_code=document.getElementById('notifSchool')?.value;
   if(SA.notifScope==='role') body.role=document.getElementById('notifRole')?.value;
   if(SA.notifScope==='user') body.user_id=document.getElementById('notifUserId')?.value;
   const d=await apiPost('/super-admin/notify',body);
-  if(d.success){showToast(`Notification sent to ${d.sent_to} user(s)!`,'success');document.getElementById('notifMessage').value='';}
+  if(d.success){
+    showToast(`Notification broadcast to ${d.sent_to} user(s)!`,'success');
+    document.getElementById('notifMessage').value='';
+    const titleEl = document.getElementById('notifTitle');
+    if (titleEl) titleEl.value = '';
+  }
   else showToast(d.error||'Failed','error');
 }
 

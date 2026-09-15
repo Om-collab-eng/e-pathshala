@@ -10,6 +10,7 @@ const { Readable } = require('stream');
 const cron = require('node-cron');
 const { isSuperAdmin, getRoleDashboard } = require('../middleware/roleHome');
 const { logActivity, ensureSecurityTables } = require('../services/auditLogger');
+const notificationService = require('../services/notificationService');
 
 // ─────────────────────────────────────────────
 //  SETTINGS TABLE ADAPTER
@@ -648,46 +649,69 @@ router.post('/global-content/remove/:id', async (req, res) => {
 //  NOTIFICATIONS
 // ─────────────────────────────────────────────
 router.post('/notify', async (req, res) => {
-  const { message, type = 'info', scope, school_code, user_id, role } = req.body;
+  const { title, message, type = 'info', scope, school_code, user_id, role } = req.body;
   if (!message) return res.status(400).json({ error: 'message required' });
+  const io = req.app.get('io');
+  const finalTitle = title || 'Librika Notification';
+
   try {
     let inserted = 0;
     if (scope === 'all') {
       const users = await db.query('SELECT id, school_code FROM users');
-      for (const u of (users.rows || [])) {
-        await db.query('INSERT INTO notifications (user_id, message, type, is_read, school_code, created_at) VALUES ($1,$2,$3,"0",$4,NOW())',
-          [u.id, message, type, u.school_code || null]);
-        inserted++;
-      }
+      inserted = (users.rows || []).length;
+      await notificationService.notifyAll({
+        io,
+        title: finalTitle,
+        message,
+        type,
+        url: '/student'
+      });
     } else if (scope === 'school' && school_code) {
       const users = await db.query('SELECT id, school_code FROM users WHERE school_code=$1', [school_code]);
-      for (const u of (users.rows || [])) {
-        await db.query('INSERT INTO notifications (user_id, message, type, is_read, school_code, created_at) VALUES ($1,$2,$3,"0",$4,NOW())',
-          [u.id, message, type, u.school_code || null]);
-        inserted++;
-      }
+      inserted = (users.rows || []).length;
+      await notificationService.notifySchool({
+        io,
+        schoolCode: school_code,
+        title: finalTitle,
+        message,
+        type,
+        url: '/student'
+      });
     } else if (scope === 'role' && role) {
       const users = await db.query('SELECT id, school_code FROM users WHERE role=$1', [role]);
-      for (const u of (users.rows || [])) {
-        await db.query('INSERT INTO notifications (user_id, message, type, is_read, school_code, created_at) VALUES ($1,$2,$3,"0",$4,NOW())',
-          [u.id, message, type, u.school_code || null]);
-        inserted++;
-      }
+      inserted = (users.rows || []).length;
+      await notificationService.notifyRole({
+        io,
+        role,
+        title: finalTitle,
+        message,
+        type,
+        url: '/student'
+      });
     } else if (scope === 'user' && user_id) {
       const u = await db.query('SELECT id, school_code FROM users WHERE id=$1', [user_id]);
       if (u.rows[0]) {
-        await db.query('INSERT INTO notifications (user_id, message, type, is_read, school_code, created_at) VALUES ($1,$2,$3,"0",$4,NOW())',
-          [u.rows[0].id, message, type, u.rows[0].school_code || null]);
         inserted = 1;
+        await notificationService.notifyUser({
+          io,
+          userId: u.rows[0].id,
+          schoolCode: u.rows[0].school_code || 'GLOBAL',
+          title: finalTitle,
+          message,
+          type,
+          url: '/student'
+        });
       }
     } else {
       return res.status(400).json({ error: 'Invalid scope' });
     }
     res.json({ success: true, sent_to: inserted });
   } catch (err) {
+    console.error('[/super-admin/notify] Error broadcasting:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // ─────────────────────────────────────────────
 //  AUDIT LOGS

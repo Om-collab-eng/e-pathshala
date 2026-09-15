@@ -1216,7 +1216,8 @@ For searching books: {"type": "search_book", "query": "..."}
                     // Handle first load vs live updates
                     if (data.newNotifications && data.newNotifications.length > 0) {
                         data.newNotifications.forEach(n => {
-                            if (n.id > lastNotifId || lastNotifId === 0) {
+                            if (lastNotifId > 0 && n.id > lastNotifId) {
+                                playNotificationChime();
                                 showToast(n.message, n.type || 'notif', '🔔 Notification');
                             }
                         });

@@ -146,6 +146,88 @@ async function notifySchool({ io, schoolCode = 'GLOBAL', title, message, type = 
   return { success: true };
 }
 
+/**
+ * Broadcast notification to all users matching a role
+ */
+async function notifyRole({ io, role, title, message, type = 'info', url = '/student', data = {} }) {
+  const finalTitle = title || 'Librika Announcement';
+  const finalMessage = message || '';
+
+  try {
+    const users = await db.query('SELECT id, school_code FROM users WHERE role = $1', [role]);
+    for (const u of (users.rows || [])) {
+      await db.query(
+        `INSERT INTO notifications (user_id, message, type, is_read, school_code, created_at)
+         VALUES ($1, $2, $3, 0, $4, CURRENT_TIMESTAMP)`,
+        [u.id, finalMessage, type, u.school_code || 'GLOBAL']
+      ).catch(() => {});
+    }
+  } catch (dbErr) {
+    console.warn('[NOTIFY] DB insert role note:', dbErr.message);
+  }
+
+  if (io) {
+    emitLiveNotification(io, {
+      title: finalTitle,
+      message: finalMessage,
+      type,
+      url,
+      data
+    });
+  }
+
+  pushService.sendPushToRole(role, {
+    title: finalTitle,
+    body: finalMessage,
+    url,
+    type,
+    data
+  }).catch(err => console.warn('[Web Push] Role broadcast error:', err.message));
+
+  return { success: true };
+}
+
+/**
+ * Broadcast notification to all users on the platform
+ */
+async function notifyAll({ io, title, message, type = 'info', url = '/student', data = {} }) {
+  const finalTitle = title || 'Librika Announcement';
+  const finalMessage = message || '';
+
+  try {
+    const users = await db.query('SELECT id, school_code FROM users');
+    for (const u of (users.rows || [])) {
+      await db.query(
+        `INSERT INTO notifications (user_id, message, type, is_read, school_code, created_at)
+         VALUES ($1, $2, $3, 0, $4, CURRENT_TIMESTAMP)`,
+        [u.id, finalMessage, type, u.school_code || 'GLOBAL']
+      ).catch(() => {});
+    }
+  } catch (dbErr) {
+    console.warn('[NOTIFY] DB insert all note:', dbErr.message);
+  }
+
+  if (io) {
+    emitLiveNotification(io, {
+      title: finalTitle,
+      message: finalMessage,
+      type,
+      url,
+      data
+    });
+  }
+
+  pushService.sendPushToAll({
+    title: finalTitle,
+    body: finalMessage,
+    url,
+    type,
+    data
+  }).catch(err => console.warn('[Web Push] All broadcast error:', err.message));
+
+  return { success: true };
+}
+
 async function registerDeviceToken(userId, fcmToken, deviceType = 'web') {
   try {
     await db.query(
@@ -173,8 +255,11 @@ async function unregisterDeviceToken(fcmToken) {
 module.exports = {
   notifyUser,
   notifySchool,
+  notifyRole,
+  notifyAll,
   sendNotificationToUser,
   registerDeviceToken,
   unregisterDeviceToken
 };
+
 
