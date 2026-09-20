@@ -317,27 +317,35 @@
   // 4. UNIVERSAL HEADER SEARCH
   // ─────────────────────────────────────────────────────────────
   function initUniversalSearch() {
-    const searchInput = document.getElementById('crUniversalSearch');
-    if (!searchInput) return;
+    const searchInputs = [
+      document.getElementById('crUniversalSearch'),
+      document.getElementById('crUniversalSearchMobile')
+    ].filter(Boolean);
+    if (!searchInputs.length) return;
 
     document.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        searchInput.focus();
+        searchInputs[0].focus();
       }
     });
 
-    searchInput.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase().trim();
-      const cards = document.querySelectorAll('.cr-card');
+    searchInputs.forEach(input => {
+      input.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        searchInputs.forEach(other => {
+          if (other !== input) other.value = e.target.value;
+        });
+        const cards = document.querySelectorAll('.cr-card');
 
-      cards.forEach(card => {
-        const text = card.textContent.toLowerCase();
-        if (!q || text.includes(q)) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
-        }
+        cards.forEach(card => {
+          const text = card.textContent.toLowerCase();
+          if (!q || text.includes(q)) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
       });
     });
   }

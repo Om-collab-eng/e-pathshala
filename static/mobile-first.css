@@ -255,3 +255,16 @@
     padding-bottom: calc(64px + var(--safe-bottom)) !important;
   }
 }
+
+/* ── Universal Floating AI / Action Button Offset Above Bottom Docks ── */
+@media (max-width: 900px) {
+  .ai-chat-widget-container,
+  .ai-chat-toggle-btn,
+  .lp-ai-fab,
+  .sp-floating-ai-btn,
+  .cr-libra-float-btn,
+  #aiChatToggleBtn {
+    bottom: calc(72px + var(--safe-bottom)) !important;
+    z-index: 9990 !important;
+  }
+}

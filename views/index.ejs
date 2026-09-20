@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title><%= typeof title !== 'undefined' ? title : 'Librika - Online Courses, Free E-Books & Digital Library Platform' %></title>
   
   <!-- Fonts & Icons -->
@@ -18,7 +18,8 @@
   <link rel="shortcut icon" href="/favicon.ico">
   <meta name="theme-color" content="#0056D2">
   
-  <!-- Coursera-Inspired Librika Stylesheet -->
+  <!-- Librika Mobile-First & Coursera Stylesheets -->
+  <link rel="stylesheet" href="/mobile-first.css">
   <link rel="stylesheet" href="/coursera-librika.css">
   <script src="/js/libra-ai.js" defer></script>
 </head>
@@ -103,6 +104,14 @@
       </div>
     </div>
   </header>
+  
+  <!-- Mobile Search Strip for Phones & Small Tablets -->
+  <div class="cr-mobile-search-strip">
+    <div class="cr-search-wrapper" style="width:100%;box-shadow:none;border:1px solid var(--cr-gray-200);background:#F8FAFC;">
+      <svg class="cr-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="crUniversalSearchMobile" class="cr-search-input" placeholder="Search 10,000+ courses, books, topics..." style="font-size:16px;">
+    </div>
+  </div>
 
   <!-- =========================================================================
        2. COURSERA HERO SECTION
@@ -702,6 +711,45 @@
       </div>
     </div>
   </footer>
+  
+  <!-- Mobile Bottom Navigation Dock for Librika Coursera Experience -->
+  <nav class="cr-mobile-bottom-dock" aria-label="Mobile Bottom Navigation">
+    <a href="/" class="cr-dock-item active">
+      <span class="cr-dock-icon">🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="#catalog" class="cr-dock-item" onclick="const t = document.querySelector('[data-filter=all]'); if(t) t.click();">
+      <span class="cr-dock-icon">📚</span>
+      <span>Catalog</span>
+    </a>
+    <button class="cr-dock-item" type="button" onclick="const f = document.querySelector('.cr-libra-float-btn'); if(f) f.click();">
+      <span class="cr-dock-icon">✨</span>
+      <span>Libra AI</span>
+    </button>
+    <% if (typeof session !== 'undefined' && session && session.user_id) { %>
+      <% if (session.role === 'student') { %>
+        <a href="/student" class="cr-dock-item">
+          <span class="cr-dock-icon">🎓</span>
+          <span>Portal</span>
+        </a>
+      <% } else if (session.role === 'personal') { %>
+        <a href="/personal" class="cr-dock-item">
+          <span class="cr-dock-icon">📖</span>
+          <span>Library</span>
+        </a>
+      <% } else { %>
+        <a href="/admin" class="cr-dock-item">
+          <span class="cr-dock-icon">⚡</span>
+          <span>Admin</span>
+        </a>
+      <% } %>
+    <% } else { %>
+      <a href="/login" class="cr-dock-item">
+        <span class="cr-dock-icon">👤</span>
+        <span>Log In</span>
+      </a>
+    <% } %>
+  </nav>
 
 </body>
 </html>

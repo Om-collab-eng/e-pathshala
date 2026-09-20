@@ -33,6 +33,9 @@
     <!-- ═══════════════════════════════════════════════════════════════
          1. PRIMARY 9-MODULE SIDEBAR NAVIGATION
          ═══════════════════════════════════════════════════════════════ -->
+    <!-- Backdrop Dimming Overlay for Mobile Drawer Sidebar -->
+    <div class="lp-sidebar-backdrop" id="lpSidebarBackdrop" onclick="toggleSidebar()"></div>
+
     <aside class="lp-sidebar" id="lpSidebar">
       
       <!-- Top Utility Controls (Back, Home, Night Toggle) Above Logo -->
@@ -285,10 +288,10 @@
           </div>
 
           <!-- Quick Actions Bar -->
-          <div class="card" style="margin-bottom:24px;padding:18px 24px;">
+          <div class="card lp-quick-actions-card" style="margin-bottom:24px;padding:18px 24px;">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
               <span style="font-weight:800;font-size:0.95rem;color:#111827;">⚡ Quick Actions:</span>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <div class="lp-quick-actions-btns" style="display:flex;gap:10px;flex-wrap:wrap;">
                 <button class="btn-secondary" onclick="openModal('addBookModal')">➕ Add Book</button>
                 <button class="btn-secondary" onclick="navigateToModule('circulation', 'issue')">📤 Issue Book</button>
                 <button class="btn-secondary" onclick="navigateToModule('circulation', 'return')">📥 Return Book</button>
@@ -299,7 +302,7 @@
           </div>
 
           <!-- Two-Column Grid: Recent Activity & Needs Attention -->
-          <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:24px;">
+          <div class="lp-dashboard-grid">
             
             <!-- Recent Activity -->
             <div class="card">
@@ -1541,6 +1544,8 @@
       // Auto-close sidebar on mobile
       const sb = document.getElementById('lpSidebar');
       if (sb && window.innerWidth <= 1024) sb.classList.remove('open');
+      const backdrop = document.getElementById('lpSidebarBackdrop');
+      if (backdrop) backdrop.classList.remove('active');
 
       if (subTab) {
         if (moduleName === 'circulation') {
@@ -1593,7 +1598,11 @@
 
     function toggleSidebar() {
       const sb = document.getElementById('lpSidebar');
-      if (sb) sb.classList.toggle('open');
+      const backdrop = document.getElementById('lpSidebarBackdrop');
+      if (sb) {
+        const isOpen = sb.classList.toggle('open');
+        if (backdrop) backdrop.classList.toggle('active', isOpen);
+      }
     }
 
     function toggleAiCopilot() {
@@ -1606,6 +1615,7 @@
       if (m) {
         m.style.display = 'flex';
         m.classList.add('active');
+        document.body.classList.add('modal-open');
       }
     }
 
@@ -1614,6 +1624,10 @@
       if (m) {
         m.style.display = 'none';
         m.classList.remove('active');
+        const anyActive = document.querySelector('.lp-drawer-overlay.active, .lp-drawer-overlay[style*="display: flex"]');
+        if (!anyActive) {
+          document.body.classList.remove('modal-open');
+        }
       }
     }
 
