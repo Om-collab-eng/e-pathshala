@@ -1205,3 +1205,129 @@ table.lp-table tbody tr:hover {
   padding: 20px;
   overflow-y: auto;
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   13. MOBILE-FIRST RESPONSIVE DOCK & TOUCH POLISH
+   ───────────────────────────────────────────────────────────────── */
+.lp-mobile-bottom-dock {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  z-index: 9995;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 4px calc(env(safe-area-inset-bottom, 0px)) 4px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.07);
+}
+
+.lp-dock-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 6px 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+  min-height: 48px;
+}
+
+.lp-dock-item:active, .lp-dock-item.active {
+  color: var(--primary);
+}
+
+.lp-dock-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+@media (max-width: 1024px) {
+  .lp-mobile-bottom-dock {
+    display: flex;
+  }
+  .lp-main {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .lp-topbar {
+    padding: 0.65rem 1rem;
+    gap: 8px;
+  }
+  .lp-search-bar {
+    width: 200px;
+  }
+  .lp-hero-section {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .lp-hero-left {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+  .hero-title {
+    font-size: 1.8rem;
+  }
+  .hero-sub {
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .lp-topbar-right .ai-button,
+  .lp-topbar-right .btn-secondary {
+    display: none;
+  }
+  .lp-search-bar {
+    width: 160px;
+  }
+  .hero-title {
+    font-size: 1.5rem;
+  }
+  .lp-today-card {
+    padding: 16px;
+  }
+  .lp-today-metrics {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .lp-scanner-box {
+    padding: 16px;
+    border-radius: 16px;
+  }
+  /* Bottom sheet for modals */
+  .lp-drawer-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .lp-drawer-overlay .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 20px 16px calc(24px + env(safe-area-inset-bottom, 0px)) 16px !important;
+  }
+  .lp-tab-bar {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .lp-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+}
+

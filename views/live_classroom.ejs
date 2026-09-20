@@ -219,6 +219,27 @@
       position: relative;
     }
 
+    @media (max-width: 640px) {
+      .ls-topbar {
+        padding: 0 10px;
+        height: 52px;
+      }
+      .ls-exit-btn {
+        width: 38px;
+        height: 38px;
+      }
+      .ls-meeting-title {
+        max-width: 140px;
+        font-size: 0.88rem;
+      }
+      .ls-code-pill, .ls-timer-pill {
+        display: none;
+      }
+      #jitsiContainer {
+        height: calc(100vh - 52px);
+      }
+    }
+
     #jitsiContainer iframe {
       width: 100% !important;
       height: 100% !important;

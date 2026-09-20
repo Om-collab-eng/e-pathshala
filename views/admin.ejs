@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/librarian-pro.css">
+  <link rel="stylesheet" href="/mobile-first.css">
 </head>
 <body class="lp-body">
 <%
@@ -1487,6 +1488,30 @@
     </div>
   </div>
 
+  <!-- Mobile Bottom Navigation Dock for Librarian Pro -->
+  <nav class="lp-mobile-bottom-dock" aria-label="Librarian Pro Mobile Navigation">
+    <button class="lp-dock-item <%= currentModule === 'dashboard' ? 'active' : '' %>" id="lpdock-dashboard" onclick="navigateToModule('dashboard')">
+      <span class="lp-dock-icon">📊</span>
+      <span>Dashboard</span>
+    </button>
+    <button class="lp-dock-item <%= currentModule === 'circulation' ? 'active' : '' %>" id="lpdock-circulation" onclick="navigateToModule('circulation')">
+      <span class="lp-dock-icon">🔄</span>
+      <span>Circulation</span>
+    </button>
+    <button class="lp-dock-item <%= currentModule === 'catalog' ? 'active' : '' %>" id="lpdock-catalog" onclick="navigateToModule('catalog')">
+      <span class="lp-dock-icon">📚</span>
+      <span>Catalog</span>
+    </button>
+    <button class="lp-dock-item <%= currentModule === 'members' ? 'active' : '' %>" id="lpdock-members" onclick="navigateToModule('members')">
+      <span class="lp-dock-icon">👥</span>
+      <span>Members</span>
+    </button>
+    <button class="lp-dock-item" onclick="toggleSidebar()">
+      <span class="lp-dock-icon">☰</span>
+      <span>Menu</span>
+    </button>
+  </nav>
+
   <!-- ═══════════════════════════════════════════════════════════════
        6. INTERACTIVE CLIENT-SIDE JAVASCRIPT
        ═══════════════════════════════════════════════════════════════ -->
@@ -1507,6 +1532,15 @@
           btn.classList.add('active');
         }
       });
+
+      // Update mobile bottom dock active button
+      document.querySelectorAll('.lp-dock-item').forEach(d => d.classList.remove('active'));
+      const dockBtn = document.getElementById('lpdock-' + moduleName);
+      if (dockBtn) dockBtn.classList.add('active');
+
+      // Auto-close sidebar on mobile
+      const sb = document.getElementById('lpSidebar');
+      if (sb && window.innerWidth <= 1024) sb.classList.remove('open');
 
       if (subTab) {
         if (moduleName === 'circulation') {

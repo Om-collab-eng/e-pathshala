@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title><%= title || 'Student Portal - Librika' %></title>
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/mobile-first.css">
 
   <style>
     /* ═════════════════════════════════════════════════════════════════
@@ -708,10 +709,97 @@
     @media (max-width: 800px) {
       .sp-sidebar { transform: translateX(-100%); }
       .sp-sidebar.open { transform: translateX(0); }
-      .sp-main { margin-left: 0; }
+      .sp-main {
+        margin-left: 0 !important;
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+      }
       .sp-mobile-toggle { display: block; }
       .sp-topbar { padding: 0 16px; }
-      .sp-content-body { padding: 16px; }
+      .sp-content-body { padding: 14px 10px !important; }
+      .sp-mobile-bottom-dock { display: flex !important; }
+    }
+
+    @media (max-width: 640px) {
+      .sp-grid-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+      }
+      .sp-book-cover-wrap {
+        height: 145px !important;
+      }
+      .sp-book-info {
+        padding: 10px !important;
+      }
+      .sp-book-title {
+        font-size: 0.85rem !important;
+      }
+      .sp-book-author {
+        font-size: 0.72rem !important;
+        margin-bottom: 6px !important;
+      }
+      .sp-grid-3 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      /* Bottom sheet modals for student */
+      .sp-modal-overlay {
+        align-items: flex-end !important;
+        padding: 0 !important;
+      }
+      .sp-modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+
+    /* ── Mobile Bottom Navigation Dock for Student ── */
+    .sp-mobile-bottom-dock {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      z-index: 9995;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 4px calc(env(safe-area-inset-bottom, 0px)) 4px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.07);
+    }
+
+    .sp-dock-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 6px 2px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: all 0.15s ease;
+      min-height: 48px;
+    }
+
+    .sp-dock-item:active, .sp-dock-item.active {
+      color: var(--primary);
+    }
+
+    .sp-dock-icon {
+      font-size: 1.25rem;
+      line-height: 1;
+      margin-bottom: 2px;
     }
 
     /* ── E-Library Dynamic Scrolling Ticker & Educational Strip ── */
@@ -2293,6 +2381,11 @@
       url.searchParams.set('module', moduleName);
       window.history.pushState({}, '', url);
 
+      // Update mobile bottom dock active button
+      document.querySelectorAll('.sp-dock-item').forEach(d => d.classList.remove('active'));
+      const dockBtn = document.getElementById('spdock-' + moduleName);
+      if (dockBtn) dockBtn.classList.add('active');
+
       // Close mobile sidebar if open
       const sb = document.getElementById('studentSidebar');
       if (sb) sb.classList.remove('open');
@@ -2813,6 +2906,29 @@
     });
   </script>
 
+  <!-- Student Mobile Bottom Navigation Dock -->
+  <nav class="sp-mobile-bottom-dock" aria-label="Student Mobile Navigation">
+    <button class="sp-dock-item <%= currentModule === 'dashboard' ? 'active' : '' %>" id="spdock-dashboard" onclick="switchStudentModule('dashboard', null)">
+      <span class="sp-dock-icon">🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="sp-dock-item <%= currentModule === 'catalog' ? 'active' : '' %>" id="spdock-catalog" onclick="switchStudentModule('catalog', null)">
+      <span class="sp-dock-icon">📚</span>
+      <span>Catalog</span>
+    </button>
+    <button class="sp-dock-item <%= currentModule === 'borrowings' ? 'active' : '' %>" id="spdock-borrowings" onclick="switchStudentModule('borrowings', null)">
+      <span class="sp-dock-icon">🔄</span>
+      <span>My Loans</span>
+    </button>
+    <button class="sp-dock-item <%= currentModule === 'e-library' ? 'active' : '' %>" id="spdock-e-library" onclick="switchStudentModule('e-library', null)">
+      <span class="sp-dock-icon">📖</span>
+      <span>E-Library</span>
+    </button>
+    <button class="sp-dock-item" onclick="toggleStudentSidebar()">
+      <span class="sp-dock-icon">☰</span>
+      <span>Menu</span>
+    </button>
+  </nav>
 
 </body>
 </html>
