@@ -86,13 +86,22 @@
         </button>
 
         <!-- 4. Circulation -->
-        <button class="lp-nav-item <%= currentModule === 'circulation' ? 'active' : '' %>" onclick="navigateToModule('circulation')">
+        <button class="lp-nav-item <%= currentModule === 'circulation' ? 'active' : '' %>" data-module="circulation" onclick="navigateToModule('circulation')">
           <span class="lp-nav-icon">🔄</span>
           <span>Circulation</span>
           <% if (stats.overdue_count > 0) { %>
             <span class="lp-nav-badge danger"><%= stats.overdue_count %></span>
           <% } else { %>
             <span class="lp-nav-badge primary"><%= stats.active_issues %></span>
+          <% } %>
+        </button>
+
+        <!-- 5. Student Progress (Books, Quizzes, Courses) -->
+        <button class="lp-nav-item <%= currentModule === 'student-progress' ? 'active' : '' %>" data-module="student-progress" onclick="navigateToModule('student-progress')">
+          <span class="lp-nav-icon">🎓</span>
+          <span>Student Progress</span>
+          <% if (typeof stats.student_progress_count !== 'undefined' && stats.student_progress_count > 0) { %>
+            <span class="lp-nav-badge" style="background:#4F46E5;color:#fff;"><%= stats.student_progress_count %></span>
           <% } %>
         </button>
 
@@ -876,6 +885,266 @@
         </section>
 
         <!-- ─────────────────────────────────────────────────────────────
+             MODULE — STUDENT PROGRESS (BOOKS, QUIZZES, LIVE COURSES) [READ-ONLY]
+             ───────────────────────────────────────────────────────────── -->
+        <section id="module-student-progress" class="lp-module-view" style="display:<%= currentModule === 'student-progress' ? 'block' : 'none' %>;">
+          <!-- Section Header -->
+          <div class="lp-section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <h2 style="font-size:1.4rem;font-weight:800;color:#1E293B;margin:0;">🎓 Student Learning & Activity Progress</h2>
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#F1F5F9;color:#475569;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #CBD5E1;">
+                  🔒 Read-Only Monitor
+                </span>
+              </div>
+              <p style="font-size:0.85rem;color:#64748B;margin:4px 0 0 0;">
+                Live consolidated view of ongoing physical book borrowings, digital reading, quiz assessments, and enrolled live courses per student.
+              </p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <button class="btn-secondary" onclick="exportStudentProgressCSV()" style="font-size:0.8rem;padding:7px 12px;">
+                📥 Export CSV
+              </button>
+              <button class="btn-secondary" onclick="refreshStudentProgressData()" style="font-size:0.8rem;padding:7px 12px;">
+                🔄 Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Metric Cards Grid -->
+          <div class="lp-stats-grid" style="margin-bottom:24px;">
+            <div class="lp-stat-card" style="border-left:4px solid #0B5ED7;cursor:pointer;" onclick="setStudentProgressFilter('category', 'BOOK')">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Ongoing Books</span>
+                <h3 class="lp-stat-value" id="spMetricBooks"><%= (typeof studentProgressCounts !== 'undefined' ? studentProgressCounts.books : 0) %></h3>
+                <span class="lp-stat-change" style="color:#0B5ED7;">📚 Physical loans + Digital e-books</span>
+              </div>
+              <div class="lp-stat-icon-wrap blue">📚</div>
+            </div>
+
+            <div class="lp-stat-card" style="border-left:4px solid #10B981;cursor:pointer;" onclick="setStudentProgressFilter('category', 'QUIZ')">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Quizzes Attempted</span>
+                <h3 class="lp-stat-value" id="spMetricQuizzes"><%= (typeof studentProgressCounts !== 'undefined' ? studentProgressCounts.quizzes : 0) %></h3>
+                <span class="lp-stat-change" style="color:#059669;">🎯 Assessments & Scores</span>
+              </div>
+              <div class="lp-stat-icon-wrap" style="background:rgba(16,185,129,0.15);color:#059669;">🎯</div>
+            </div>
+
+            <div class="lp-stat-card" style="border-left:4px solid #8B5CF6;cursor:pointer;" onclick="setStudentProgressFilter('category', 'COURSE')">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Live Courses</span>
+                <h3 class="lp-stat-value" id="spMetricCourses"><%= (typeof studentProgressCounts !== 'undefined' ? studentProgressCounts.courses : 0) %></h3>
+                <span class="lp-stat-change" style="color:#7C3AED;">🎓 Ongoing Enrollments</span>
+              </div>
+              <div class="lp-stat-icon-wrap indigo">🎓</div>
+            </div>
+
+            <div class="lp-stat-card" style="border-left:4px solid #F59E0B;cursor:pointer;" onclick="setStudentProgressFilter('category', 'ALL')">
+              <div class="lp-stat-info">
+                <span class="lp-stat-title">Active Students</span>
+                <h3 class="lp-stat-value" id="spMetricStudents"><%= (typeof studentProgressCounts !== 'undefined' ? studentProgressCounts.students : 0) %></h3>
+                <span class="lp-stat-change" style="color:#D97706;">👥 Engaged Learners</span>
+              </div>
+              <div class="lp-stat-icon-wrap warning">👥</div>
+            </div>
+          </div>
+
+          <!-- Filter & Search Controls Toolbar -->
+          <div class="card" style="padding:16px 20px;margin-bottom:20px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-surface);">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+              
+              <!-- Category Filter Tabs -->
+              <div class="lp-tabs-bar" style="border-bottom:none;margin:0;padding:0;gap:8px;" id="spCategoryTabs">
+                <button class="lp-tab-btn active" id="spTabAll" onclick="setStudentProgressCategory('ALL', this)">
+                  All Activities (<span id="spCountAll"><%= (typeof studentProgressItems !== 'undefined' ? studentProgressItems.length : 0) %></span>)
+                </button>
+                <button class="lp-tab-btn" id="spTabBooks" onclick="setStudentProgressCategory('BOOK', this)">
+                  📚 Books (<span id="spCountBooks"><%= (typeof studentProgressCounts !== 'undefined' ? studentProgressCounts.books : 0) %></span>)
+                </button>
+                <button class="lp-tab-btn" id="spTabQuizzes" onclick="setStudentProgressCategory('QUIZ', this)">
+                  🎯 Quizzes (<span id="spCountQuizzes"><%= (typeof studentProgressCounts !== 'undefined' ? studentProgressCounts.quizzes : 0) %></span>)
+                </button>
+                <button class="lp-tab-btn" id="spTabCourses" onclick="setStudentProgressCategory('COURSE', this)">
+                  🎓 Courses (<span id="spCountCourses"><%= (typeof studentProgressCounts !== 'undefined' ? studentProgressCounts.courses : 0) %></span>)
+                </button>
+              </div>
+
+              <!-- View Switcher (Table vs Student Grouped Cards) -->
+              <div style="display:flex;align-items:center;gap:6px;background:var(--bg-main, #F1F5F9);padding:4px;border-radius:8px;border:1px solid var(--border-color, #E2E8F0);">
+                <button type="button" id="spViewTableBtn" class="btn-primary" style="padding:5px 12px;font-size:0.75rem;border-radius:6px;" onclick="switchStudentProgressView('table')">
+                  📋 Table View
+                </button>
+                <button type="button" id="spViewGroupedBtn" class="btn-secondary" style="padding:5px 12px;font-size:0.75rem;border-radius:6px;background:transparent;border:none;" onclick="switchStudentProgressView('grouped')">
+                  👥 By Student
+                </button>
+              </div>
+            </div>
+
+            <!-- Search Input & Status Dropdown Filter -->
+            <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;">
+              <div class="lp-search-bar" style="flex:1;min-width:240px;background:#F8FAFC;border:1px solid #E2E8F0;">
+                <span class="lp-search-icon">🔍</span>
+                <input type="text" id="spSearchInput" class="lp-search-input" placeholder="Search by student name, phone, class, book, quiz, or course title..." oninput="filterStudentProgress()">
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label for="spStatusFilter" style="font-size:0.8rem;font-weight:700;color:#64748B;white-space:nowrap;">Status:</label>
+                <select id="spStatusFilter" class="lp-search-input" style="padding:8px 14px;border-radius:8px;background:#F8FAFC;border:1px solid #E2E8F0;font-size:0.85rem;font-weight:600;min-width:140px;" onchange="filterStudentProgress()">
+                  <option value="ALL">All Statuses</option>
+                  <option value="ACTIVE">Issued / Reading</option>
+                  <option value="OVERDUE">Overdue Only</option>
+                  <option value="PASSED">Passed / Completed</option>
+                  <option value="ENROLLED">Enrolled</option>
+                </select>
+              </div>
+
+              <button type="button" class="btn-secondary" onclick="resetStudentProgressFilters()" style="padding:7px 12px;font-size:0.8rem;" title="Clear filters">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- TABLE VIEW -->
+          <div id="spTableView" class="lp-table-container card" style="padding:0;overflow:hidden;border:1px solid var(--border-color);border-radius:12px;">
+            <div style="padding:14px 20px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;background:var(--bg-surface);">
+              <div style="font-size:0.85rem;font-weight:700;color:#334155;">
+                Showing <span id="spVisibleCount"><%= (typeof studentProgressItems !== 'undefined' ? studentProgressItems.length : 0) %></span> active learning activities
+              </div>
+              <div style="font-size:0.75rem;color:#94A3B8;display:flex;align-items:center;gap:4px;">
+                <span>🔒 Read-Only (Librarian View)</span>
+              </div>
+            </div>
+
+            <div class="lp-table-wrap" style="overflow-x:auto;">
+              <table class="lp-table" id="spTable" style="margin:0;width:100%;">
+                <thead>
+                  <tr style="background:#F8FAFC;">
+                    <th style="width:22%;">Student</th>
+                    <th style="width:28%;">Activity / Item Name</th>
+                    <th style="width:12%;">Type</th>
+                    <th style="width:14%;">Status</th>
+                    <th style="width:12%;">Progress</th>
+                    <th style="width:12%;">Assigned / Due Date</th>
+                  </tr>
+                </thead>
+                <tbody id="spTableBody">
+                  <% if (typeof studentProgressItems === 'undefined' || studentProgressItems.length === 0) { %>
+                    <tr class="sp-empty-row">
+                      <td colspan="6" style="text-align:center;padding:48px 20px;color:#94A3B8;">
+                        <div style="font-size:2.5rem;margin-bottom:8px;">🎓</div>
+                        <div style="font-weight:700;font-size:1rem;color:#475569;">No ongoing activities found</div>
+                        <div style="font-size:0.85rem;margin-top:4px;">Students with active book loans, quizzes, or courses will appear here.</div>
+                      </td>
+                    </tr>
+                  <% } else { %>
+                    <% studentProgressItems.forEach(item => { %>
+                      <% 
+                        const isOverdue = (item.status === 'OVERDUE' || (item.due_date && new Date(item.due_date) < new Date() && item.category === 'BOOK'));
+                        let badgeClass = 'issued';
+                        let badgeStyle = '';
+                        if (isOverdue) {
+                          badgeClass = 'overdue';
+                          badgeStyle = 'background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;';
+                        } else if (item.status === 'PASSED' || item.status === 'COMPLETED') {
+                          badgeClass = 'available';
+                          badgeStyle = 'background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;';
+                        } else if (item.status === 'ENROLLED') {
+                          badgeStyle = 'background:#F5F3FF;color:#6D28D9;border:1px solid #DDD6FE;';
+                        } else {
+                          badgeStyle = 'background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;';
+                        }
+
+                        let icon = '📚';
+                        if (item.category === 'QUIZ') icon = '🎯';
+                        else if (item.category === 'COURSE') icon = '🎓';
+                        else if (item.item_type === 'Digital E-Book') icon = '🌐';
+                      %>
+                      <tr class="sp-row" 
+                          data-student="<%= (item.student_name || '').toLowerCase() %>" 
+                          data-phone="<%= (item.student_phone || '').toLowerCase() %>" 
+                          data-class="<%= (item.student_class || '').toLowerCase() %>" 
+                          data-item="<%= (item.item_name || '').toLowerCase() %>" 
+                          data-category="<%= item.category %>" 
+                          data-status="<%= isOverdue ? 'OVERDUE' : item.status %>"
+                          data-raw-student="<%= item.student_name || '' %>"
+                          data-raw-class="<%= item.student_class || '' %>"
+                          data-raw-phone="<%= item.student_phone || '' %>"
+                          data-raw-item="<%= item.item_name || '' %>"
+                          data-raw-type="<%= item.item_type || '' %>"
+                          data-raw-progress="<%= item.progress || '' %>"
+                          data-raw-assigned="<%= renderDate(item.assigned_date) %>"
+                          data-raw-due="<%= item.due_date ? renderDate(item.due_date) : '' %>">
+                        <td>
+                          <div style="font-weight:700;color:#1E293B;font-size:0.92rem;"><%= item.student_name %></div>
+                          <div style="font-size:0.75rem;color:#64748B;display:flex;align-items:center;gap:6px;margin-top:2px;">
+                            <span style="background:#F1F5F9;padding:1px 6px;border-radius:4px;font-weight:600;"><%= item.student_class %></span>
+                            <% if (item.student_phone) { %>
+                              <span>📞 <%= item.student_phone %></span>
+                            <% } %>
+                          </div>
+                        </td>
+                        <td>
+                          <div style="font-weight:700;color:#1E293B;font-size:0.9rem;display:flex;align-items:center;gap:6px;">
+                            <span><%= icon %></span>
+                            <span><%= item.item_name %></span>
+                          </div>
+                        </td>
+                        <td>
+                          <span style="font-size:0.78rem;font-weight:700;padding:2px 8px;border-radius:6px;background:#F8FAFC;color:#475569;border:1px solid #E2E8F0;">
+                            <%= item.item_type %>
+                          </span>
+                        </td>
+                        <td>
+                          <span class="lp-status-pill <%= badgeClass %>" style="<%= badgeStyle %>font-size:0.75rem;font-weight:800;padding:3px 8px;border-radius:6px;">
+                            <%= isOverdue ? 'OVERDUE' : item.status %>
+                          </span>
+                        </td>
+                        <td>
+                          <div style="font-weight:700;font-size:0.85rem;color:#334155;">
+                            <%= item.progress || '—' %>
+                          </div>
+                          <% if (item.progress && item.progress.includes('%')) { %>
+                            <% const pct = parseInt(item.progress) || 0; %>
+                            <div style="width:100%;height:5px;background:#E2E8F0;border-radius:3px;margin-top:4px;overflow:hidden;">
+                              <div style="width:<%= Math.min(100, Math.max(0, pct)) %>%;height:100%;background:<%= pct >= 70 ? '#10B981' : (pct >= 40 ? '#F59E0B' : '#EF4444') %>;border-radius:3px;"></div>
+                            </div>
+                          <% } %>
+                        </td>
+                        <td>
+                          <div style="font-size:0.82rem;color:#334155;">
+                            <span style="color:#64748B;font-size:0.72rem;display:block;">Assigned:</span>
+                            <strong><%= renderDate(item.assigned_date) || '—' %></strong>
+                          </div>
+                          <% if (item.due_date) { %>
+                            <div style="font-size:0.82rem;margin-top:4px;<%= isOverdue ? 'color:#DC2626;font-weight:700;' : 'color:#64748B;' %>">
+                              <span style="font-size:0.72rem;display:block;">Due:</span>
+                              <%= renderDate(item.due_date) %>
+                              <% if (isOverdue) { %>
+                                <span style="font-size:0.7rem;background:#FEE2E2;color:#DC2626;padding:1px 4px;border-radius:3px;font-weight:800;margin-left:2px;">LATE</span>
+                              <% } %>
+                            </div>
+                          <% } else { %>
+                            <div style="font-size:0.72rem;color:#94A3B8;margin-top:2px;">Due: — (Self-paced)</div>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- GROUPED BY STUDENT VIEW -->
+          <div id="spGroupedView" style="display:none;margin-top:10px;">
+            <div id="spGroupedContainer" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(360px, 1fr));gap:16px;">
+              <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────────────────────────────────────
              MODULE 06 — E-LIBRARY (E-BOOKS, DOCUMENTS, RESEARCH PAPERS)
              ───────────────────────────────────────────────────────────── -->
         <section id="module-e-library" class="lp-module-view" style="display:<%= currentModule === 'e-library' ? 'block' : 'none' %>;">
@@ -1531,7 +1800,10 @@
 
       // Update sidebar active button
       document.querySelectorAll('.lp-nav-item').forEach(btn => {
-        if (btn.textContent.toLowerCase().includes(moduleName)) {
+        const dMod = btn.getAttribute('data-module');
+        const cleanText = btn.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const cleanMod = moduleName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (dMod === moduleName || (cleanMod && cleanText.includes(cleanMod))) {
           btn.classList.add('active');
         }
       });
@@ -1594,6 +1866,243 @@
       if (btn) btn.classList.add('active');
       const pane = document.getElementById(`settings-pane-${tabName}`);
       if (pane) pane.classList.add('active');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // STUDENT PROGRESS CONTROLS (READ-ONLY LIBRARIAN VIEW)
+    // ═══════════════════════════════════════════════════════════════
+    let currentSpCategory = 'ALL';
+    let currentSpView = 'table';
+
+    function setStudentProgressCategory(cat, btn) {
+      currentSpCategory = cat;
+      document.querySelectorAll('#spCategoryTabs .lp-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      filterStudentProgress();
+    }
+
+    function setStudentProgressFilter(type, value) {
+      if (type === 'category') {
+        const btnMap = { 'ALL': 'spTabAll', 'BOOK': 'spTabBooks', 'QUIZ': 'spTabQuizzes', 'COURSE': 'spTabCourses' };
+        const btn = document.getElementById(btnMap[value]);
+        setStudentProgressCategory(value, btn);
+      }
+    }
+
+    function switchStudentProgressView(view) {
+      currentSpView = view;
+      const tableView = document.getElementById('spTableView');
+      const groupedView = document.getElementById('spGroupedView');
+      const tableBtn = document.getElementById('spViewTableBtn');
+      const groupedBtn = document.getElementById('spViewGroupedBtn');
+
+      if (view === 'grouped') {
+        if (tableView) tableView.style.display = 'none';
+        if (groupedView) groupedView.style.display = 'block';
+        if (tableBtn) { tableBtn.className = 'btn-secondary'; tableBtn.style.background = 'transparent'; tableBtn.style.border = 'none'; }
+        if (groupedBtn) { groupedBtn.className = 'btn-primary'; groupedBtn.style.background = ''; groupedBtn.style.border = ''; }
+        renderGroupedStudentView();
+      } else {
+        if (tableView) tableView.style.display = 'block';
+        if (groupedView) groupedView.style.display = 'none';
+        if (tableBtn) { tableBtn.className = 'btn-primary'; tableBtn.style.background = ''; tableBtn.style.border = ''; }
+        if (groupedBtn) { groupedBtn.className = 'btn-secondary'; groupedBtn.style.background = 'transparent'; groupedBtn.style.border = 'none'; }
+      }
+    }
+
+    function resetStudentProgressFilters() {
+      const search = document.getElementById('spSearchInput');
+      if (search) search.value = '';
+      const status = document.getElementById('spStatusFilter');
+      if (status) status.value = 'ALL';
+      setStudentProgressCategory('ALL', document.getElementById('spTabAll'));
+    }
+
+    function filterStudentProgress() {
+      const q = (document.getElementById('spSearchInput')?.value || '').toLowerCase().trim();
+      const statusFilter = document.getElementById('spStatusFilter')?.value || 'ALL';
+      const rows = document.querySelectorAll('#spTableBody .sp-row');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const student = row.getAttribute('data-student') || '';
+        const phone = row.getAttribute('data-phone') || '';
+        const sClass = row.getAttribute('data-class') || '';
+        const item = row.getAttribute('data-item') || '';
+        const category = row.getAttribute('data-category') || '';
+        const status = (row.getAttribute('data-status') || '').toUpperCase();
+
+        const matchQuery = !q || student.includes(q) || phone.includes(q) || sClass.includes(q) || item.includes(q);
+        const matchCategory = (currentSpCategory === 'ALL') || (category === currentSpCategory);
+
+        let matchStatus = true;
+        if (statusFilter === 'OVERDUE') {
+          matchStatus = (status === 'OVERDUE');
+        } else if (statusFilter === 'ACTIVE') {
+          matchStatus = (status === 'ISSUED' || status === 'READING');
+        } else if (statusFilter === 'PASSED') {
+          matchStatus = (status === 'PASSED' || status === 'COMPLETED');
+        } else if (statusFilter === 'ENROLLED') {
+          matchStatus = (status === 'ENROLLED');
+        }
+
+        if (matchQuery && matchCategory && matchStatus) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      const countEl = document.getElementById('spVisibleCount');
+      if (countEl) countEl.textContent = visibleCount;
+
+      let emptyRow = document.getElementById('spNoMatchRow');
+      if (visibleCount === 0 && rows.length > 0) {
+        if (!emptyRow) {
+          emptyRow = document.createElement('tr');
+          emptyRow.id = 'spNoMatchRow';
+          emptyRow.innerHTML = `<td colspan="6" style="text-align:center;padding:32px 20px;color:#94A3B8;">No records match the current search or filters.</td>`;
+          document.getElementById('spTableBody')?.appendChild(emptyRow);
+        } else {
+          emptyRow.style.display = '';
+        }
+      } else if (emptyRow) {
+        emptyRow.style.display = 'none';
+      }
+
+      if (currentSpView === 'grouped') {
+        renderGroupedStudentView();
+      }
+    }
+
+    function renderGroupedStudentView() {
+      const container = document.getElementById('spGroupedContainer');
+      if (!container) return;
+
+      const rows = Array.from(document.querySelectorAll('#spTableBody .sp-row')).filter(r => r.style.display !== 'none');
+      if (rows.length === 0) {
+        container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94A3B8;">No student records found matching the criteria.</div>`;
+        return;
+      }
+
+      const groups = {};
+      rows.forEach(r => {
+        const name = r.getAttribute('data-raw-student') || 'Unknown Student';
+        if (!groups[name]) {
+          groups[name] = {
+            name,
+            class: r.getAttribute('data-raw-class') || '',
+            phone: r.getAttribute('data-raw-phone') || '',
+            items: []
+          };
+        }
+        groups[name].items.push({
+          item: r.getAttribute('data-raw-item') || '',
+          type: r.getAttribute('data-raw-type') || '',
+          category: r.getAttribute('data-category') || '',
+          status: r.getAttribute('data-status') || '',
+          progress: r.getAttribute('data-raw-progress') || '',
+          assigned: r.getAttribute('data-raw-assigned') || '',
+          due: r.getAttribute('data-raw-due') || ''
+        });
+      });
+
+      container.innerHTML = Object.values(groups).map(g => {
+        return `
+          <div class="card" style="padding:18px;border:1px solid var(--border-color);border-radius:12px;display:flex;flex-direction:column;justify-content:space-between;background:var(--bg-surface);">
+            <div>
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;border-bottom:1px solid var(--border-color);padding-bottom:10px;">
+                <div>
+                  <h4 style="margin:0;font-size:1rem;font-weight:800;color:#1E293B;">${escapeHtml(g.name)}</h4>
+                  <div style="font-size:0.75rem;color:#64748B;display:flex;gap:8px;margin-top:2px;">
+                    <span style="background:#F1F5F9;padding:1px 6px;border-radius:4px;font-weight:600;">${escapeHtml(g.class)}</span>
+                    ${g.phone ? `<span>📞 ${escapeHtml(g.phone)}</span>` : ''}
+                  </div>
+                </div>
+                <span style="background:#EEF2FF;color:#4F46E5;font-size:0.75rem;font-weight:800;padding:2px 8px;border-radius:12px;border:1px solid #C7D2FE;">
+                  ${g.items.length} ${g.items.length === 1 ? 'Activity' : 'Activities'}
+                </span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                ${g.items.map(it => {
+                  const isLate = it.status === 'OVERDUE';
+                  let icon = '📚';
+                  if (it.category === 'QUIZ') icon = '🎯';
+                  else if (it.category === 'COURSE') icon = '🎓';
+                  else if (it.type === 'Digital E-Book') icon = '🌐';
+                  return `
+                    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                        <span style="font-size:0.85rem;font-weight:700;color:#1E293B;display:flex;align-items:center;gap:6px;">
+                          <span>${icon}</span>
+                          <span>${escapeHtml(it.item)}</span>
+                        </span>
+                        <span style="font-size:0.72rem;font-weight:800;padding:2px 6px;border-radius:4px;${isLate ? 'background:#FEE2E2;color:#991B1B;' : (it.status === 'PASSED' || it.status === 'COMPLETED' ? 'background:#ECFDF5;color:#047857;' : 'background:#EFF6FF;color:#1D4ED8;')}">
+                          ${escapeHtml(it.status)}
+                        </span>
+                      </div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;font-size:0.75rem;color:#64748B;">
+                        <span>Progress: <strong style="color:#1E293B;">${escapeHtml(it.progress || '—')}</strong></span>
+                        <span>${it.due ? (isLate ? `<span style="color:#DC2626;font-weight:700;">Due: ${escapeHtml(it.due)} (Late)</span>` : `Due: ${escapeHtml(it.due)}`) : `Assigned: ${escapeHtml(it.assigned)}`}</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function exportStudentProgressCSV() {
+      const rows = Array.from(document.querySelectorAll('#spTableBody .sp-row')).filter(r => r.style.display !== 'none');
+      if (rows.length === 0) {
+        alert('No records available to export.');
+        return;
+      }
+      let csv = 'Student Name,Class,Phone,Item Title,Item Type,Category,Status,Progress,Assigned Date,Due Date\n';
+      rows.forEach(r => {
+        const student = (r.getAttribute('data-raw-student') || '').replace(/"/g, '""');
+        const sClass = (r.getAttribute('data-raw-class') || '').replace(/"/g, '""');
+        const phone = (r.getAttribute('data-raw-phone') || '').replace(/"/g, '""');
+        const item = (r.getAttribute('data-raw-item') || '').replace(/"/g, '""');
+        const type = (r.getAttribute('data-raw-type') || '').replace(/"/g, '""');
+        const cat = (r.getAttribute('data-category') || '').replace(/"/g, '""');
+        const status = (r.getAttribute('data-status') || '').replace(/"/g, '""');
+        const progress = (r.getAttribute('data-raw-progress') || '').replace(/"/g, '""');
+        const assigned = (r.getAttribute('data-raw-assigned') || '').replace(/"/g, '""');
+        const due = (r.getAttribute('data-raw-due') || '').replace(/"/g, '""');
+        csv += `"${student}","${sClass}","${phone}","${item}","${type}","${cat}","${status}","${progress}","${assigned}","${due}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `student_learning_progress_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function refreshStudentProgressData() {
+      try {
+        const res = await fetch('/admin/api/student-progress');
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert('Could not refresh progress data: ' + (data.error || 'Server error'));
+        }
+      } catch (err) {
+        window.location.reload();
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     function toggleSidebar() {

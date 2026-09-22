@@ -73,6 +73,96 @@ function calculateFine(dueDateStr, finePerDay = 5, graceDays = 2) {
   return { fine: 0, is_overdue: false, days_overdue: 0 };
 }
 
+// Helper to fetch student learning progress across Books, Quizzes, and Courses
+async function fetchStudentProgress(sCode) {
+  try {
+    // 1. Ongoing Physical Books (Issued and not yet returned)
+    const booksQuery = `
+      SELECT t.id, t.user_id, u.name as student_name, COALESCE(u.class, 'Class 10') as student_class, u.phone as student_phone,
+             b.title as item_name, 'Physical Book' as item_type, 'BOOK' as category,
+             COALESCE(t.status, 'ISSUED') as status,
+             t.issue_date as assigned_date, t.due_date,
+             CASE 
+               WHEN t.due_date IS NOT NULL AND t.due_date < CURRENT_TIMESTAMP THEN 'Overdue'
+               ELSE 'Reading / Issued'
+             END as progress
+      FROM transactions t
+      JOIN users u ON t.user_id = u.id
+      JOIN books b ON t.book_id = b.id
+      WHERE (LOWER(t.school_code) = LOWER($1) OR t.school_code = 'GLOBAL' OR t.school_code IS NULL OR t.school_code = '')
+        AND (t.return_date IS NULL OR t.return_date = '')
+      ORDER BY t.id DESC LIMIT 100
+    `;
+    const booksRes = await db.query(booksQuery, [sCode]).catch(() => ({ rows: [] }));
+
+    // 2. Ongoing Digital Readings
+    const digitalQuery = `
+      SELECT dbr.id, dbr.student_id as user_id, u.name as student_name, COALESCE(u.class, 'Class 10') as student_class, u.phone as student_phone,
+             dc.title as item_name, 'Digital E-Book' as item_type, 'BOOK' as category,
+             COALESCE(dbr.reading_status, 'READING') as status,
+             dbr.started_at as assigned_date, NULL as due_date,
+             CONCAT(COALESCE(dbr.progress_percentage, 0), '%') as progress
+      FROM digital_book_readings dbr
+      JOIN users u ON dbr.student_id = u.id
+      JOIN digital_content dc ON dbr.content_id = dc.id
+      WHERE (LOWER(dbr.school_code) = LOWER($1) OR dbr.school_code = 'GLOBAL' OR dbr.school_code IS NULL OR dbr.school_code = '')
+      ORDER BY dbr.id DESC LIMIT 100
+    `;
+    const digitalRes = await db.query(digitalQuery, [sCode]).catch(() => ({ rows: [] }));
+
+    // 3. Quizzes (Attempts & Progress)
+    const quizQuery = `
+      SELECT qa.id, COALESCE(qa.user_id, qa.student_id) as user_id, u.name as student_name, COALESCE(u.class, 'Class 10') as student_class, u.phone as student_phone,
+             q.title as item_name, 'Quiz' as item_type, 'QUIZ' as category,
+             COALESCE(qa.status, CASE WHEN qa.passed = 1 THEN 'PASSED' ELSE 'COMPLETED' END) as status,
+             qa.started_at as assigned_date, NULL as due_date,
+             CONCAT(ROUND(COALESCE(qa.percentage, qa.score, 0)), '% score') as progress
+      FROM quiz_attempts qa
+      JOIN users u ON (u.id = qa.user_id OR u.id = qa.student_id)
+      JOIN quizzes q ON q.id = qa.quiz_id
+      WHERE (LOWER(u.school_code) = LOWER($1) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
+      ORDER BY qa.id DESC LIMIT 100
+    `;
+    const quizRes = await db.query(quizQuery, [sCode]).catch(() => ({ rows: [] }));
+
+    // 4. Courses (Live Course Enrollments)
+    const coursesQuery = `
+      SELECT ce.id, ce.user_id, COALESCE(u.name, ce.user_name) as student_name, COALESCE(u.class, 'Class 10') as student_class, u.phone as student_phone,
+             c.title as item_name, 'Course' as item_type, 'COURSE' as category,
+             COALESCE(ce.status, 'ENROLLED') as status,
+             COALESCE(ce.enrolled_at, CURRENT_TIMESTAMP) as assigned_date, NULL as due_date,
+             CONCAT(COALESCE(ce.progress_percent, 0), '%') as progress
+      FROM course_enrollments ce
+      LEFT JOIN users u ON ce.user_id = u.id
+      JOIN live_courses c ON c.id = ce.course_id
+      WHERE (LOWER(c.school_code) = LOWER($1) OR c.school_code = 'GLOBAL' OR c.school_code IS NULL OR c.school_code = '')
+      ORDER BY ce.id DESC LIMIT 100
+    `;
+    const coursesRes = await db.query(coursesQuery, [sCode]).catch(() => ({ rows: [] }));
+
+    const items = [
+      ...(booksRes.rows || []),
+      ...(digitalRes.rows || []),
+      ...(quizRes.rows || []),
+      ...(coursesRes.rows || [])
+    ];
+
+    return {
+      items,
+      counts: {
+        total: items.length,
+        books: (booksRes.rows || []).length + (digitalRes.rows || []).length,
+        quizzes: (quizRes.rows || []).length,
+        courses: (coursesRes.rows || []).length,
+        students: new Set(items.map(i => i.user_id || i.student_name)).size
+      }
+    };
+  } catch (err) {
+    console.error('Error fetching student progress:', err);
+    return { items: [], counts: { total: 0, books: 0, quizzes: 0, courses: 0, students: 0 } };
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. MAIN LIBRARIAN 9-MODULE PORTAL RENDERER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -243,6 +333,9 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     `, [sCode]).catch(() => ({ rows: [] }));
     const reviews = revRes.rows || [];
 
+    // 10. Fetch Student Learning Progress (Books, Quizzes, Courses)
+    const studentProgressData = await fetchStudentProgress(sCode);
+
     res.render('admin', {
       title: 'Librika Librarian Console - Intelligent Workspace',
       currentModule: targetModule,
@@ -265,7 +358,12 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
         total_staff: staff.length,
         total_returned: returnedLoans.length,
         total_digital: digitalItems.length,
-        pending_reservations: reservations.filter(r => r.status === 'Pending' || r.status === 'pending').length
+        pending_reservations: reservations.filter(r => r.status === 'Pending' || r.status === 'pending').length,
+        student_progress_count: studentProgressData.counts.total,
+        student_progress_books: studentProgressData.counts.books,
+        student_progress_quizzes: studentProgressData.counts.quizzes,
+        student_progress_courses: studentProgressData.counts.courses,
+        student_progress_students: studentProgressData.counts.students
       },
       books,
       bookCopies,
@@ -281,7 +379,9 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
       studioSessions,
       auditLogs,
       notificationsList,
-      reviews
+      reviews,
+      studentProgressItems: studentProgressData.items,
+      studentProgressCounts: studentProgressData.counts
     });
   } catch (err) {
     console.error('Librarian portal render error:', err);
@@ -298,11 +398,23 @@ router.get('/dashboard', adminOnly, (req, res) => renderLibrarianPortal(req, res
 router.get('/catalog', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'catalog'));
 router.get('/members', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'members'));
 router.get('/circulation', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'circulation'));
+router.get('/student-progress', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'student-progress'));
 router.get('/requests', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'requests'));
 router.get('/e-library', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'e-library'));
 router.get('/studio', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'studio'));
 router.get('/analytics', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'analytics'));
 router.get('/settings', adminOnly, (req, res) => renderLibrarianPortal(req, res, 'settings'));
+
+// API Endpoint for dynamic filtering / fetching of Student Progress
+router.get('/api/student-progress', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const data = await fetchStudentProgress(sCode);
+    res.json({ success: true, ...data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. RAPID CIRCULATION DESK APIS (ISSUE, RETURN, RENEW, LOOKUPS)
