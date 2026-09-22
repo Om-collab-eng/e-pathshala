@@ -44,6 +44,7 @@ node db/initAdsMigration.js || true
 node db/initMeetingTables.js || true
 node db/initQuizTables.js || true
 node db/initPushSubscriptionsTable.js || true
+node db/migrateLoadingAndCleanDemo.js || true
 
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
 mkdir -p tmp
@@ -60,6 +61,7 @@ node db/initAdsMigration.js || true
 node db/initMeetingTables.js || true
 node db/initQuizTables.js || true
 node db/initPushSubscriptionsTable.js || true
+node db/migrateLoadingAndCleanDemo.js || true
 
 
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true

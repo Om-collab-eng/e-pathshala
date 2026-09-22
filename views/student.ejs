@@ -1551,15 +1551,15 @@
 
             <!-- Search & Filters -->
             <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-              <input type="text" id="catalogSearchInput" placeholder="Search by title, author, ISBN or topic..." style="flex:1;min-width:280px;height:42px;padding:0 14px;border-radius:12px;border:1px solid var(--border);font-family:inherit;font-size:0.88rem;" onkeyup="filterCatalogGrid(this.value)">
+              <input type="text" id="catalogSearchInput" placeholder="Search by title, author, ISBN or topic..." style="flex:1;min-width:280px;height:42px;padding:0 14px;border-radius:12px;border:1px solid var(--border);font-family:inherit;font-size:0.88rem;" oninput="handleCatalogSearch(this.value)">
               
-              <div style="display:flex;gap:6px;overflow-x:auto;">
-                <button class="btn-secondary" onclick="filterCatalogByGenre('ALL', this)" style="background:var(--primary-light);color:var(--primary);border-color:rgba(11,94,215,0.2);">All</button>
-                <button class="btn-secondary" onclick="filterCatalogByGenre('Science', this)">Science</button>
-                <button class="btn-secondary" onclick="filterCatalogByGenre('Fiction', this)">Fiction</button>
-                <button class="btn-secondary" onclick="filterCatalogByGenre('Technology', this)">Technology</button>
-                <button class="btn-secondary" onclick="filterCatalogByGenre('History', this)">History</button>
-                <button class="btn-secondary" onclick="filterCatalogByGenre('Mathematics', this)">Mathematics</button>
+              <div id="catalogGenreFilters" style="display:flex;gap:6px;overflow-x:auto;">
+                <button class="btn-secondary" onclick="handleCatalogGenreSelect('ALL', this)" style="background:var(--primary-light);color:var(--primary);border-color:rgba(11,94,215,0.2);">All</button>
+                <button class="btn-secondary" onclick="handleCatalogGenreSelect('Science', this)">Science</button>
+                <button class="btn-secondary" onclick="handleCatalogGenreSelect('Fiction', this)">Fiction</button>
+                <button class="btn-secondary" onclick="handleCatalogGenreSelect('Technology', this)">Technology</button>
+                <button class="btn-secondary" onclick="handleCatalogGenreSelect('History', this)">History</button>
+                <button class="btn-secondary" onclick="handleCatalogGenreSelect('Mathematics', this)">Mathematics</button>
               </div>
             </div>
 
@@ -2084,8 +2084,21 @@
             <!-- Offline Quizzes Pane -->
             <div id="quiz-subpane-offline">
               <div id="offlineQuizGrid" class="sp-grid-3">
-                <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:36px;color:var(--text-muted);">
-                  Loading Offline Book Quizzes...
+                <div class="sp-card" style="animation: pulse 1.5s infinite; opacity: 0.7; min-height: 180px; display:flex; flex-direction:column; justify-content:space-between; margin-bottom:0;">
+                  <div>
+                    <div style="width: 80px; height: 20px; background: rgba(0,0,0,0.08); border-radius: 999px; margin-bottom: 12px;"></div>
+                    <div style="width: 85%; height: 20px; background: rgba(0,0,0,0.08); border-radius: 6px; margin-bottom: 8px;"></div>
+                    <div style="width: 60%; height: 14px; background: rgba(0,0,0,0.05); border-radius: 4px;"></div>
+                  </div>
+                  <div style="width: 100%; height: 36px; background: rgba(0,0,0,0.08); border-radius: 8px;"></div>
+                </div>
+                <div class="sp-card" style="animation: pulse 1.5s infinite; opacity: 0.7; min-height: 180px; display:flex; flex-direction:column; justify-content:space-between; margin-bottom:0;">
+                  <div>
+                    <div style="width: 80px; height: 20px; background: rgba(0,0,0,0.08); border-radius: 999px; margin-bottom: 12px;"></div>
+                    <div style="width: 85%; height: 20px; background: rgba(0,0,0,0.08); border-radius: 6px; margin-bottom: 8px;"></div>
+                    <div style="width: 60%; height: 14px; background: rgba(0,0,0,0.05); border-radius: 4px;"></div>
+                  </div>
+                  <div style="width: 100%; height: 36px; background: rgba(0,0,0,0.08); border-radius: 8px;"></div>
                 </div>
               </div>
             </div>
@@ -2093,8 +2106,13 @@
             <!-- Digital Quizzes Pane -->
             <div id="quiz-subpane-digital" style="display:none;">
               <div id="digitalQuizGrid" class="sp-grid-3">
-                <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:36px;color:var(--text-muted);">
-                  Loading Digital Library Quizzes...
+                <div class="sp-card" style="animation: pulse 1.5s infinite; opacity: 0.7; min-height: 180px; display:flex; flex-direction:column; justify-content:space-between; margin-bottom:0;">
+                  <div>
+                    <div style="width: 80px; height: 20px; background: rgba(0,0,0,0.08); border-radius: 999px; margin-bottom: 12px;"></div>
+                    <div style="width: 85%; height: 20px; background: rgba(0,0,0,0.08); border-radius: 6px; margin-bottom: 8px;"></div>
+                    <div style="width: 60%; height: 14px; background: rgba(0,0,0,0.05); border-radius: 4px;"></div>
+                  </div>
+                  <div style="width: 100%; height: 36px; background: rgba(0,0,0,0.08); border-radius: 8px;"></div>
                 </div>
               </div>
             </div>
@@ -2103,22 +2121,34 @@
 
           <!-- Tab 2: Assignments -->
           <div id="learn-tab-assignments" class="learn-tab-pane" style="display:none;">
-            <div class="sp-grid-3">
-              <% assignments.forEach(a => { %>
-                <div class="sp-card" style="margin-bottom:0;">
-                  <span class="sp-pill <%= a.sub_status === 'SUBMITTED' ? 'green' : 'yellow' %>" style="margin-bottom:8px;">
-                    <%= a.sub_status === 'SUBMITTED' ? '✅ Submitted' : '⏳ Pending' %>
-                  </span>
-                  <h4 style="margin:0 0 6px 0;font-size:1rem;font-weight:800;"><%= a.title %></h4>
-                  <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px 0;"><%= a.description %></p>
-                  <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px;">
-                    📅 Due: <strong><%= renderDate(a.due_at) %></strong>
-                  </div>
-                  <button class="btn-primary" style="width:100%;justify-content:center;" onclick="openAssignmentModal('<%= a.id %>', '<%= a.title %>')">
-                    <%= a.sub_status === 'SUBMITTED' ? 'View Submission' : 'Submit Work' %>
-                  </button>
+            <div id="assignmentsGrid" class="sp-grid-3">
+              <% if (!assignments || assignments.length === 0) { %>
+                <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:48px 20px;">
+                  <span style="font-size:2.5rem;display:block;margin-bottom:8px;">📝</span>
+                  <h4 style="margin:0 0 6px 0;font-size:1.1rem;font-weight:800;">No Pending Assignments</h4>
+                  <p style="margin:0;font-size:0.88rem;color:var(--text-secondary);">Your instructors have not posted any active assignments for your class right now.</p>
                 </div>
-              <% }) %>
+              <% } else { %>
+                <% assignments.forEach(a => { %>
+                  <div class="sp-card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div>
+                      <span class="sp-pill <%= a.sub_status === 'SUBMITTED' || a.sub_status === 'GRADED' ? 'green' : (a.sub_status === 'OVERDUE' ? 'red' : 'yellow') %>" style="margin-bottom:8px;">
+                        <%= a.sub_status === 'GRADED' ? ('🎯 Graded (' + (a.score || '') + ')') : (a.sub_status === 'SUBMITTED' ? '✅ Submitted' : (a.sub_status === 'OVERDUE' ? '⚠️ Overdue' : '⏳ Pending')) %>
+                      </span>
+                      <h4 style="margin:0 0 6px 0;font-size:1rem;font-weight:800;"><%= a.title %></h4>
+                      <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px 0;"><%= a.description || 'No description provided.' %></p>
+                      <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px;">
+                        📅 Due: <strong><%= renderDate(a.due_at) %></strong>
+                      </div>
+                    </div>
+                    <div>
+                      <button class="btn-primary" style="width:100%;justify-content:center;" onclick="openAssignmentModal('<%= a.id %>', '<%= (a.title || '').replace(/'/g, '\\\'') %>')">
+                        <%= a.sub_status === 'SUBMITTED' || a.sub_status === 'GRADED' ? 'View / Resubmit' : 'Submit Work &rarr;' %>
+                      </button>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } %>
             </div>
           </div>
 
@@ -2508,6 +2538,31 @@
     </div>
   </div>
 
+  <!-- Assignment Submission Modal -->
+  <div id="assignmentModal" class="sp-modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal('assignmentModal')">
+    <div class="sp-modal-content" style="padding:24px;max-width:520px;width:92%;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 id="assignmentModalTitle" style="margin:0;font-size:1.15rem;font-weight:800;">📝 Submit Assignment</h3>
+        <button onclick="closeModal('assignmentModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <form id="assignmentModalForm" onsubmit="submitAssignmentWork(event)">
+        <input type="hidden" id="assignmentModalId" name="assignment_id">
+        <div style="margin-bottom:14px;">
+          <label style="display:block;margin-bottom:6px;font-size:0.82rem;font-weight:700;">Attach File (PDF, DOCX, ZIP, Code, Image)</label>
+          <input type="file" id="assignmentModalFile" name="file" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:0.85rem;">
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="display:block;margin-bottom:6px;font-size:0.82rem;font-weight:700;">Submission Notes / Answer Text</label>
+          <textarea id="assignmentModalNotes" name="notes" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.88rem;resize:vertical;" placeholder="Write your submission notes or answers here..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeModal('assignmentModal')">Cancel</button>
+          <button type="submit" id="btnSubmitAssignmentWork" class="btn-primary">Submit Work &rarr;</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ═════════════════════════════════════════════════════════════════
        5. CLIENT-SIDE JAVASCRIPT LOGIC
        ═════════════════════════════════════════════════════════════════ -->
@@ -2547,6 +2602,17 @@
       const backdrop = document.getElementById('spSidebarBackdrop');
       if (backdrop) backdrop.classList.remove('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Automatically trigger dynamic loaders when entering modules
+      if (moduleName === 'learn') {
+        loadStudentQuizzes();
+        loadStudentAssignments();
+      } else if (moduleName === 'catalog') {
+        const grid = document.getElementById('catalogGrid');
+        if (grid && (!grid.children || grid.children.length === 0 || grid.querySelector('.sp-card'))) {
+          loadStudentCatalog();
+        }
+      }
     }
 
     function toggleStudentSidebar() {
@@ -2573,6 +2639,12 @@
       const target = document.getElementById(`learn-tab-${tab}`);
       if (target) target.style.display = 'block';
       if (btn) btn.classList.add('active');
+
+      if (tab === 'quizzes') {
+        loadStudentQuizzes();
+      } else if (tab === 'assignments') {
+        loadStudentAssignments();
+      }
     }
 
     function switchSavedTab(tab, btn) {
@@ -2751,19 +2823,56 @@
       }
     }
 
+    // Reusable animated skeleton loader
+    function renderSkeletonCards(count = 3, type = 'card') {
+      let html = '';
+      for (let i = 0; i < count; i++) {
+        if (type === 'book') {
+          html += `
+            <div class="sp-book-card" style="animation: pulse 1.5s infinite; opacity: 0.7;">
+              <div style="height: 180px; background: rgba(0,0,0,0.06); border-radius: 12px 12px 0 0;"></div>
+              <div class="sp-book-info">
+                <div style="height: 18px; width: 75%; background: rgba(0,0,0,0.08); border-radius: 4px; margin-bottom: 8px;"></div>
+                <div style="height: 14px; width: 45%; background: rgba(0,0,0,0.05); border-radius: 4px; margin-bottom: 12px;"></div>
+                <div style="height: 32px; width: 100%; background: rgba(0,0,0,0.06); border-radius: 8px;"></div>
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="sp-card" style="animation: pulse 1.5s infinite; opacity: 0.7; min-height: 180px; display:flex; flex-direction:column; justify-content:space-between; margin-bottom:0;">
+              <div>
+                <div style="width: 80px; height: 20px; background: rgba(0,0,0,0.08); border-radius: 999px; margin-bottom: 12px;"></div>
+                <div style="width: 85%; height: 20px; background: rgba(0,0,0,0.08); border-radius: 6px; margin-bottom: 8px;"></div>
+                <div style="width: 60%; height: 14px; background: rgba(0,0,0,0.05); border-radius: 4px; margin-bottom: 8px;"></div>
+                <div style="width: 40%; height: 14px; background: rgba(0,0,0,0.05); border-radius: 4px;"></div>
+              </div>
+              <div style="width: 100%; height: 36px; background: rgba(0,0,0,0.08); border-radius: 8px; margin-top: 14px;"></div>
+            </div>
+          `;
+        }
+      }
+      return html;
+    }
+
+    // ── QUIZZES LOADER ──────────────────────────────────────────────────────────
     async function loadStudentQuizzes() {
+      const offGrid = document.getElementById('offlineQuizGrid');
+      const digGrid = document.getElementById('digitalQuizGrid');
+
+      if (offGrid) offGrid.innerHTML = renderSkeletonCards(3);
+      if (digGrid) digGrid.innerHTML = renderSkeletonCards(3);
+
       try {
         const res = await fetch('/api/quizzes/student');
+        if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
         const data = await res.json();
-        if (data.status !== 'success') return;
-
-        const offGrid = document.getElementById('offlineQuizGrid');
-        const digGrid = document.getElementById('digitalQuizGrid');
+        if (data.status !== 'success') throw new Error(data.message || 'Failed to fetch quizzes');
 
         const renderQuizCards = (list, isOffline) => {
           if (!list || list.length === 0) {
             return `
-              <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:48px;">
+              <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:48px 20px;">
                 <span style="font-size:2.5rem;display:block;margin-bottom:8px;">${isOffline ? '📚' : '📱'}</span>
                 <h4 style="margin:0 0 6px 0;font-size:1.1rem;font-weight:800;">No Quizzes Available</h4>
                 <p style="margin:0;font-size:0.88rem;color:var(--text-secondary);">
@@ -2800,7 +2909,7 @@
                   ${statusPill}
                   <h4 style="margin:0 0 6px 0;font-size:1.05rem;font-weight:800;line-height:1.3;">${q.title}</h4>
                   <div style="font-size:0.82rem;color:var(--text-secondary);font-weight:600;margin-bottom:8px;">
-                    📖 ${q.book_title || 'Book Quiz'}
+                    📖 ${q.book_title || q.subject || 'Curriculum Quiz'}
                   </div>
                   ${q.card_status === 'LOCKED' ? `
                     <div style="font-size:0.75rem;color:#b91c1c;background:#fee2e2;padding:6px 10px;border-radius:8px;margin-bottom:12px;line-height:1.4;">
@@ -2808,7 +2917,7 @@
                     </div>
                   ` : `
                     <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:14px;">
-                      ⏱️ ${q.time_limit} Mins · 🏆 Pass: ${q.passing_percentage}% · 🔄 ${q.attempts_remaining} attempts left
+                      ⏱️ ${q.time_limit || 15} Mins · 🏆 Pass: ${q.passing_percentage || 60}% · 🔄 ${q.attempts_remaining ?? 2} attempts left
                     </div>
                   `}
                 </div>
@@ -2824,11 +2933,242 @@
         if (digGrid) digGrid.innerHTML = renderQuizCards(data.digitalQuizzes, false);
       } catch (err) {
         console.warn('Load quizzes error:', err);
+        const errHtml = `
+          <div class="sp-card" style="grid-column: 1 / -1; text-align:center; padding:36px 20px; border: 1px dashed #ef4444; background: #fef2f2; border-radius: 14px;">
+            <span style="font-size: 2.2rem; display:block; margin-bottom: 8px;">⚠️</span>
+            <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 800; color: #991b1b;">Unable to Load Quizzes</h4>
+            <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: #7f1d1d;">${err.message || 'Could not connect to the quiz service. Please check your connection and retry.'}</p>
+            <button class="btn-primary" onclick="loadStudentQuizzes()" style="margin: 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; font-size: 0.85rem;">🔄 Try Again</button>
+          </div>
+        `;
+        if (offGrid) offGrid.innerHTML = errHtml;
+        if (digGrid) digGrid.innerHTML = errHtml;
       }
     }
 
     function openQuizModal(quizId, title) {
       window.location.href = `/quizzes/${quizId}/take`;
+    }
+
+    // ── ASSIGNMENTS LOADER & MODALS ─────────────────────────────────────────────
+    async function loadStudentAssignments() {
+      const container = document.getElementById('assignmentsGrid');
+      if (!container) return;
+      container.innerHTML = renderSkeletonCards(3);
+
+      try {
+        const res = await fetch('/student/api/assignments');
+        if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Failed to load assignments');
+
+        const list = data.assignments || [];
+        if (list.length === 0) {
+          container.innerHTML = `
+            <div class="sp-card" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; border-radius: 16px;">
+              <span style="font-size: 2.5rem; display: block; margin-bottom: 8px;">📝</span>
+              <h4 style="margin: 0 0 6px 0; font-size: 1.1rem; font-weight: 800;">No Pending Assignments</h4>
+              <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary);">Your instructors have not posted any active assignments for your class right now.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = list.map(a => {
+          let pill = 'yellow';
+          let label = '⏳ Pending';
+          if (a.sub_status === 'GRADED') {
+            pill = 'green';
+            label = `🎯 Graded (${a.score})`;
+          } else if (a.sub_status === 'SUBMITTED') {
+            pill = 'green';
+            label = '✅ Submitted';
+          } else if (a.sub_status === 'OVERDUE') {
+            pill = 'red';
+            label = '⚠️ Overdue';
+          }
+
+          const dueDateStr = a.due_at ? new Date(a.due_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'No Due Date';
+
+          return `
+            <div class="sp-card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
+              <div>
+                <span class="sp-pill ${pill}" style="margin-bottom:8px;">${label}</span>
+                <h4 style="margin:0 0 6px 0;font-size:1rem;font-weight:800;">${a.title}</h4>
+                <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px 0;">${a.description || 'No instructions provided.'}</p>
+                <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:16px;">
+                  📅 Due: <strong>${dueDateStr}</strong>
+                </div>
+              </div>
+              <div>
+                <button class="btn-primary" style="width:100%;justify-content:center;" onclick="openAssignmentModal('${a.id}', '${(a.title || '').replace(/'/g, "\\'")}')">
+                  ${a.sub_status === 'SUBMITTED' || a.sub_status === 'GRADED' ? 'View / Resubmit' : 'Submit Work &rarr;'}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.warn('Load assignments error:', err);
+        container.innerHTML = `
+          <div class="sp-card" style="grid-column: 1 / -1; text-align:center; padding:36px 20px; border: 1px dashed #ef4444; background: #fef2f2; border-radius: 14px;">
+            <span style="font-size: 2.2rem; display:block; margin-bottom: 8px;">⚠️</span>
+            <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 800; color: #991b1b;">Unable to Load Assignments</h4>
+            <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: #7f1d1d;">${err.message || 'Could not fetch your class assignments. Please try again.'}</p>
+            <button class="btn-primary" onclick="loadStudentAssignments()" style="margin: 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; font-size: 0.85rem;">🔄 Try Again</button>
+          </div>
+        `;
+      }
+    }
+
+    function openAssignmentModal(id, title) {
+      const modal = document.getElementById('assignmentModal');
+      if (!modal) {
+        window.location.href = `/student/assignments/${id}`;
+        return;
+      }
+      document.getElementById('assignmentModalId').value = id;
+      document.getElementById('assignmentModalTitle').innerText = '📝 Submit: ' + title;
+      document.getElementById('assignmentModalNotes').value = '';
+      document.getElementById('assignmentModalFile').value = '';
+      openModal('assignmentModal');
+    }
+
+    async function submitAssignmentWork(e) {
+      e.preventDefault();
+      const assignmentId = document.getElementById('assignmentModalId').value;
+      const fileInput = document.getElementById('assignmentModalFile');
+      const notes = document.getElementById('assignmentModalNotes').value;
+      const btn = document.getElementById('btnSubmitAssignmentWork');
+
+      if ((!fileInput.files || fileInput.files.length === 0) && !notes.trim()) {
+        alert('Please either attach a file or write answer notes before submitting.');
+        return;
+      }
+
+      const formData = new FormData();
+      if (fileInput.files && fileInput.files[0]) {
+        formData.append('file', fileInput.files[0]);
+      }
+      formData.append('notes', notes);
+
+      btn.disabled = true;
+      btn.innerText = 'Submitting...';
+
+      try {
+        const res = await fetch(`/student/assignments/${assignmentId}/submit`, {
+          method: 'POST',
+          body: formData
+        });
+        closeModal('assignmentModal');
+        alert('Work submitted successfully!');
+        loadStudentAssignments();
+      } catch (err) {
+        alert('Submission error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Submit Work →';
+      }
+    }
+
+    // ── PHYSICAL BOOKS CATALOG LOADER ───────────────────────────────────────────
+    let currentCatalogGenre = 'ALL';
+    let catalogSearchTimeout = null;
+
+    async function loadStudentCatalog(searchQuery = '', genre = currentCatalogGenre) {
+      const grid = document.getElementById('catalogGrid');
+      if (!grid) return;
+      grid.innerHTML = renderSkeletonCards(4, 'book');
+
+      try {
+        const url = new URL('/student/api/catalog', window.location.origin);
+        if (searchQuery) url.searchParams.set('q', searchQuery);
+        if (genre && genre !== 'ALL') url.searchParams.set('genre', genre);
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Failed to load catalog');
+
+        const books = data.books || [];
+        if (books.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:48px 20px;background:var(--surface-sub);border-radius:var(--radius-md);border:1px dashed var(--border);">
+              <div style="font-size:2.4rem;margin-bottom:12px;">📚</div>
+              <h4 style="margin:0 0 6px 0;font-weight:800;color:var(--text-primary);">No Books Found</h4>
+              <p style="margin:0 0 16px 0;font-size:0.85rem;color:var(--text-secondary);">No physical books matched your search criteria or genre filter.</p>
+              <button class="btn-secondary" onclick="resetCatalogFilters()" style="display:inline-flex;padding:6px 14px;font-size:0.82rem;">Reset Filters</button>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = books.map(b => `
+          <div class="sp-book-card" data-genre="${(b.genre || '').toLowerCase()}" data-title="${(b.title || '').toLowerCase()}" data-author="${(b.author || '').toLowerCase()}">
+            <div class="sp-book-cover-wrap">
+              <img src="${b.cover_url || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&auto=format&fit=crop&q=60'}" class="sp-book-cover" alt="${b.title}">
+              <span class="sp-book-badge ${b.available_copies > 0 ? 'available' : 'out'}">
+                ${b.available_copies > 0 ? (b.available_copies + ' in Library') : 'Issued Out'}
+              </span>
+            </div>
+            <div class="sp-book-info">
+              <h4 class="sp-book-title">${b.title}</h4>
+              <div class="sp-book-author">${b.author}</div>
+              <div class="sp-book-location">
+                📍 Rack ${b.rack_location || 'A-1'} · Shelf ${b.shelf_no || '2'}
+              </div>
+              <div class="sp-book-actions">
+                <button class="btn-primary" style="flex:1;justify-content:center;padding:6px;font-size:0.78rem;" onclick="reserveBook('${b.id}')">
+                  ${b.is_reserved ? 'Reserved' : 'Reserve'}
+                </button>
+                <button class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;" onclick="toggleSaveBook('${b.id}', this)" title="Save to Wishlist">
+                  ${b.is_saved ? '⭐' : '☆'}
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.warn('Load catalog error:', err);
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align:center; padding:36px 20px; border: 1px dashed #ef4444; background: #fef2f2; border-radius: 14px;">
+            <span style="font-size: 2.2rem; display:block; margin-bottom: 8px;">⚠️</span>
+            <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 800; color: #991b1b;">Unable to Load Books Catalog</h4>
+            <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: #7f1d1d;">${err.message || 'Could not fetch catalog books. Please try again.'}</p>
+            <button class="btn-primary" onclick="loadStudentCatalog()" style="margin: 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; font-size: 0.85rem;">🔄 Try Again</button>
+          </div>
+        `;
+      }
+    }
+
+    function handleCatalogSearch(val) {
+      clearTimeout(catalogSearchTimeout);
+      catalogSearchTimeout = setTimeout(() => {
+        loadStudentCatalog(val, currentCatalogGenre);
+      }, 350);
+    }
+
+    function handleCatalogGenreSelect(genre, btn) {
+      currentCatalogGenre = genre;
+      document.querySelectorAll('#catalogGenreFilters button').forEach(b => {
+        b.style.background = '';
+        b.style.color = '';
+        b.style.borderColor = '';
+      });
+      if (btn) {
+        btn.style.background = 'var(--primary-light)';
+        btn.style.color = 'var(--primary)';
+        btn.style.borderColor = 'rgba(11,94,215,0.2)';
+      }
+      const q = document.getElementById('catalogSearchInput')?.value || '';
+      loadStudentCatalog(q, genre);
+    }
+
+    function resetCatalogFilters() {
+      const input = document.getElementById('catalogSearchInput');
+      if (input) input.value = '';
+      const allBtn = document.querySelector('#catalogGenreFilters button');
+      handleCatalogGenreSelect('ALL', allBtn);
     }
 
     async function handleProfileUpdate(e) {
@@ -3064,6 +3404,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadElibraryTicker();
       loadStudentQuizzes();
+      loadStudentAssignments();
     });
   </script>
 

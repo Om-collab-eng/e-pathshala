@@ -239,170 +239,39 @@ async function initLiveTables() {
       `).catch(() => {});
     });
 
-    // Check if seed data exists
-    const checkCourses = await query('SELECT count(*) as count FROM live_courses').catch(() => ({ rows: [{ count: 0 }] }));
-    const count = checkCourses.rows && checkCourses.rows[0] ? parseInt(checkCourses.rows[0].count || 0) : 0;
-
-    if (count === 0) {
-      console.log('[LIVE STUDIO] Seeding sample courses & live sessions...');
-
-      // Seed Course 1: Full-Stack Web Dev
+    // Cleanup any lingering demo classes to ensure only real teacher/librarian sessions appear
+    try {
       await query(`
-        INSERT INTO live_courses (title, subtitle, description, instructor_id, instructor_name, category, level, price, cover_image, status, school_code)
-        VALUES (
-          'Full-Stack Web Development Bootcamp (MERN & Next.js)',
-          'Master React, Node.js, Express, MySQL & Next.js 15 with live interactive coding sessions and production deployments.',
-          'Comprehensive zero-to-hero curriculum covering frontend architecture, REST APIs, databases, authentication, and cloud deployment.',
-          23,
-          'Prof. Vikram Malhotra',
-          'Computer Science',
-          'All Levels',
-          0.00,
-          'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60',
-          'Published',
-          'DPS123'
-        )
+        DELETE FROM live_sessions 
+        WHERE title LIKE '%Live Masterclass: React State%' 
+           OR title LIKE '%Live Lab: Building RAG%' 
+           OR title LIKE '%Board Exam Marathon%'
+           OR meeting_id IN ('LIB-REACT-101', 'LIB-AI-202', 'LIB-PHY-303')
       `).catch(() => {});
 
-      // Seed Course 2: AI & LLM Engineering
       await query(`
-        INSERT INTO live_courses (title, subtitle, description, instructor_id, instructor_name, category, level, price, cover_image, status, school_code)
-        VALUES (
-          'Artificial Intelligence & Applied LLMs Masterclass',
-          'Learn prompt engineering, RAG pipelines, fine-tuning, and multimodal AI with hands-on live labs.',
-          'Deep dive into LangChain, OpenAI APIs, NVIDIA NIM, and vector databases for modern software engineering.',
-          23,
-          'Dr. Ananya Sen',
-          'AI & Data Science',
-          'Intermediate',
-          0.00,
-          'https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=60',
-          'Published',
-          'DPS123'
-        )
+        DELETE FROM studio_sessions 
+        WHERE title LIKE '%Advanced Mathematics%' 
+           OR title LIKE '%Physics Laws of Motion%'
+           OR title LIKE '%Modern Web Bootcamp Live Lab%'
+           OR meeting_code IN ('LIBRIKA-10MATH-7A8B9C', 'LIBRIKA-9SCI-42A8F31C', 'LIBRIKA-AIWEB-99C1D2')
       `).catch(() => {});
 
-      // Seed Course 3: Class 12 Physics Live Batch
       await query(`
-        INSERT INTO live_courses (title, subtitle, description, instructor_id, instructor_name, category, level, price, cover_image, status, school_code)
-        VALUES (
-          'CBSE & Competitive Physics: Electromagnetism & Optics',
-          'Interactive live problem solving, numerical derivation marathons, and board exam revision batch.',
-          'Weekly live interactive classes with digital whiteboard derivations, formula cheat sheets, and previous 10 years question solutions.',
-          23,
-          'Mrs. Sharma (Senior Faculty)',
-          'Science & Academics',
-          'Advanced',
-          0.00,
-          'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=800&auto=format&fit=crop&q=60',
-          'Published',
-          'DPS123'
-        )
+        DELETE FROM live_courses 
+        WHERE title LIKE '%Full-Stack Web Development Bootcamp%' 
+           OR title LIKE '%Artificial Intelligence & Applied LLMs%' 
+           OR title LIKE '%CBSE & Competitive Physics%'
       `).catch(() => {});
 
-      // Seed Modules for Course 1
       await query(`
-        INSERT INTO course_modules (course_id, title, order_index) VALUES 
-        (1, 'Module 1: Modern JavaScript & Async Programming', 1),
-        (1, 'Module 2: React 19 State, Hooks & Component Lifecycle', 2),
-        (1, 'Module 3: Backend REST APIs with Node.js & Express', 3),
-        (1, 'Module 4: Live Capstone Project & Cloud Deployment', 4)
+        DELETE FROM course_enrollments 
+        WHERE user_name LIKE '%Aarav Patel%' OR user_name LIKE '%Diya Sharma%'
       `).catch(() => {});
-
-      // Seed Lessons for Course 1
-      await query(`
-        INSERT INTO course_lessons (module_id, course_id, title, content_type, duration_minutes, order_index) VALUES 
-        (1, 1, 'ES6+ Features, Closures & Event Loop Deep Dive', 'video', 50, 1),
-        (1, 1, 'Promises, Async/Await & Fetch API Hands-on', 'video', 45, 2),
-        (2, 1, 'Interactive Live Masterclass: Building React Hooks from Scratch', 'live_class', 60, 3),
-        (3, 1, 'Live Class: Building Scalable REST APIs & PostgreSQL Integration', 'live_class', 75, 4)
-      `).catch(() => {});
-
-      // Seed Live Sessions
-      const now = new Date();
-      const in2Hours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const dayAfter = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-
-      const fmt = (d) => d.toISOString().slice(0, 19).replace('T', ' ');
-
-      await query(`
-        INSERT INTO live_sessions (course_id, lesson_id, title, scheduled_start, scheduled_end, duration_minutes, meeting_id, passcode, host_user_id, host_name, status, shareable_token, max_participants, school_code)
-        VALUES 
-        (
-          1, 
-          3, 
-          'Live Masterclass: React State & Custom Hooks Studio', 
-          '${fmt(in2Hours)}', 
-          '${fmt(new Date(in2Hours.getTime() + 60 * 60 * 1000))}', 
-          60, 
-          'LIB-REACT-101', 
-          '888999', 
-          23, 
-          'Prof. Vikram Malhotra', 
-          'scheduled', 
-          'token_react_live_101', 
-          150, 
-          'DPS123'
-        ),
-        (
-          2, 
-          NULL, 
-          'Live Lab: Building RAG with LangChain & Vector Databases', 
-          '${fmt(tomorrow)}', 
-          '${fmt(new Date(tomorrow.getTime() + 75 * 60 * 1000))}', 
-          75, 
-          'LIB-AI-202', 
-          '777666', 
-          23, 
-          'Dr. Ananya Sen', 
-          'scheduled', 
-          'token_ai_live_202', 
-          100, 
-          'DPS123'
-        ),
-        (
-          3, 
-          NULL, 
-          'Board Exam Marathon: Electromagnetic Waves & Optics Problem Solving', 
-          '${fmt(dayAfter)}', 
-          '${fmt(new Date(dayAfter.getTime() + 90 * 60 * 1000))}', 
-          90, 
-          'LIB-PHY-303', 
-          '555444', 
-          23, 
-          'Mrs. Sharma (Senior Faculty)', 
-          'scheduled', 
-          'token_phy_live_303', 
-          200, 
-          'DPS123'
-        )
-      `).catch(() => {});
-
-      // Seed Enrollments for Demo Students
-      await query(`
-        INSERT INTO course_enrollments (course_id, user_id, user_name, user_email, role, progress_percent, status) VALUES 
-        (1, 12, 'Aarav Patel (Grade 10)', 'aarav.patel@dps.edu', 'student', 45, 'active'),
-        (2, 12, 'Aarav Patel (Grade 10)', 'aarav.patel@dps.edu', 'student', 20, 'active'),
-        (3, 12, 'Aarav Patel (Grade 10)', 'aarav.patel@dps.edu', 'student', 70, 'active'),
-        (1, 14, 'Diya Sharma (Grade 12)', 'diya.sharma@dps.edu', 'student', 60, 'active'),
-        (3, 14, 'Diya Sharma (Grade 12)', 'diya.sharma@dps.edu', 'student', 85, 'active')
-      `).catch(() => {});
-
-      // Seed Studio Sessions (Jitsi Powered)
-      const today = now;
-
-      await query(`
-        INSERT INTO studio_sessions (title, description, host_id, host_name, meeting_code, scheduled_start, scheduled_end, duration_minutes, status, class_name, school_code) VALUES
-
-
-        ('Class 10 Advanced Mathematics - Calculus & Trigonometry', 'Live interactive algebra & trigonometry derivation marathon.', 23, 'Mrs. Sharma', 'LIBRIKA-10MATH-7A8B9C', '${fmt(today)}', '${fmt(new Date(today.getTime() + 60 * 60 * 1000))}', 60, 'LIVE', 'Class 10-A', 'DPS123'),
-        ('Class 9 Science - Physics Laws of Motion & Gravitation', 'Concept clarity, live whiteboard problem solving and Q&A.', 23, 'Mrs. Sharma', 'LIBRIKA-9SCI-42A8F31C', '${fmt(tomorrow)}', '${fmt(new Date(tomorrow.getTime() + 45 * 60 * 1000))}', 45, 'SCHEDULED', 'Class 9-B', 'DPS123'),
-        ('Artificial Intelligence & Modern Web Bootcamp Live Lab', 'Hands-on live coding workshop with React and APIs.', 23, 'Prof. Vikram Malhotra', 'LIBRIKA-AIWEB-99C1D2', '${fmt(dayAfter)}', '${fmt(new Date(dayAfter.getTime() + 90 * 60 * 1000))}', 90, 'SCHEDULED', 'Technology Lab', 'DPS123')
-      `).catch(() => {});
-
-      console.log('[LIVE STUDIO] Sample courses, curriculum, studio sessions and scheduled live batches initialized.');
+    } catch (cleanErr) {
+      // Ignored
     }
+
   } catch (err) {
     console.warn('[LIVE STUDIO] Table initialization error (handled):', err.message);
   }

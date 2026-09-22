@@ -118,7 +118,7 @@ async function fetchStudentPortalData(userId, sCode) {
             (SELECT COUNT(*) FROM student_wishlist sw WHERE sw.user_id = $1 AND sw.book_id = b.id) as in_wishlist,
             (SELECT COUNT(*) FROM reservations r WHERE r.user_id = $1 AND r.book_id = b.id AND r.status = 'PENDING') as is_reserved
      FROM books b
-     WHERE (b.school_code = $2 OR b.school_code = 'GLOBAL' OR b.school_code = 'DPS123')
+     WHERE (LOWER(b.school_code) = LOWER($2) OR b.school_code = 'GLOBAL' OR b.school_code = 'DPS123' OR b.school_code IS NULL OR b.school_code = '')
        AND (b.is_banned IS NULL OR (b.is_banned != 1 AND b.is_banned != '1'))
      ORDER BY b.id DESC LIMIT 100`,
     [userId, sCode]
@@ -144,7 +144,7 @@ async function fetchStudentPortalData(userId, sCode) {
             COALESCE(dc.subject, 'Academic Resource') as author,
             (SELECT COUNT(*) FROM student_saved_documents sd WHERE sd.user_id = $1 AND sd.document_id = dc.id) as is_saved
      FROM digital_content dc
-     WHERE (dc.school_code = $2 OR dc.school_code = 'GLOBAL' OR dc.school_code = 'DPS123' OR dc.student_id = $1 OR dc.school_code IS NULL)
+     WHERE (LOWER(dc.school_code) = LOWER($2) OR dc.school_code = 'GLOBAL' OR dc.school_code = 'DPS123' OR dc.student_id = $1 OR dc.school_code IS NULL OR dc.school_code = '')
      ORDER BY dc.id DESC LIMIT 80`,
     [userId, sCode]
   ).catch(() => ({ rows: [] }));
@@ -189,7 +189,7 @@ async function fetchStudentPortalData(userId, sCode) {
             (SELECT score FROM quiz_attempts qa WHERE (qa.quiz_id = q.id OR qa.book_id = q.id) AND qa.user_id = $1 ORDER BY qa.id DESC LIMIT 1) as my_score,
             (SELECT CASE WHEN qa.passed = 1 THEN 'PASSED' ELSE 'COMPLETED' END FROM quiz_attempts qa WHERE (qa.quiz_id = q.id OR qa.book_id = q.id) AND qa.user_id = $1 ORDER BY qa.id DESC LIMIT 1) as my_status
      FROM quizzes q
-     WHERE q.published = 1
+     WHERE (q.published = 1 OR q.status = 'PUBLISHED' OR q.status IS NULL)
      ORDER BY q.id DESC`,
     [userId]
   ).catch(() => ({ rows: [] }));
@@ -199,10 +199,15 @@ async function fetchStudentPortalData(userId, sCode) {
     `SELECT a.*,
             COALESCE(a.due_at, a.due_date) as due_at,
             asub.file_url as submission_url, asub.submission_text, asub.submitted_at, 
-            asub.grade as score, 'Graded' as feedback, 'SUBMITTED' as sub_status
+            asub.grade as score, NULL as feedback,
+            CASE 
+              WHEN asub.grade IS NOT NULL THEN 'GRADED'
+              WHEN asub.submitted_at IS NOT NULL THEN 'SUBMITTED'
+              ELSE 'PENDING'
+            END as sub_status
      FROM assignments a
      LEFT JOIN assignment_submissions asub ON asub.assignment_id = a.id AND asub.user_id = $1
-     WHERE a.school_code = $2 OR a.school_code = 'GLOBAL' OR a.school_code = 'DPS123'
+     WHERE (LOWER(a.school_code) = LOWER($2) OR a.school_code = 'GLOBAL' OR a.school_code = 'DPS123' OR a.school_code IS NULL OR a.school_code = '')
      ORDER BY COALESCE(a.due_at, a.due_date) ASC`,
     [userId, sCode]
   ).catch(() => ({ rows: [] }));
@@ -788,6 +793,79 @@ router.post('/api/publication-delete/:pubId', studentOnly, async (req, res) => {
   }
 });
 
+// Dynamic API: Student Physical Books Catalog
+router.get('/api/catalog', studentOnly, async (req, res) => {
+  const userId = req.session.user_id;
+  const sCode = req.session.school_code || 'DPS123';
+  const queryText = (req.query.q || '').trim().toLowerCase();
+  const genre = (req.query.genre || 'ALL').trim();
+
+  try {
+    let sql = `
+      SELECT b.*, 
+             COALESCE(b.shelf_location, '') as rack_location,
+             (SELECT COUNT(*) FROM student_saved_books sb WHERE sb.user_id = $1 AND sb.book_id = b.id) as is_saved,
+             (SELECT COUNT(*) FROM student_wishlist sw WHERE sw.user_id = $1 AND sw.book_id = b.id) as in_wishlist,
+             (SELECT COUNT(*) FROM reservations r WHERE r.user_id = $1 AND r.book_id = b.id AND r.status = 'PENDING') as is_reserved
+      FROM books b
+      WHERE (LOWER(b.school_code) = LOWER($2) OR b.school_code = 'GLOBAL' OR b.school_code = 'DPS123' OR b.school_code IS NULL OR b.school_code = '')
+        AND (b.is_banned IS NULL OR (b.is_banned != 1 AND b.is_banned != '1'))
+    `;
+    const params = [userId, sCode];
+
+    if (genre && genre !== 'ALL') {
+      params.push(`%${genre.toLowerCase()}%`);
+      sql += ` AND LOWER(COALESCE(b.genre, '')) LIKE $${params.length}`;
+    }
+
+    if (queryText) {
+      params.push(`%${queryText}%`);
+      const pIdx = params.length;
+      sql += ` AND (LOWER(b.title) LIKE $${pIdx} OR LOWER(COALESCE(b.author, '')) LIKE $${pIdx} OR LOWER(COALESCE(b.isbn, '')) LIKE $${pIdx})`;
+    }
+
+    sql += ` ORDER BY b.id DESC LIMIT 100`;
+
+    const result = await pool.query(sql, params).catch(() => ({ rows: [] }));
+    res.json({ status: 'success', books: result.rows || [] });
+  } catch (err) {
+    console.error('Catalog fetch error:', err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// Dynamic API: Student Class Assignments
+router.get('/api/assignments', studentOnly, async (req, res) => {
+  const userId = req.session.user_id;
+  const sCode = req.session.school_code || 'DPS123';
+
+  try {
+    const assignRes = await pool.query(
+      `SELECT a.*,
+              COALESCE(a.due_at, a.due_date) as due_at,
+              asub.file_url as submission_url, asub.submission_text, asub.submitted_at, 
+              asub.grade as score, NULL as feedback,
+              CASE 
+                WHEN asub.grade IS NOT NULL THEN 'GRADED'
+                WHEN asub.submitted_at IS NOT NULL THEN 'SUBMITTED'
+                WHEN COALESCE(a.due_at, a.due_date) < CURRENT_TIMESTAMP THEN 'OVERDUE'
+                ELSE 'PENDING'
+              END as sub_status
+       FROM assignments a
+       LEFT JOIN assignment_submissions asub ON asub.assignment_id = a.id AND asub.user_id = $1
+       WHERE (LOWER(a.school_code) = LOWER($2) OR a.school_code = 'GLOBAL' OR a.school_code = 'DPS123' OR a.school_code IS NULL OR a.school_code = '')
+       ORDER BY COALESCE(a.due_at, a.due_date) ASC`,
+      [userId, sCode]
+    ).catch(() => ({ rows: [] }));
+
+    res.json({ status: 'success', assignments: assignRes.rows || [] });
+  } catch (err) {
+    console.error('Assignments fetch error:', err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 router.fetchStudentPortalData = fetchStudentPortalData;
 module.exports = router;
+
 

@@ -158,12 +158,23 @@ async function initQuizTables() {
     `).catch(() => {});
   });
 
-  // Ensure library_type column exists on quizzes table if created previously without it
+  // Ensure all columns exist on quizzes table if created previously with simpler schema
   await query(`ALTER TABLE quizzes ADD COLUMN library_type VARCHAR(20) DEFAULT 'OFFLINE'`).catch(() => {});
+  await query(`ALTER TABLE quizzes ADD COLUMN book_id BIGINT UNSIGNED NULL`).catch(() => {});
   await query(`ALTER TABLE quizzes ADD COLUMN digital_content_id BIGINT UNSIGNED NULL`).catch(() => {});
+  await query(`ALTER TABLE quizzes ADD COLUMN school_code VARCHAR(50) DEFAULT 'GLOBAL'`).catch(() => {});
+  await query(`ALTER TABLE quizzes ADD COLUMN status VARCHAR(20) DEFAULT 'PUBLISHED'`).catch(() => {});
+  await query(`ALTER TABLE quizzes ADD COLUMN difficulty VARCHAR(20) DEFAULT 'MEDIUM'`).catch(() => {});
+  await query(`ALTER TABLE quizzes ADD COLUMN instructions TEXT NULL`).catch(() => {});
   await query(`ALTER TABLE quizzes ADD COLUMN time_limit INT DEFAULT 15`).catch(() => {});
   await query(`ALTER TABLE quizzes ADD COLUMN max_attempts INT DEFAULT 2`).catch(() => {});
   await query(`ALTER TABLE quizzes ADD COLUMN passing_percentage INT DEFAULT 60`).catch(() => {});
+  await query(`ALTER TABLE quizzes ADD COLUMN created_by BIGINT UNSIGNED NULL`).catch(() => {});
+  await query(`ALTER TABLE quizzes ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`).catch(() => {});
+  // Ensure existing rows without status are PUBLISHED
+  await query(`UPDATE quizzes SET status = 'PUBLISHED' WHERE status IS NULL OR status = ''`).catch(() => {});
+  await query(`UPDATE quizzes SET school_code = 'GLOBAL' WHERE school_code IS NULL OR school_code = ''`).catch(() => {});
+
 
   // 6. QUIZ QUESTIONS TABLE
   await query(`
