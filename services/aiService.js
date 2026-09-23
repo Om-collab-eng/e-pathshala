@@ -477,12 +477,35 @@ async function extractTextOCR(imageBase64) {
   }
 }
 
-async function chatWithLibra(userMessage, conversationHistory = []) {
+async function chatWithLibra(userMessage, conversationHistory = [], contextData = null) {
   try {
+    let groundingContext = '';
+    if (contextData) {
+      if (contextData.schoolCode) {
+        groundingContext += `\nAUTHENTICATED USER & TENANT CONTEXT:\n- Role: ${contextData.role || 'Student'}\n- Student Name: ${contextData.userName || 'Student'}\n- School / Tenant Code: ${contextData.schoolCode}\n`;
+      }
+      if (contextData.catalogEvidence && contextData.catalogEvidence.length > 0) {
+        groundingContext += `\nAUTHORIZED SCHOOL LIBRARY CATALOG EVIDENCE (Live Physical Holdings for School ${contextData.schoolCode}):\n`;
+        contextData.catalogEvidence.forEach((b, idx) => {
+          groundingContext += `${idx + 1}. "${b.title}" by ${b.author || 'Unknown'} | Shelf Location: ${b.shelf_location || 'General Stacks'} | Available: ${b.available_copies !== undefined ? b.available_copies : 1} of ${b.total_copies !== undefined ? b.total_copies : 1} copies\n`;
+        });
+        groundingContext += `\nCRITICAL GROUNDING & ANTI-DEFLECTION RULES FOR SCHOOL HOLDINGS:
+- If the user asks whether books are in their school library (e.g., "Are they in my school library?", "Do you have this book?", "Is [Book Title] in our library?"):
+  1. DIRECTLY CONSULT THE AUTHORIZED SCHOOL LIBRARY CATALOG EVIDENCE ABOVE.
+  2. If the book (or books mentioned earlier in the conversation) is in the evidence, answer YES directly. Give its exact title, shelf location, and number of available copies.
+  3. If the book is NOT in the evidence, clearly state that it is currently not available in their physical school library catalog. Suggest they can check the digital E-Library or submit a book acquisition request to their librarian.
+  4. NEVER deflect with generic step-by-step navigation instructions (e.g. NEVER answer "Go to the catalog tab and type the name"). Answer directly using the catalog records provided!
+  5. DO NOT invent books or shelf locations not listed in the evidence above.\n`;
+      } else if (contextData.schoolCode) {
+        groundingContext += `\nAUTHORIZED SCHOOL LIBRARY CATALOG STATUS:
+No physical library books are currently cataloged for school ${contextData.schoolCode}. If asked about book availability, clearly state that no copies are registered in their school catalog.\n`;
+      }
+    }
+
     const systemPrompt = `You are "Libra", the world-class intelligent AI tutor, academic mentor, and library concierge for Librika (librika.in) — an enterprise Hybrid Library ERP, Digital Learning Management System, Open E-Library, and Jitsi JaaS Live Classroom Platform.
 
 ${LIBRIKA_KNOWLEDGE_BASE}
-
+${groundingContext}
 YOUR WRITING STYLE & FORMATTING GUIDELINES:
 1. 🎨 MODERN, ENGAGING & BEAUTIFULLY FORMATTED:
    - Provide answers that are crisp, encouraging, clear, and structured.
@@ -495,7 +518,7 @@ YOUR WRITING STYLE & FORMATTING GUIDELINES:
      - Status badges in brackets: \`[100% FREE]\`, \`[BEGINNER]\`, \`[INTERMEDIATE]\`, \`[PRO]\`, \`⭐ 4.9/5\`.
 
 2. 🎓 DUAL CAPABILITY:
-   - **Platform Guide Mode:** When asked about Librika features (Publishing up to 27MB, E-Library, Catalog, My Borrows, Live Classes, Quizzes, Notes, Plans, Fines), provide exact, actionable step-by-step instructions.
+   - **Platform & School Library Guide Mode:** When asked about Librika features or school library books, provide exact, factual answers grounded in the provided school catalog evidence. Never give generic navigation runarounds when direct data is provided.
    - **Academic Tutor Mode:** When asked about study topics (Science, Math, Coding, Literature, History, Economics, Exam Prep), act as an encouraging, world-class personal tutor. Explain concepts with crystal clarity, everyday analogies, step-by-step formulas, and follow-up quiz questions.
 
 3. 🚀 RESPONSE STRUCTURE:
@@ -508,7 +531,7 @@ YOUR WRITING STYLE & FORMATTING GUIDELINES:
     let prompt = `${systemPrompt}\n\n`;
     if (conversationHistory && conversationHistory.length > 0) {
       prompt += `Conversation Context:\n`;
-      conversationHistory.slice(-4).forEach(msg => {
+      conversationHistory.slice(-8).forEach(msg => {
         prompt += `${msg.role === 'user' ? 'User' : 'Libra'}: ${msg.content}\n`;
       });
       prompt += `\n`;
@@ -519,6 +542,30 @@ YOUR WRITING STYLE & FORMATTING GUIDELINES:
     return response || "Hello! I am **Libra**, your Librika AI guide and study tutor. How can I assist you with your library, publishing, or studies today?";
   } catch (err) {
     console.error("Libra AI Chat error:", err.message);
+
+    // Context-aware fallback if LLM endpoint has a network issue
+    if (contextData && contextData.catalogEvidence && contextData.catalogEvidence.length > 0) {
+      const qLower = (userMessage || '').toLowerCase();
+      if (qLower.includes('library') || qLower.includes('available') || qLower.includes('shelf') || qLower.includes('catalog') || qLower.includes('book')) {
+        const matches = contextData.catalogEvidence.filter(b => 
+          qLower.includes(b.title.toLowerCase()) || 
+          (b.genre && qLower.includes(b.genre.toLowerCase())) ||
+          (b.author && qLower.includes(b.author.toLowerCase()))
+        );
+        if (matches.length > 0) {
+          let rep = `### 📚 School Library Catalog Match\n\nYes! Here are the matching books currently in your school library:\n\n`;
+          matches.forEach(b => {
+            rep += `🔹 **${b.title}** by *${b.author || 'Unknown'}*\n  - 📍 **Shelf Location:** ${b.shelf_location || 'General Stacks'}\n  - 📦 **Availability:** ${b.available_copies} of ${b.total_copies} copies available\n\n`;
+          });
+          return rep;
+        } else if (qLower.includes('are they in') || qLower.includes('is it in') || qLower.includes('in my school')) {
+          return `### 📚 School Library Availability\n\nBased on your school library's physical catalog records, those specific titles are currently **not in stock** in your campus library.\n\n> 💡 **Books available in your school library right now:**\n` + 
+          contextData.catalogEvidence.slice(0, 4).map(b => `- **${b.title}** (${b.shelf_location || 'Stacks'}, ${b.available_copies} copies)`).join('\n') + 
+          `\n\nYou can request your librarian to acquire them, or read our digital collection on E-Library!`;
+        }
+      }
+    }
+
     return `### 🌟 Welcome to Librika! I'm **Libra**, your AI Learning Copilot.
 
 I'm here to help you navigate **Librika (librika.in)** and master your academic subjects.
@@ -532,7 +579,7 @@ I'm here to help you navigate **Librika (librika.in)** and master your academic 
 - 🧠 **AI Study Tools** — Concept explanations, 5-question quizzes, 8-card flashcards & summaries.
 - 💳 **Membership Plans** — Free Starter (500 books, 20 e-books), Basic (10k books), and Pro (unlimited).
 
-> 💡 **Pro Tip:** You can ask me for study summaries, book recommendations, or exact steps to publish a book!
+> 💡 **Pro Tip:** You can ask me for study summaries, book recommendations, or whether specific books are in your school library!
 
 ---
 💬 *Try asking:* **"How do I publish a book on E-Library?"** or **"Explain Newton's Laws of Motion"**`;

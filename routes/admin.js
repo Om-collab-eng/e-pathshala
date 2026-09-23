@@ -206,14 +206,19 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     });
 
     // 2. Fetch Books Catalog & Copies
-    const booksRes = await db.query('SELECT * FROM books WHERE school_code = $1 ORDER BY id DESC', [sCode]).catch(() => ({ rows: [] }));
+    const booksRes = await db.query(`
+      SELECT * FROM books 
+      WHERE (LOWER(school_code) = LOWER($1) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+        AND (is_banned IS NULL OR (is_banned != 1 AND is_banned != '1'))
+      ORDER BY id DESC
+    `, [sCode]).catch(() => ({ rows: [] }));
     const books = booksRes.rows || [];
 
     const copiesRes = await db.query(`
       SELECT bc.*, b.title as book_title, b.author as book_author, b.isbn as book_isbn
       FROM book_copies bc
       JOIN books b ON bc.book_id = b.id
-      WHERE b.school_code = $1
+      WHERE (LOWER(b.school_code) = LOWER($1) OR b.school_code = 'GLOBAL' OR b.school_code IS NULL OR b.school_code = '')
       ORDER BY bc.id DESC
     `, [sCode]).catch(() => ({ rows: [] }));
     const bookCopies = copiesRes.rows || [];
@@ -595,10 +600,10 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
     // 3. Find Book
     let book = null;
     if (book_id) {
-      const bRes = await db.query('SELECT * FROM books WHERE id = $1 AND school_code = $2', [book_id, sCode]);
+      const bRes = await db.query('SELECT * FROM books WHERE id = $1 AND (LOWER(school_code) = LOWER($2) OR school_code = \'GLOBAL\' OR school_code IS NULL OR school_code = \'\')', [book_id, sCode]);
       book = bRes.rows && bRes.rows[0];
     } else if (barcode) {
-      const bRes = await db.query('SELECT * FROM books WHERE (barcode_id = $1 OR isbn = $1) AND school_code = $2', [barcode, sCode]);
+      const bRes = await db.query('SELECT * FROM books WHERE (barcode_id = $1 OR isbn = $1) AND (LOWER(school_code) = LOWER($2) OR school_code = \'GLOBAL\' OR school_code IS NULL OR school_code = \'\')', [barcode, sCode]);
       book = bRes.rows && bRes.rows[0];
     }
 
@@ -900,7 +905,7 @@ router.post('/api/ai/chat', adminOnly, async (req, res) => {
     }
 
     // Full AI answer with live metrics and Librika knowledge
-    const countRes = await db.query('SELECT COUNT(*) as total FROM books WHERE school_code = $1', [sCode]);
+    const countRes = await db.query('SELECT COUNT(*) as total FROM books WHERE (LOWER(school_code) = LOWER($1) OR school_code = \'GLOBAL\' OR school_code IS NULL OR school_code = \'\') AND (is_banned IS NULL OR is_banned != 1)', [sCode]);
     const totalB = countRes.rows && countRes.rows[0] ? countRes.rows[0].total : 0;
     
     const context = `Librarian at school ${sCode} with ${totalB} physical books in the catalog. User is logged in as School Admin / Librarian.`;

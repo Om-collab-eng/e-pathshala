@@ -869,8 +869,33 @@ router.post('/api/ai/chat', async (req, res) => {
 
     if (toolName === 'chat') {
       const studentName = req.session && req.session.user_name ? req.session.user_name : 'Student';
-      const history = [{ role: 'user', content: `[Student: ${studentName}] ${message}` }];
-      const reply = await aiService.chatWithLibra(message, history);
+      const schoolCode = req.session && req.session.school_code ? req.session.school_code : 'GLOBAL';
+      req.session.student_ai_memory = req.session.student_ai_memory || [];
+
+      const booksRes = await pool.query(`
+        SELECT id, title, author, shelf_location, available_copies, total_copies, genre
+        FROM books
+        WHERE (LOWER(school_code) = LOWER($1) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+          AND (is_banned IS NULL OR (is_banned != 1 AND is_banned != '1'))
+        ORDER BY title ASC
+        LIMIT 60
+      `, [schoolCode]).catch(() => ({ rows: [] }));
+
+      const contextData = {
+        role: 'Student',
+        userName: studentName,
+        schoolCode: schoolCode,
+        catalogEvidence: booksRes.rows || []
+      };
+
+      const reply = await aiService.chatWithLibra(message, req.session.student_ai_memory, contextData);
+
+      req.session.student_ai_memory.push({ role: 'user', content: message });
+      req.session.student_ai_memory.push({ role: 'assistant', content: reply });
+      if (req.session.student_ai_memory.length > 10) {
+        req.session.student_ai_memory = req.session.student_ai_memory.slice(-10);
+      }
+
       return res.json({ status: 'success', reply });
     }
 
