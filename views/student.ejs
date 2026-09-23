@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title><%= title || 'Student Portal - Librika' %></title>
+  <title><%= typeof title !== 'undefined' && title ? title : 'Student Portal - Librika' %></title>
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2411,7 +2411,9 @@
                     </div>
                     <button type="button" 
                             class="sp-progress-preview-btn" 
-                            onclick="openStudentProgressPreview('<%= ld.id %>', '<%= (ld.name || '').replace(/'/g, \"\\'\") %>')"
+                            data-student-id="<%= ld.id %>"
+                            data-student-name="<%= ld.name || 'Student' %>"
+                            onclick="openStudentProgressPreview(this.dataset.studentId, this.dataset.studentName)"
                             title="View Public Reading Progress"
                             aria-label="View <%= ld.name %>'s reading progress">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
