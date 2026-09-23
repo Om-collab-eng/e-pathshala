@@ -601,8 +601,137 @@ body.lp-body {
   font-size: 1.05rem;
   color: var(--text-secondary);
   max-width: 540px;
-  margin: 0 0 24px 0;
+  margin: 0 0 18px 0;
   line-height: 1.5;
+}
+
+/* Dynamic Hero Inspirational Quote Card */
+.lp-hero-quote-card {
+  margin: 0 0 22px 0;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #D5E4FC;
+  border-left: 4px solid #0B5ED7;
+  border-radius: 16px;
+  padding: 14px 18px;
+  box-shadow: 0 4px 18px rgba(11, 94, 215, 0.05);
+  transition: all 0.25s ease;
+  position: relative;
+  max-width: 600px;
+}
+
+.lp-hero-quote-card:hover {
+  box-shadow: 0 6px 22px rgba(11, 94, 215, 0.08);
+  border-color: #BFDBFE;
+}
+
+.lp-quote-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.lp-quote-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #4F46E5;
+  background: #EEF2FF;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  border: 1px solid #C7D2FE;
+}
+
+.lp-quote-shuffle-btn {
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 3px 9px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.lp-quote-shuffle-btn:hover {
+  background: #EFF6FF;
+  color: #0B5ED7;
+  border-color: #93C5FD;
+  transform: translateY(-1px);
+}
+
+.lp-quote-body-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.lp-quote-mark {
+  font-size: 2rem;
+  line-height: 0.85;
+  color: #0B5ED7;
+  font-family: Georgia, serif;
+  user-select: none;
+  opacity: 0.8;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.lp-quote-text {
+  font-size: 0.93rem;
+  font-weight: 600;
+  font-style: italic;
+  color: #1E293B;
+  margin: 0 0 4px 0;
+  line-height: 1.45;
+}
+
+.lp-quote-author {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748B;
+  display: block;
+}
+
+[data-theme="dark"] .lp-hero-quote-card {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: #334155;
+  border-left-color: #3B82F6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .lp-quote-pill {
+  background: rgba(79, 70, 229, 0.2);
+  color: #A5B4FC;
+  border-color: rgba(165, 180, 252, 0.3);
+}
+
+[data-theme="dark"] .lp-quote-shuffle-btn {
+  background: #1E293B;
+  border-color: #475569;
+  color: #CBD5E1;
+}
+
+[data-theme="dark"] .lp-quote-shuffle-btn:hover {
+  background: #334155;
+  color: #60A5FA;
+}
+
+[data-theme="dark"] .lp-quote-text {
+  color: #F1F5F9;
+}
+
+[data-theme="dark"] .lp-quote-author {
+  color: #94A3B8;
 }
 
 .lp-hero-actions {

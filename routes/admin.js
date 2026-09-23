@@ -7,6 +7,7 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const aiService = require('../services/aiService');
 const { logActivity, ensureSecurityTables } = require('../services/auditLogger');
+const { quotes: libraryQuotes, getRandomQuote } = require('../data/quotes');
 require('dotenv').config();
 
 const upload = multer({
@@ -381,7 +382,9 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
       notificationsList,
       reviews,
       studentProgressItems: studentProgressData.items,
-      studentProgressCounts: studentProgressData.counts
+      studentProgressCounts: studentProgressData.counts,
+      dailyQuote: getRandomQuote(),
+      libraryQuotes
     });
   } catch (err) {
     console.error('Librarian portal render error:', err);
@@ -414,6 +417,12 @@ router.get('/api/student-progress', adminOnly, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// API Endpoint for dynamic randomized quotes
+router.get('/api/quotes/random', (req, res) => {
+  const exclude = parseInt(req.query.exclude) || -1;
+  res.json({ success: true, ...getRandomQuote(exclude) });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

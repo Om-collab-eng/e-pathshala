@@ -1301,10 +1301,28 @@
               <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;margin:0 0 8px 0;letter-spacing:-0.03em;">
                 Good morning, <%= student.name.split(' ')[0] %> 👋
               </h1>
-              <p style="font-size:0.95rem;color:rgba(255,255,255,0.85);margin:0 0 20px 0;line-height:1.5;">
+              <p style="font-size:0.95rem;color:rgba(255,255,255,0.85);margin:0 0 16px 0;line-height:1.5;">
                 Keep learning. Keep reading. You're on a <strong><%= stats.readingStreak %>-day streak</strong> and have <strong><%= stats.activeBooksCount %> books</strong> currently borrowed.
               </p>
               
+              <!-- Dynamic Inspirational Reading Quote Card -->
+              <div id="spHeroQuoteCard" style="margin-bottom:18px;background:rgba(255,255,255,0.14);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.22);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:all 0.3s ease;">
+                <div style="display:flex;align-items:flex-start;gap:8px;flex:1;">
+                  <span style="font-size:1.4rem;line-height:0.9;opacity:0.9;font-family:Georgia,serif;">“</span>
+                  <div id="spQuoteContainer" style="transition:opacity 0.25s ease, transform 0.25s ease;">
+                    <span id="spQuoteText" style="font-size:0.86rem;font-style:italic;font-weight:600;color:#FFFFFF;line-height:1.4;display:block;">
+                      "Today a reader, tomorrow a leader."
+                    </span>
+                    <span id="spQuoteAuthor" style="font-size:0.74rem;font-weight:700;color:rgba(255,255,255,0.8);margin-top:2px;display:block;">
+                      — Margaret Fuller
+                    </span>
+                  </div>
+                </div>
+                <button type="button" onclick="cycleStudentHeroQuote(true)" title="New quote" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:6px;padding:4px 8px;font-size:0.75rem;font-weight:700;cursor:pointer;flex-shrink:0;transition:all 0.2s ease;">
+                  <span id="spQuoteSpinIcon" style="display:inline-block;transition:transform 0.4s ease;">↻</span>
+                </button>
+              </div>
+
               <!-- Quick Action Pills -->
               <div style="display:flex;gap:10px;flex-wrap:wrap;">
                 <button class="sp-hero-btn sp-hero-btn-primary" onclick="switchStudentModule('e-library')">
@@ -3401,7 +3419,93 @@
       } catch (e) {}
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // DYNAMIC INSPIRATIONAL QUOTE ENGINE (STUDENT DASHBOARD)
+    // ═══════════════════════════════════════════════════════════════
+    const STUDENT_QUOTES = [
+      { quote: "Today a reader, tomorrow a leader.", author: "Margaret Fuller" },
+      { quote: "There is no friend as loyal as a book.", author: "Ernest Hemingway" },
+      { quote: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.", author: "Dr. Seuss" },
+      { quote: "Books are a uniquely portable magic.", author: "Stephen King" },
+      { quote: "Reading is essential for those who seek to rise above the ordinary.", author: "Jim Rohn" },
+      { quote: "Once you learn to read, you will be forever free.", author: "Frederick Douglass" },
+      { quote: "A reader lives a thousand lives before he dies. The man who never reads lives only one.", author: "George R.R. Martin" },
+      { quote: "One best book is equal to a hundred good friends, but one good friend is equal to a library.", author: "Dr. A.P.J. Abdul Kalam" },
+      { quote: "Live as if you were to die tomorrow. Learn as if you were to live forever.", author: "Mahatma Gandhi" },
+      { quote: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
+      { quote: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+      { quote: "Reading brings us unknown friends.", author: "Honoré de Balzac" },
+      { quote: "A room without books is like a body without a soul.", author: "Marcus Tullius Cicero" },
+      { quote: "When in doubt go to the library.", author: "J.K. Rowling" },
+      { quote: "The highest education is that which makes our life in harmony with all existence.", author: "Rabindranath Tagore" }
+    ];
+
+    let currentStudentQuoteIdx = Math.floor(Math.random() * STUDENT_QUOTES.length);
+    let lastStudentAwayTime = Date.now();
+    let isCyclingStudentQuote = false;
+
+    function cycleStudentHeroQuote(isManual = false) {
+      if (isCyclingStudentQuote) return;
+      isCyclingStudentQuote = true;
+
+      const spinIcon = document.getElementById('spQuoteSpinIcon');
+      if (spinIcon && isManual) spinIcon.style.transform = 'rotate(360deg)';
+
+      const container = document.getElementById('spQuoteContainer');
+      if (container) {
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(4px)';
+      }
+
+      let nextIdx;
+      do {
+        nextIdx = Math.floor(Math.random() * STUDENT_QUOTES.length);
+      } while (nextIdx === currentStudentQuoteIdx && STUDENT_QUOTES.length > 1);
+      currentStudentQuoteIdx = nextIdx;
+      const q = STUDENT_QUOTES[nextIdx];
+
+      setTimeout(() => {
+        const textEl = document.getElementById('spQuoteText');
+        const authorEl = document.getElementById('spQuoteAuthor');
+        if (textEl && q) textEl.textContent = `"${q.quote}"`;
+        if (authorEl && q) authorEl.textContent = `— ${q.author}`;
+
+        try { sessionStorage.setItem('last_student_quote_idx', currentStudentQuoteIdx); } catch(e) {}
+
+        if (container) {
+          container.style.opacity = '1';
+          container.style.transform = 'translateY(0)';
+        }
+
+        setTimeout(() => {
+          if (spinIcon) spinIcon.style.transform = 'none';
+          isCyclingStudentQuote = false;
+        }, 300);
+      }, 200);
+    }
+
+    // Auto-cycle quote when student comes back to the tab
+    function onStudentReturn() {
+      const now = Date.now();
+      if (now - lastStudentAwayTime > 4000) {
+        cycleStudentHeroQuote(false);
+      }
+      lastStudentAwayTime = now;
+    }
+
+    window.addEventListener('focus', onStudentReturn);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') onStudentReturn();
+      else lastStudentAwayTime = Date.now();
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const savedIdx = sessionStorage.getItem('last_student_quote_idx');
+        if (savedIdx !== null) cycleStudentHeroQuote(false);
+        else cycleStudentHeroQuote(false);
+      } catch(e) {}
+
       loadElibraryTicker();
       loadStudentQuizzes();
       loadStudentAssignments();

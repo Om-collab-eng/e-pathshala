@@ -211,7 +211,12 @@
           <!-- Hero Section + Today Card -->
           <div class="lp-hero-section">
             <div class="lp-hero-left">
-              <span class="lp-hero-pill">✨ Intelligent Library Workspace</span>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                <span class="lp-hero-pill" style="margin-bottom:0;">✨ Intelligent Library Workspace</span>
+                <span class="lp-quote-pill" id="lpQuotePillTag">
+                  <span>💡</span> Thought of the Moment
+                </span>
+              </div>
               <h1 class="hero-title">
                 Your library,<br>
                 always in motion.
@@ -219,6 +224,30 @@
               <p class="hero-sub">
                 Manage books, readers, circulation and digital resources from one intelligent workspace.
               </p>
+
+              <!-- Dynamic Inspirational Literary Quote Card -->
+              <div class="lp-hero-quote-card" id="lpHeroQuoteCard">
+                <div class="lp-quote-header">
+                  <span style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);display:inline-flex;align-items:center;gap:4px;">
+                    📚 Daily Literary Inspiration
+                  </span>
+                  <button type="button" class="lp-quote-shuffle-btn" onclick="cycleHeroQuote(true)" title="Get a new quote">
+                    <span id="lpQuoteSpinIcon" style="display:inline-block;transition:transform 0.4s ease;">↻</span> <span>New Quote</span>
+                  </button>
+                </div>
+                <div class="lp-quote-body-wrap" id="lpQuoteContainer">
+                  <span class="lp-quote-mark">“</span>
+                  <div style="flex:1;">
+                    <p id="lpQuoteText" class="lp-quote-text">
+                      "<%= (typeof dailyQuote !== 'undefined' && dailyQuote && dailyQuote.quote) ? dailyQuote.quote : 'Google can bring you back 100,000 answers. A librarian can bring you back the right one.' %>"
+                    </p>
+                    <span id="lpQuoteAuthor" class="lp-quote-author">
+                      — <%= (typeof dailyQuote !== 'undefined' && dailyQuote && dailyQuote.author) ? dailyQuote.author : 'Neil Gaiman' %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div class="lp-hero-actions">
                 <button class="btn-primary" onclick="openModal('addBookModal')">+ Add Book</button>
                 <button class="btn-secondary" onclick="navigateToModule('circulation', 'issue')">Issue Book</button>
@@ -1788,6 +1817,92 @@
        6. INTERACTIVE CLIENT-SIDE JAVASCRIPT
        ═══════════════════════════════════════════════════════════════ -->
   <script>
+    // ═══════════════════════════════════════════════════════════════
+    // DYNAMIC INSPIRATIONAL QUOTE ENGINE (LIBRARIAN HERO)
+    // ═══════════════════════════════════════════════════════════════
+    window.LIBRARY_QUOTES = <%- JSON.stringify(typeof libraryQuotes !== 'undefined' ? libraryQuotes : []) %>;
+    let currentQuoteIndex = <%= (typeof dailyQuote !== 'undefined' && dailyQuote && typeof dailyQuote.index === 'number') ? dailyQuote.index : 0 %>;
+    let lastAwayTimestamp = Date.now();
+    let isCyclingQuote = false;
+
+    function cycleHeroQuote(isManual = false) {
+      if (isCyclingQuote || !window.LIBRARY_QUOTES || window.LIBRARY_QUOTES.length === 0) return;
+      isCyclingQuote = true;
+
+      const spinIcon = document.getElementById('lpQuoteSpinIcon');
+      if (spinIcon && isManual) {
+        spinIcon.style.transform = 'rotate(360deg)';
+      }
+
+      const container = document.getElementById('lpQuoteContainer');
+      if (container) {
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(5px)';
+      }
+
+      let nextIndex;
+      if (window.LIBRARY_QUOTES.length > 1) {
+        do {
+          nextIndex = Math.floor(Math.random() * window.LIBRARY_QUOTES.length);
+        } while (nextIndex === currentQuoteIndex);
+      } else {
+        nextIndex = 0;
+      }
+      currentQuoteIndex = nextIndex;
+      const q = window.LIBRARY_QUOTES[nextIndex];
+
+      setTimeout(() => {
+        const textEl = document.getElementById('lpQuoteText');
+        const authorEl = document.getElementById('lpQuoteAuthor');
+        if (textEl && q) textEl.textContent = `"${q.quote}"`;
+        if (authorEl && q) authorEl.textContent = `— ${q.author}`;
+
+        try {
+          sessionStorage.setItem('last_library_quote_idx', currentQuoteIndex);
+        } catch(e) {}
+
+        if (container) {
+          container.style.opacity = '1';
+          container.style.transform = 'translateY(0)';
+        }
+
+        setTimeout(() => {
+          if (spinIcon) spinIcon.style.transform = 'none';
+          isCyclingQuote = false;
+        }, 300);
+      }, 200);
+    }
+
+    // Auto-cycle quote when user "comes back" (focus or tab visible)
+    function onUserReturnToApp() {
+      const now = Date.now();
+      if (now - lastAwayTimestamp > 4000) {
+        cycleHeroQuote(false);
+      }
+      lastAwayTimestamp = now;
+    }
+
+    window.addEventListener('focus', onUserReturnToApp);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        onUserReturnToApp();
+      } else {
+        lastAwayTimestamp = Date.now();
+      }
+    });
+
+    // On page load/refresh: ensure a fresh quote is presented
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const lastIdx = sessionStorage.getItem('last_library_quote_idx');
+        if (lastIdx !== null && parseInt(lastIdx) === currentQuoteIndex && window.LIBRARY_QUOTES.length > 1) {
+          cycleHeroQuote(false);
+        } else {
+          sessionStorage.setItem('last_library_quote_idx', currentQuoteIndex);
+        }
+      } catch(e) {}
+    });
+
     let activeCheckoutMember = null;
     let activeCheckoutBook = null;
 
@@ -1818,6 +1933,11 @@
       if (sb && window.innerWidth <= 1024) sb.classList.remove('open');
       const backdrop = document.getElementById('lpSidebarBackdrop');
       if (backdrop) backdrop.classList.remove('active');
+
+      // If returning to dashboard, cycle quote to welcome the user back
+      if (moduleName === 'dashboard') {
+        cycleHeroQuote(false);
+      }
 
       if (subTab) {
         if (moduleName === 'circulation') {
