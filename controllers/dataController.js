@@ -58,47 +58,45 @@ const createExportFunction = (moduleConfig) => {
       let schoolCode = schoolCodeParam || userSchoolCode;
 
       // Admin restriction: if the user is an admin, they are limited to their own school
-      if (req.session.role === 'admin') {
+      if (req.session.role === 'admin' || req.session.role === 'librarian') {
         schoolCode = userSchoolCode;
       }
-      // Note: super_admin is not restricted by default in the original code? We'll leave as is.
 
       // Build query using the moduleConfig
-      let { queryText, queryParams } = moduleConfig.buildQuery(schoolCode, useDemo);
+      const q = moduleConfig.buildQuery(schoolCode, useDemo);
+      const queryText = q.text || q.queryText;
+      const queryParams = q.params || q.queryParams || [];
 
       // Execute the query
       const result = await query(queryText, queryParams, useDemo);
-
-      // Prepare data for export
       const headers = moduleConfig.headers;
-      const rows = result.rows.map = {};
-        return headers.map(header => row[header]) ?? []; // We'll map the row to the header names
+      const dbRows = result.rows || [];
 
-      // Actually, the row from the query is an object with keys as per the SELECT aliases.
-      // We assume the query returns columns with the exact names as in the headers.
-      // If not, we need to map. We'll assume the query uses the same aliases as the headers.
-
-      // For safety, we can map by index if the headers are in the same order as the SELECT.
-      // But let's assume the query returns an object with the correct keys.
-
-      // If the query uses aliases that match the headers, we can use the row directly.
-      // We'll do: const exportRow = {}; headers.forEach(h => { exportRow[h] = row[h]; });
-      // But if the row doesn't have the key, it will be undefined.
-
-      // We'll instead use the row as is and hope the keys match.
-      // Alternatively, we can change the buildQuery to return an array of values in the order of headers.
-
-      // Let's change the approach: have the buildQuery return the SQL and the params, and also a function to map a row to an array of values in header order.
-      // But to keep it simple, we'll assume the query returns the columns in the same order as the headers and with the same names.
-
-      // We'll do: the buildQuery returns an object with { text, params, rowToArray } where rowToArray is a function that takes a row and returns an array of values in header order.
-
-      // Given time, we'll do a simpler approach: we'll have the buildQuery return the SQL and params, and we'll assume the row is an array (but our query returns objects).
-
-      // Actually, our query function returns rows as an array of objects. We can convert to array of arrays by mapping over the headers.
-
-      const dataArray = result.rows.map(row => {
-        return headers.map(header => row[header]);
+      // Map rows to match headers
+      const dataRows = dbRows.map(r => {
+        const rowObj = {};
+        headers.forEach(h => {
+          const lowerH = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+          let val = r[h];
+          if (val === undefined) {
+            for (const [col, v] of Object.entries(r)) {
+              const lowerCol = col.toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (lowerCol === lowerH ||
+                  (lowerH === 'isbn' && (lowerCol === 'barcodeid' || lowerCol === 'isbn')) ||
+                  (lowerH === 'category' && lowerCol === 'genre') ||
+                  (lowerH === 'quantity' && (lowerCol === 'totalcopies' || lowerCol === 'copies')) ||
+                  (lowerH === 'studentid' && lowerCol === 'admissionno') ||
+                  (lowerH === 'studentname' && (lowerCol === 'student' || lowerCol === 'name')) ||
+                  (lowerH === 'booktitle' && (lowerCol === 'book' || lowerCol === 'title')) ||
+                  (lowerH === 'librarianname' && lowerCol === 'librarianname')) {
+                val = v;
+                break;
+              }
+            }
+          }
+          rowObj[h] = val != null ? val : '';
+        });
+        return rowObj;
       });
 
       // Now generate the file
@@ -107,14 +105,13 @@ const createExportFunction = (moduleConfig) => {
       let fileExtension;
 
       if (format === 'xlsx') {
-        fileBuffer = await generateXLSX(headers, dataArray);
+        fileBuffer = await generateXLSX(headers, dataRows);
         contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         fileExtension = 'xlsx';
       } else {
-        // CSV
-        const csv = generateCSV(headers, dataArray);
+        const csv = generateCSV(headers, dataRows);
         fileBuffer = Buffer.from(csv);
-        contentType = 'text/csv';
+        contentType = 'text/csv; charset=utf-8';
         fileExtension = 'csv';
       }
 

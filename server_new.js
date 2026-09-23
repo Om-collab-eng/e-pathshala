@@ -119,10 +119,11 @@ app.use(superAdminIsolation);
 app.use(async (req, res, next) => {
   if (req.session && req.session.user_id) {
     try {
-      const uRes = await db.query('SELECT id, name, role, school_code, is_banned FROM users WHERE id = $1', [req.session.user_id]);
+      const uRes = await db.query('SELECT id, name, role, school_code, is_banned, status FROM users WHERE id = $1', [req.session.user_id]);
       if (uRes && uRes.rows && uRes.rows.length > 0) {
         const u = uRes.rows[0];
-        if (u.is_banned === 1 || u.is_banned === '1' || u.is_banned === true) {
+        const isSuspended = (u.is_banned === 1 || u.is_banned === '1' || u.is_banned === true || String(u.status || '').toLowerCase() === 'suspended');
+        if (isSuspended) {
           req.session.destroy(() => {});
           return res.redirect('/login?error=account_suspended');
         }
@@ -144,16 +145,20 @@ app.use(async (req, res, next) => {
   res.locals.session = req.session || {};
 
   // Convert connect-flash messages into template locals:
-  //   messages  → array of [type, text] for base.ejs toasts
-  //   success / error → first message of that type (for inline banners)
-  const flashMsgs = (req.flash && typeof req.flash === 'function') ? req.flash() : [];
-  res.locals.messages = flashMsgs;
-  res.locals.success = null;
-  res.locals.error = null;
-  if (Array.isArray(flashMsgs)) {
-    for (const msg of flashMsgs) {
+  const flashData = (req.flash && typeof req.flash === 'function') ? req.flash() : {};
+  res.locals.success = (flashData.success && flashData.success[0]) || null;
+  res.locals.error = (flashData.error && flashData.error[0]) || null;
+  res.locals.messages = [];
+  if (Array.isArray(flashData)) {
+    for (const msg of flashData) {
       if (msg && msg[0] === 'success' && !res.locals.success) res.locals.success = msg[1];
       if (msg && msg[0] === 'error' && !res.locals.error) res.locals.error = msg[1];
+    }
+  } else if (typeof flashData === 'object' && flashData !== null) {
+    for (const [type, msgs] of Object.entries(flashData)) {
+      if (Array.isArray(msgs)) {
+        msgs.forEach(m => res.locals.messages.push([type, m]));
+      }
     }
   }
 

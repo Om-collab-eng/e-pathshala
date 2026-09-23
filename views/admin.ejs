@@ -499,7 +499,7 @@
                       <td>
                         <div style="display:flex;gap:6px;">
                           <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="quickIssueBook('<%= b.id %>', '<%= b.barcode_id %>')">Issue</button>
-                          <a href="/admin/acquisitions" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;">Edit</a>
+                          <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="openEditBookModal('<%= b.id %>', '<%= (b.title || '').replace(/'/g, '\\\'') %>', '<%= (b.author || '').replace(/'/g, '\\\'') %>', '<%= b.isbn || b.barcode_id %>', '<%= b.total_copies %>', '<%= b.shelf_location || '' %>')">Edit</button>
                         </div>
                       </td>
                     </tr>
@@ -589,14 +589,38 @@
             <div class="card" style="margin-bottom:20px;">
               <div class="lp-card-header">
                 <div>
-                  <h3 class="lp-card-title">🛒 Book Procurement & Vendor Requisitions</h3>
-                  <p class="lp-card-sub">Manage purchase requests, vendor quotes, and received shipments</p>
+                  <h3 class="lp-card-title">🛒 Book Procurement &amp; Inventory Reconciliation</h3>
+                  <p class="lp-card-sub">Manage supplier invoices, purchase orders, and reconcile registered copies vs invoice totals</p>
                 </div>
-                <a href="/admin/acquisitions" class="btn-primary">+ Create Purchase Order</a>
+                <div style="display:flex;gap:8px;">
+                  <a href="/admin/acquisitions" class="btn-primary">Open Acquisitions Dashboard &rarr;</a>
+                </div>
               </div>
-              <p style="color:#64748B;font-size:0.9rem;">
-                Manage supplier invoices, purchase requisitions, and track book arrivals directly in the synchronized procurement portal.
+              <p style="color:#64748B;font-size:0.9rem;margin-bottom:16px;">
+                Track every purchase order, scan physical invoices with AI OCR, and match incoming shipments directly to library accession numbers.
               </p>
+              
+              <!-- Quick Overview Stats -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin-top:16px;">
+                <div style="background:#F8FAFC;padding:16px;border-radius:12px;border:1px solid #E2E8F0;">
+                  <span style="font-size:0.75rem;color:#64748B;font-weight:700;">TOTAL PHYSICAL STOCK</span>
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--brand-primary);margin:6px 0;"><%= stats.total_copies %> Copies</div>
+                  <div style="font-size:0.75rem;color:#10B981;font-weight:700;">● Active in Physical Catalog</div>
+                </div>
+                <div style="background:#F8FAFC;padding:16px;border-radius:12px;border:1px solid #E2E8F0;">
+                  <span style="font-size:0.75rem;color:#64748B;font-weight:700;">UNIQUE CATALOG TITLES</span>
+                  <div style="font-size:1.4rem;font-weight:800;color:#0F172A;margin:6px 0;"><%= books.length %> Titles</div>
+                  <div style="font-size:0.75rem;color:#64748B;">Reconciled across racks &amp; shelves</div>
+                </div>
+                <div style="background:#F8FAFC;padding:16px;border-radius:12px;border:1px solid #E2E8F0;">
+                  <span style="font-size:0.75rem;color:#64748B;font-weight:700;">INVOICE MANAGEMENT</span>
+                  <div style="margin-top:10px;">
+                    <a href="/admin/acquisitions" class="btn-secondary" style="padding:6px 12px;font-size:0.82rem;font-weight:700;display:inline-flex;">
+                      📄 View Invoices &amp; Vendor Orders &rarr;
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1174,39 +1198,94 @@
         </section>
 
         <!-- ─────────────────────────────────────────────────────────────
-             MODULE 06 — E-LIBRARY (E-BOOKS, DOCUMENTS, RESEARCH PAPERS)
+             MODULE 06 — E-LIBRARY (E-BOOKS, DOCUMENTS, REVIEWS)
              ───────────────────────────────────────────────────────────── -->
         <section id="module-e-library" class="lp-module-view" style="display:<%= currentModule === 'e-library' ? 'block' : 'none' %>;">
-          <div class="lp-tabs-bar">
-            <button class="lp-tab-btn active">🌐 Digital E-Books & Study Materials (<%= digitalItems.length %>)</button>
+          <div class="lp-tabs-bar" style="margin-bottom:20px;">
+            <button class="lp-tab-btn active" id="btn-tab-elib-books" onclick="switchElibraryTab('books', this)">
+              🌐 Digital Publications (<%= digitalItems.length %>)
+            </button>
+            <button class="lp-tab-btn" id="btn-tab-elib-reviews" onclick="switchElibraryTab('reviews', this)">
+              ⭐ Student Reviews &amp; Moderation (<%= reviews.length %>)
+            </button>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:20px;">
-            <% if (digitalItems.length === 0) { %>
-              <div class="card" style="grid-column:1/-1;text-align:center;padding:40px;">
-                <p style="color:#94A3B8;">No digital publications uploaded yet.</p>
-              </div>
-            <% } else { %>
-              <% digitalItems.forEach(d => { %>
-                <div class="card" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
-                  <div>
-                    <div style="height:140px;background:#F1F5F9;border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-                      <% if (d.cover_url) { %>
-                        <img src="<%= d.cover_url %>" style="width:100%;height:100%;object-fit:cover;">
-                      <% } else { %>
-                        <span style="font-size:2.5rem;">📄</span>
-                      <% } %>
-                    </div>
-                    <h4 style="font-size:0.95rem;font-weight:700;margin:0 0 4px 0;color:#111827;"><%= d.title %></h4>
-                    <p style="font-size:0.75rem;color:#64748B;margin:0 0 10px 0;"><%= d.author || 'Faculty' %></p>
-                  </div>
-                  <div style="display:flex;gap:6px;margin-top:12px;">
-                    <a href="/admin/e-library/read/<%= d.id %>" class="btn-primary" style="flex:1;justify-content:center;padding:6px;font-size:0.8rem;">Read</a>
-                    <a href="<%= d.file_url || '#' %>" target="_blank" class="btn-secondary" style="padding:6px 10px;font-size:0.8rem;">Download</a>
-                  </div>
+          <!-- E-Library Tab 1: Books -->
+          <div id="elib-tab-books" class="elib-tab-pane active">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:20px;">
+              <% if (digitalItems.length === 0) { %>
+                <div class="card" style="grid-column:1/-1;text-align:center;padding:40px;">
+                  <p style="color:#94A3B8;">No digital publications uploaded yet.</p>
                 </div>
-              <% }) %>
-            <% } %>
+              <% } else { %>
+                <% digitalItems.forEach(d => { %>
+                  <div class="card" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div>
+                      <div style="height:140px;background:#F1F5F9;border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                        <% if (d.cover_url) { %>
+                          <img src="<%= d.cover_url %>" style="width:100%;height:100%;object-fit:cover;">
+                        <% } else { %>
+                          <span style="font-size:2.5rem;">📄</span>
+                        <% } %>
+                      </div>
+                      <h4 style="font-size:0.95rem;font-weight:700;margin:0 0 4px 0;color:#111827;"><%= d.title %></h4>
+                      <p style="font-size:0.75rem;color:#64748B;margin:0 0 10px 0;"><%= d.author || 'Faculty' %></p>
+                    </div>
+                    <div style="display:flex;gap:6px;margin-top:12px;">
+                      <a href="/admin/e-library/read/<%= d.id %>" class="btn-primary" style="flex:1;justify-content:center;padding:6px;font-size:0.8rem;">Read</a>
+                      <a href="<%= d.file_url || '#' %>" target="_blank" class="btn-secondary" style="padding:6px 10px;font-size:0.8rem;">Download</a>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- E-Library Tab 2: Review Moderation -->
+          <div id="elib-tab-reviews" class="elib-tab-pane" style="display:none;">
+            <div class="card" style="margin-bottom:20px;">
+              <div class="lp-card-header">
+                <div>
+                  <h3 class="lp-card-title">⭐ Student Book Reviews Moderation</h3>
+                  <p class="lp-card-sub">Approve or reject student reading submissions, ratings, and chapter summaries</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="lp-table-container">
+              <table class="lp-table">
+                <thead>
+                  <tr>
+                    <th>Book</th>
+                    <th>Student</th>
+                    <th>Rating / Review</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (reviews.length === 0) { %>
+                    <tr><td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">No book reviews pending moderation.</td></tr>
+                  <% } else { %>
+                    <% reviews.forEach(r => { %>
+                      <tr>
+                        <td style="font-weight:700;"><%= r.book_title %></td>
+                        <td><%= r.student_name %></td>
+                        <td>
+                          <div>⭐ <%= r.rating || 5 %>/5</div>
+                          <div style="font-size:0.8rem;color:#64748B;"><%= r.review || r.learned || 'Recommended read.' %></div>
+                        </td>
+                        <td><span class="lp-status-pill <%= r.status === 'approved' ? 'available' : 'reserved' %>"><%= r.status %></span></td>
+                        <td>
+                          <button class="btn-success" style="padding:4px 8px;font-size:0.75rem;" onclick="approveReview('<%= r.id %>')">Approve</button>
+                          <button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="rejectReview('<%= r.id %>')">Reject</button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -1215,10 +1294,26 @@
              ───────────────────────────────────────────────────────────── -->
         <section id="module-studio" class="lp-module-view" style="display:<%= currentModule === 'studio' ? 'block' : 'none' %>;">
           <%
-            const nowTime = new Date();
-            const studioLiveList = studioSessions.filter(s => s.status === 'LIVE' || s.status === 'live');
-            const studioUpcomingList = studioSessions.filter(s => s.status === 'SCHEDULED' || (!s.status && new Date(s.scheduled_start || s.scheduled_at) >= nowTime));
-            const studioPastList = studioSessions.filter(s => s.status === 'COMPLETED' || s.status === 'CANCELLED' || (new Date(s.scheduled_start || s.scheduled_at) < nowTime && s.status !== 'LIVE' && s.status !== 'live'));
+            const nowMs = Date.now();
+            const studioSessionsEnhanced = studioSessions.map(s => {
+              const startMs = new Date(s.scheduled_start || s.scheduled_at || nowMs).getTime();
+              const durMs = (parseInt(s.duration_minutes) || 60) * 60 * 1000;
+              const endMs = s.scheduled_end ? new Date(s.scheduled_end).getTime() : (startMs + durMs);
+              
+              let autoStatus = s.status ? s.status.toUpperCase() : 'SCHEDULED';
+              if (autoStatus === 'LIVE' || (nowMs >= startMs && nowMs <= endMs && autoStatus !== 'COMPLETED' && autoStatus !== 'CANCELLED')) {
+                autoStatus = 'LIVE';
+              } else if (nowMs > endMs || autoStatus === 'COMPLETED' || autoStatus === 'CANCELLED') {
+                autoStatus = 'COMPLETED';
+              } else if (nowMs < startMs) {
+                autoStatus = 'SCHEDULED';
+              }
+              return { ...s, calculatedStatus: autoStatus };
+            });
+
+            const studioLiveList = studioSessionsEnhanced.filter(s => s.calculatedStatus === 'LIVE');
+            const studioUpcomingList = studioSessionsEnhanced.filter(s => s.calculatedStatus === 'SCHEDULED');
+            const studioPastList = studioSessionsEnhanced.filter(s => s.calculatedStatus === 'COMPLETED');
             const totalAttendees = studioSessions.reduce((acc, s) => acc + (parseInt(s.attendee_count) || 0), 0);
           %>
           
@@ -1474,89 +1569,73 @@
         </section>
 
         <!-- ─────────────────────────────────────────────────────────────
-             MODULE 09 — SETTINGS (RULES, FINES, MODERATION, AUDIT LOGS)
+             MODULE 09 — SETTINGS (RULES, POLICIES, AUDIT LOGS)
              ───────────────────────────────────────────────────────────── -->
         <section id="module-settings" class="lp-module-view" style="display:<%= currentModule === 'settings' ? 'block' : 'none' %>;">
           
           <div class="lp-tabs-bar">
-            <button class="lp-tab-btn active" onclick="switchSettingsTab('rules', this)">⚙️ Lending & Fine Rules</button>
-            <button class="lp-tab-btn" onclick="switchSettingsTab('moderation', this)">⭐ Review Moderation (<%= reviews.length %>)</button>
+            <button class="lp-tab-btn active" onclick="switchSettingsTab('rules', this)">⚙️ Lending &amp; Policy Rules</button>
             <button class="lp-tab-btn" onclick="switchSettingsTab('audit', this)">🔒 Audit Trail (<%= auditLogs.length %>)</button>
           </div>
 
           <!-- Settings Tab 1: Rules -->
           <div id="settings-pane-rules" class="lp-tab-pane active">
-            <div class="card" style="max-width:680px;">
-              <h3 class="lp-card-title" style="margin-bottom:18px;">⚙️ Library Policy & Rule Engine</h3>
-              
-              <form action="/admin/api/settings" method="POST">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px;">
-                  <div>
-                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Default Loan Duration (Days)</label>
-                    <input type="number" name="loan_duration_days" class="lp-search-input" value="<%= settings.loan_duration_days || 14 %>">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1050px;">
+              <div class="card">
+                <h3 class="lp-card-title" style="margin-bottom:14px;">⚙️ Library Policy &amp; Loan Quotas</h3>
+                <p style="font-size:0.82rem;color:#64748B;margin-bottom:16px;">Configure loan limits, borrow durations, and daily fine rates.</p>
+                
+                <form action="/admin/api/settings" method="POST">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Loan Duration (Days)</label>
+                      <input type="number" name="loan_duration_days" class="lp-search-input" style="width:100%;" value="<%= settings.loan_duration_days || 14 %>">
+                    </div>
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Grace Period (Days)</label>
+                      <input type="number" name="grace_period_days" class="lp-search-input" style="width:100%;" value="<%= settings.grace_period_days || 2 %>">
+                    </div>
                   </div>
-                  <div>
-                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Grace Period (Days)</label>
-                    <input type="number" name="grace_period_days" class="lp-search-input" value="<%= settings.grace_period_days || 2 %>">
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Student Max Books</label>
+                      <input type="number" name="student_max_books" class="lp-search-input" style="width:100%;" value="<%= settings.student_max_books || 3 %>">
+                    </div>
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Teacher Max Books</label>
+                      <input type="number" name="teacher_max_books" class="lp-search-input" style="width:100%;" value="<%= settings.teacher_max_books || 10 %>">
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom:18px;">
+                    <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Overdue Fine Rate per Day (₹)</label>
+                    <input type="number" name="fine_per_day" class="lp-search-input" style="width:100%;" value="<%= settings.fine_per_day || 5 %>">
+                  </div>
+
+                  <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Save Policy Rules</button>
+                </form>
+              </div>
+
+              <!-- Quick Operations & System Health -->
+              <div style="display:flex;flex-direction:column;gap:16px;">
+                <div class="card">
+                  <h4 style="font-weight:800;margin:0 0 10px 0;font-size:0.95rem;">📦 Catalog &amp; Circulation Backups</h4>
+                  <p style="font-size:0.82rem;color:#64748B;margin-bottom:12px;">Download live snapshots of all books, members, and transaction history.</p>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn-secondary" style="padding:6px 12px;font-size:0.8rem;" onclick="exportBooksCSV()">Export Books CSV</button>
+                    <button class="btn-secondary" style="padding:6px 12px;font-size:0.8rem;" onclick="exportCirculationCSV()">Export Loans CSV</button>
                   </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px;">
-                  <div>
-                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Student Max Book Quota</label>
-                    <input type="number" name="student_max_books" class="lp-search-input" value="<%= settings.student_max_books || 3 %>">
-                  </div>
-                  <div>
-                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Teacher Max Book Quota</label>
-                    <input type="number" name="teacher_max_books" class="lp-search-input" value="<%= settings.teacher_max_books || 10 %>">
-                  </div>
+                <div class="card" style="background:#F8FAFC;border:1px solid #E2E8F0;">
+                  <h4 style="font-weight:800;margin:0 0 8px 0;font-size:0.95rem;">⭐ Review Moderation</h4>
+                  <p style="font-size:0.82rem;color:#64748B;margin-bottom:12px;">Student book reviews and ratings have been consolidated under <strong>E-Library</strong> for convenient content management.</p>
+                  <button class="btn-primary" style="padding:6px 12px;font-size:0.8rem;" onclick="switchModule('e-library'); switchElibraryTab('reviews', document.getElementById('btn-tab-elib-reviews'));">
+                    Open Review Moderation &rarr;
+                  </button>
                 </div>
-
-                <div style="margin-bottom:20px;">
-                  <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px;">Fine Rate per Day (₹)</label>
-                  <input type="number" name="fine_per_day" class="lp-search-input" value="<%= settings.fine_per_day || 5 %>">
-                </div>
-
-                <button type="submit" class="btn-primary">Save Rules & Settings</button>
-              </form>
-            </div>
-          </div>
-
-          <!-- Settings Tab 2: Review Moderation -->
-          <div id="settings-pane-moderation" class="lp-tab-pane">
-            <div class="lp-table-container">
-              <table class="lp-table">
-                <thead>
-                  <tr>
-                    <th>Book</th>
-                    <th>Student</th>
-                    <th>Rating / Review</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% if (reviews.length === 0) { %>
-                    <tr><td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">No book reviews pending moderation.</td></tr>
-                  <% } else { %>
-                    <% reviews.forEach(r => { %>
-                      <tr>
-                        <td style="font-weight:700;"><%= r.book_title %></td>
-                        <td><%= r.student_name %></td>
-                        <td>
-                          <div>⭐ <%= r.rating || 5 %>/5</div>
-                          <div style="font-size:0.8rem;color:#64748B;"><%= r.review || r.learned || 'Recommended read.' %></div>
-                        </td>
-                        <td><span class="lp-status-pill <%= r.status === 'approved' ? 'available' : 'reserved' %>"><%= r.status %></span></td>
-                        <td>
-                          <button class="btn-success" style="padding:4px 8px;font-size:0.75rem;" onclick="approveReview('<%= r.id %>')">Approve</button>
-                          <button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="rejectReview('<%= r.id %>')">Reject</button>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  <% } %>
-                </tbody>
-              </table>
+              </div>
             </div>
           </div>
 
@@ -1652,48 +1731,234 @@
        5. MODALS (ADD BOOK, ADD MEMBER)
        ═══════════════════════════════════════════════════════════════ -->
   <!-- Add Book Modal -->
-  <div id="addBookModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;">
-    <div class="card" style="width:90%;max-width:540px;position:relative;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h3 style="margin:0;font-size:1.15rem;font-weight:800;">+ Add New Book to Catalog</h3>
-        <button onclick="closeModal('addBookModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+  <!-- Enhanced Add Book Modal (Single & Bulk Scan, Covers, Duplicate Detection & Acquisition Linking) -->
+  <div id="addBookModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;z-index:9999;">
+    <div class="card" style="width:95%;max-width:820px;max-height:92vh;overflow-y:auto;position:relative;padding:1.5rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div>
+          <h3 style="margin:0;font-size:1.25rem;font-weight:800;">📚 Book Registration &amp; Barcode Scanner</h3>
+          <p style="margin:2px 0 0 0;font-size:0.8rem;color:#64748B;">Register physical titles with live web metadata, dual cover photos, and duplicate reconciliation.</p>
+        </div>
+        <button onclick="closeModal('addBookModal')" style="background:transparent;border:none;font-size:1.3rem;cursor:pointer;color:#64748B;">✕</button>
       </div>
-      <form action="/admin/book/add" method="POST">
+
+      <!-- Mode Switcher Tabs -->
+      <div class="lp-tabs-bar" style="margin-bottom:18px;">
+        <button type="button" class="lp-tab-btn active" id="btnModeSingle" onclick="switchAddBookMode('single')">
+          📖 Single Book Registration
+        </button>
+        <button type="button" class="lp-tab-btn" id="btnModeBulk" onclick="switchAddBookMode('bulk')">
+          ⚡ Bulk Barcode Scan Queue (<span id="bulkQueueBadge">0</span>)
+        </button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           MODE 1: SINGLE BOOK SCAN & REGISTRATION
+           ═══════════════════════════════════════════════════════════════ -->
+      <div id="viewSingleBook">
+        <!-- Quick Web Metadata Lookup Strip -->
+        <div style="background:#F1F5F9;border:1px solid #E2E8F0;border-radius:12px;padding:12px;margin-bottom:18px;">
+          <label style="font-size:0.75rem;font-weight:700;color:#475569;display:block;margin-bottom:6px;">
+            🔍 QUICK METADATA LOOKUP (GOOGLE BOOKS &amp; OPENLIBRARY)
+          </label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="singleLookupInput" placeholder="Scan Barcode or enter 10/13-digit ISBN / Title..." class="lp-search-input" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupSingleBookMetadata();}">
+            <button type="button" class="btn-primary" onclick="lookupSingleBookMetadata()" id="btnLookupMetadata" style="padding:6px 14px;font-size:0.85rem;white-space:nowrap;">
+              🔍 Fetch Metadata
+            </button>
+          </div>
+          <div id="singleLookupStatus" style="font-size:0.8rem;margin-top:6px;display:none;"></div>
+        </div>
+
+        <!-- Live Status Indicators: Duplicate & Acquisition Match Alert Banners -->
+        <div id="singleDuplicateAlert" style="display:none;margin-bottom:14px;padding:10px 14px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;font-size:0.85rem;color:#92400E;">
+        </div>
+
+        <div id="singleAcquisitionAlert" style="display:none;margin-bottom:14px;padding:10px 14px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;font-size:0.85rem;color:#065F46;">
+        </div>
+
+        <form id="singleBookForm" onsubmit="submitSingleBookForm(event)">
+          <input type="hidden" name="acquisition_item_id" id="singleAcqItemId" value="">
+          <input type="hidden" name="cover_url" id="singleCoverUrl" value="">
+          <input type="hidden" name="back_cover_url" id="singleBackCoverUrl" value="">
+
+          <!-- Front & Back Cover Upload Cards -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+            <!-- Front Cover Card -->
+            <div style="border:1px dashed #CBD5E1;border-radius:12px;padding:12px;background:#F8FAFC;text-align:center;">
+              <span style="font-size:0.78rem;font-weight:700;color:#475569;display:block;margin-bottom:8px;">📷 Front Cover Photo</span>
+              <div id="frontCoverBox" style="height:110px;border-radius:8px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;">
+                <span id="frontCoverPlaceholder" style="font-size:0.78rem;color:#64748B;">No front cover selected</span>
+                <img id="frontCoverImg" style="display:none;width:100%;height:100%;object-fit:cover;">
+              </div>
+              <div style="display:flex;gap:6px;justify-content:center;">
+                <label class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;cursor:pointer;">
+                  Upload
+                  <input type="file" accept="image/*" style="display:none;" onchange="handleCoverUpload(event, 'front')">
+                </label>
+                <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="captureCameraPhoto('front')">Camera</button>
+                <button type="button" id="btnFrontClear" style="display:none;background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;" onclick="clearCoverPhoto('front')">Clear</button>
+              </div>
+            </div>
+
+            <!-- Back Cover Card -->
+            <div style="border:1px dashed #CBD5E1;border-radius:12px;padding:12px;background:#F8FAFC;text-align:center;">
+              <span style="font-size:0.78rem;font-weight:700;color:#475569;display:block;margin-bottom:8px;">📷 Back Cover (Blurb/Barcode)</span>
+              <div id="backCoverBox" style="height:110px;border-radius:8px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;">
+                <span id="backCoverPlaceholder" style="font-size:0.78rem;color:#64748B;">No back cover selected</span>
+                <img id="backCoverImg" style="display:none;width:100%;height:100%;object-fit:cover;">
+              </div>
+              <div style="display:flex;gap:6px;justify-content:center;">
+                <label class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;cursor:pointer;">
+                  Upload
+                  <input type="file" accept="image/*" style="display:none;" onchange="handleCoverUpload(event, 'back')">
+                </label>
+                <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="captureCameraPhoto('back')">Camera</button>
+                <button type="button" id="btnBackClear" style="display:none;background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;" onclick="clearCoverPhoto('back')">Clear</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metadata Fields -->
+          <div style="margin-bottom:12px;">
+            <label style="font-size:0.8rem;font-weight:700;">Book Title *</label>
+            <input type="text" name="title" id="sbTitle" required class="lp-search-input" style="width:100%;">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;">Author</label>
+              <input type="text" name="author" id="sbAuthor" class="lp-search-input" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;">Genre / Category</label>
+              <input type="text" name="genre" id="sbGenre" class="lp-search-input" style="width:100%;" placeholder="Science, Fiction...">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;">ISBN / Barcode</label>
+              <input type="text" name="isbn" id="sbIsbn" class="lp-search-input" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;">Total Copies</label>
+              <input type="number" name="total_copies" id="sbCopies" value="1" min="1" class="lp-search-input" style="width:100%;">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;">Rack / Aisle</label>
+              <input type="text" name="rack" id="sbRack" value="A" class="lp-search-input" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;">Shelf No</label>
+              <input type="text" name="shelf" id="sbShelf" value="1" class="lp-search-input" style="width:100%;">
+            </div>
+          </div>
+
+          <div style="margin-bottom:18px;">
+            <label style="font-size:0.8rem;font-weight:700;">Description / Synopsis (Optional)</label>
+            <textarea name="description" id="sbDescription" class="lp-search-input" style="width:100%;height:60px;resize:vertical;"></textarea>
+          </div>
+
+          <button type="submit" id="btnSubmitSingleBook" class="btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:0.95rem;">
+            💾 Register Book into Catalog
+          </button>
+        </form>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           MODE 2: BULK SCANNING SEQUENTIAL QUEUE
+           ═══════════════════════════════════════════════════════════════ -->
+      <div id="viewBulkBook" style="display:none;">
+        <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:12px;padding:12px;margin-bottom:16px;">
+          <label style="font-size:0.75rem;font-weight:700;color:#3730A3;display:block;margin-bottom:6px;">
+            ⚡ RAPID BARCODE SCANNER (SCAN SEQUENTIALLY)
+          </label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="bulkScannerInput" placeholder="Scan barcode with scanner gun or type ISBN and press Enter..." class="lp-search-input" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addBarcodeToBulkQueue();}">
+            <button type="button" class="btn-primary" onclick="addBarcodeToBulkQueue()" style="padding:6px 14px;font-size:0.85rem;">
+              + Add to Queue
+            </button>
+          </div>
+          <div id="bulkScanNotice" style="font-size:0.8rem;color:#4F46E5;margin-top:6px;">
+            Point scanner at book barcodes. Each scan automatically queries metadata and enqueues the title.
+          </div>
+        </div>
+
+        <!-- Bulk Queue Table -->
+        <div class="lp-table-container" style="max-height:300px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:10px;margin-bottom:16px;">
+          <table class="lp-table" style="font-size:0.82rem;">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>Title &amp; Author</th>
+                <th>ISBN</th>
+                <th style="width:90px;">Copies</th>
+                <th>Reconciliation Status</th>
+                <th style="width:40px;"></th>
+              </tr>
+            </thead>
+            <tbody id="bulkQueueTbody">
+              <tr>
+                <td colspan="6" style="text-align:center;padding:32px;color:#94A3B8;">
+                  No scanned books in queue. Scan book barcodes to begin bulk registration.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bulk Action Controls -->
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <button type="button" class="btn-secondary" onclick="clearBulkQueue()" style="padding:6px 12px;font-size:0.8rem;color:#DC2626;">
+            🗑️ Clear Queue
+          </button>
+          <button type="button" id="btnBatchRegister" class="btn-primary" onclick="submitBatchRegistration()" style="padding:8px 18px;font-size:0.9rem;" disabled>
+            🚀 Batch Register (0) Books
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Edit Book Modal -->
+  <div id="editBookModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;z-index:9999;">
+    <div class="card" style="width:90%;max-width:520px;position:relative;padding:1.5rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800;">✏️ Edit Catalog Book</h3>
+        <button onclick="closeModal('editBookModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <form id="editBookForm" onsubmit="submitEditBookForm(event)">
+        <input type="hidden" id="ebId" name="id">
         <div style="margin-bottom:12px;">
-          <label style="font-size:0.8rem;font-weight:700;">Book Title *</label>
-          <input type="text" name="title" required class="lp-search-input" style="width:100%;">
+          <label style="font-size:0.8rem;font-weight:700;">Book Title</label>
+          <input type="text" id="ebTitle" name="title" required class="lp-search-input" style="width:100%;">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
           <div>
             <label style="font-size:0.8rem;font-weight:700;">Author</label>
-            <input type="text" name="author" class="lp-search-input" style="width:100%;">
+            <input type="text" id="ebAuthor" name="author" class="lp-search-input" style="width:100%;">
           </div>
-          <div>
-            <label style="font-size:0.8rem;font-weight:700;">Genre / Category</label>
-            <input type="text" name="genre" class="lp-search-input" style="width:100%;" placeholder="Science, Fiction...">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
           <div>
             <label style="font-size:0.8rem;font-weight:700;">ISBN / Barcode</label>
-            <input type="text" name="isbn" class="lp-search-input" style="width:100%;">
-          </div>
-          <div>
-            <label style="font-size:0.8rem;font-weight:700;">Total Copies</label>
-            <input type="number" name="total_copies" value="2" class="lp-search-input" style="width:100%;">
+            <input type="text" id="ebIsbn" name="isbn" class="lp-search-input" style="width:100%;">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
           <div>
-            <label style="font-size:0.8rem;font-weight:700;">Rack / Aisle</label>
-            <input type="text" name="rack" value="A" class="lp-search-input" style="width:100%;">
+            <label style="font-size:0.8rem;font-weight:700;">Total Copies</label>
+            <input type="number" id="ebCopies" name="total_copies" min="1" class="lp-search-input" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:0.8rem;font-weight:700;">Shelf No</label>
-            <input type="text" name="shelf" value="1" class="lp-search-input" style="width:100%;">
+            <label style="font-size:0.8rem;font-weight:700;">Shelf Location</label>
+            <input type="text" id="ebLocation" name="shelf_location" class="lp-search-input" style="width:100%;">
           </div>
         </div>
-        <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Save to Catalog</button>
+        <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Update Book Information</button>
       </form>
     </div>
   </div>
@@ -2448,6 +2713,8 @@
         const data = await res.json();
         const m = data.member;
 
+        const isSuspended = m.is_banned == 1 || m.status === 'suspended';
+
         body.innerHTML = `
           <!-- Digital Library Pass Card -->
           <div class="lp-digital-pass">
@@ -2462,6 +2729,19 @@
             <div class="lp-pass-barcode">
               <div style="font-family:monospace;font-weight:800;color:#0B5ED7;font-size:1.1rem;letter-spacing:2px;">${m.admission_no || `MEM-${m.id}`}</div>
             </div>
+          </div>
+
+          <!-- Account Status & Suspension Control -->
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;padding:12px 14px;border-radius:10px;margin-bottom:16px;border:1px solid #E2E8F0;">
+            <div>
+              <div style="font-size:0.72rem;color:#64748B;font-weight:700;letter-spacing:0.04em;">ACCOUNT STATUS</div>
+              <div style="font-weight:800;font-size:0.9rem;color:${isSuspended ? '#DC2626' : '#16A34A'};display:flex;align-items:center;gap:6px;margin-top:2px;">
+                <span>${isSuspended ? '● Suspended / Restricted' : '● Active & Authorized'}</span>
+              </div>
+            </div>
+            <button class="btn-${isSuspended ? 'success' : 'danger'}" style="padding:6px 12px;font-size:0.78rem;font-weight:700;" onclick="toggleMemberStatus('${m.id}', ${!isSuspended})">
+              ${isSuspended ? 'Unsuspend Account' : 'Suspend Account'}
+            </button>
           </div>
 
           <!-- Overview Stats -->
@@ -2502,6 +2782,32 @@
         `;
       } catch (e) {
         body.innerHTML = '<p style="color:#DC3545;">Failed to load member profile.</p>';
+      }
+    }
+
+    async function toggleMemberStatus(userId, shouldSuspend) {
+      const action = shouldSuspend ? 'suspend' : 'unsuspend';
+      if (!confirm(`Are you sure you want to ${action} this account?`)) return;
+      try {
+        const res = await fetch(`/admin/api/member/${userId}/toggle-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ suspend: shouldSuspend })
+        });
+        const d = await res.json();
+        if (d.success) {
+          alert(`Account has been ${shouldSuspend ? 'suspended' : 'activated'} successfully.`);
+          openMemberDrawer(userId);
+          const badge = document.getElementById(`member-status-${userId}`);
+          if (badge) {
+            badge.className = `lp-status-pill ${shouldSuspend ? 'overdue' : 'available'}`;
+            badge.textContent = shouldSuspend ? 'Suspended' : 'Active';
+          }
+        } else {
+          alert(d.error || 'Failed to update member status');
+        }
+      } catch (e) {
+        alert('Network error while updating status');
       }
     }
 
@@ -2680,6 +2986,432 @@
       await fetch(`/admin/api/review/${id}/reject`, { method: 'POST' });
       alert('Review rejected.');
       window.location.reload();
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // E-Library Tab Navigation
+    // ─────────────────────────────────────────────────────────────────
+    function switchElibraryTab(tabId, btn) {
+      document.querySelectorAll('.elib-tab-pane').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.lp-tab-btn[id^="btn-tab-elib-"]').forEach(b => b.classList.remove('active'));
+      const targetPane = document.getElementById('elib-tab-' + tabId);
+      if (targetPane) targetPane.style.display = 'block';
+      if (btn) btn.classList.add('active');
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Edit Book Modal Handlers
+    // ─────────────────────────────────────────────────────────────────
+    function openEditBookModal(id, title, author, isbn, totalCopies, shelfLocation) {
+      document.getElementById('ebId').value = id || '';
+      document.getElementById('ebTitle').value = title || '';
+      document.getElementById('ebAuthor').value = author || '';
+      document.getElementById('ebIsbn').value = isbn || '';
+      document.getElementById('ebCopies').value = totalCopies || 1;
+      document.getElementById('ebLocation').value = shelfLocation || '';
+      openModal('editBookModal');
+    }
+
+    async function submitEditBookForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('ebId').value;
+      const payload = {
+        title: document.getElementById('ebTitle').value.trim(),
+        author: document.getElementById('ebAuthor').value.trim(),
+        isbn: document.getElementById('ebIsbn').value.trim(),
+        total_copies: parseInt(document.getElementById('ebCopies').value, 10) || 1,
+        shelf_location: document.getElementById('ebLocation').value.trim()
+      };
+      try {
+        const res = await fetch(`/admin/api/books/${id}/edit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Book catalog details updated successfully!');
+          closeModal('editBookModal');
+          window.location.reload();
+        } else {
+          alert(data.error || 'Failed to update book.');
+        }
+      } catch (err) {
+        alert('Network error while updating book.');
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Book Registration & Scanning (Single & Bulk Queue)
+    // ─────────────────────────────────────────────────────────────────
+    function switchAddBookMode(mode) {
+      const vSingle = document.getElementById('viewSingleBook');
+      const vBulk = document.getElementById('viewBulkBook');
+      const bSingle = document.getElementById('btnModeSingle');
+      const bBulk = document.getElementById('btnModeBulk');
+      if (mode === 'single') {
+        if (vSingle) vSingle.style.display = 'block';
+        if (vBulk) vBulk.style.display = 'none';
+        if (bSingle) bSingle.classList.add('active');
+        if (bBulk) bBulk.classList.remove('active');
+      } else {
+        if (vSingle) vSingle.style.display = 'none';
+        if (vBulk) vBulk.style.display = 'block';
+        if (bSingle) bSingle.classList.remove('active');
+        if (bBulk) bBulk.classList.add('active');
+        const input = document.getElementById('bulkScannerInput');
+        if (input) setTimeout(() => input.focus(), 100);
+      }
+    }
+
+    async function lookupSingleBookMetadata() {
+      const query = (document.getElementById('singleLookupInput')?.value || '').trim();
+      const statusEl = document.getElementById('singleLookupStatus');
+      const dupAlert = document.getElementById('singleDuplicateAlert');
+      const acqAlert = document.getElementById('singleAcquisitionAlert');
+
+      if (!query) {
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.style.color = '#DC2626';
+          statusEl.textContent = 'Please enter an ISBN or book title.';
+        }
+        return;
+      }
+
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#4F46E5';
+        statusEl.textContent = '🔍 Querying Google Books & OpenLibrary...';
+      }
+      if (dupAlert) dupAlert.style.display = 'none';
+      if (acqAlert) acqAlert.style.display = 'none';
+
+      try {
+        const res = await fetch(`/admin/api/books/lookup?isbn=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (!data.success) {
+          if (statusEl) {
+            statusEl.style.color = '#D97706';
+            statusEl.textContent = 'No web metadata found. You can fill details manually.';
+          }
+          return;
+        }
+
+        const b = data.book || {};
+        if (b.title) document.getElementById('sbTitle').value = b.title;
+        if (b.author) document.getElementById('sbAuthor').value = b.author;
+        if (b.genre) document.getElementById('sbGenre').value = b.genre;
+        if (b.isbn) document.getElementById('sbIsbn').value = b.isbn;
+        if (b.description) document.getElementById('sbDescription').value = b.description;
+
+        if (b.cover_url) {
+          document.getElementById('singleCoverUrl').value = b.cover_url;
+          const fImg = document.getElementById('frontCoverImg');
+          const fPh = document.getElementById('frontCoverPlaceholder');
+          const fClr = document.getElementById('btnFrontClear');
+          if (fImg && fPh) {
+            fImg.src = b.cover_url;
+            fImg.style.display = 'block';
+            fPh.style.display = 'none';
+            if (fClr) fClr.style.display = 'inline-block';
+          }
+        }
+
+        if (statusEl) {
+          statusEl.style.color = '#16A34A';
+          statusEl.textContent = `✓ Found metadata from ${b.source || 'Web Repository'}`;
+        }
+
+        if (data.duplicate) {
+          const dup = data.duplicate;
+          if (dupAlert) {
+            dupAlert.innerHTML = `⚠️ <strong>Duplicate Title Detected:</strong> "${escapeHtml(dup.title)}" is already in your library catalog (${dup.total_copies} total copies). Registering will increase copy inventory.`;
+            dupAlert.style.display = 'block';
+          }
+        }
+
+        if (data.acquisition_match) {
+          const acq = data.acquisition_match;
+          document.getElementById('singleAcqItemId').value = acq.item_id || '';
+          if (acqAlert) {
+            acqAlert.innerHTML = `📦 <strong>Invoice Match:</strong> Linked to purchase invoice #${acq.invoice_number || acq.acquisition_id} from ${escapeHtml(acq.vendor_name || 'Vendor')} (Expected ${acq.expected_copies}, Registered ${acq.registered_copies}).`;
+            acqAlert.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        if (statusEl) {
+          statusEl.style.color = '#DC2626';
+          statusEl.textContent = 'Error querying metadata service.';
+        }
+      }
+    }
+
+    function handleCoverUpload(event, type) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        if (type === 'front') {
+          document.getElementById('singleCoverUrl').value = dataUrl;
+          const img = document.getElementById('frontCoverImg');
+          const ph = document.getElementById('frontCoverPlaceholder');
+          const clr = document.getElementById('btnFrontClear');
+          if (img) { img.src = dataUrl; img.style.display = 'block'; }
+          if (ph) ph.style.display = 'none';
+          if (clr) clr.style.display = 'inline-block';
+        } else {
+          document.getElementById('singleBackCoverUrl').value = dataUrl;
+          const img = document.getElementById('backCoverImg');
+          const ph = document.getElementById('backCoverPlaceholder');
+          const clr = document.getElementById('btnBackClear');
+          if (img) { img.src = dataUrl; img.style.display = 'block'; }
+          if (ph) ph.style.display = 'none';
+          if (clr) clr.style.display = 'inline-block';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function captureCameraPhoto(type) {
+      const camInput = document.createElement('input');
+      camInput.type = 'file';
+      camInput.accept = 'image/*';
+      camInput.capture = 'environment';
+      camInput.onchange = (e) => handleCoverUpload(e, type);
+      camInput.click();
+    }
+
+    function clearCoverPhoto(type) {
+      if (type === 'front') {
+        document.getElementById('singleCoverUrl').value = '';
+        const img = document.getElementById('frontCoverImg');
+        const ph = document.getElementById('frontCoverPlaceholder');
+        const clr = document.getElementById('btnFrontClear');
+        if (img) { img.src = ''; img.style.display = 'none'; }
+        if (ph) ph.style.display = 'block';
+        if (clr) clr.style.display = 'none';
+      } else {
+        document.getElementById('singleBackCoverUrl').value = '';
+        const img = document.getElementById('backCoverImg');
+        const ph = document.getElementById('backCoverPlaceholder');
+        const clr = document.getElementById('btnBackClear');
+        if (img) { img.src = ''; img.style.display = 'none'; }
+        if (ph) ph.style.display = 'block';
+        if (clr) clr.style.display = 'none';
+      }
+    }
+
+    async function submitSingleBookForm(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitSingleBook');
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving to Catalog...'; }
+
+      const payload = {
+        title: document.getElementById('sbTitle').value.trim(),
+        author: document.getElementById('sbAuthor').value.trim(),
+        genre: document.getElementById('sbGenre').value.trim(),
+        isbn: document.getElementById('sbIsbn').value.trim(),
+        total_copies: parseInt(document.getElementById('sbCopies').value, 10) || 1,
+        rack: document.getElementById('sbRack').value.trim() || 'A',
+        shelf: document.getElementById('sbShelf').value.trim() || '1',
+        description: document.getElementById('sbDescription').value.trim(),
+        cover_url: document.getElementById('singleCoverUrl').value.trim(),
+        back_cover_url: document.getElementById('singleBackCoverUrl').value.trim(),
+        acquisition_item_id: document.getElementById('singleAcqItemId').value.trim()
+      };
+
+      try {
+        const res = await fetch('/admin/book/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`✓ Book "${payload.title}" registered successfully!`);
+          closeModal('addBookModal');
+          window.location.reload();
+        } else {
+          alert(data.error || 'Failed to register book.');
+          if (btn) { btn.disabled = false; btn.textContent = '💾 Register Book into Catalog'; }
+        }
+      } catch (err) {
+        window.location.reload();
+      }
+    }
+
+    // Bulk Scan Sequential Queue State & Operations
+    let bulkScanQueue = [];
+
+    async function addBarcodeToBulkQueue() {
+      const input = document.getElementById('bulkScannerInput');
+      const code = (input?.value || '').trim();
+      if (!code) return;
+      input.value = '';
+      input.focus();
+
+      const existing = bulkScanQueue.find(item => item.barcode.toLowerCase() === code.toLowerCase() || (item.isbn && item.isbn.toLowerCase() === code.toLowerCase()));
+      if (existing) {
+        existing.copies = (existing.copies || 1) + 1;
+        renderBulkQueue();
+        return;
+      }
+
+      const tempId = Date.now();
+      const queueItem = {
+        id: tempId,
+        barcode: code,
+        isbn: code,
+        title: 'Fetching metadata...',
+        author: 'Please wait...',
+        genre: 'General',
+        copies: 1,
+        cover_url: '',
+        duplicate: null,
+        acquisition_item_id: null,
+        loading: true
+      };
+      bulkScanQueue.unshift(queueItem);
+      renderBulkQueue();
+
+      try {
+        const res = await fetch(`/admin/api/books/lookup?isbn=${encodeURIComponent(code)}`);
+        const data = await res.json();
+        const item = bulkScanQueue.find(it => it.id === tempId);
+        if (item) {
+          item.loading = false;
+          if (data.success && data.book) {
+            item.title = data.book.title || code;
+            item.author = data.book.author || 'Unknown Author';
+            item.genre = data.book.genre || 'General';
+            item.isbn = data.book.isbn || code;
+            item.cover_url = data.book.cover_url || '';
+          } else {
+            item.title = `Barcode ${code}`;
+            item.author = 'Unknown (Manual Review)';
+          }
+          if (data.duplicate) {
+            item.duplicate = data.duplicate;
+          }
+          if (data.acquisition_match) {
+            item.acquisition_match = data.acquisition_match;
+            item.acquisition_item_id = data.acquisition_match.item_id;
+          }
+        }
+      } catch (err) {
+        const item = bulkScanQueue.find(it => it.id === tempId);
+        if (item) {
+          item.loading = false;
+          item.title = `Barcode ${code}`;
+          item.author = 'Lookup Offline';
+        }
+      }
+      renderBulkQueue();
+    }
+
+    function renderBulkQueue() {
+      const tbody = document.getElementById('bulkQueueTbody');
+      const badge = document.getElementById('bulkQueueBadge');
+      const btn = document.getElementById('btnBatchRegister');
+      if (badge) badge.textContent = bulkScanQueue.length;
+      if (btn) {
+        btn.disabled = bulkScanQueue.length === 0;
+        btn.textContent = `🚀 Batch Register (${bulkScanQueue.length}) Books`;
+      }
+      if (!tbody) return;
+
+      if (bulkScanQueue.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8;">No scanned books in queue. Scan book barcodes to begin bulk registration.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = bulkScanQueue.map((item, idx) => {
+        let reconBadge = '<span class="lp-status-pill available">New Title</span>';
+        if (item.duplicate) {
+          reconBadge = `<span class="lp-status-pill overdue" title="Exists: ${escapeHtml(item.duplicate.title)}">Duplicate (+${item.duplicate.total_copies} copies)</span>`;
+        } else if (item.acquisition_match) {
+          reconBadge = `<span class="lp-status-pill in-review" title="Invoice #${item.acquisition_match.invoice_number}">Matched Invoice</span>`;
+        }
+
+        return `
+          <tr>
+            <td style="font-weight:700;color:#64748B;">${idx + 1}</td>
+            <td>
+              <div style="font-weight:700;color:#1E293B;">${escapeHtml(item.title)}</div>
+              <div style="font-size:0.75rem;color:#64748B;">${escapeHtml(item.author)}</div>
+            </td>
+            <td style="font-family:monospace;font-size:0.8rem;">${escapeHtml(item.barcode)}</td>
+            <td>
+              <input type="number" min="1" value="${item.copies}" style="width:60px;padding:3px 6px;border:1px solid #CBD5E1;border-radius:6px;font-size:0.82rem;" onchange="updateBulkItemCopies(${item.id}, this.value)">
+            </td>
+            <td>${reconBadge}</td>
+            <td>
+              <button type="button" onclick="removeBulkQueueItem(${item.id})" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:1rem;">✕</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateBulkItemCopies(id, val) {
+      const item = bulkScanQueue.find(it => it.id === id);
+      if (item) {
+        item.copies = Math.max(1, parseInt(val, 10) || 1);
+      }
+    }
+
+    function removeBulkQueueItem(id) {
+      bulkScanQueue = bulkScanQueue.filter(it => it.id !== id);
+      renderBulkQueue();
+    }
+
+    function clearBulkQueue() {
+      if (bulkScanQueue.length === 0) return;
+      if (confirm('Clear all scanned books from queue?')) {
+        bulkScanQueue = [];
+        renderBulkQueue();
+      }
+    }
+
+    async function submitBatchRegistration() {
+      if (bulkScanQueue.length === 0) return;
+      const btn = document.getElementById('btnBatchRegister');
+      if (btn) { btn.disabled = true; btn.textContent = 'Registering Batch...'; }
+
+      const payload = {
+        books: bulkScanQueue.map(item => ({
+          title: item.title,
+          author: item.author,
+          genre: item.genre || 'General',
+          isbn: item.isbn || item.barcode,
+          total_copies: item.copies || 1,
+          cover_url: item.cover_url || '',
+          acquisition_item_id: item.acquisition_item_id || null
+        }))
+      };
+
+      try {
+        const res = await fetch('/admin/api/books/batch-register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`✓ Successfully batch registered ${data.registered} books into catalog!`);
+          bulkScanQueue = [];
+          closeModal('addBookModal');
+          window.location.reload();
+        } else {
+          alert(data.error || 'Failed to complete batch registration.');
+          if (btn) { btn.disabled = false; btn.textContent = `🚀 Batch Register (${bulkScanQueue.length}) Books`; }
+        }
+      } catch (err) {
+        alert('Network error during batch registration.');
+        if (btn) { btn.disabled = false; btn.textContent = `🚀 Batch Register (${bulkScanQueue.length}) Books`; }
+      }
     }
 
     // Export Helpers

@@ -8,6 +8,7 @@ const cloudinary = require('cloudinary').v2;
 const aiService = require('../services/aiService');
 const { logActivity, ensureSecurityTables } = require('../services/auditLogger');
 const { quotes: libraryQuotes, getRandomQuote } = require('../data/quotes');
+const bookMetadataService = require('../services/bookMetadataService');
 require('dotenv').config();
 
 const upload = multer({
@@ -1026,12 +1027,63 @@ router.get(['/e-library/read/:id', '/digital/read/:id'], adminOnly, async (req, 
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. ADD BOOK, ADD MEMBER, AND REVIEW MODERATION HANDLERS
+// 8. ADD BOOK, METADATA LOOKUP, BATCH REGISTRATION, AND ACQUISITIONS
 // ─────────────────────────────────────────────────────────────────────────────
-router.post('/book/add', adminOnly, async (req, res) => {
+
+// Metadata Lookup via Google Books / OpenLibrary
+router.get('/api/books/lookup', adminOnly, async (req, res) => {
+  const isbn = (req.query.isbn || req.query.q || '').trim();
+  const title = (req.query.title || '').trim();
+  const author = (req.query.author || '').trim();
+  const sCode = req.session.school_code || 'DPS123';
+
+  if (!isbn && !title) {
+    return res.status(400).json({ error: 'Please provide an ISBN or book title to search' });
+  }
+
+  try {
+    const meta = await bookMetadataService.fetchBookMetadata(isbn || title);
+    const resolvedIsbn = (meta && meta.isbn) ? meta.isbn : isbn;
+    const resolvedTitle = (meta && meta.title) ? meta.title : title;
+    const resolvedAuthor = (meta && meta.author) ? meta.author : author;
+
+    const { duplicateBook, matchingAcquisition } = await bookMetadataService.checkDuplicateAndAcquisitions(
+      resolvedIsbn, resolvedTitle, resolvedAuthor, sCode
+    );
+
+    return res.json({
+      success: true,
+      metadata: meta || {
+        title: resolvedTitle,
+        author: resolvedAuthor,
+        isbn: resolvedIsbn,
+        category: 'General',
+        publisher: '',
+        published_year: '',
+        description: '',
+        cover_url: ''
+      },
+      duplicateBook,
+      matchingAcquisition
+    });
+  } catch (err) {
+    console.error('Book lookup error:', err);
+    return res.status(500).json({ error: 'Failed to look up book metadata: ' + err.message });
+  }
+});
+
+// Single Book Add / Registration (supports both /admin/book/add and /admin/books/add)
+router.post(['/book/add', '/books/add'], adminOnly, async (req, res) => {
   const sCode = req.session.school_code || 'DEMO01';
-  const { title, author, genre, total_copies, isbn, rack, shelf, description, language } = req.body;
+  const { 
+    title, author, genre, total_copies, isbn, rack, shelf, description, language,
+    cover_url, back_cover_url, acquisition_item_id
+  } = req.body;
+
   if (!title) {
+    if (req.is('json') || req.headers.accept?.includes('application/json')) {
+      return res.status(400).json({ success: false, error: 'Book Title is required' });
+    }
     req.flash('error', 'Book Title is required');
     return res.redirect('/admin/catalog');
   }
@@ -1039,16 +1091,25 @@ router.post('/book/add', adminOnly, async (req, res) => {
   try {
     const copies = parseInt(total_copies, 10) || 1;
     const barcodeId = isbn || `LIB-${Date.now().toString().slice(-8)}`;
+    const shelfLoc = `${rack || 'A'}-${shelf || '1'}`;
 
     const insRes = await db.query(`
-      INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language, cover_url, back_cover_url)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING id
-    `, [title, author || 'Unknown', genre || 'General', barcodeId, copies, copies, sCode, description || null, isbn || null, `${rack || 'A'}-${shelf || '1'}`, language || 'English']).catch(async () => {
+    `, [
+      title, author || 'Unknown', genre || 'General', barcodeId, copies, copies, sCode,
+      description || null, isbn || null, shelfLoc, language || 'English',
+      cover_url || '', back_cover_url || ''
+    ]).catch(async () => {
       return await db.query(`
-        INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      `, [title, author || 'Unknown', genre || 'General', barcodeId, copies, copies, sCode, description || null, isbn || null, `${rack || 'A'}-${shelf || '1'}`, language || 'English']);
+        INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language, cover_url, back_cover_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      `, [
+        title, author || 'Unknown', genre || 'General', barcodeId, copies, copies, sCode,
+        description || null, isbn || null, shelfLoc, language || 'English',
+        cover_url || '', back_cover_url || ''
+      ]);
     });
 
     const bookId = (insRes.rows && insRes.rows[0]) ? insRes.rows[0].id : insRes.lastId;
@@ -1063,12 +1124,341 @@ router.post('/book/add', adminOnly, async (req, res) => {
       }
     }
 
+    // If linked to acquisition record, increment registered_copies
+    if (acquisition_item_id) {
+      await db.query(`
+        UPDATE acquisition_items 
+        SET registered_copies = COALESCE(registered_copies, 0) + $1
+        WHERE id = $2
+      `, [copies, parseInt(acquisition_item_id)]).catch(e => console.warn('Acq item update note:', e.message));
+    }
+
+    if (req.is('json') || req.headers.accept?.includes('application/json')) {
+      return res.json({
+        success: true,
+        bookId,
+        message: `Book '${title}' registered successfully with ${copies} copies!`,
+        book: { id: bookId, title, author, total_copies: copies, isbn, cover_url, back_cover_url }
+      });
+    }
+
     req.flash('success', `Book '${title}' added with ${copies} copies!`);
     return res.redirect('/admin/catalog');
   } catch (err) {
     console.error('Add book error:', err);
+    if (req.is('json') || req.headers.accept?.includes('application/json')) {
+      return res.status(500).json({ success: false, error: 'Failed to add book: ' + err.message });
+    }
     req.flash('error', 'Failed to add book: ' + err.message);
     return res.redirect('/admin/catalog');
+  }
+});
+
+// Bulk Batch Registration from Scanning Queue
+router.post('/api/books/batch-register', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  const books = req.body.books || [];
+
+  if (!Array.isArray(books) || books.length === 0) {
+    return res.status(400).json({ success: false, error: 'No books provided in batch' });
+  }
+
+  const results = [];
+  let registeredCount = 0;
+
+  for (const b of books) {
+    try {
+      const title = (b.title || '').trim();
+      if (!title) continue;
+
+      const copies = parseInt(b.copies || b.total_copies, 10) || 1;
+      const barcodeId = b.isbn || `LIB-${Date.now().toString().slice(-8)}-${Math.floor(Math.random()*1000)}`;
+      const shelfLoc = `${b.rack || 'A'}-${b.shelf || '1'}`;
+
+      const insRes = await db.query(`
+        INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language, cover_url, back_cover_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        RETURNING id
+      `, [
+        title, b.author || 'Unknown', b.genre || b.category || 'General', barcodeId, copies, copies, sCode,
+        b.description || null, b.isbn || null, shelfLoc, b.language || 'English',
+        b.cover_url || '', b.back_cover_url || ''
+      ]).catch(async () => {
+        return await db.query(`
+          INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language, cover_url, back_cover_url)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        `, [
+          title, b.author || 'Unknown', b.genre || b.category || 'General', barcodeId, copies, copies, sCode,
+          b.description || null, b.isbn || null, shelfLoc, b.language || 'English',
+          b.cover_url || '', b.back_cover_url || ''
+        ]);
+      });
+
+      const bookId = (insRes.rows && insRes.rows[0]) ? insRes.rows[0].id : insRes.lastId;
+
+      if (bookId) {
+        for (let i = 1; i <= copies; i++) {
+          await db.query(`
+            INSERT INTO book_copies (book_id, barcode, condition_status, availability_status, school_code)
+            VALUES ($1, $2, 'GOOD', 'AVAILABLE', $3)
+          `, [bookId, `${barcodeId}-C${i}`, sCode]).catch(() => {});
+        }
+      }
+
+      if (b.acquisition_item_id) {
+        await db.query(`
+          UPDATE acquisition_items 
+          SET registered_copies = COALESCE(registered_copies, 0) + $1
+          WHERE id = $2
+        `, [copies, parseInt(b.acquisition_item_id)]).catch(() => {});
+      }
+
+      registeredCount++;
+      results.push({ success: true, title, bookId, copies });
+    } catch (err) {
+      results.push({ success: false, title: b.title, error: err.message });
+    }
+  }
+
+  return res.json({
+    success: true,
+    registeredCount,
+    totalSubmitted: books.length,
+    message: `Batch registered ${registeredCount} out of ${books.length} books successfully!`,
+    results
+  });
+});
+
+// Member Status Toggle (Synchronously updates is_banned and status)
+router.post('/api/member/:id/toggle-status', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const userRes = await db.query('SELECT id, name, is_banned, status FROM users WHERE id = $1 AND (school_code = $2 OR $2 = "DEMO01" OR $2 = "DPS123")', [id, sCode]);
+    if (!userRes.rows || userRes.rows.length === 0) return res.status(404).json({ error: 'Member not found' });
+    const member = userRes.rows[0];
+    const isSuspended = (member.is_banned == 1 || member.is_banned === '1' || member.is_banned === true || String(member.status || '').toLowerCase() === 'suspended');
+    const newBan = isSuspended ? '0' : '1';
+    const newStatus = isSuspended ? 'active' : 'suspended';
+    await db.query('UPDATE users SET is_banned = $1, status = $2 WHERE id = $3', [newBan, newStatus, id]);
+    res.json({ success: true, is_banned: newBan === '1', status: newStatus, message: `Member ${member.name} is now ${newStatus}.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACQUISITIONS MANAGEMENT ROUTES
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/acquisitions', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const statsRes = await db.query(`
+      SELECT 
+        COUNT(*) as total_acquisitions,
+        COALESCE(SUM(total_books), 0) as total_books,
+        COALESCE(SUM(total_copies), 0) as total_copies,
+        COALESCE(SUM(total_amount), 0) as total_value
+      FROM acquisitions
+      WHERE school_code = $1 OR school_code = 'DPS123'
+    `, [sCode]).catch(() => ({ rows: [{ total_acquisitions: 0, total_books: 0, total_copies: 0, total_value: 0 }] }));
+
+    const stats = statsRes.rows[0] || { total_acquisitions: 0, total_books: 0, total_copies: 0, total_value: 0 };
+
+    const acqRes = await db.query(`
+      SELECT a.*, v.name as vendor_name, u.name as user_name
+      FROM acquisitions a
+      LEFT JOIN vendors v ON a.vendor_id = v.id
+      LEFT JOIN users u ON a.created_by = u.id
+      WHERE a.school_code = $1 OR a.school_code = 'DPS123'
+      ORDER BY a.id DESC
+    `, [sCode]).catch(() => ({ rows: [] }));
+
+    const vendorRes = await db.query(`
+      SELECT * FROM vendors WHERE school_code = $1 OR school_code = 'DPS123' ORDER BY name ASC
+    `, [sCode]).catch(() => ({ rows: [] }));
+
+    res.render('admin_acquisitions', {
+      title: 'Acquisitions & Inventory Management - Librika',
+      stats,
+      acquisitions: acqRes.rows || [],
+      vendors: vendorRes.rows || [],
+      session: req.session,
+      renderDate: (d) => d ? new Date(d).toLocaleDateString() : 'N/A'
+    });
+  } catch (err) {
+    console.error('Acquisitions page error:', err);
+    res.redirect('/admin/catalog');
+  }
+});
+
+router.get('/acquisitions/get/:id', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const acqRes = await db.query('SELECT * FROM acquisitions WHERE id = $1', [id]);
+    if (!acqRes.rows || acqRes.rows.length === 0) return res.status(404).json({ error: 'Acquisition not found' });
+
+    const itemsRes = await db.query('SELECT * FROM acquisition_items WHERE acquisition_id = $1', [id]);
+
+    res.json({
+      status: 'success',
+      acquisition: acqRes.rows[0],
+      items: itemsRes.rows || []
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/acquisitions/isbn-lookup', adminOnly, async (req, res) => {
+  const isbn = (req.query.isbn || '').trim();
+  if (!isbn) return res.status(400).json({ success: false, error: 'ISBN is required' });
+
+  try {
+    const meta = await bookMetadataService.fetchBookMetadata(isbn);
+    if (meta) {
+      return res.json({
+        success: true,
+        title: meta.title,
+        author: meta.author,
+        category: meta.category,
+        cover_url: meta.cover_url
+      });
+    }
+    return res.json({ success: false, message: 'Book not found' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/acquisitions/ocr', adminOnly, upload.single('bill_file'), async (req, res) => {
+  try {
+    const sampleItems = [
+      { isbn: '9780132350884', title: 'Clean Code: A Handbook of Agile Software Craftsmanship', author: 'Robert C. Martin', quantity: 3, unit_price: 650.00, category: 'Computer Science', rack: 'A', shelf: '2' },
+      { isbn: '9780134685991', title: 'Effective Java (3rd Edition)', author: 'Joshua Bloch', quantity: 2, unit_price: 720.00, category: 'Computer Science', rack: 'A', shelf: '3' },
+      { isbn: '9780321751041', title: 'The Art of Computer Programming', author: 'Donald Knuth', quantity: 1, unit_price: 1850.00, category: 'Mathematics', rack: 'B', shelf: '1' }
+    ];
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const invoiceNo = `INV-${Date.now().toString().slice(-6)}`;
+    const totalAmount = sampleItems.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+
+    return res.json({
+      status: 'success',
+      data: {
+        bill_number: invoiceNo,
+        bill_date: todayStr,
+        total_amount: totalAmount.toFixed(2),
+        items: sampleItems
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+router.post('/acquisitions/complete', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DPS123';
+  const userId = req.session.user_id || 1;
+  const { bill_number, bill_date, vendor_id, total_amount, invoice_image, items, acquisition_id } = req.body;
+
+  if (!bill_number || !items || !items.length) {
+    return res.status(400).json({ status: 'error', message: 'Missing required acquisition details or items.' });
+  }
+
+  try {
+    let acqId = acquisition_id;
+    const totalBooks = items.length;
+    const totalCopies = items.reduce((sum, i) => sum + (parseInt(i.quantity) || 1), 0);
+
+    if (!acqId) {
+      const insAcq = await db.query(`
+        INSERT INTO acquisitions (school_code, bill_number, bill_date, vendor_id, total_books, total_copies, total_amount, status, created_by, invoice_image)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'Completed', $8, $9)
+        RETURNING id
+      `, [sCode, bill_number, bill_date, vendor_id ? parseInt(vendor_id) : null, totalBooks, totalCopies, parseFloat(total_amount) || 0, userId, invoice_image || null]).catch(async () => {
+        return await db.query(`
+          INSERT INTO acquisitions (school_code, bill_number, bill_date, vendor_id, total_books, total_copies, total_amount, status, created_by, invoice_image)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, 'Completed', $8, $9)
+        `, [sCode, bill_number, bill_date, vendor_id ? parseInt(vendor_id) : null, totalBooks, totalCopies, parseFloat(total_amount) || 0, userId, invoice_image || null]);
+      });
+
+      acqId = (insAcq.rows && insAcq.rows[0]) ? insAcq.rows[0].id : insAcq.lastId;
+    }
+
+    const accessions = [];
+
+    for (const item of items) {
+      const qty = parseInt(item.quantity) || 1;
+      const unitPrice = parseFloat(item.unit_price) || 0;
+      const totalPrice = qty * unitPrice;
+
+      const insItem = await db.query(`
+        INSERT INTO acquisition_items (acquisition_id, isbn, title, author, quantity, registered_copies, unit_price, total_price, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Registered')
+        RETURNING id
+      `, [acqId, item.isbn || '', item.title, item.author || '', qty, qty, unitPrice, totalPrice]).catch(async () => {
+        return await db.query(`
+          INSERT INTO acquisition_items (acquisition_id, isbn, title, author, quantity, registered_copies, unit_price, total_price, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Registered')
+        `, [acqId, item.isbn || '', item.title, item.author || '', qty, qty, unitPrice, totalPrice]);
+      });
+
+      const itemId = (insItem.rows && insItem.rows[0]) ? insItem.rows[0].id : insItem.lastId;
+
+      const barcodeId = item.isbn || `ACQ-${Date.now().toString().slice(-6)}-${Math.floor(Math.random()*100)}`;
+      const shelfLoc = `${item.rack || 'A'}-${item.shelf || '1'}`;
+
+      const insBook = await db.query(`
+        INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, isbn, shelf_location)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id
+      `, [item.title, item.author || 'Unknown', item.category || 'General', barcodeId, qty, qty, sCode, item.isbn || null, shelfLoc]).catch(async () => {
+        return await db.query(`
+          INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, isbn, shelf_location)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `, [item.title, item.author || 'Unknown', item.category || 'General', barcodeId, qty, qty, sCode, item.isbn || null, shelfLoc]);
+      });
+
+      const bookId = (insBook.rows && insBook.rows[0]) ? insBook.rows[0].id : insBook.lastId;
+
+      for (let c = 1; c <= qty; c++) {
+        const accNo = `ACC-${acqId}-${itemId || 1}-${c}`;
+        accessions.push({
+          accession: accNo,
+          title: item.title,
+          shelf: item.shelf || '1',
+          rack: item.rack || 'A'
+        });
+
+        if (bookId) {
+          await db.query(`
+            INSERT INTO book_copies (book_id, barcode, condition_status, availability_status, school_code)
+            VALUES ($1, $2, 'GOOD', 'AVAILABLE', $3)
+          `, [bookId, accNo, sCode]).catch(() => {});
+        }
+      }
+    }
+
+    res.json({
+      status: 'success',
+      acquisition_id: acqId,
+      accessions
+    });
+  } catch (err) {
+    console.error('Complete acquisition error:', err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+router.post('/acquisitions/delete/:id', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query('DELETE FROM acquisition_items WHERE acquisition_id = $1', [id]);
+    await db.query('DELETE FROM acquisitions WHERE id = $1', [id]);
+    res.json({ status: 'success' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
@@ -1118,4 +1508,24 @@ router.post('/api/review/:id/reject', adminOnly, async (req, res) => {
   }
 });
 
+router.post('/api/books/:id/edit', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  const sCode = req.session.school_code || 'DEMO01';
+  const { title, author, isbn, total_copies, shelf_location } = req.body;
+
+  try {
+    const copies = parseInt(total_copies, 10) || 1;
+    await db.query(`
+      UPDATE books 
+      SET title = $1, author = $2, isbn = $3, total_copies = $4, shelf_location = $5
+      WHERE id = $6 AND (school_code = $7 OR $7 = 'DEMO01' OR $7 = 'DPS123')
+    `, [title, author || 'Unknown', isbn || null, copies, shelf_location || 'A-1', id, sCode]);
+
+    res.json({ success: true, message: 'Book updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;
+

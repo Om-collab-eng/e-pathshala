@@ -11,28 +11,28 @@ const upload = multer({ dest: 'uploads/temp/' });
 // All data routes require authentication
 router.use(authMiddleware);
 
-// Export routes
-router.get('/export/books',
+// Export routes (supports both /data/export/books and /data/export-books)
+router.get(['/export/books', '/export-books'],
   permissionMiddleware('canExportCSV'),
   dataController.exportBooks
 );
 
-router.get('/export/students',
+router.get(['/export/students', '/export-students'],
   permissionMiddleware('canExportCSV'),
   dataController.exportStudents
 );
 
-router.get('/export/librarians',
+router.get(['/export/librarians', '/export-librarians'],
   permissionMiddleware('canExportCSV'),
   dataController.exportLibrarians
 );
 
-router.get('/export/schools',
+router.get(['/export/schools', '/export-schools'],
   permissionMiddleware('canExportCSV'),
   dataController.exportSchools
 );
 
-router.get('/export/transactions',
+router.get(['/export/transactions', '/export-transactions', '/export-circulation'],
   permissionMiddleware('canExportCSV'),
   dataController.exportTransactions
 );

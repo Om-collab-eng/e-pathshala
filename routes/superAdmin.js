@@ -419,8 +419,9 @@ router.post('/users/:id/toggle-ban', async (req, res) => {
     const cur = await db.query('SELECT is_banned FROM users WHERE id=$1', [id]);
     const current = cur.rows[0]?.is_banned;
     const newBan = (current === '1' || current === 1 || current === true) ? '0' : '1';
-    await db.query('UPDATE users SET is_banned=$1 WHERE id=$2', [newBan, id]);
-    res.json({ success: true, is_banned: newBan === '1' });
+    const newStatus = (newBan === '1') ? 'suspended' : 'active';
+    await db.query('UPDATE users SET is_banned=$1, status=$2 WHERE id=$3', [newBan, newStatus, id]);
+    res.json({ success: true, is_banned: newBan === '1', status: newStatus });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -429,13 +430,13 @@ router.post('/users/:id/toggle-ban', async (req, res) => {
 // Legacy ban/unban routes
 router.post('/ban-user/:id', async (req, res) => {
   try {
-    await db.query('UPDATE users SET is_banned=$1 WHERE id=$2', ['1', req.params.id]);
+    await db.query('UPDATE users SET is_banned=$1, status=$2 WHERE id=$3', ['1', 'suspended', req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 router.post('/unban-user/:id', async (req, res) => {
   try {
-    await db.query('UPDATE users SET is_banned=$1 WHERE id=$2', ['0', req.params.id]);
+    await db.query('UPDATE users SET is_banned=$1, status=$2 WHERE id=$3', ['0', 'active', req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1684,10 +1685,10 @@ router.post('/users/bulk-action', async (req, res) => {
         await db.query(`DELETE FROM users WHERE id = $1`, [id]);
         count++;
       } else if (action === 'ban') {
-        await db.query(`UPDATE users SET is_banned = '1' WHERE id = $1`, [id]);
+        await db.query(`UPDATE users SET is_banned = '1', status = 'suspended' WHERE id = $1`, [id]);
         count++;
       } else if (action === 'unban') {
-        await db.query(`UPDATE users SET is_banned = '0' WHERE id = $1`, [id]);
+        await db.query(`UPDATE users SET is_banned = '0', status = 'active' WHERE id = $1`, [id]);
         count++;
       } else if (action === 'force-logout') {
         await db.query(`UPDATE users SET session_token = NULL WHERE id = $1`, [id]);

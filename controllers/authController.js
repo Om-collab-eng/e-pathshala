@@ -8,17 +8,23 @@ exports.getLogin = (req, res) => {
     return res.redirect(getRoleDashboard(req.session.role));
   }
   const flashList = req.flash('error');
-  const error = (flashList && flashList.length > 0 ? flashList[0] : null) || req.query.error || null;
+  let error = (flashList && flashList.length > 0 ? flashList[0] : null) || res.locals.error || req.query.error || null;
+  if (error === 'account_suspended') {
+    error = 'Your account has been suspended. Please contact your school administrator or librarian.';
+  }
+  const returnTo = req.query.returnTo || null;
   res.render('login', {
     title: 'Secure Access - librika.in',
     demo_mode: req.session.demo_mode || false,
     error,
+    returnTo
   });
 };
 
 exports.postLogin = async (req, res) => {
-  const { login_type, school_code, username, password } = req.body;
-  const loginInput = (username || req.body.login || '').trim();
+  const { login_type, school_code, username, password, returnTo: bodyReturnTo } = req.body;
+  const returnTo = bodyReturnTo || req.query.returnTo || null;
+  const loginInput = (username || req.body.login || req.body.phone || req.body.email || '').trim();
   const clientIp = getClientIp(req);
   const userAgent = req.headers['user-agent'] || '';
 
@@ -32,11 +38,12 @@ exports.postLogin = async (req, res) => {
       failureReason: 'Missing login ID or password'
     });
     req.flash('error', 'Please enter both login ID and password');
-    return res.redirect('/login');
+    return res.redirect(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : '/login');
   }
 
   try {
     let user = null;
+    let foundDbUser = null;
     try {
       const result = await query(
         `SELECT * FROM users 
@@ -46,6 +53,14 @@ exports.postLogin = async (req, res) => {
       );
 
       if (result && result.rows && result.rows.length > 0) {
+        foundDbUser = result.rows[0];
+        // If this database user is suspended/banned, block immediately
+        const dbIsSuspended = (foundDbUser.is_banned === 1 || foundDbUser.is_banned === '1' || String(foundDbUser.status || '').toLowerCase() === 'suspended');
+        if (dbIsSuspended) {
+          req.flash('error', 'Your account has been suspended. Please contact your school administrator or librarian.');
+          return res.redirect('/login?error=account_suspended');
+        }
+
         for (const r of result.rows) {
           let match = false;
           const userPass = String(r.password || '').trim();
@@ -66,8 +81,8 @@ exports.postLogin = async (req, res) => {
       console.warn('[AUTH] Database query fallback:', dbErr.message);
     }
 
-    // 2. Demo fallback if user not found in database
-    if (!user) {
+    // 2. Demo fallback if user not found in database and not a suspended user
+    if (!user && !foundDbUser) {
       const lowerInput = loginInput.toLowerCase();
       const lowerPass = password.toLowerCase();
 
@@ -94,11 +109,12 @@ exports.postLogin = async (req, res) => {
         failureReason: 'Invalid login ID or password'
       });
       req.flash('error', 'Invalid login ID or password');
-      return res.redirect('/login');
+      return res.redirect(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : '/login');
     }
 
     const isBanned = user.is_banned === 1 || user.is_banned === '1' || user.is_banned === true || user.is_banned === 'true';
-    if (isBanned) {
+    const isSuspended = isBanned || String(user.status || '').toLowerCase() === 'suspended' || String(user.status || '').toLowerCase() === 'banned';
+    if (isSuspended) {
       await logLoginAttempt({
         userId: user.id,
         email: user.email,
@@ -108,9 +124,9 @@ exports.postLogin = async (req, res) => {
         ip: clientIp,
         userAgent,
         success: 0,
-        failureReason: 'Account is banned'
+        failureReason: 'Account is suspended or banned'
       });
-      req.flash('error', 'Your account has been banned. Contact support.');
+      req.flash('error', 'Your account has been suspended. Please contact your school administrator or librarian.');
       return res.redirect('/login');
     }
 
@@ -161,6 +177,14 @@ exports.postLogin = async (req, res) => {
 
       if (!user.profile_complete && (user.role === 'student' || user.role === 'personal')) {
         return res.redirect('/complete-profile');
+      }
+
+      if (returnTo && typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')) {
+        // Prevent student/personal role from being accidentally redirected to /admin
+        if ((req.session.role === 'student' || req.session.role === 'personal') && returnTo.startsWith('/admin')) {
+          return res.redirect(getRoleDashboard(req.session.role));
+        }
+        return res.redirect(returnTo);
       }
 
       // Single source of truth: route to the dashboard for this role.

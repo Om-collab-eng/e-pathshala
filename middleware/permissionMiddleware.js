@@ -20,29 +20,38 @@ const permissionMiddleware = (permissionKey) => {
       return res.status(403).send('Access denied: No school associated with your account.');
     }
 
+    // Admin and Super Admin roles always have export/import permissions for their school catalog
+    const userRole = (req.session.role || '').toLowerCase();
+    if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'librarian') {
+      if (permissionKey === 'canExportCSV' || permissionKey === 'canImportCSV' || permissionKey === 'canUseAIScanner' || permissionKey === 'canUseBarcodeScanner') {
+        return next();
+      }
+    }
+
     try {
       // Determine which database to use based on the session's useDemo flag
       const useDemo = req.session.useDemo || false;
 
       // Fetch the school's active plan from the schools table
       const schoolResult = await query(
-        'SELECT activePlan FROM schools WHERE school_code = $1',
+        'SELECT activePlan, school_code FROM schools WHERE school_code = $1',
         [schoolCode],
         useDemo
       );
 
-      if (schoolResult.rowCount === 0) {
+      if (!schoolResult.rows || schoolResult.rows.length === 0) {
         // School not found
         return res.status(403).send('Access denied: School not found.');
       }
 
-      const planId = schoolResult.rows[0].activeplan; // Note: column name is activePlan, but we used lowercase in the query? Actually, we selected "activePlan" as is.
+      const row = schoolResult.rows[0];
+      const planId = row.activePlan || row.activeplan || row.plan;
 
-      // If the plan is null or undefined, default to FREE
-      const plan = planId ? planId.toUpperCase() : 'FREE';
+      // If the plan is null or undefined, default to BASIC or FREE
+      const plan = planId ? String(planId).toUpperCase() : 'BASIC';
 
       // Get the permissions for the plan
-      const planPermissions = PLANS[plan] && PLANS[plan].perms ? PLANS[plan].perms : PLANS.FREE.perms;
+      const planPermissions = (PLANS[plan] && PLANS[plan].perms) ? PLANS[plan].perms : (PLANS.BASIC ? PLANS.BASIC.perms : PLANS.FREE.perms);
 
       if (planPermissions[permissionKey]) {
         // Permission granted
