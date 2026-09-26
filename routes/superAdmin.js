@@ -95,6 +95,45 @@ const adUpload = multer({
   }
 });
 
+const rbacService = require('../services/rbacService');
+const {
+  normalizeIndianMobile,
+  getAllPermissions,
+  getAllRoles,
+  getRoleById,
+  createRole,
+  updateRole,
+  cloneRole,
+  deleteRole,
+  assignUserRole
+} = rbacService;
+
+const avatarUploadDir = path.join(__dirname, '..', 'static', 'uploads', 'avatars');
+try { fs.mkdirSync(avatarUploadDir, { recursive: true }); } catch (e) {}
+
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, avatarUploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const safeName = 'avatar_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8) + ext;
+    cb(null, safeName);
+  }
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|webp|gif/;
+    const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+    if (allowed.test(ext) || allowed.test(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG, PNG, WEBP, and GIF images are allowed for avatars'));
+    }
+  }
+});
+
 // ─────────────────────────────────────────────
 //  MIDDLEWARE
 // ─────────────────────────────────────────────
@@ -318,148 +357,961 @@ router.post('/delete-school/:code', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-//  USER MANAGEMENT
 // ─────────────────────────────────────────────
+//  USER MANAGEMENT (MASTER DIRECTORY, PROFILE, RBAC, BULK, CSV)
+// ─────────────────────────────────────────────
+
+// User Directory with Search, Multi-Filter, and Human-Readable Joins
 router.get('/users', async (req, res) => {
-  const { role, school_code, banned, search, page = 1, limit = 50 } = req.query;
+  const { role, school_code, status, banned, search, page = 1, limit = 50, gender, class: userClass } = req.query;
   try {
     let where = '1=1';
     let params = [];
-    if (role) { params.push(role); where += ` AND role = $${params.length}`; }
-    if (school_code) { params.push(school_code); where += ` AND school_code = $${params.length}`; }
-    if (banned !== undefined && banned !== '') {
-      params.push(banned === 'true' ? '1' : '0');
-      where += ` AND is_banned = $${params.length}`;
+    if (role) { params.push(role); where += ` AND LOWER(u.role) = LOWER($${params.length})`; }
+    if (school_code) { params.push(school_code); where += ` AND u.school_code = $${params.length}`; }
+    if (gender) { params.push(gender); where += ` AND u.gender = $${params.length}`; }
+    if (userClass) { params.push(userClass); where += ` AND u.class = $${params.length}`; }
+
+    if (status === 'deleted') {
+      where += ` AND u.deleted_at IS NOT NULL`;
+    } else if (status === 'suspended' || banned === 'true') {
+      where += ` AND (u.is_banned = '1' OR u.is_banned = 1 OR u.status = 'suspended') AND u.deleted_at IS NULL`;
+    } else if (status === 'active' || banned === 'false') {
+      where += ` AND (u.is_banned = '0' OR u.is_banned = 0 OR u.status = 'active' OR u.status IS NULL) AND u.deleted_at IS NULL`;
+    } else {
+      where += ` AND u.deleted_at IS NULL`;
     }
-    if (search) {
-      params.push(`%${search}%`);
-      where += ` AND (name LIKE $${params.length} OR phone LIKE $${params.length} OR email LIKE $${params.length} OR admission_no LIKE $${params.length})`;
+
+    if (search && search.trim()) {
+      const cleanSearch = `%${search.trim()}%`;
+      params.push(cleanSearch);
+      const pIdx = params.length;
+      where += ` AND (u.name LIKE $${pIdx} OR u.phone LIKE $${pIdx} OR u.email LIKE $${pIdx} OR u.admission_no LIKE $${pIdx} OR u.student_id LIKE $${pIdx} OR u.employee_id LIKE $${pIdx})`;
     }
+
     const offset = (safeInt(page, 1) - 1) * safeInt(limit, 50);
-    params.push(safeInt(limit, 50)); params.push(offset);
+    params.push(safeInt(limit, 50));
+    params.push(offset);
+
     const result = await db.query(
-      `SELECT id, name, phone, email, role, school_code, class, section, stream,
-              is_banned, status, admission_no, dob
-       FROM users WHERE ${where} ORDER BY id DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      `SELECT u.id, u.name, u.first_name, u.last_name, u.phone, u.email, u.role, u.school_code,
+              u.class, u.section, u.stream, u.is_banned, u.status, u.admission_no, u.student_id,
+              u.employee_id, u.dob, u.gender, u.profile_picture, u.avatar_id, u.last_active_at,
+              u.last_login_at, u.created_at, u.deleted_at,
+              COALESCE(s.name, u.school_code, 'Independent') as school_name,
+              COALESCE(r.name, u.role) as role_name
+       FROM users u
+       LEFT JOIN schools s ON u.school_code = s.school_code
+       LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug)
+       WHERE ${where}
+       ORDER BY u.id DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );
-    // count
+
     const countParams = params.slice(0, -2);
-    const countR = await db.query(`SELECT COUNT(*) as c FROM users WHERE ${where}`, countParams);
-    res.json({ success: true, users: result.rows || [], total: safeInt(countR.rows[0]?.c || countR.rows[0]?.['COUNT(*)']) });
+    const countR = await db.query(`SELECT COUNT(*) as c FROM users u WHERE ${where}`, countParams);
+    const total = safeInt(countR.rows[0]?.c || countR.rows[0]?.['COUNT(*)'] || 0);
+
+    res.json({
+      success: true,
+      users: result.rows || [],
+      total,
+      page: safeInt(page, 1),
+      limit: safeInt(limit, 50)
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// Create User with 10-Digit Mobile Validation & Role Assignment
 router.post('/users/create', async (req, res) => {
-  const { name, phone, email, role, school_code, password, admission_no, class: cls, section } = req.body;
-  if (!name || !phone || !role) return res.status(400).json({ error: 'name, phone, role required' });
+  const { name, phone, email, role, school_code, password, admission_no, class: cls, section, gender, dob } = req.body;
+  if (!name || !phone || !role) {
+    return res.status(400).json({ error: 'Name, 10-digit mobile number, and role are required.' });
+  }
+
+  const mobileCheck = normalizeIndianMobile(phone);
+  if (!mobileCheck.valid) {
+    return res.status(400).json({ error: mobileCheck.error });
+  }
+  const normalizedPhone = mobileCheck.normalized;
+
   try {
+    const existingCheck = await db.query('SELECT id FROM users WHERE phone = $1', [normalizedPhone]);
+    if (existingCheck.rows && existingCheck.rows.length > 0) {
+      return res.status(400).json({ error: `Mobile number ${normalizedPhone} is already registered.` });
+    }
+    if (email && email.trim()) {
+      const emailCheck = await db.query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
+      if (emailCheck.rows && emailCheck.rows.length > 0) {
+        return res.status(400).json({ error: `Email ${email.trim()} is already registered.` });
+      }
+    }
+
     const hashed = await bcrypt.hash(password || 'password123', 10);
-    await db.query(
-      `INSERT INTO users (name, phone, email, role, school_code, password, admission_no, class, section, is_banned, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'0','active')`,
-      [name, phone, email || null, role, school_code || null, hashed, admission_no || null, cls || null, section || null]
-    );
-    res.json({ success: true, message: 'User created successfully' });
+    const cleanRole = role.toLowerCase().trim();
+    const insRes = await db.query(
+      `INSERT INTO users (name, phone, email, role, school_code, password, admission_no, class, section, gender, dob, is_banned, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, '0', 'active', NOW())`,
+      [name.trim(), normalizedPhone, email ? email.trim() : null, cleanRole, school_code || null, hashed, admission_no || null, cls || null, section || null, gender || null, dob || null]
+    ).catch(async () => {
+      return await db.query(
+        `INSERT INTO users (name, phone, email, role, school_code, password, admission_no, class, section, gender, dob, is_banned, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, '0', 'active')`,
+        [name.trim(), normalizedPhone, email ? email.trim() : null, cleanRole, school_code || null, hashed, admission_no || null, cls || null, section || null, gender || null, dob || null]
+      );
+    });
+
+    const newUserId = (insRes.rows && insRes.rows[0]) ? insRes.rows[0].id : insRes.lastId;
+
+    if (newUserId) {
+      await assignUserRole(newUserId, cleanRole, {
+        school_code: school_code || 'GLOBAL',
+        assigned_by: req.session.user_id
+      }).catch(err => console.warn('assignUserRole note:', err.message));
+
+      if (cleanRole === 'student') {
+        const studentId = `VBPS${String(newUserId).padStart(5, '0')}`;
+        await db.query('UPDATE users SET student_id = $1 WHERE id = $2', [studentId, newUserId]).catch(() => {});
+      }
+    }
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Created new user '${name.trim()}' (${cleanRole}) with mobile '${normalizedPhone}'`,
+      module: 'users',
+      schoolCode: school_code || 'GLOBAL'
+    }).catch(() => {});
+
+    res.json({ success: true, message: 'User created successfully', id: newUserId });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/users/:id/edit', async (req, res) => {
+// View Complete User Profile
+router.get('/users/:id/profile', async (req, res) => {
   const { id } = req.params;
-  const { name, phone, email, role, school_code, class: cls, section, stream, admission_no, dob } = req.body;
+  try {
+    const userRes = await db.query(`
+      SELECT u.*, 
+             COALESCE(s.name, u.school_code, 'Independent') as school_name,
+             COALESCE(r.name, u.role) as role_name
+      FROM users u
+      LEFT JOIN schools s ON u.school_code = s.school_code
+      LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug)
+      WHERE u.id = $1
+    `, [id]);
+
+    if (!userRes.rows || userRes.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const user = userRes.rows[0];
+
+    // Assigned roles
+    const rolesRes = await db.query(`
+      SELECT r.id, r.name, r.slug, ur.portfolio_type, ur.school_code, ur.assigned_at
+      FROM user_roles ur
+      JOIN roles r ON ur.role_id = r.id
+      WHERE ur.user_id = $1
+    `, [id]).catch(() => ({ rows: [] }));
+
+    // Recent login history
+    const loginsRes = await db.query(`
+      SELECT * FROM login_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10
+    `, [id]).catch(() => ({ rows: [] }));
+
+    // Activity timeline (audit logs + circulation + quizzes)
+    const timelineRes = await db.query(`
+      SELECT 'audit' as source, action as title, description as detail, created_at
+      FROM audit_logs WHERE user_id = $1
+      UNION ALL
+      SELECT 'circulation' as source, CONCAT('Issued book: ', b.title) as title, t.status as detail, t.issue_date as created_at
+      FROM transactions t
+      JOIN books b ON t.book_id = b.id
+      WHERE t.user_id = $1
+      ORDER BY created_at DESC LIMIT 15
+    `, [id]).catch(() => ({ rows: [] }));
+
+    res.json({
+      success: true,
+      profile: {
+        id: user.id,
+        name: user.name,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        alt_phone: user.alt_phone || '',
+        gender: user.gender || '',
+        dob: user.dob || '',
+        address: user.address || '',
+        city: user.city || '',
+        state: user.state || '',
+        country: user.country || 'India',
+        pincode: user.pincode || '',
+        profile_picture: user.profile_picture || '',
+        avatar_id: user.avatar_id || 'avatar_01',
+        school_code: user.school_code || '',
+        school_name: user.school_name || 'Independent',
+        class: user.class || '',
+        section: user.section || '',
+        stream: user.stream || '',
+        academic_year: user.academic_year || '',
+        student_id: user.student_id || (user.admission_no ? `VBPS${user.admission_no}` : `VBPS${user.id}`),
+        employee_id: user.employee_id || '',
+        department: user.department || '',
+        designation: user.designation || '',
+        admission_no: user.admission_no || '',
+        role: user.role,
+        role_name: user.role_name,
+        status: user.status || (user.is_banned === '1' ? 'suspended' : 'active'),
+        is_banned: user.is_banned === '1' || user.is_banned === 1,
+        email_verified: !!user.email_verified,
+        phone_verified: !!user.phone_verified,
+        created_at: user.created_at,
+        last_login_at: user.last_login_at,
+        last_active_at: user.last_active_at,
+        interests: user.interests || '',
+        communication_preferences: user.communication_preferences || '',
+        roles: rolesRes.rows || [],
+        logins: loginsRes.rows || [],
+        timeline: timelineRes.rows || []
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update User Profile with Validation
+router.post('/users/:id/profile', async (req, res) => {
+  const { id } = req.params;
+  const {
+    name, first_name, last_name, phone, email, gender, dob, alt_phone,
+    address, city, state, country, pincode, class: cls, section, stream,
+    admission_no, student_id, employee_id, department, designation,
+    academic_year, school_code, role, status, interests, communication_preferences,
+    avatar_id, profile_picture
+  } = req.body;
+
+  if (!name || !phone) {
+    return res.status(400).json({ error: 'Name and Mobile Number are required.' });
+  }
+
+  const mobileCheck = normalizeIndianMobile(phone);
+  if (!mobileCheck.valid) {
+    return res.status(400).json({ error: mobileCheck.error });
+  }
+  const cleanPhone = mobileCheck.normalized;
+
+  try {
+    // Check mobile collision with other users
+    const phoneCheck = await db.query('SELECT id FROM users WHERE phone = $1 AND id != $2', [cleanPhone, id]);
+    if (phoneCheck.rows && phoneCheck.rows.length > 0) {
+      return res.status(400).json({ error: `Mobile number ${cleanPhone} is already in use by another user.` });
+    }
+
+    // Protect final Super Admin from role downgrade
+    const curUserRes = await db.query('SELECT role FROM users WHERE id = $1', [id]);
+    const curUser = curUserRes.rows[0];
+    if (curUser && curUser.role === 'super_admin' && role && role !== 'super_admin') {
+      const saCountRes = await db.query("SELECT COUNT(*) as c FROM users WHERE role = 'super_admin' AND (deleted_at IS NULL)");
+      const saCount = parseInt(saCountRes.rows[0]?.c || 1, 10);
+      if (saCount <= 1) {
+        return res.status(400).json({ error: 'Cannot change role: System requires at least one active Super Admin.' });
+      }
+    }
+
+    const cleanRole = (role || curUser?.role || 'student').toLowerCase().trim();
+
+    await db.query(`
+      UPDATE users SET
+        name = $1, first_name = $2, last_name = $3, phone = $4, email = $5,
+        gender = $6, dob = $7, alt_phone = $8, address = $9, city = $10,
+        state = $11, country = $12, pincode = $13, class = $14, section = $15,
+        stream = $16, admission_no = $17, student_id = $18, employee_id = $19,
+        department = $20, designation = $21, academic_year = $22, school_code = $23,
+        role = $24, status = $25, interests = $26, communication_preferences = $27,
+        avatar_id = $28, profile_picture = $29
+      WHERE id = $30
+    `, [
+      name.trim(), first_name || null, last_name || null, cleanPhone, email ? email.trim() : null,
+      gender || null, dob || null, alt_phone || null, address || null, city || null,
+      state || null, country || 'India', pincode || null, cls || null, section || null,
+      stream || null, admission_no || null, student_id || null, employee_id || null,
+      department || null, designation || null, academic_year || null, school_code || null,
+      cleanRole, status || 'active', interests ? String(interests) : null,
+      communication_preferences ? String(communication_preferences) : null,
+      avatar_id || 'avatar_01', profile_picture || null, id
+    ]);
+
+    // Synchronize user_roles
+    if (role) {
+      await assignUserRole(id, cleanRole, {
+        school_code: school_code || 'GLOBAL',
+        assigned_by: req.session.user_id
+      }).catch(() => {});
+    }
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Updated profile for user #${id} (${name.trim()})`,
+      module: 'users',
+      schoolCode: school_code || 'GLOBAL'
+    }).catch(() => {});
+
+    res.json({ success: true, message: 'Profile updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update User Avatar Selection (Toon / Predefined)
+router.post('/users/:id/avatar', async (req, res) => {
+  const { id } = req.params;
+  const { avatar_id, profile_picture } = req.body;
   try {
     await db.query(
-      `UPDATE users SET name=$1, phone=$2, email=$3, role=$4, school_code=$5,
-       class=$6, section=$7, stream=$8, admission_no=$9, dob=$10 WHERE id=$11`,
-      [name, phone, email || null, role, school_code || null, cls || null, section || null, stream || null, admission_no || null, dob || null, id]
+      'UPDATE users SET avatar_id = $1, profile_picture = $2 WHERE id = $3',
+      [avatar_id || 'avatar_01', profile_picture || null, id]
     );
-    res.json({ success: true });
+    res.json({ success: true, message: 'Avatar updated' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/users/:id/delete', async (req, res) => {
+// Upload User Profile Picture
+router.post('/users/:id/upload-picture', avatarUpload.single('picture'), async (req, res) => {
+  const { id } = req.params;
+  if (!req.file) return res.status(400).json({ error: 'No image file uploaded' });
   try {
-    await db.query('DELETE FROM users WHERE id = $1', [req.params.id]);
-    res.json({ success: true });
+    const pictureUrl = `/static/uploads/avatars/${req.file.filename}`;
+    await db.query('UPDATE users SET profile_picture = $1 WHERE id = $2', [pictureUrl, id]);
+    res.json({ success: true, profile_picture: pictureUrl });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// User Status Management (Active, Suspend, Soft Delete, Restore)
+router.post('/users/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { action, reason } = req.body; // action: 'enable', 'disable', 'delete', 'restore'
+
+  try {
+    const curUserRes = await db.query('SELECT role, name FROM users WHERE id = $1', [id]);
+    if (!curUserRes.rows || curUserRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    const user = curUserRes.rows[0];
+
+    // Safeguard final Super Admin
+    if (user.role === 'super_admin' && (action === 'disable' || action === 'delete')) {
+      const saCountRes = await db.query("SELECT COUNT(*) as c FROM users WHERE role = 'super_admin' AND (deleted_at IS NULL)");
+      const saCount = parseInt(saCountRes.rows[0]?.c || 1, 10);
+      if (saCount <= 1) {
+        return res.status(400).json({ error: 'Safety Violation: Cannot suspend or delete the sole remaining Super Admin.' });
+      }
+    }
+
+    if (action === 'disable' || action === 'suspend') {
+      await db.query("UPDATE users SET is_banned = '1', status = 'suspended' WHERE id = $1", [id]);
+    } else if (action === 'enable' || action === 'activate') {
+      await db.query("UPDATE users SET is_banned = '0', status = 'active' WHERE id = $1", [id]);
+    } else if (action === 'delete') {
+      await db.query("UPDATE users SET status = 'deleted', deleted_at = NOW() WHERE id = $1", [id]).catch(async () => {
+        await db.query("UPDATE users SET status = 'deleted', deleted_at = CURRENT_TIMESTAMP WHERE id = $1", [id]);
+      });
+    } else if (action === 'restore') {
+      await db.query("UPDATE users SET status = 'active', is_banned = '0', deleted_at = NULL WHERE id = $1", [id]);
+    } else {
+      return res.status(400).json({ error: 'Invalid status action.' });
+    }
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `User #${id} (${user.name}) status changed to '${action}'. ${reason ? 'Reason: ' + reason : ''}`,
+      module: 'users'
+    }).catch(() => {});
+
+    res.json({ success: true, message: `User status changed to ${action}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Soft Delete User
+router.post('/users/:id/delete', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const curUserRes = await db.query('SELECT role, name FROM users WHERE id = $1', [id]);
+    const user = curUserRes.rows[0];
+    if (user && user.role === 'super_admin') {
+      const saCountRes = await db.query("SELECT COUNT(*) as c FROM users WHERE role = 'super_admin' AND deleted_at IS NULL");
+      const saCount = parseInt(saCountRes.rows[0]?.c || 1, 10);
+      if (saCount <= 1) {
+        return res.status(400).json({ error: 'Safety Violation: Cannot delete the sole remaining Super Admin.' });
+      }
+    }
+    await db.query("UPDATE users SET status = 'deleted', deleted_at = NOW() WHERE id = $1", [id]).catch(async () => {
+      await db.query("UPDATE users SET status = 'deleted', deleted_at = CURRENT_TIMESTAMP WHERE id = $1", [id]);
+    });
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Soft-deleted user #${id} (${user?.name || 'User'})`,
+      module: 'users'
+    }).catch(() => {});
+
+    res.json({ success: true, message: 'User soft-deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Restore User
+router.post('/users/:id/restore', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("UPDATE users SET status = 'active', is_banned = '0', deleted_at = NULL WHERE id = $1", [id]);
+    res.json({ success: true, message: 'User restored successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Reset Password
 router.post('/users/:id/reset-password', async (req, res) => {
   const { id } = req.params;
   const newPass = req.body.new_password || ('Temp@' + Math.random().toString(36).slice(2, 8).toUpperCase());
   try {
     const hashed = await bcrypt.hash(newPass, 10);
-    await db.query('UPDATE users SET password=$1, session_token=NULL WHERE id=$2', [hashed, id]);
+    await db.query('UPDATE users SET password = $1, session_token = NULL, last_password_change = NOW() WHERE id = $2', [hashed, id]).catch(async () => {
+      await db.query('UPDATE users SET password = $1, session_token = NULL WHERE id = $2', [hashed, id]);
+    });
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Password reset performed for user #${id}`,
+      module: 'users'
+    }).catch(() => {});
+
     res.json({ success: true, new_password: newPass });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// Force Logout
 router.post('/users/:id/force-logout', async (req, res) => {
   try {
-    await db.query('UPDATE users SET session_token=NULL WHERE id=$1', [req.params.id]);
-    res.json({ success: true });
+    await db.query('UPDATE users SET session_token = NULL WHERE id = $1', [req.params.id]);
+    res.json({ success: true, message: 'User session terminated' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// Toggle Ban (Legacy compatibility)
 router.post('/users/:id/toggle-ban', async (req, res) => {
   const { id } = req.params;
   try {
-    const cur = await db.query('SELECT is_banned FROM users WHERE id=$1', [id]);
+    const cur = await db.query('SELECT is_banned FROM users WHERE id = $1', [id]);
     const current = cur.rows[0]?.is_banned;
     const newBan = (current === '1' || current === 1 || current === true) ? '0' : '1';
     const newStatus = (newBan === '1') ? 'suspended' : 'active';
-    await db.query('UPDATE users SET is_banned=$1, status=$2 WHERE id=$3', [newBan, newStatus, id]);
+    await db.query('UPDATE users SET is_banned = $1, status = $2 WHERE id = $3', [newBan, newStatus, id]);
     res.json({ success: true, is_banned: newBan === '1', status: newStatus });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Legacy ban/unban routes
-router.post('/ban-user/:id', async (req, res) => {
-  try {
-    await db.query('UPDATE users SET is_banned=$1, status=$2 WHERE id=$3', ['1', 'suspended', req.params.id]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-router.post('/unban-user/:id', async (req, res) => {
-  try {
-    await db.query('UPDATE users SET is_banned=$1, status=$2 WHERE id=$3', ['0', 'active', req.params.id]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
+// Change Role
 router.post('/users/:id/change-role', async (req, res) => {
   const { role } = req.body;
-  if (!role) return res.status(400).json({ error: 'role required' });
+  if (!role) return res.status(400).json({ error: 'Role is required' });
   try {
-    await db.query('UPDATE users SET role=$1 WHERE id=$2', [role, req.params.id]);
-    res.json({ success: true });
+    const curUserRes = await db.query('SELECT role, name, school_code FROM users WHERE id = $1', [req.params.id]);
+    const user = curUserRes.rows[0];
+    if (user && user.role === 'super_admin' && role !== 'super_admin') {
+      const saCountRes = await db.query("SELECT COUNT(*) as c FROM users WHERE role = 'super_admin' AND deleted_at IS NULL");
+      const saCount = parseInt(saCountRes.rows[0]?.c || 1, 10);
+      if (saCount <= 1) {
+        return res.status(400).json({ error: 'Cannot change role of the sole Super Admin.' });
+      }
+    }
+
+    await assignUserRole(req.params.id, role, {
+      school_code: user?.school_code || 'GLOBAL',
+      assigned_by: req.session.user_id
+    });
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Changed role of user #${req.params.id} (${user?.name}) from '${user?.role}' to '${role}'`,
+      module: 'users'
+    }).catch(() => {});
+
+    res.json({ success: true, message: `Role changed to ${role}` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// Transfer School
 router.post('/users/:id/transfer-school', async (req, res) => {
   const { school_code } = req.body;
   if (!school_code) return res.status(400).json({ error: 'school_code required' });
   try {
-    await db.query('UPDATE users SET school_code=$1 WHERE id=$2', [school_code, req.params.id]);
-    res.json({ success: true });
+    await db.query('UPDATE users SET school_code = $1 WHERE id = $2', [school_code, req.params.id]);
+    await db.query('UPDATE user_roles SET school_code = $1 WHERE user_id = $2', [school_code, req.params.id]).catch(() => {});
+    res.json({ success: true, message: `User transferred to school ${school_code}` });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+//  BULK USER MANAGEMENT (BATCH OPERATIONS)
+// ─────────────────────────────────────────────
+
+// Bulk Assign Role
+router.post('/users/bulk-assign-role', async (req, res) => {
+  const { user_ids, role } = req.body;
+  if (!Array.isArray(user_ids) || user_ids.length === 0 || !role) {
+    return res.status(400).json({ error: 'user_ids array and target role are required' });
+  }
+
+  try {
+    let updatedCount = 0;
+    for (const uid of user_ids) {
+      await assignUserRole(uid, role, {
+        assigned_by: req.session.user_id
+      }).catch(() => {});
+      updatedCount++;
+    }
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Bulk assigned role '${role}' to ${updatedCount} users`,
+      module: 'users'
+    }).catch(() => {});
+
+    res.json({ success: true, message: `Successfully assigned role '${role}' to ${updatedCount} users` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Bulk Status Change (Enable, Disable, Soft Delete)
+router.post('/users/bulk-status', async (req, res) => {
+  const { user_ids, action } = req.body; // 'enable', 'disable', 'delete', 'restore'
+  if (!Array.isArray(user_ids) || user_ids.length === 0 || !action) {
+    return res.status(400).json({ error: 'user_ids and action required' });
+  }
+
+  try {
+    let affected = 0;
+    for (const uid of user_ids) {
+      const uRes = await db.query('SELECT role FROM users WHERE id = $1', [uid]);
+      const r = uRes.rows[0]?.role;
+      // Skip super admin for disable/delete
+      if (r === 'super_admin' && (action === 'disable' || action === 'delete')) continue;
+
+      if (action === 'disable') {
+        await db.query("UPDATE users SET is_banned = '1', status = 'suspended' WHERE id = $1", [uid]);
+      } else if (action === 'enable') {
+        await db.query("UPDATE users SET is_banned = '0', status = 'active' WHERE id = $1", [uid]);
+      } else if (action === 'delete') {
+        await db.query("UPDATE users SET status = 'deleted', deleted_at = NOW() WHERE id = $1", [uid]).catch(async () => {
+          await db.query("UPDATE users SET status = 'deleted', deleted_at = CURRENT_TIMESTAMP WHERE id = $1", [uid]);
+        });
+      } else if (action === 'restore') {
+        await db.query("UPDATE users SET status = 'active', is_banned = '0', deleted_at = NULL WHERE id = $1", [uid]);
+      }
+      affected++;
+    }
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Bulk performed '${action}' on ${affected} users`,
+      module: 'users'
+    }).catch(() => {});
+
+    res.json({ success: true, message: `Bulk action '${action}' applied to ${affected} users.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Bulk School Transfer
+router.post('/users/bulk-school', async (req, res) => {
+  const { user_ids, school_code } = req.body;
+  if (!Array.isArray(user_ids) || user_ids.length === 0 || !school_code) {
+    return res.status(400).json({ error: 'user_ids and school_code required' });
+  }
+  try {
+    let transferred = 0;
+    for (const uid of user_ids) {
+      await db.query('UPDATE users SET school_code = $1 WHERE id = $2', [school_code, uid]);
+      await db.query('UPDATE user_roles SET school_code = $1 WHERE user_id = $2', [school_code, uid]).catch(() => {});
+      transferred++;
+    }
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Bulk transferred ${transferred} users to school '${school_code}'`,
+      module: 'users'
+    }).catch(() => {});
+
+    res.json({ success: true, message: `Transferred ${transferred} users to ${school_code}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+//  CSV EXPORT & MULTI-STEP IMPORT WIZARD
+// ─────────────────────────────────────────────
+
+// Export Users to CSV with Human-Readable Headers (No Internal Codes)
+router.get('/users/export-csv', async (req, res) => {
+  const { role, school_code, status, user_ids } = req.query;
+  try {
+    let where = '1=1';
+    let params = [];
+    if (user_ids) {
+      const ids = String(user_ids).split(',').map(id => parseInt(id, 10)).filter(Boolean);
+      if (ids.length > 0) {
+        where += ` AND u.id IN (${ids.join(',')})`;
+      }
+    }
+    if (role) { params.push(role); where += ` AND LOWER(u.role) = LOWER($${params.length})`; }
+    if (school_code) { params.push(school_code); where += ` AND u.school_code = $${params.length}`; }
+    if (status === 'deleted') where += ` AND u.deleted_at IS NOT NULL`;
+    else where += ` AND u.deleted_at IS NULL`;
+
+    const r = await db.query(`
+      SELECT u.id, u.name, u.phone, u.email, COALESCE(r.name, u.role) as role_title,
+             COALESCE(s.name, u.school_code, 'Independent') as school_name,
+             u.class, u.section, u.admission_no, u.student_id, u.gender, u.dob,
+             u.status, u.created_at
+      FROM users u
+      LEFT JOIN schools s ON u.school_code = s.school_code
+      LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug)
+      WHERE ${where}
+      ORDER BY u.id DESC
+    `, params);
+
+    const rows = (r.rows || []).map(u => ({
+      'User ID': u.id,
+      'Full Name': u.name || '',
+      'Mobile Number': u.phone || '',
+      'Email Address': u.email || '',
+      'Role': u.role_title || '',
+      'School / Organization': u.school_name || '',
+      'Class': u.class || '',
+      'Section': u.section || '',
+      'Admission No': u.admission_no || '',
+      'Student ID': u.student_id || '',
+      'Gender': u.gender || '',
+      'Date of Birth': u.dob || '',
+      'Account Status': u.status || 'Active',
+      'Registration Date': u.created_at ? new Date(u.created_at).toISOString().slice(0, 10) : ''
+    }));
+
+    const headers = ['User ID', 'Full Name', 'Mobile Number', 'Email Address', 'Role', 'School / Organization', 'Class', 'Section', 'Admission No', 'Student ID', 'Gender', 'Date of Birth', 'Account Status', 'Registration Date'];
+    const csvContent = buildCSV(headers, rows);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="librika_users_${Date.now()}.csv"`);
+    res.send(csvContent);
+  } catch (err) {
+    res.status(500).send('Error generating CSV export: ' + err.message);
+  }
+});
+
+// Step 1 & 2: Parse and Validate CSV for Preview Breakdown
+router.post('/users/import-csv-validate', async (req, res) => {
+  const { csv_text } = req.body;
+  if (!csv_text || !csv_text.trim()) {
+    return res.status(400).json({ error: 'CSV data is required.' });
+  }
+
+  try {
+    const rawRows = await parseCsvText(csv_text);
+    if (!rawRows || rawRows.length === 0) {
+      return res.status(400).json({ error: 'No data rows found in CSV.' });
+    }
+
+    const rolesRes = await getAllRoles();
+    const validRoles = new Set(rolesRes.map(r => r.slug.toLowerCase()));
+    rolesRes.forEach(r => validRoles.add(r.name.toLowerCase()));
+
+    const existingPhones = new Set();
+    const existingEmails = new Set();
+    const dbUsers = await db.query('SELECT phone, email FROM users');
+    (dbUsers.rows || []).forEach(u => {
+      if (u.phone) existingPhones.add(String(u.phone).trim());
+      if (u.email) existingEmails.add(String(u.email).toLowerCase().trim());
+    });
+
+    const seenPhonesInFile = new Set();
+    const seenEmailsInFile = new Set();
+
+    let validRows = [];
+    let invalidRows = [];
+    let duplicateCount = 0;
+
+    rawRows.forEach((row, index) => {
+      const rowNum = index + 2; // accounting for 1-indexed and header
+      const name = (row['Full Name'] || row.name || row.Name || '').trim();
+      const rawMobile = (row['Mobile Number'] || row.mobile || row.phone || row.Phone || '').trim();
+      const email = (row['Email Address'] || row.email || row.Email || '').trim().toLowerCase();
+      const roleStr = (row['Role'] || row.role || row.Role || 'Student').trim().toLowerCase();
+      const school = (row['School / Organization'] || row.school || row.school_code || '').trim();
+      const cls = (row['Class'] || row.class || '').trim();
+      const section = (row['Section'] || row.section || '').trim();
+      const admNo = (row['Admission No'] || row.admission_no || '').trim();
+      const gender = (row['Gender'] || row.gender || '').trim();
+      const dob = (row['Date of Birth'] || row.dob || '').trim();
+
+      const errors = [];
+
+      if (!name) errors.push('Full Name is missing.');
+
+      const mobileCheck = normalizeIndianMobile(rawMobile);
+      if (!mobileCheck.valid) {
+        errors.push(mobileCheck.error);
+      } else {
+        const cleanMobile = mobileCheck.normalized;
+        if (existingPhones.has(cleanMobile)) {
+          errors.push(`Mobile ${cleanMobile} already exists in database.`);
+          duplicateCount++;
+        } else if (seenPhonesInFile.has(cleanMobile)) {
+          errors.push(`Duplicate mobile ${cleanMobile} within this CSV.`);
+          duplicateCount++;
+        } else {
+          seenPhonesInFile.add(cleanMobile);
+        }
+      }
+
+      if (email) {
+        if (existingEmails.has(email)) {
+          errors.push(`Email ${email} already exists in database.`);
+          duplicateCount++;
+        } else if (seenEmailsInFile.has(email)) {
+          errors.push(`Duplicate email ${email} within this CSV.`);
+          duplicateCount++;
+        } else {
+          seenEmailsInFile.add(email);
+        }
+      }
+
+      if (errors.length > 0) {
+        invalidRows.push({ rowNum, name: name || 'N/A', mobile: rawMobile, email, errors });
+      } else {
+        validRows.push({
+          rowNum,
+          name,
+          phone: mobileCheck.normalized,
+          email,
+          role: roleStr,
+          school_code: school,
+          class: cls,
+          section,
+          admission_no: admNo,
+          gender,
+          dob
+        });
+      }
+    });
+
+    res.json({
+      success: true,
+      summary: {
+        totalRows: rawRows.length,
+        validCount: validRows.length,
+        invalidCount: invalidRows.length,
+        duplicateCount
+      },
+      validRows,
+      invalidRows
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'CSV Validation Error: ' + err.message });
+  }
+});
+
+// Step 3: Confirm and Execute Valid Records Import
+router.post('/users/import-csv-confirm', async (req, res) => {
+  const { valid_rows } = req.body;
+  if (!Array.isArray(valid_rows) || valid_rows.length === 0) {
+    return res.status(400).json({ error: 'No validated rows to import.' });
+  }
+
+  try {
+    const defaultPassword = await bcrypt.hash('password123', 10);
+    let importedCount = 0;
+
+    for (const r of valid_rows) {
+      const cleanRole = (r.role || 'student').toLowerCase();
+      const insRes = await db.query(`
+        INSERT INTO users (name, phone, email, role, school_code, password, admission_no, class, section, gender, dob, is_banned, status, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, '0', 'active', NOW())
+      `, [
+        r.name, r.phone, r.email || null, cleanRole, r.school_code || null,
+        defaultPassword, r.admission_no || null, r.class || null, r.section || null,
+        r.gender || null, r.dob || null
+      ]).catch(async () => {
+        return await db.query(`
+          INSERT INTO users (name, phone, email, role, school_code, password, admission_no, class, section, gender, dob, is_banned, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, '0', 'active')
+        `, [
+          r.name, r.phone, r.email || null, cleanRole, r.school_code || null,
+          defaultPassword, r.admission_no || null, r.class || null, r.section || null,
+          r.gender || null, r.dob || null
+        ]);
+      });
+
+      const newId = (insRes.rows && insRes.rows[0]) ? insRes.rows[0].id : insRes.lastId;
+      if (newId) {
+        await assignUserRole(newId, cleanRole, {
+          school_code: r.school_code || 'GLOBAL',
+          assigned_by: req.session.user_id
+        }).catch(() => {});
+
+        if (cleanRole === 'student') {
+          const studentId = `VBPS${String(newId).padStart(5, '0')}`;
+          await db.query('UPDATE users SET student_id = $1 WHERE id = $2', [studentId, newId]).catch(() => {});
+        }
+      }
+      importedCount++;
+    }
+
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Successfully bulk imported ${importedCount} users from CSV`,
+      module: 'users'
+    }).catch(() => {});
+
+    res.json({ success: true, message: `Successfully imported ${importedCount} users into Librika!` });
+  } catch (err) {
+    res.status(500).json({ error: 'Import failed: ' + err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+//  DYNAMIC ROLE BUILDER & PERMISSION APIS
+// ─────────────────────────────────────────────
+
+// Get complete permissions catalog grouped by module
+router.get('/api/permissions', async (req, res) => {
+  try {
+    const data = await getAllPermissions();
+    res.json({ success: true, ...data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all roles
+router.get('/api/roles', async (req, res) => {
+  try {
+    const roles = await getAllRoles();
+    res.json({ success: true, roles });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get single role with its assigned permissions
+router.get('/api/roles/:id', async (req, res) => {
+  try {
+    const role = await getRoleById(req.params.id);
+    if (!role) return res.status(404).json({ error: 'Role not found' });
+    res.json({ success: true, role });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create custom role
+router.post('/api/roles/create', async (req, res) => {
+  const { name, description, permission_ids, status } = req.body;
+  try {
+    const role = await createRole({ name, description, permission_ids, status });
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Created new custom role '${role.name}' with ${role.permissions.length} permissions`,
+      module: 'roles'
+    }).catch(() => {});
+    res.json({ success: true, role });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Edit role
+router.post('/api/roles/:id/edit', async (req, res) => {
+  const { name, description, permission_ids, status } = req.body;
+  try {
+    const role = await updateRole(req.params.id, { name, description, permission_ids, status });
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Updated role '${role.name}'`,
+      module: 'roles'
+    }).catch(() => {});
+    res.json({ success: true, role });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Clone role
+router.post('/api/roles/:id/clone', async (req, res) => {
+  const { new_name, new_description } = req.body;
+  try {
+    const cloned = await cloneRole(req.params.id, { newName: new_name, newDescription: new_description });
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Cloned role #${req.params.id} into '${cloned.name}'`,
+      module: 'roles'
+    }).catch(() => {});
+    res.json({ success: true, role: cloned });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Delete role
+router.post('/api/roles/:id/delete', async (req, res) => {
+  try {
+    const result = await deleteRole(req.params.id);
+    await logActivity(req, {
+      userId: req.session.user_id,
+      action: `Deleted custom role #${req.params.id}`,
+      module: 'roles'
+    }).catch(() => {});
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Toggle role active/inactive
+router.post('/api/roles/:id/toggle-status', async (req, res) => {
+  try {
+    const role = await getRoleById(req.params.id);
+    if (!role) return res.status(404).json({ error: 'Role not found' });
+    const newStatus = role.status === 'active' ? 'inactive' : 'active';
+    const updated = await updateRole(req.params.id, { status: newStatus });
+    res.json({ success: true, role: updated });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

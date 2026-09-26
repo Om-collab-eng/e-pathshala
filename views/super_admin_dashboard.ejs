@@ -1047,7 +1047,166 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
   font-weight: 700;
 }
 .sa-dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
-.sa-dot-yellow { width: 8px; height: 8px; border-radius: 50%; background: var(--warning); }
+/* ── USER MANAGEMENT & RBAC EXTENSIONS ── */
+.sa-modal-xl { max-width: 980px !important; }
+.sa-profile-nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--border);
+  padding: 0 1.6rem;
+  background: var(--surface-sub);
+  overflow-x: auto;
+}
+.sa-profile-nav-pill {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+.sa-profile-nav-pill.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: #fff;
+  border-radius: 8px 8px 0 0;
+}
+.sa-profile-pane { display: none; padding: 1.4rem 0; }
+.sa-profile-pane.active { display: block; }
+
+.sa-avatar-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+.sa-avatar-option {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.15s;
+}
+.sa-avatar-option:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+.sa-avatar-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+.sa-avatar-option img {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 6px;
+}
+.sa-avatar-option span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sa-action-dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  min-width: 195px;
+  z-index: 1000;
+  padding: 6px 0;
+}
+.sa-action-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.sa-action-dropdown-item:hover {
+  background: var(--surface-sub);
+  color: var(--primary);
+}
+.sa-action-dropdown-item.danger:hover {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+.sa-action-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.sa-perm-module-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+.sa-perm-module-header {
+  padding: 10px 14px;
+  background: var(--surface-sub);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.sa-perm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  padding: 12px 14px;
+}
+.sa-perm-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+.sa-perm-item input { margin-top: 2px; }
+.sa-perm-item label { cursor: pointer; color: var(--text-primary); }
+.sa-perm-item small { display: block; color: var(--text-secondary); font-size: 0.72rem; }
+
+.sa-stat-chip {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sa-chip-valid { background: #dcfce7; color: #15803d; }
+.sa-chip-invalid { background: #fee2e2; color: #b91c1c; }
+.sa-chip-duplicate { background: #fef3c7; color: #b45309; }
+.sa-chip-total { background: #e0f2fe; color: #0369a1; }
 
 /* ── RESPONSIVE BREAKPOINTS ── */
 @media (max-width: 990px) {
@@ -1521,11 +1680,18 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
 
       <div class="sa-card">
         <div class="sa-card-header">
-          <div class="sa-card-title">👥 User Management</div>
-          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('createUserModal')">+ Add User</button>
+          <div>
+            <div class="sa-card-title">👥 User Management Directory</div>
+            <p style="color:var(--text-secondary);font-size:.8rem;margin:2px 0 0">Master administrative user directory with 10-digit Indian mobile validation and comprehensive profiles.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="sa-btn sa-btn-outline sa-btn-sm" onclick="openModal('userCsvImportModal')">📥 Import CSV</button>
+            <button class="sa-btn sa-btn-outline sa-btn-sm" onclick="exportUsersCsv()">📤 Export CSV</button>
+            <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openModal('createUserModal')">+ Add User</button>
+          </div>
         </div>
-        <div class="sa-toolbar">
-          <div class="sa-search" style="flex:2;"><span>🔍</span><input type="text" id="userSearch" placeholder="Name, phone, email, admission no..." oninput="debouncedLoadUsers()"></div>
+        <div class="sa-toolbar" style="flex-wrap:wrap;gap:8px">
+          <div class="sa-search" style="flex:2;min-width:240px"><span>🔍</span><input type="text" id="userSearch" placeholder="Name, 10-digit phone, email, student ID, admission no..." oninput="debouncedLoadUsers()"></div>
           <select class="sa-select" id="userRoleFilter" onchange="loadUsers(1)">
             <option value="">All Roles</option>
             <option value="super_admin">Super Admin</option>
@@ -1534,21 +1700,34 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
             <option value="teacher">Teacher</option>
             <option value="parent">Parent</option>
             <option value="student">Student</option>
+            <option value="quiz_manager">Quiz Manager</option>
+            <option value="content_manager">Content Manager</option>
+            <option value="personal">Personal</option>
           </select>
           <select class="sa-select" id="userBanFilter" onchange="loadUsers(1)">
             <option value="">All Status</option>
-            <option value="false">Active</option>
-            <option value="true">Banned</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="deleted">Soft-Deleted</option>
           </select>
           <select class="sa-select" id="userSchoolFilter" onchange="loadUsers(1)">
             <option value="">All Schools</option>
           </select>
+          <select class="sa-select" id="userGenderFilter" onchange="loadUsers(1)">
+            <option value="">All Genders</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+          <button class="sa-btn sa-btn-ghost sa-btn-sm" onclick="clearUserFilters()" title="Reset Filters">🔄 Reset</button>
         </div>
         <div id="usersBulkBar" class="sa-bulk-bar" style="margin:0 1.4rem">
           <span class="sa-bulk-count" id="usersBulkCount">0 selected</span>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openBulkRoleModal()">🔄 Change Role</button>
+          <button class="sa-btn sa-btn-info sa-btn-sm" onclick="openBulkSchoolModal()">🏫 Transfer School</button>
+          <button class="sa-btn sa-btn-warning sa-btn-sm" onclick="openBulkStatusModal()">⚡ Update Status</button>
           <button class="sa-btn sa-btn-danger sa-btn-sm" onclick="bulkDeleteUsers()">🗑️ Delete</button>
-          <button class="sa-btn sa-btn-warning sa-btn-sm" onclick="bulkBanUsers()">🚫 Ban</button>
-          <button class="sa-btn sa-btn-success sa-btn-sm" onclick="bulkUnbanUsers()">✅ Unban</button>
+          <button class="sa-btn sa-btn-ghost sa-btn-sm" onclick="deselectAllUsers()">✕ Deselect</button>
         </div>
         <div id="usersTableWrap" class="sa-loading"><span class="sa-spinner"></span>Loading users...</div>
         <div class="sa-pagination" id="usersPagination"></div>
@@ -2011,10 +2190,15 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
       </div>
 
       <div class="sa-card">
-        <div class="sa-card-header"><div class="sa-card-title">🛡️ Roles & Permissions</div></div>
+        <div class="sa-card-header">
+          <div>
+            <div class="sa-card-title">🛡️ Roles & Permissions Catalog (RBAC)</div>
+            <p style="color:var(--text-secondary);font-size:.82rem;margin:4px 0 0 0">Configure granular module permissions for system and custom roles. System roles are protected against deletion.</p>
+          </div>
+          <button class="sa-btn sa-btn-primary sa-btn-sm" onclick="openCreateRoleModal()">+ Create Custom Role</button>
+        </div>
         <div class="sa-card-body">
-          <p style="color:#94a3b8;font-size:.86rem;margin-bottom:1rem">Default role permissions stored in <code>system_settings.role_permissions</code>. Override per-user via the Users tab.</p>
-          <div id="rolePermWrap" class="sa-loading"><span class="sa-spinner"></span>Loading...</div>
+          <div id="rolesListWrap" class="sa-loading"><span class="sa-spinner"></span>Loading roles catalog...</div>
         </div>
       </div>
     </div>
@@ -2584,28 +2768,52 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
 
 <!-- Create User -->
 <div class="sa-modal-overlay" id="createUserModal">
-  <div class="sa-modal">
-    <div class="sa-modal-header"><h3>👤 Create User</h3><button class="sa-close-btn" onclick="closeModal('createUserModal')">✕</button></div>
+  <div class="sa-modal sa-modal-lg">
+    <div class="sa-modal-header"><h3>👤 Create New User</h3><button class="sa-close-btn" onclick="closeModal('createUserModal')">✕</button></div>
     <div class="sa-modal-body">
       <div class="sa-form-row">
         <div class="sa-form-group"><label>Full Name *</label><input type="text" class="sa-input" id="cuName" placeholder="Full name"></div>
-        <div class="sa-form-group"><label>Phone *</label><input type="text" class="sa-input" id="cuPhone" placeholder="10-digit phone"></div>
+        <div class="sa-form-group">
+          <label>Mobile Number (India) * <small style="color:var(--text-secondary)">(10 digits starting 6-9)</small></label>
+          <input type="text" class="sa-input" id="cuPhone" placeholder="9876543210" maxlength="14">
+        </div>
       </div>
       <div class="sa-form-row">
-        <div class="sa-form-group"><label>Email</label><input type="email" class="sa-input" id="cuEmail" placeholder="Email address"></div>
+        <div class="sa-form-group"><label>Email Address</label><input type="email" class="sa-input" id="cuEmail" placeholder="user@example.com"></div>
         <div class="sa-form-group"><label>Password</label><input type="text" class="sa-input" id="cuPassword" placeholder="Default: password123"></div>
       </div>
       <div class="sa-form-row">
-        <div class="sa-form-group"><label>Role *</label>
-          <select class="sa-select" id="cuRole"><option value="student">Student</option><option value="parent">Parent</option><option value="librarian">Librarian</option><option value="admin">Admin</option><option value="teacher">Teacher</option><option value="super_admin">Super Admin</option></select>
+        <div class="sa-form-group"><label>System Role *</label>
+          <select class="sa-select" id="cuRole">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="librarian">Librarian</option>
+            <option value="admin">School Admin</option>
+            <option value="super_admin">Super Admin</option>
+            <option value="parent">Parent</option>
+            <option value="quiz_manager">Quiz Manager</option>
+            <option value="content_manager">Content Manager</option>
+            <option value="personal">Personal</option>
+          </select>
         </div>
-        <div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="cuSchool" placeholder="School code"></div>
+        <div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="cuSchool" placeholder="Leave blank for GLOBAL / Independent"></div>
       </div>
       <div class="sa-form-row">
         <div class="sa-form-group"><label>Class</label><input type="text" class="sa-input" id="cuClass" placeholder="e.g. 10"></div>
         <div class="sa-form-group"><label>Section</label><input type="text" class="sa-input" id="cuSection" placeholder="e.g. A"></div>
       </div>
-      <div class="sa-form-group"><label>Admission No.</label><input type="text" class="sa-input" id="cuAdmNo" placeholder="Admission number"></div>
+      <div class="sa-form-row">
+        <div class="sa-form-group"><label>Admission / Roll No.</label><input type="text" class="sa-input" id="cuAdmNo" placeholder="e.g. ADM2026001"></div>
+        <div class="sa-form-group"><label>Gender</label>
+          <select class="sa-select" id="cuGender">
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="sa-form-group"><label>Date of Birth</label><input type="date" class="sa-input" id="cuDob"></div>
     </div>
     <div class="sa-modal-footer">
       <button class="sa-btn sa-btn-ghost" onclick="closeModal('createUserModal')">Cancel</button>
@@ -2614,34 +2822,364 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
   </div>
 </div>
 
-<!-- Edit User -->
-<div class="sa-modal-overlay" id="editUserModal">
-  <div class="sa-modal">
-    <div class="sa-modal-header"><h3>✏️ Edit User</h3><button class="sa-close-btn" onclick="closeModal('editUserModal')">✕</button></div>
-    <div class="sa-modal-body">
-      <input type="hidden" id="euId">
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>Full Name</label><input type="text" class="sa-input" id="euName"></div>
-        <div class="sa-form-group"><label>Phone</label><input type="text" class="sa-input" id="euPhone"></div>
+<!-- ════ USER PROFILE MODAL (6 TABS) ════ -->
+<div class="sa-modal-overlay" id="userProfileModal">
+  <div class="sa-modal sa-modal-xl">
+    <div class="sa-modal-header">
+      <div>
+        <h3 id="upModalTitle">👤 User Profile Details</h3>
+        <p id="upModalSubtitle" style="color:var(--text-secondary);font-size:.78rem;margin:2px 0 0">User ID #—</p>
       </div>
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>Email</label><input type="email" class="sa-input" id="euEmail"></div>
-        <div class="sa-form-group"><label>Role</label>
-          <select class="sa-select" id="euRole"><option value="student">Student</option><option value="parent">Parent</option><option value="librarian">Librarian</option><option value="admin">Admin</option><option value="teacher">Teacher</option><option value="super_admin">Super Admin</option></select>
+      <button class="sa-close-btn" onclick="closeModal('userProfileModal')">✕</button>
+    </div>
+    <div class="sa-profile-nav">
+      <button class="sa-profile-nav-pill active" onclick="switchProfileTab('basic')">👤 Basic Info</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('edu')">🎓 Education & Org</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('interests')">⭐ Interests & Prefs</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('account')">🔒 Account & Security</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('avatar')">🖼️ Avatar & Photo</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('timeline')">📜 Activity & Logins</button>
+    </div>
+    <div class="sa-modal-body" style="max-height:65vh;overflow-y:auto">
+      <input type="hidden" id="upId">
+      
+      <!-- Tab 1: Basic Info -->
+      <div class="sa-profile-pane active" id="pane-up-basic">
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Display Name *</label><input type="text" class="sa-input" id="upName"></div>
+          <div class="sa-form-group">
+            <label>Indian Mobile Number * <span id="upPhoneCheckBadge" class="badge badge-green" style="display:none">Valid 🇮🇳</span></label>
+            <input type="text" class="sa-input" id="upPhone" placeholder="10-digit mobile number">
+          </div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>First Name</label><input type="text" class="sa-input" id="upFirstName"></div>
+          <div class="sa-form-group"><label>Last Name</label><input type="text" class="sa-input" id="upLastName"></div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Email Address</label><input type="email" class="sa-input" id="upEmail"></div>
+          <div class="sa-form-group"><label>Alternate Phone</label><input type="text" class="sa-input" id="upAltPhone"></div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Gender</label>
+            <select class="sa-select" id="upGender">
+              <option value="">Unspecified</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="sa-form-group"><label>Date of Birth</label><input type="date" class="sa-input" id="upDob"></div>
+        </div>
+        <div class="sa-form-group"><label>Street Address</label><input type="text" class="sa-input" id="upAddress"></div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>City</label><input type="text" class="sa-input" id="upCity"></div>
+          <div class="sa-form-group"><label>State</label><input type="text" class="sa-input" id="upState"></div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Country</label><input type="text" class="sa-input" id="upCountry" value="India"></div>
+          <div class="sa-form-group"><label>Pincode</label><input type="text" class="sa-input" id="upPincode"></div>
         </div>
       </div>
-      <div class="sa-form-row">
-        <div class="sa-form-group"><label>School Code</label><input type="text" class="sa-input" id="euSchool"></div>
-        <div class="sa-form-group"><label>Class</label><input type="text" class="sa-input" id="euClass"></div>
+
+      <!-- Tab 2: Education & Org -->
+      <div class="sa-profile-pane" id="pane-up-edu">
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Assigned School Code</label><input type="text" class="sa-input" id="upSchoolCode"></div>
+          <div class="sa-form-group"><label>Primary Role</label>
+            <select class="sa-select" id="upRole">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="librarian">Librarian</option>
+              <option value="admin">School Admin</option>
+              <option value="super_admin">Super Admin</option>
+              <option value="parent">Parent</option>
+              <option value="quiz_manager">Quiz Manager</option>
+              <option value="content_manager">Content Manager</option>
+              <option value="personal">Personal</option>
+            </select>
+          </div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Class</label><input type="text" class="sa-input" id="upClass" placeholder="e.g. 10"></div>
+          <div class="sa-form-group"><label>Section</label><input type="text" class="sa-input" id="upSection" placeholder="e.g. A"></div>
+          <div class="sa-form-group"><label>Stream</label><input type="text" class="sa-input" id="upStream" placeholder="e.g. Science"></div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Academic Year</label><input type="text" class="sa-input" id="upAcademicYear" placeholder="2026-2027"></div>
+          <div class="sa-form-group"><label>Student ID</label><input type="text" class="sa-input" id="upStudentId" placeholder="e.g. VBPS00123"></div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Admission Number</label><input type="text" class="sa-input" id="upAdmissionNo"></div>
+          <div class="sa-form-group"><label>Employee ID</label><input type="text" class="sa-input" id="upEmployeeId"></div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Department</label><input type="text" class="sa-input" id="upDepartment"></div>
+          <div class="sa-form-group"><label>Designation</label><input type="text" class="sa-input" id="upDesignation"></div>
+        </div>
       </div>
+
+      <!-- Tab 3: Interests & Prefs -->
+      <div class="sa-profile-pane" id="pane-up-interests">
+        <div class="sa-form-group">
+          <label>Reading Interests & Favorite Genres</label>
+          <input type="text" class="sa-input" id="upInterests" placeholder="e.g. Science Fiction, Vedic Mathematics, History, Poetry">
+          <small style="color:var(--text-secondary)">Comma-separated tags representing user literary preferences</small>
+        </div>
+        <div class="sa-form-group" style="margin-top:1.2rem">
+          <label>Communication & Notification Channels</label>
+          <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="upPrefEmail"> Email Notifications</label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="upPrefSms"> SMS Alerts</label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="upPrefWhatsApp"> WhatsApp Overdue Alerts</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Account & Security -->
+      <div class="sa-profile-pane" id="pane-up-account">
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Account Status</label>
+            <select class="sa-select" id="upStatus">
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+              <option value="deleted">Soft-Deleted</option>
+            </select>
+          </div>
+          <div class="sa-form-group"><label>Registration Date</label><input type="text" class="sa-input" id="upCreatedAt" readonly></div>
+        </div>
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label>Last Login Time</label><input type="text" class="sa-input" id="upLastLoginAt" readonly></div>
+          <div class="sa-form-group"><label>Last Active Time</label><input type="text" class="sa-input" id="upLastActiveAt" readonly></div>
+        </div>
+        <div style="margin-top:1rem;padding:14px;background:var(--surface-sub);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-weight:700;margin-bottom:8px">🔐 Security Actions</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button type="button" class="sa-btn sa-btn-warning sa-btn-sm" onclick="resetPasswordFromProfile()">🔑 Reset Password</button>
+            <button type="button" class="sa-btn sa-btn-info sa-btn-sm" onclick="forceLogoutFromProfile()">⏏️ Force Logout</button>
+            <button type="button" class="sa-btn sa-btn-outline sa-btn-sm" onclick="masterLoginFromProfile()">👁️ Impersonate (Master Login)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Avatar & Photo -->
+      <div class="sa-profile-pane" id="pane-up-avatar">
+        <div style="display:flex;gap:20px;align-items:center;margin-bottom:1.4rem;padding:14px;background:var(--surface-sub);border-radius:12px">
+          <img id="upAvatarCurrentImg" src="/static/avatars/avatar_01.svg" style="width:72px;height:72px;border-radius:50%;border:3px solid var(--primary);object-fit:cover">
+          <div>
+            <div style="font-weight:700;font-size:1rem" id="upAvatarCurrentName">Current Character Avatar</div>
+            <p style="color:var(--text-secondary);font-size:.78rem;margin:2px 0 8px">Select from Librika's 12 friendly SVG avatars or upload a custom profile photo.</p>
+            <label class="sa-btn sa-btn-primary sa-btn-xs" style="cursor:pointer">
+              📷 Upload Custom Photo
+              <input type="file" id="upPhotoUploadInput" accept="image/*" style="display:none" onchange="uploadUserProfilePicture(this)">
+            </label>
+          </div>
+        </div>
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">Pick an Official Librika Character Avatar:</div>
+        <div class="sa-avatar-picker-grid" id="upAvatarGrid">
+          <!-- Populated dynamically with 12 friendly SVG avatars -->
+        </div>
+      </div>
+
+      <!-- Tab 6: Activity & Logins -->
+      <div class="sa-profile-pane" id="pane-up-timeline">
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:8px">📜 Recent Activity Timeline</div>
+        <div id="upTimelineList" style="max-height:200px;overflow-y:auto;margin-bottom:1rem;border:1px solid var(--border);border-radius:8px;padding:8px">
+          <p style="color:var(--text-secondary);font-size:.8rem">No activity events recorded yet.</p>
+        </div>
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:8px">💻 Recent Login History</div>
+        <div id="upLoginHistoryList" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
+          <p style="color:var(--text-secondary);font-size:.8rem">No login sessions recorded yet.</p>
+        </div>
+      </div>
+
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('userProfileModal')">Close</button>
+      <button class="sa-btn sa-btn-primary" onclick="saveUserProfile()">💾 Save Profile Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ VISUAL ROLE BUILDER MODAL ════ -->
+<div class="sa-modal-overlay" id="roleBuilderModal">
+  <div class="sa-modal sa-modal-xl">
+    <div class="sa-modal-header">
+      <div>
+        <h3 id="rbModalTitle">🛡️ Role & Permissions Matrix</h3>
+        <p id="rbModalSubtitle" style="color:var(--text-secondary);font-size:.78rem;margin:2px 0 0">Configure module-level permissions for this role</p>
+      </div>
+      <button class="sa-close-btn" onclick="closeModal('roleBuilderModal')">✕</button>
+    </div>
+    <div class="sa-modal-body" style="max-height:65vh;overflow-y:auto">
+      <input type="hidden" id="rbRoleId">
       <div class="sa-form-row">
-        <div class="sa-form-group"><label>Section</label><input type="text" class="sa-input" id="euSection"></div>
-        <div class="sa-form-group"><label>Admission No.</label><input type="text" class="sa-input" id="euAdmNo"></div>
+        <div class="sa-form-group"><label>Role Display Name *</label><input type="text" class="sa-input" id="rbName" placeholder="e.g. Senior Librarian"></div>
+        <div class="sa-form-group"><label>Role Slug / System Key *</label><input type="text" class="sa-input" id="rbSlug" placeholder="e.g. senior_librarian"></div>
+      </div>
+      <div class="sa-form-group"><label>Role Description</label><input type="text" class="sa-input" id="rbDesc" placeholder="Responsibilities and scope of this role"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:1rem 0 0.5rem">
+        <div style="font-weight:800;font-size:.9rem;color:var(--text-primary)">Module Permissions Catalog</div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="sa-btn sa-btn-ghost sa-btn-xs" onclick="toggleAllPerms(true)">Select All</button>
+          <button type="button" class="sa-btn sa-btn-ghost sa-btn-xs" onclick="toggleAllPerms(false)">Deselect All</button>
+        </div>
+      </div>
+      <div id="rbModulesWrap">
+        <!-- Rendered dynamically grouped by 11 modules -->
       </div>
     </div>
     <div class="sa-modal-footer">
-      <button class="sa-btn sa-btn-ghost" onclick="closeModal('editUserModal')">Cancel</button>
-      <button class="sa-btn sa-btn-primary" onclick="saveUser()">💾 Save Changes</button>
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('roleBuilderModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="saveRoleBuilder()">💾 Save Role & Permissions</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CLONE ROLE MODAL ════ -->
+<div class="sa-modal-overlay" id="cloneRoleModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>📋 Clone Role</h3><button class="sa-close-btn" onclick="closeModal('cloneRoleModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <input type="hidden" id="crSourceId">
+      <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:1rem">
+        Duplicating permissions from: <strong id="crSourceName" style="color:var(--primary)">—</strong>
+      </p>
+      <div class="sa-form-group"><label>New Role Name *</label><input type="text" class="sa-input" id="crNewName" placeholder="e.g. Assistant Teacher"></div>
+      <div class="sa-form-group"><label>New Role Slug</label><input type="text" class="sa-input" id="crNewSlug" placeholder="e.g. assistant_teacher (optional)"></div>
+      <div class="sa-form-group"><label>Description</label><input type="text" class="sa-input" id="crNewDesc" placeholder="Description for new role"></div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('cloneRoleModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="confirmCloneRole()">📋 Clone & Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BULK ROLE ASSIGN MODAL ════ -->
+<div class="sa-modal-overlay" id="bulkRoleModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>🔄 Bulk Assign Role</h3><button class="sa-close-btn" onclick="closeModal('bulkRoleModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:1rem">Target users selected: <strong id="bulkRoleCount" style="color:var(--primary)">0</strong></p>
+      <div class="sa-form-group"><label>Select Target Role</label>
+        <select class="sa-select" id="bulkTargetRole">
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+          <option value="librarian">Librarian</option>
+          <option value="admin">Admin</option>
+          <option value="parent">Parent</option>
+          <option value="quiz_manager">Quiz Manager</option>
+          <option value="content_manager">Content Manager</option>
+          <option value="personal">Personal</option>
+        </select>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('bulkRoleModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="confirmBulkRole()">Apply Role</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BULK SCHOOL TRANSFER MODAL ════ -->
+<div class="sa-modal-overlay" id="bulkSchoolModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>🏫 Bulk Transfer School</h3><button class="sa-close-btn" onclick="closeModal('bulkSchoolModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:1rem">Target users selected: <strong id="bulkSchoolCount" style="color:var(--primary)">0</strong></p>
+      <div class="sa-form-group"><label>Target School Code</label>
+        <select class="sa-select" id="bulkTargetSchool">
+          <option value="">Select School...</option>
+        </select>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('bulkSchoolModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="confirmBulkSchool()">Transfer School</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BULK STATUS UPDATE MODAL ════ -->
+<div class="sa-modal-overlay" id="bulkStatusModal">
+  <div class="sa-modal">
+    <div class="sa-modal-header"><h3>⚡ Bulk Status Update</h3><button class="sa-close-btn" onclick="closeModal('bulkStatusModal')">✕</button></div>
+    <div class="sa-modal-body">
+      <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:1rem">Target users selected: <strong id="bulkStatusCount" style="color:var(--primary)">0</strong></p>
+      <div class="sa-form-group"><label>Choose Status Action</label>
+        <select class="sa-select" id="bulkTargetStatusAction">
+          <option value="enable">✅ Activate / Enable Users</option>
+          <option value="disable">🚫 Suspend / Disable Users</option>
+          <option value="restore">♻️ Restore Soft-Deleted Users</option>
+        </select>
+      </div>
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('bulkStatusModal')">Cancel</button>
+      <button class="sa-btn sa-btn-primary" onclick="confirmBulkStatus()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MULTI-STEP CSV IMPORT WIZARD MODAL ════ -->
+<div class="sa-modal-overlay" id="userCsvImportModal">
+  <div class="sa-modal sa-modal-lg">
+    <div class="sa-modal-header">
+      <div>
+        <h3>📥 Multi-Step User CSV Import Wizard</h3>
+        <p style="color:var(--text-secondary);font-size:.78rem;margin:2px 0 0">Batch import students, faculty, and staff with real-time validation preview</p>
+      </div>
+      <button class="sa-close-btn" onclick="closeModal('userCsvImportModal')">✕</button>
+    </div>
+    <div class="sa-modal-body" style="max-height:65vh;overflow-y:auto">
+      
+      <!-- Step 1: Upload & File Input -->
+      <div id="csvWizardStep1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+          <div>
+            <strong>Step 1: Choose or Paste CSV Data</strong>
+            <p style="color:var(--text-secondary);font-size:.8rem;margin:2px 0 0">Must contain columns: Full Name, Mobile Number, Email Address, Role, School</p>
+          </div>
+          <button type="button" class="sa-btn sa-btn-outline sa-btn-sm" onclick="downloadSampleUserCsv()">📥 Download Sample CSV</button>
+        </div>
+        <div class="sa-form-group">
+          <label>Select CSV File (.csv)</label>
+          <input type="file" id="csvFileInput" accept=".csv" class="sa-input" onchange="handleCsvFileSelected(this)">
+        </div>
+        <div class="sa-form-group" style="margin-top:10px">
+          <label>Or Paste CSV Text Directly</label>
+          <textarea class="sa-textarea" id="csvTextarea" rows="6" placeholder="Full Name,Mobile Number,Email Address,Role,School / Organization,Class,Section,Admission No,Gender,Date of Birth&#10;Aarav Sharma,9876543210,aarav@school.org,Student,VBPS01,10,A,ADM001,male,2010-05-15"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 2: Validation Preview -->
+      <div id="csvWizardStep2" style="display:none">
+        <div style="font-weight:700;margin-bottom:8px">Step 2: Validation Breakdown & Preview</div>
+        <div style="display:flex;gap:10px;margin-bottom:1.2rem;flex-wrap:wrap">
+          <span class="sa-stat-chip sa-chip-total" id="chipTotalRows">Total: 0</span>
+          <span class="sa-stat-chip sa-chip-valid" id="chipValidRows">Valid: 0</span>
+          <span class="sa-stat-chip sa-chip-invalid" id="chipInvalidRows">Invalid: 0</span>
+          <span class="sa-stat-chip sa-chip-duplicate" id="chipDuplicateRows">Duplicates: 0</span>
+        </div>
+        <div id="csvValidationErrorsWrap" style="display:none">
+          <div style="color:var(--danger);font-weight:700;font-size:.82rem;margin-bottom:6px">⚠️ Invalid Rows Found (These will be skipped):</div>
+          <div class="sa-table-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+            <table class="sa-table" style="font-size:.78rem">
+              <thead><tr><th>Row #</th><th>Name</th><th>Mobile</th><th>Reason / Error</th></tr></thead>
+              <tbody id="csvErrorsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="csvValidPreviewNotice" style="margin-top:1rem;color:var(--success);font-weight:600;font-size:.85rem"></div>
+      </div>
+
+    </div>
+    <div class="sa-modal-footer">
+      <button class="sa-btn sa-btn-ghost" onclick="closeModal('userCsvImportModal')">Cancel</button>
+      <button class="sa-btn sa-btn-secondary" id="btnCsvBack" style="display:none" onclick="backToCsvStep1()">← Back</button>
+      <button class="sa-btn sa-btn-primary" id="btnCsvValidate" onclick="validateUserCsv()">Inspect & Validate CSV →</button>
+      <button class="sa-btn sa-btn-success" id="btnCsvConfirm" style="display:none" onclick="confirmImportUserCsv()">✅ Confirm & Import Users</button>
     </div>
   </div>
 </div>
@@ -3370,21 +3908,56 @@ async function bulkDeleteSchools() {
 }
 
 // ═══════════════════════════════════════
-//  USERS
+//  USERS & PROFILE & RBAC CLIENT LOGIC
 // ═══════════════════════════════════════
 let _usersPage = 1, _usersTotal = 0;
+let _currentProfileUser = null;
+let _selectedAvatarId = 'avatar_01';
+let _csvValidatedRows = [];
+
+// Close action dropdown menus when clicking outside
+window.addEventListener('click', e => {
+  if (!e.target.closest('.sa-dropdown-wrap')) {
+    document.querySelectorAll('.sa-action-dropdown-menu').forEach(m => m.style.display = 'none');
+  }
+});
+
+function toggleActionDropdown(e, menuId) {
+  e.stopPropagation();
+  const menu = document.getElementById(menuId);
+  const isOpen = menu && menu.style.display === 'block';
+  document.querySelectorAll('.sa-action-dropdown-menu').forEach(m => m.style.display = 'none');
+  if (menu && !isOpen) menu.style.display = 'block';
+}
+
+function clearUserFilters() {
+  if (document.getElementById('userSearch')) document.getElementById('userSearch').value = '';
+  if (document.getElementById('userRoleFilter')) document.getElementById('userRoleFilter').value = '';
+  if (document.getElementById('userBanFilter')) document.getElementById('userBanFilter').value = '';
+  if (document.getElementById('userSchoolFilter')) document.getElementById('userSchoolFilter').value = '';
+  if (document.getElementById('userGenderFilter')) document.getElementById('userGenderFilter').value = '';
+  loadUsers(1);
+}
+
 async function loadUsers(page = 1) {
   _usersPage = page;
-  document.getElementById('usersTableWrap').innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
+  document.getElementById('usersTableWrap').innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading users directory...</div>';
   const search = document.getElementById('userSearch')?.value || '';
   const role = document.getElementById('userRoleFilter')?.value || '';
-  const banned = document.getElementById('userBanFilter')?.value || '';
+  const status = document.getElementById('userBanFilter')?.value || '';
   const school = document.getElementById('userSchoolFilter')?.value || '';
-  const params = new URLSearchParams({ page, limit:50 });
+  const gender = document.getElementById('userGenderFilter')?.value || '';
+
+  // Ensure schools filter dropdown is populated
+  populateSchoolDropdowns();
+
+  const params = new URLSearchParams({ page, limit: 50 });
   if (search) params.set('search', search);
   if (role) params.set('role', role);
-  if (banned !== '') params.set('banned', banned);
+  if (status) params.set('status', status);
   if (school) params.set('school_code', school);
+  if (gender) params.set('gender', gender);
+
   try {
     const r = await fetch('/super-admin/users?' + params);
     const d = await r.json();
@@ -3393,40 +3966,108 @@ async function loadUsers(page = 1) {
     renderUsersTable(SA.users);
     renderPagination('usersPagination', page, _usersTotal, 50, 'loadUsers');
   } catch(e) {
-    document.getElementById('usersTableWrap').innerHTML = '<div class="sa-empty"><p>Failed to load users.</p></div>';
+    document.getElementById('usersTableWrap').innerHTML = '<div class="sa-empty"><p style="color:var(--danger)">Failed to load users.</p></div>';
+  }
+}
+
+function populateSchoolDropdowns() {
+  const schoolFilter = document.getElementById('userSchoolFilter');
+  const bulkSchool = document.getElementById('bulkTargetSchool');
+  if (SA.schools && SA.schools.length > 0 && schoolFilter && schoolFilter.options.length <= 1) {
+    SA.schools.forEach(s => {
+      const code = s.school_code || s.code;
+      const name = s.name || code;
+      const opt = new Option(`${name} (${code})`, code);
+      schoolFilter.add(opt);
+      if (bulkSchool) bulkSchool.add(new Option(`${name} (${code})`, code));
+    });
   }
 }
 
 function renderUsersTable(users) {
-  if (!users.length) { document.getElementById('usersTableWrap').innerHTML = '<div class="sa-empty"><div class="sa-empty-icon">👥</div><p>No users found.</p></div>'; return; }
-  const roleBadge = r => ({'super_admin':'badge-yellow','admin':'badge-blue','librarian':'badge-green','student':'badge-indigo','teacher':'badge-purple','parent':'badge-pink'}[r]||'badge-gray');
+  if (!users.length) {
+    document.getElementById('usersTableWrap').innerHTML = '<div class="sa-empty"><div class="sa-empty-icon">👥</div><p>No matching users found in directory.</p></div>';
+    return;
+  }
+  const roleBadge = r => ({
+    'super_admin':'badge-yellow', 'admin':'badge-blue', 'librarian':'badge-green',
+    'student':'badge-indigo', 'teacher':'badge-purple', 'parent':'badge-pink',
+    'quiz_manager':'badge-yellow', 'content_manager':'badge-blue', 'personal':'badge-gray'
+  }[r] || 'badge-gray');
+
   document.getElementById('usersTableWrap').innerHTML = `
     <div class="sa-table-wrap"><table class="sa-table">
       <thead><tr>
         <th class="sa-col-check"><input type="checkbox" class="sa-check" onchange="toggleAllUsers(this)"></th>
-        <th>ID</th><th>Name</th><th>Phone</th><th>Role</th><th>School</th><th>Class</th><th>Status</th><th>Actions</th>
+        <th>User</th>
+        <th>Contact & Mobile</th>
+        <th>Role</th>
+        <th>Assigned School</th>
+        <th>Class / Sec</th>
+        <th>Status</th>
+        <th style="text-align:right">Actions</th>
       </tr></thead>
-      <tbody>${users.map(u => `
-        <tr>
+      <tbody>${users.map(u => {
+        const isDeleted = !!u.deleted_at;
+        const isBanned = (u.is_banned === '1' || u.is_banned === 1 || u.status === 'suspended');
+        let statusBadge = '<span class="badge badge-green">Active</span>';
+        if (isDeleted) statusBadge = '<span class="badge badge-red">Soft-Deleted</span>';
+        else if (isBanned) statusBadge = '<span class="badge badge-yellow">Suspended</span>';
+
+        const avatarSrc = u.profile_picture || `/static/avatars/${u.avatar_id || 'avatar_01'}.svg`;
+        const studentSub = u.student_id ? u.student_id : (u.admission_no ? `Adm: ${u.admission_no}` : `#${u.id}`);
+        const phoneFormatted = u.phone ? (u.phone.startsWith('+91') ? u.phone : `+91 ${u.phone}`) : '—';
+        const isIndianPhoneValid = /^[6-9]\d{9}$/.test(String(u.phone || '').replace(/\D/g, '').slice(-10));
+
+        return `
+        <tr style="${isDeleted ? 'opacity:0.6;' : ''}">
           <td><input type="checkbox" class="sa-check user-check" value="${u.id}" onchange="updateUserBulk()"></td>
-          <td style="color:#334155;font-size:.75rem">#${u.id}</td>
-          <td style="color:#e2e8f0;font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name||'—'}</td>
-          <td>${u.phone||'—'}</td>
-          <td><span class="badge ${roleBadge(u.role)}">${u.role||'—'}</span></td>
-          <td><span class="badge badge-gray" style="font-size:.65rem">${u.school_code||'—'}</span></td>
-          <td style="font-size:.78rem">${u.class||''} ${u.section||''}</td>
-          <td><span class="badge ${(u.is_banned==='1'||u.is_banned===1)?'badge-red':'badge-green'}">${(u.is_banned==='1'||u.is_banned===1)?'Banned':'Active'}</span></td>
-          <td><div class="sa-table-actions">
-            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick='editUserModal(${JSON.stringify(u).replace(/'/g,"&#39;")})'>✏️</button>
-            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick="changeRolePrompt(${u.id},'${(u.name||'').replace(/'/g,"\\'")}','${u.role||''}')" title="Change role">🔄</button>
-            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick="transferSchoolPrompt(${u.id},'${(u.name||'').replace(/'/g,"\\'")}','${u.school_code||''}')" title="Transfer school">🏫</button>
-            <button class="sa-btn ${(u.is_banned==='1'||u.is_banned===1)?'sa-btn-success':'sa-btn-danger'} sa-btn-xs" onclick="toggleBanUser(${u.id})">${(u.is_banned==='1'||u.is_banned===1)?'✅':'🚫'}</button>
-            <button class="sa-btn sa-btn-warning sa-btn-xs" onclick="resetPasswordPrompt(${u.id},'${(u.name||'').replace(/'/g,"\\'")}')">🔑</button>
-            <button class="sa-btn sa-btn-info sa-btn-xs" onclick="forceLogout(${u.id})">⏏️</button>
-            <button class="sa-btn sa-btn-ghost sa-btn-xs" onclick="masterLoginAs(${u.id})">👁️</button>
-            <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteUser(${u.id},'${(u.name||'').replace(/'/g,"\\'")}')">🗑️</button>
-          </div></td>
-        </tr>`).join('')}
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              <img src="${avatarSrc}" onerror="this.onerror=null;this.src='/static/avatars/avatar_01.svg'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border)">
+              <div>
+                <a href="javascript:void(0)" onclick="openUserProfile(${u.id})" style="font-weight:700;color:var(--text-primary);text-decoration:none;display:block">${u.name || 'Unnamed User'}</a>
+                <small style="color:var(--text-secondary);font-size:.72rem">${studentSub}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:4px">
+              ${phoneFormatted}
+              ${isIndianPhoneValid ? '<span title="Valid Indian Mobile" style="color:var(--success);font-size:.75rem">✓</span>' : ''}
+            </div>
+            <div style="font-size:.75rem;color:var(--text-secondary);max-width:160px;overflow:hidden;text-overflow:ellipsis">${u.email || '—'}</div>
+          </td>
+          <td><span class="badge ${roleBadge(u.role)}">${u.role_name || u.role || '—'}</span></td>
+          <td><span class="badge badge-gray" style="font-size:.72rem">${u.school_name || u.school_code || 'Independent'}</span></td>
+          <td style="font-size:.8rem">${u.class ? u.class + (u.section ? ' - ' + u.section : '') : '—'}</td>
+          <td>${statusBadge}</td>
+          <td style="text-align:right">
+            <div class="sa-dropdown-wrap" style="position:relative;display:inline-block">
+              <button class="sa-btn sa-btn-outline sa-btn-xs" onclick="toggleActionDropdown(event, 'uMenu-${u.id}')">⋯ Actions</button>
+              <div class="sa-action-dropdown-menu" id="uMenu-${u.id}">
+                <button class="sa-action-dropdown-item" onclick="openUserProfile(${u.id})">👁️ View Full Profile</button>
+                <button class="sa-action-dropdown-item" onclick="openUserProfileTab(${u.id}, 'basic')">✏️ Edit User Details</button>
+                <button class="sa-action-dropdown-item" onclick="changeRolePrompt(${u.id}, '${(u.name||'').replace(/'/g,"\\'")}', '${u.role||''}')">🔄 Change Role</button>
+                <button class="sa-action-dropdown-item" onclick="openRoleModalForUser('${u.role||''}')">🛡️ Manage Role Permissions</button>
+                <button class="sa-action-dropdown-item" onclick="toggleUserStatus(${u.id}, '${isBanned ? 'suspended' : 'active'}')">${isBanned ? '✅ Activate User' : '🚫 Suspend User'}</button>
+                <button class="sa-action-dropdown-item" onclick="resetPasswordPrompt(${u.id}, '${(u.name||'').replace(/'/g,"\\'")}')">🔑 Reset Password</button>
+                <button class="sa-action-dropdown-item" onclick="openUserProfileTab(${u.id}, 'timeline')">📜 Login & Activity Log</button>
+                <button class="sa-action-dropdown-item" onclick="viewSchoolDetails('${u.school_code||''}')">🏫 View Assigned School</button>
+                <button class="sa-action-dropdown-item" onclick="exportSingleUserCsv(${u.id})">📥 Export User Data</button>
+                <button class="sa-action-dropdown-item" onclick="forceLogout(${u.id})">⏏️ Force Logout</button>
+                <button class="sa-action-dropdown-item" onclick="masterLoginAs(${u.id})">👁️ Master Login As</button>
+                <div class="sa-action-dropdown-divider"></div>
+                ${isDeleted ? `
+                  <button class="sa-action-dropdown-item" onclick="restoreUser(${u.id})">♻️ Restore User</button>
+                ` : `
+                  <button class="sa-action-dropdown-item danger" onclick="deleteUser(${u.id}, '${(u.name||'').replace(/'/g,"\\'")}')">🗑️ Delete User</button>
+                `}
+              </div>
+            </div>
+          </td>
+        </tr>`;
+      }).join('')}
       </tbody>
     </table></div>`;
   SA.selectedUsers.clear();
@@ -3434,122 +4075,897 @@ function renderUsersTable(users) {
 }
 
 function toggleAllUsers(cb) {
-  document.querySelectorAll('.user-check').forEach(c => { c.checked=cb.checked; if(cb.checked) SA.selectedUsers.add(c.value); else SA.selectedUsers.delete(c.value); });
+  document.querySelectorAll('.user-check').forEach(c => {
+    c.checked = cb.checked;
+    if (cb.checked) SA.selectedUsers.add(c.value);
+    else SA.selectedUsers.delete(c.value);
+  });
   updateUserBulk();
 }
+
 function updateUserBulk() {
   SA.selectedUsers.clear();
   document.querySelectorAll('.user-check:checked').forEach(c => SA.selectedUsers.add(c.value));
   const bar = document.getElementById('usersBulkBar');
-  if(SA.selectedUsers.size>0){ bar.classList.add('show'); document.getElementById('usersBulkCount').textContent=SA.selectedUsers.size+' selected'; }
-  else bar.classList.remove('show');
+  if (SA.selectedUsers.size > 0) {
+    bar.classList.add('show');
+    document.getElementById('usersBulkCount').textContent = SA.selectedUsers.size + ' selected';
+  } else {
+    bar.classList.remove('show');
+  }
 }
 
+function deselectAllUsers() {
+  document.querySelectorAll('.user-check').forEach(c => c.checked = false);
+  const headCb = document.querySelector('.sa-col-check input');
+  if (headCb) headCb.checked = false;
+  SA.selectedUsers.clear();
+  document.getElementById('usersBulkBar').classList.remove('show');
+}
+
+// ─────────────────────────────────────────────
+//  USER PROFILE MODAL (6 TABS) LOGIC
+// ─────────────────────────────────────────────
+function switchProfileTab(tab) {
+  document.querySelectorAll('.sa-profile-nav-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sa-profile-pane').forEach(p => p.classList.remove('active'));
+  
+  const targetPane = document.getElementById('pane-up-' + tab);
+  if (targetPane) targetPane.classList.add('active');
+  const targetPill = document.querySelector(`.sa-profile-nav-pill[onclick*="'${tab}'"]`);
+  if (targetPill) targetPill.classList.add('active');
+}
+
+async function openUserProfile(userId) {
+  await openUserProfileTab(userId, 'basic');
+}
+
+async function openUserProfileTab(userId, initialTab = 'basic') {
+  try {
+    const r = await fetch(`/super-admin/users/${userId}/profile`);
+    const d = await r.json();
+    if (!d.success || !d.profile) return showToast(d.error || 'Failed to load profile', 'error');
+
+    _currentProfileUser = d.profile;
+    const u = d.profile;
+
+    document.getElementById('upId').value = u.id;
+    document.getElementById('upModalTitle').textContent = `👤 ${u.name || 'User Profile'}`;
+    document.getElementById('upModalSubtitle').textContent = `User ID: #${u.id} • ${u.role_name || u.role} • ${u.school_name || 'Independent'}`;
+
+    // Tab 1: Basic
+    document.getElementById('upName').value = u.name || '';
+    document.getElementById('upFirstName').value = u.first_name || '';
+    document.getElementById('upLastName').value = u.last_name || '';
+    document.getElementById('upPhone').value = u.phone || '';
+    document.getElementById('upAltPhone').value = u.alt_phone || '';
+    document.getElementById('upEmail').value = u.email || '';
+    document.getElementById('upGender').value = u.gender || '';
+    document.getElementById('upDob').value = u.dob ? String(u.dob).slice(0, 10) : '';
+    document.getElementById('upAddress').value = u.address || '';
+    document.getElementById('upCity').value = u.city || '';
+    document.getElementById('upState').value = u.state || '';
+    document.getElementById('upCountry').value = u.country || 'India';
+    document.getElementById('upPincode').value = u.pincode || '';
+
+    const phoneBadge = document.getElementById('upPhoneCheckBadge');
+    if (phoneBadge) {
+      phoneBadge.style.display = /^[6-9]\d{9}$/.test(String(u.phone || '').replace(/\D/g, '').slice(-10)) ? 'inline-block' : 'none';
+    }
+
+    // Tab 2: Education & Org
+    document.getElementById('upSchoolCode').value = u.school_code || '';
+    document.getElementById('upRole').value = u.role || 'student';
+    document.getElementById('upClass').value = u.class || '';
+    document.getElementById('upSection').value = u.section || '';
+    document.getElementById('upStream').value = u.stream || '';
+    document.getElementById('upAcademicYear').value = u.academic_year || '';
+    document.getElementById('upStudentId').value = u.student_id || '';
+    document.getElementById('upAdmissionNo').value = u.admission_no || '';
+    document.getElementById('upEmployeeId').value = u.employee_id || '';
+    document.getElementById('upDepartment').value = u.department || '';
+    document.getElementById('upDesignation').value = u.designation || '';
+
+    // Tab 3: Interests & Prefs
+    document.getElementById('upInterests').value = u.interests || '';
+    const prefs = String(u.communication_preferences || '').toLowerCase();
+    document.getElementById('upPrefEmail').checked = prefs.includes('email');
+    document.getElementById('upPrefSms').checked = prefs.includes('sms');
+    document.getElementById('upPrefWhatsApp').checked = prefs.includes('whatsapp');
+
+    // Tab 4: Account & Security
+    document.getElementById('upStatus').value = u.status || (u.is_banned ? 'suspended' : 'active');
+    document.getElementById('upCreatedAt').value = u.created_at ? new Date(u.created_at).toLocaleString() : '—';
+    document.getElementById('upLastLoginAt').value = u.last_login_at ? new Date(u.last_login_at).toLocaleString() : 'Never logged in';
+    document.getElementById('upLastActiveAt').value = u.last_active_at ? new Date(u.last_active_at).toLocaleString() : '—';
+
+    // Tab 5: Avatar & Photo
+    _selectedAvatarId = u.avatar_id || 'avatar_01';
+    const currentAvatarSrc = u.profile_picture || `/static/avatars/${_selectedAvatarId}.svg`;
+    document.getElementById('upAvatarCurrentImg').src = currentAvatarSrc;
+    document.getElementById('upAvatarCurrentName').textContent = u.profile_picture ? 'Custom Profile Picture' : `Character: ${_selectedAvatarId.replace('_', ' ').toUpperCase()}`;
+    renderAvatarPickerGrid(_selectedAvatarId);
+
+    // Tab 6: Activity Timeline & Login History
+    renderProfileTimeline(u.timeline || []);
+    renderProfileLogins(u.logins || []);
+
+    switchProfileTab(initialTab);
+    openModal('userProfileModal');
+  } catch (err) {
+    showToast('Failed to fetch profile: ' + err.message, 'error');
+  }
+}
+
+function renderAvatarPickerGrid(activeAvatarId) {
+  const grid = document.getElementById('upAvatarGrid');
+  if (!grid) return;
+  const avatars = [
+    { id: 'avatar_01', name: 'Aarav' }, { id: 'avatar_02', name: 'Ananya' },
+    { id: 'avatar_03', name: 'Rohan' }, { id: 'avatar_04', name: 'Priya' },
+    { id: 'avatar_05', name: 'Kabir' }, { id: 'avatar_06', name: 'Diya' },
+    { id: 'avatar_07', name: 'Vikram' }, { id: 'avatar_08', name: 'Meera' },
+    { id: 'avatar_09', name: 'Arjun' }, { id: 'avatar_10', name: 'Kavya' },
+    { id: 'avatar_11', name: 'Dev' }, { id: 'avatar_12', name: 'Isha' }
+  ];
+
+  grid.innerHTML = avatars.map(a => `
+    <div class="sa-avatar-option ${a.id === activeAvatarId ? 'selected' : ''}" onclick="selectAvatarOption('${a.id}')">
+      <img src="/static/avatars/${a.id}.svg" alt="${a.name}">
+      <span>${a.name}</span>
+    </div>
+  `).join('');
+}
+
+async function selectAvatarOption(avatarId) {
+  _selectedAvatarId = avatarId;
+  document.querySelectorAll('.sa-avatar-option').forEach(el => el.classList.remove('selected'));
+  const selectedEl = document.querySelector(`.sa-avatar-option[onclick*="'${avatarId}'"]`);
+  if (selectedEl) selectedEl.classList.add('selected');
+
+  document.getElementById('upAvatarCurrentImg').src = `/static/avatars/${avatarId}.svg`;
+  document.getElementById('upAvatarCurrentName').textContent = `Character: ${avatarId.replace('_', ' ').toUpperCase()}`;
+
+  const userId = document.getElementById('upId').value;
+  if (userId) {
+    await apiPost(`/super-admin/users/${userId}/avatar`, { avatar_id: avatarId, profile_picture: null });
+    showToast('Avatar character updated!', 'success');
+  }
+}
+
+async function uploadUserProfilePicture(input) {
+  if (!input.files || !input.files[0]) return;
+  const userId = document.getElementById('upId').value;
+  if (!userId) return;
+
+  const formData = new FormData();
+  formData.append('picture', input.files[0]);
+
+  try {
+    const res = await fetch(`/super-admin/users/${userId}/upload-picture`, {
+      method: 'POST',
+      body: formData
+    });
+    const d = await res.json();
+    if (d.success && d.profile_picture) {
+      document.getElementById('upAvatarCurrentImg').src = d.profile_picture;
+      document.getElementById('upAvatarCurrentName').textContent = 'Custom Profile Picture';
+      showToast('Profile picture uploaded successfully!', 'success');
+      loadUsers(_usersPage);
+    } else {
+      showToast(d.error || 'Upload failed', 'error');
+    }
+  } catch (err) {
+    showToast('Upload error: ' + err.message, 'error');
+  }
+}
+
+function renderProfileTimeline(timeline) {
+  const container = document.getElementById('upTimelineList');
+  if (!container) return;
+  if (!timeline.length) {
+    container.innerHTML = '<p style="color:var(--text-secondary);font-size:.8rem;padding:6px">No activity recorded for this user yet.</p>';
+    return;
+  }
+  container.innerHTML = timeline.map(t => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 6px;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-weight:600;font-size:.82rem">${t.source === 'circulation' ? '📚 ' : '⚡ '}${t.title}</div>
+        <small style="color:var(--text-secondary);font-size:.74rem">${t.detail || ''}</small>
+      </div>
+      <span style="color:var(--text-muted);font-size:.72rem">${t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}</span>
+    </div>
+  `).join('');
+}
+
+function renderProfileLogins(logins) {
+  const container = document.getElementById('upLoginHistoryList');
+  if (!container) return;
+  if (!logins.length) {
+    container.innerHTML = '<p style="color:var(--text-secondary);font-size:.8rem;padding:6px">No login history recorded yet.</p>';
+    return;
+  }
+  container.innerHTML = `
+    <table class="sa-table" style="font-size:.75rem">
+      <thead><tr><th>Date & Time</th><th>IP Address</th><th>Status</th></tr></thead>
+      <tbody>
+        ${logins.map(l => `
+          <tr>
+            <td>${l.created_at ? new Date(l.created_at).toLocaleString() : '—'}</td>
+            <td><code>${l.ip_address || '—'}</code></td>
+            <td><span class="badge ${l.status === 'success' ? 'badge-green' : 'badge-red'}">${l.status || 'success'}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function saveUserProfile() {
+  const userId = document.getElementById('upId').value;
+  if (!userId) return;
+
+  const phone = document.getElementById('upPhone').value.trim();
+  const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+  if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+    return showToast('Invalid mobile: Indian mobile must be 10 digits starting with 6, 7, 8, or 9.', 'error');
+  }
+
+  const prefs = [];
+  if (document.getElementById('upPrefEmail')?.checked) prefs.push('email');
+  if (document.getElementById('upPrefSms')?.checked) prefs.push('sms');
+  if (document.getElementById('upPrefWhatsApp')?.checked) prefs.push('whatsapp');
+
+  const payload = {
+    name: document.getElementById('upName').value.trim(),
+    first_name: document.getElementById('upFirstName').value.trim(),
+    last_name: document.getElementById('upLastName').value.trim(),
+    phone: cleanPhone,
+    alt_phone: document.getElementById('upAltPhone').value.trim(),
+    email: document.getElementById('upEmail').value.trim(),
+    gender: document.getElementById('upGender').value,
+    dob: document.getElementById('upDob').value,
+    address: document.getElementById('upAddress').value.trim(),
+    city: document.getElementById('upCity').value.trim(),
+    state: document.getElementById('upState').value.trim(),
+    country: document.getElementById('upCountry').value.trim(),
+    pincode: document.getElementById('upPincode').value.trim(),
+    school_code: document.getElementById('upSchoolCode').value.trim(),
+    role: document.getElementById('upRole').value,
+    class: document.getElementById('upClass').value.trim(),
+    section: document.getElementById('upSection').value.trim(),
+    stream: document.getElementById('upStream').value.trim(),
+    academic_year: document.getElementById('upAcademicYear').value.trim(),
+    student_id: document.getElementById('upStudentId').value.trim(),
+    admission_no: document.getElementById('upAdmissionNo').value.trim(),
+    employee_id: document.getElementById('upEmployeeId').value.trim(),
+    department: document.getElementById('upDepartment').value.trim(),
+    designation: document.getElementById('upDesignation').value.trim(),
+    interests: document.getElementById('upInterests').value.trim(),
+    communication_preferences: prefs.join(','),
+    status: document.getElementById('upStatus').value,
+    avatar_id: _selectedAvatarId
+  };
+
+  const d = await apiPost(`/super-admin/users/${userId}/profile`, payload);
+  if (d.success) {
+    showToast('User profile saved successfully!', 'success');
+    closeModal('userProfileModal');
+    loadUsers(_usersPage);
+  } else {
+    showToast(d.error || 'Failed to update profile', 'error');
+  }
+}
+
+function resetPasswordFromProfile() {
+  const userId = document.getElementById('upId').value;
+  const name = document.getElementById('upName').value;
+  if (userId) resetPasswordPrompt(userId, name);
+}
+
+function forceLogoutFromProfile() {
+  const userId = document.getElementById('upId').value;
+  if (userId) forceLogout(userId);
+}
+
+function masterLoginFromProfile() {
+  const userId = document.getElementById('upId').value;
+  if (userId) {
+    closeModal('userProfileModal');
+    masterLoginAs(userId);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  USER CREATION & STATUS ACTIONS
+// ─────────────────────────────────────────────
 async function createUser() {
-  const body = { name:document.getElementById('cuName').value, phone:document.getElementById('cuPhone').value, email:document.getElementById('cuEmail').value, password:document.getElementById('cuPassword').value||'password123', role:document.getElementById('cuRole').value, school_code:document.getElementById('cuSchool').value, class:document.getElementById('cuClass').value, section:document.getElementById('cuSection').value, admission_no:document.getElementById('cuAdmNo').value };
-  if (!body.name||!body.phone) return showToast('Name & phone required','error');
+  const rawPhone = document.getElementById('cuPhone').value.trim();
+  const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+  if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+    return showToast('Mobile number must be a valid 10-digit Indian number starting with 6, 7, 8, or 9.', 'error');
+  }
+
+  const body = {
+    name: document.getElementById('cuName').value.trim(),
+    phone: cleanPhone,
+    email: document.getElementById('cuEmail').value.trim(),
+    password: document.getElementById('cuPassword').value || 'password123',
+    role: document.getElementById('cuRole').value,
+    school_code: document.getElementById('cuSchool').value.trim(),
+    class: document.getElementById('cuClass').value.trim(),
+    section: document.getElementById('cuSection').value.trim(),
+    admission_no: document.getElementById('cuAdmNo').value.trim(),
+    gender: document.getElementById('cuGender').value,
+    dob: document.getElementById('cuDob').value
+  };
+
+  if (!body.name) return showToast('Full name is required', 'error');
+
   const d = await apiPost('/super-admin/users/create', body);
-  if (d.success) { closeModal('createUserModal'); showToast('User created!','success'); loadUsers(_usersPage); }
-  else showToast(d.error||'Failed','error');
+  if (d.success) {
+    closeModal('createUserModal');
+    showToast('User created successfully!', 'success');
+    loadUsers(1);
+  } else {
+    showToast(d.error || 'Failed to create user', 'error');
+  }
 }
 
-function editUserModal(u) {
-  document.getElementById('euId').value=u.id; document.getElementById('euName').value=u.name||'';
-  document.getElementById('euPhone').value=u.phone||''; document.getElementById('euEmail').value=u.email||'';
-  document.getElementById('euRole').value=u.role||'student'; document.getElementById('euSchool').value=u.school_code||'';
-  document.getElementById('euClass').value=u.class||''; document.getElementById('euSection').value=u.section||'';
-  document.getElementById('euAdmNo').value=u.admission_no||'';
-  openModal('editUserModal');
-}
+async function toggleUserStatus(id, currentStatus) {
+  const isSuspended = currentStatus === 'suspended';
+  const action = isSuspended ? 'enable' : 'disable';
+  if (!confirm(`Are you sure you want to ${action === 'enable' ? 'activate' : 'suspend'} this user?`)) return;
 
-async function saveUser() {
-  const id = document.getElementById('euId').value;
-  const body = { name:document.getElementById('euName').value, phone:document.getElementById('euPhone').value, email:document.getElementById('euEmail').value, role:document.getElementById('euRole').value, school_code:document.getElementById('euSchool').value, class:document.getElementById('euClass').value, section:document.getElementById('euSection').value, admission_no:document.getElementById('euAdmNo').value };
-  const d = await apiPost(`/super-admin/users/${id}/edit`, body);
-  if (d.success) { closeModal('editUserModal'); showToast('User updated!','success'); loadUsers(_usersPage); }
-  else showToast(d.error||'Failed','error');
-}
-
-async function toggleBanUser(id) {
-  if (!confirm('Ban/unban this user?')) return;
-  const d = await apiPost(`/super-admin/users/${id}/toggle-ban`, {});
-  if (d.success) { showToast(d.is_banned?'User banned':'User unbanned', d.is_banned?'warning':'success'); loadUsers(_usersPage); }
-  else showToast(d.error||'Failed','error');
+  const d = await apiPost(`/super-admin/users/${id}/status`, { action });
+  if (d.success) {
+    showToast(d.message || 'Status updated', 'success');
+    loadUsers(_usersPage);
+  } else {
+    showToast(d.error || 'Action failed', 'error');
+  }
 }
 
 async function deleteUser(id, name) {
-  if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
+  if (!confirm(`Soft-delete user "${name}"? The user can be restored later.`)) return;
   const d = await apiPost(`/super-admin/users/${id}/delete`, {});
-  if (d.success) { showToast('User deleted','success'); loadUsers(_usersPage); }
-  else showToast(d.error||'Failed','error');
+  if (d.success) {
+    showToast('User soft-deleted', 'success');
+    loadUsers(_usersPage);
+  } else {
+    showToast(d.error || 'Failed', 'error');
+  }
+}
+
+async function restoreUser(id) {
+  const d = await apiPost(`/super-admin/users/${id}/restore`, {});
+  if (d.success) {
+    showToast('User restored successfully', 'success');
+    loadUsers(_usersPage);
+  } else {
+    showToast(d.error || 'Failed', 'error');
+  }
 }
 
 async function resetPasswordPrompt(id, name) {
-  const np = prompt(`Set new password for "${name}" (leave blank for auto-generate):`);
+  const np = prompt(`Set new password for "${name}" (leave blank to auto-generate):`);
   if (np === null) return;
   const body = np.trim() ? { new_password: np.trim() } : {};
   const d = await apiPost(`/super-admin/users/${id}/reset-password`, body);
-  if (d.success) { alert(`Password reset!\nNew password: ${d.new_password}`); showToast('Password reset!','success'); }
-  else showToast(d.error||'Failed','error');
+  if (d.success) {
+    alert(`Password reset successful!\nNew Password: ${d.new_password}`);
+    showToast('Password reset successfully', 'success');
+  } else {
+    showToast(d.error || 'Failed', 'error');
+  }
 }
 
 async function forceLogout(id) {
-  if (!confirm('Force-logout this user from all devices?')) return;
+  if (!confirm('Force-logout this user from all active browser sessions?')) return;
   const d = await apiPost(`/super-admin/users/${id}/force-logout`, {});
-  if (d.success) showToast('User logged out from all devices','success');
-  else showToast(d.error||'Failed','error');
+  if (d.success) showToast('User session terminated', 'success');
+  else showToast(d.error || 'Failed', 'error');
 }
 
 function masterLoginAs(userId) {
-  document.getElementById('masterUserId').value = userId;
+  const masterInput = document.getElementById('masterUserId');
+  if (masterInput) masterInput.value = userId;
   switchTab('masterauth', document.querySelector('[onclick*="masterauth"]'));
 }
 
 async function changeRolePrompt(id, name, currentRole) {
-  const allowed = ['student','parent','librarian','admin','teacher','super_admin'];
-  const role = prompt(`Change role for "${name}"?\nAllowed: ${allowed.join(', ')}\nCurrent: ${currentRole}`, currentRole || 'student');
+  const allowed = ['student', 'teacher', 'librarian', 'admin', 'parent', 'super_admin', 'quiz_manager', 'content_manager', 'personal'];
+  const role = prompt(`Change role for "${name}"?\nAllowed roles: ${allowed.join(', ')}\nCurrent: ${currentRole}`, currentRole || 'student');
   if (!role) return;
-  if (!allowed.includes(role.toLowerCase().trim())) return showToast('Invalid role', 'error');
+  if (!allowed.includes(role.toLowerCase().trim())) return showToast('Invalid role specified', 'error');
   const d = await apiPost(`/super-admin/users/${id}/change-role`, { role: role.toLowerCase().trim() });
-  if (d.success) { showToast('Role updated', 'success'); loadUsers(_usersPage); }
-  else showToast(d.error || 'Failed', 'error');
+  if (d.success) {
+    showToast('Role updated successfully', 'success');
+    loadUsers(_usersPage);
+  } else {
+    showToast(d.error || 'Failed', 'error');
+  }
 }
 
-async function transferSchoolPrompt(id, name, currentSchool) {
-  const school = prompt(`Transfer "${name}" to which school code?`, currentSchool || '');
-  if (school === null) return;
-  if (!school.trim()) return showToast('School code required', 'error');
-  const d = await apiPost(`/super-admin/users/${id}/transfer-school`, { school_code: school.trim().toUpperCase() });
-  if (d.success) { showToast('School updated', 'success'); loadUsers(_usersPage); }
-  else showToast(d.error || 'Failed', 'error');
+function viewSchoolDetails(schoolCode) {
+  if (!schoolCode) return showToast('No school assigned', 'info');
+  const searchInput = document.getElementById('schoolSearch');
+  if (searchInput) searchInput.value = schoolCode;
+  switchTab('schools', document.getElementById('nav-schools'));
+}
+
+function openRoleModalForUser(roleSlug) {
+  switchTab('roles', document.getElementById('nav-roles'));
+}
+
+// ─────────────────────────────────────────────
+//  BULK OPERATIONS
+// ─────────────────────────────────────────────
+function openBulkRoleModal() {
+  if (!SA.selectedUsers.size) return showToast('No users selected', 'warning');
+  document.getElementById('bulkRoleCount').textContent = SA.selectedUsers.size;
+  openModal('bulkRoleModal');
+}
+
+async function confirmBulkRole() {
+  const role = document.getElementById('bulkTargetRole').value;
+  const user_ids = [...SA.selectedUsers];
+  const d = await apiPost('/super-admin/users/bulk-assign-role', { user_ids, role });
+  if (d.success) {
+    closeModal('bulkRoleModal');
+    showToast(d.message || 'Roles updated', 'success');
+    deselectAllUsers();
+    loadUsers(_usersPage);
+  } else {
+    showToast(d.error || 'Failed', 'error');
+  }
+}
+
+function openBulkSchoolModal() {
+  if (!SA.selectedUsers.size) return showToast('No users selected', 'warning');
+  document.getElementById('bulkSchoolCount').textContent = SA.selectedUsers.size;
+  populateSchoolDropdowns();
+  openModal('bulkSchoolModal');
+}
+
+async function confirmBulkSchool() {
+  const school_code = document.getElementById('bulkTargetSchool').value;
+  if (!school_code) return showToast('Please select a target school', 'error');
+  const user_ids = [...SA.selectedUsers];
+  const d = await apiPost('/super-admin/users/bulk-school', { user_ids, school_code });
+  if (d.success) {
+    closeModal('bulkSchoolModal');
+    showToast(d.message || 'School transferred', 'success');
+    deselectAllUsers();
+    loadUsers(_usersPage);
+  } else {
+    showToast(d.error || 'Failed', 'error');
+  }
+}
+
+function openBulkStatusModal() {
+  if (!SA.selectedUsers.size) return showToast('No users selected', 'warning');
+  document.getElementById('bulkStatusCount').textContent = SA.selectedUsers.size;
+  openModal('bulkStatusModal');
+}
+
+async function confirmBulkStatus() {
+  const action = document.getElementById('bulkTargetStatusAction').value;
+  const user_ids = [...SA.selectedUsers];
+  const d = await apiPost('/super-admin/users/bulk-status', { user_ids, action });
+  if (d.success) {
+    closeModal('bulkStatusModal');
+    showToast(d.message || 'Status updated', 'success');
+    deselectAllUsers();
+    loadUsers(_usersPage);
+  } else {
+    showToast(d.error || 'Failed', 'error');
+  }
 }
 
 async function bulkDeleteUsers() {
   if (!SA.selectedUsers.size) return;
-  if (!confirm(`Delete ${SA.selectedUsers.size} user(s)?`)) return;
-  const ids = [...SA.selectedUsers];
-  const d = await apiPost('/super-admin/users/bulk-action', { ids, action: 'delete' });
-  if (d.success) showToast(`${d.affected} user(s) deleted`, 'success');
-  else showToast(d.error || 'Failed', 'error');
-  loadUsers(1);
+  if (!confirm(`Soft-delete ${SA.selectedUsers.size} user(s)?`)) return;
+  const user_ids = [...SA.selectedUsers];
+  const d = await apiPost('/super-admin/users/bulk-status', { user_ids, action: 'delete' });
+  if (d.success) {
+    showToast(d.message || 'Users soft-deleted', 'success');
+    deselectAllUsers();
+    loadUsers(1);
+  } else {
+    showToast(d.error || 'Failed', 'error');
+  }
 }
-async function bulkBanUsers() {
-  if (!SA.selectedUsers.size) return;
-  if (!confirm(`Ban ${SA.selectedUsers.size} user(s)?`)) return;
-  const ids = [...SA.selectedUsers];
-  const d = await apiPost('/super-admin/users/bulk-action', { ids, action: 'ban' });
-  if (d.success) showToast(`${d.affected} user(s) banned`, 'warning');
-  else showToast(d.error || 'Failed', 'error');
-  loadUsers(_usersPage);
+
+// ─────────────────────────────────────────────
+//  CSV EXPORT & MULTI-STEP IMPORT WIZARD
+// ─────────────────────────────────────────────
+function exportUsersCsv() {
+  const search = document.getElementById('userSearch')?.value || '';
+  const role = document.getElementById('userRoleFilter')?.value || '';
+  const status = document.getElementById('userBanFilter')?.value || '';
+  const school = document.getElementById('userSchoolFilter')?.value || '';
+
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (role) params.set('role', role);
+  if (status) params.set('status', status);
+  if (school) params.set('school_code', school);
+
+  window.location.href = '/super-admin/users/export-csv?' + params.toString();
 }
-async function bulkUnbanUsers() {
-  if (!SA.selectedUsers.size) return;
-  if (!confirm(`Unban ${SA.selectedUsers.size} user(s)?`)) return;
-  const ids = [...SA.selectedUsers];
-  const d = await apiPost('/super-admin/users/bulk-action', { ids, action: 'unban' });
-  if (d.success) showToast(`${d.affected} user(s) unbanned`, 'success');
-  else showToast(d.error || 'Failed', 'error');
-  loadUsers(_usersPage);
+
+function exportSingleUserCsv(userId) {
+  window.location.href = `/super-admin/users/export-csv?user_ids=${userId}`;
+}
+
+function downloadSampleUserCsv() {
+  const headers = ['Full Name', 'Mobile Number', 'Email Address', 'Role', 'School / Organization', 'Class', 'Section', 'Admission No', 'Gender', 'Date of Birth'];
+  const sampleRow1 = ['Aarav Sharma', '9876543210', 'aarav.sharma@school.org', 'Student', 'VBPS01', '10', 'A', 'ADM2026001', 'male', '2010-05-15'];
+  const sampleRow2 = ['Priya Verma', '9123456789', 'priya.verma@school.org', 'Teacher', 'VBPS01', '', '', 'EMP2026002', 'female', '1988-11-20'];
+  const sampleRow3 = ['Rajesh Patel', '9988776655', 'rajesh.patel@school.org', 'Librarian', 'GLOBAL', '', '', 'LIB2026003', 'male', '1985-02-10'];
+
+  const csvContent = [headers.join(','), sampleRow1.join(','), sampleRow2.join(','), sampleRow3.join(',')].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'librika_users_import_sample.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function handleCsvFileSelected(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('csvTextarea').value = e.target.result;
+  };
+  reader.readAsText(file);
+}
+
+async function validateUserCsv() {
+  const csv_text = document.getElementById('csvTextarea').value.trim();
+  if (!csv_text) return showToast('Please select a CSV file or paste CSV text first.', 'error');
+
+  const btn = document.getElementById('btnCsvValidate');
+  btn.textContent = 'Inspecting & Validating...';
+  btn.disabled = true;
+
+  try {
+    const res = await apiPost('/super-admin/users/import-csv-validate', { csv_text });
+    btn.textContent = 'Inspect & Validate CSV →';
+    btn.disabled = false;
+
+    if (!res.success) return showToast(res.error || 'Validation failed', 'error');
+
+    _csvValidatedRows = res.validRows || [];
+    const sum = res.summary || {};
+
+    document.getElementById('chipTotalRows').textContent = `Total Rows: ${sum.totalRows || 0}`;
+    document.getElementById('chipValidRows').textContent = `Valid: ${sum.validCount || 0}`;
+    document.getElementById('chipInvalidRows').textContent = `Invalid: ${sum.invalidCount || 0}`;
+    document.getElementById('chipDuplicateRows').textContent = `Duplicates: ${sum.duplicateCount || 0}`;
+
+    const errorsWrap = document.getElementById('csvValidationErrorsWrap');
+    const errorsTbody = document.getElementById('csvErrorsTableBody');
+    if (res.invalidRows && res.invalidRows.length > 0) {
+      errorsWrap.style.display = 'block';
+      errorsTbody.innerHTML = res.invalidRows.map(inv => `
+        <tr>
+          <td>#${inv.rowNum}</td>
+          <td>${inv.name || '—'}</td>
+          <td>${inv.mobile || '—'}</td>
+          <td style="color:var(--danger)">${inv.errors.join('; ')}</td>
+        </tr>
+      `).join('');
+    } else {
+      errorsWrap.style.display = 'none';
+    }
+
+    const previewNotice = document.getElementById('csvValidPreviewNotice');
+    if (_csvValidatedRows.length > 0) {
+      previewNotice.textContent = `✅ Ready to import ${_csvValidatedRows.length} valid user records into Librika.`;
+      document.getElementById('btnCsvConfirm').style.display = 'inline-block';
+      document.getElementById('btnCsvConfirm').textContent = `✅ Import ${_csvValidatedRows.length} Users`;
+    } else {
+      previewNotice.textContent = '❌ No valid rows found in CSV. Please correct the errors above and retry.';
+      document.getElementById('btnCsvConfirm').style.display = 'none';
+    }
+
+    // Switch to step 2 view
+    document.getElementById('csvWizardStep1').style.display = 'none';
+    document.getElementById('csvWizardStep2').style.display = 'block';
+    document.getElementById('btnCsvValidate').style.display = 'none';
+    document.getElementById('btnCsvBack').style.display = 'inline-block';
+  } catch (err) {
+    btn.textContent = 'Inspect & Validate CSV →';
+    btn.disabled = false;
+    showToast('CSV Parsing Error: ' + err.message, 'error');
+  }
+}
+
+function backToCsvStep1() {
+  document.getElementById('csvWizardStep1').style.display = 'block';
+  document.getElementById('csvWizardStep2').style.display = 'none';
+  document.getElementById('btnCsvValidate').style.display = 'inline-block';
+  document.getElementById('btnCsvBack').style.display = 'none';
+  document.getElementById('btnCsvConfirm').style.display = 'none';
+}
+
+async function confirmImportUserCsv() {
+  if (!_csvValidatedRows.length) return showToast('No validated rows to import.', 'error');
+
+  const btn = document.getElementById('btnCsvConfirm');
+  btn.textContent = 'Importing...';
+  btn.disabled = true;
+
+  try {
+    const res = await apiPost('/super-admin/users/import-csv-confirm', { valid_rows: _csvValidatedRows });
+    btn.textContent = '✅ Confirm & Import Users';
+    btn.disabled = false;
+
+    if (res.success) {
+      closeModal('userCsvImportModal');
+      showToast(res.message || 'Users imported successfully!', 'success');
+      backToCsvStep1();
+      document.getElementById('csvTextarea').value = '';
+      loadUsers(1);
+    } else {
+      showToast(res.error || 'Import failed', 'error');
+    }
+  } catch (err) {
+    btn.textContent = '✅ Confirm & Import Users';
+    btn.disabled = false;
+    showToast('Import Error: ' + err.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════
+//  VISUAL ROLE BUILDER (RBAC) LOGIC
+// ═══════════════════════════════════════
+let _permissionsCatalog = {};
+
+async function loadRolesCatalog() {
+  const wrap = document.getElementById('rolesListWrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading roles catalog...</div>';
+
+  try {
+    const res = await (await fetch('/super-admin/api/roles')).json();
+    const roles = res.roles || [];
+    renderRolesCatalog(roles);
+  } catch (err) {
+    wrap.innerHTML = `<p style="color:var(--danger)">Failed to load roles: ${err.message}</p>`;
+  }
+}
+
+// Alias for tab loader
+const loadRolePerms = loadRolesCatalog;
+
+function renderRolesCatalog(roles) {
+  const wrap = document.getElementById('rolesListWrap');
+  if (!roles.length) {
+    wrap.innerHTML = '<div class="sa-empty"><p>No roles defined.</p></div>';
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+      ${roles.map(r => `
+        <div class="sa-card" style="margin-bottom:0;border:1px solid var(--border);border-radius:12px;padding:16px;background:#fff;display:flex;flex-direction:column;justify-content:space-between">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span style="font-weight:800;font-size:1.05rem;color:var(--text-primary)">${r.name}</span>
+              <span class="badge ${r.is_system ? 'badge-purple' : 'badge-indigo'}">${r.is_system ? 'System Role' : 'Custom Role'}</span>
+            </div>
+            <div style="font-size:.78rem;color:var(--text-secondary);margin-bottom:10px">
+              <code>${r.slug}</code>
+            </div>
+            <p style="font-size:.82rem;color:var(--text-secondary);min-height:36px;margin:0 0 12px">${r.description || 'No description provided.'}</p>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+              <span style="font-size:.8rem;font-weight:700;color:var(--text-primary)">👥 ${r.user_count || 0} Assigned Users</span>
+              <span class="badge ${r.status === 'active' ? 'badge-green' : 'badge-red'}">${r.status || 'active'}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border)">
+            <button class="sa-btn sa-btn-primary sa-btn-xs" style="flex:1" onclick="openRoleModal(${r.id})">⚙️ Permissions Matrix</button>
+            <button class="sa-btn sa-btn-outline sa-btn-xs" onclick="openCloneRoleModal(${r.id}, '${(r.name||'').replace(/'/g,"\\'")}')" title="Clone Role">📋 Clone</button>
+            ${!r.is_system ? `
+              <button class="sa-btn sa-btn-danger sa-btn-xs" onclick="deleteRole(${r.id}, '${(r.name||'').replace(/'/g,"\\'")}')" title="Delete Custom Role">🗑️</button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function openCreateRoleModal() {
+  document.getElementById('rbRoleId').value = '';
+  document.getElementById('rbName').value = '';
+  document.getElementById('rbSlug').value = '';
+  document.getElementById('rbSlug').disabled = false;
+  document.getElementById('rbDesc').value = '';
+  document.getElementById('rbModalTitle').textContent = '🛡️ Create Custom Role & Permissions';
+  document.getElementById('rbModalSubtitle').textContent = 'Define role key and select granular module permissions';
+
+  fetchAndRenderPermissionsMatrix([]);
+  openModal('roleBuilderModal');
+}
+
+async function openRoleModal(roleId) {
+  try {
+    const roleRes = await (await fetch(`/super-admin/api/roles/${roleId}`)).json();
+    if (!roleRes.success || !roleRes.role) return showToast(roleRes.error || 'Failed to fetch role', 'error');
+
+    const r = roleRes.role;
+    document.getElementById('rbRoleId').value = r.id;
+    document.getElementById('rbName').value = r.name;
+    document.getElementById('rbSlug').value = r.slug;
+    document.getElementById('rbSlug').disabled = !!r.is_system;
+    document.getElementById('rbDesc').value = r.description || '';
+    document.getElementById('rbModalTitle').textContent = `🛡️ Permissions Matrix: ${r.name}`;
+    document.getElementById('rbModalSubtitle').textContent = `${r.is_system ? 'System Role (Slug locked)' : 'Custom Role'} • ${r.user_count || 0} assigned users`;
+
+    const assignedIds = (r.permissions || []).map(p => p.id);
+    await fetchAndRenderPermissionsMatrix(assignedIds);
+    openModal('roleBuilderModal');
+  } catch (err) {
+    showToast('Error loading role: ' + err.message, 'error');
+  }
+}
+
+async function fetchAndRenderPermissionsMatrix(assignedPermIds = []) {
+  const container = document.getElementById('rbModulesWrap');
+  container.innerHTML = '<div class="sa-loading"><span class="sa-spinner"></span>Loading permissions catalog...</div>';
+
+  try {
+    if (!Object.keys(_permissionsCatalog).length) {
+      const permsRes = await (await fetch('/super-admin/api/permissions')).json();
+      _permissionsCatalog = permsRes.modules || {};
+    }
+
+    const assignedSet = new Set(assignedPermIds);
+    const moduleTitles = {
+      users: '👥 Users Management',
+      roles: '🛡️ Roles & Permissions Control',
+      books: '📚 Books & Physical Library Catalog',
+      digital: '🌐 Digital Content Vault',
+      transactions: '📋 Transactions & Circulation',
+      rfid: '🏷️ RFID & Inventory Management',
+      categories: '📂 Categories & Subject Classifications',
+      requests: '🙋 Book Requests & Acquisition',
+      goals: '🎯 Reading Goals & Challenges',
+      ads: '📢 Announcements & Display Ads',
+      system: '⚙️ System, Backups & Maintenance'
+    };
+
+    let html = '';
+    for (const [modKey, perms] of Object.entries(_permissionsCatalog)) {
+      const modTitle = moduleTitles[modKey] || modKey.toUpperCase();
+      const allSelected = perms.every(p => assignedSet.has(p.id));
+
+      html += `
+        <div class="sa-perm-module-card">
+          <div class="sa-perm-module-header">
+            <span>${modTitle}</span>
+            <label style="font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+              <input type="checkbox" onchange="toggleModulePerms('${modKey}', this.checked)" ${allSelected ? 'checked' : ''}> Select Module
+            </label>
+          </div>
+          <div class="sa-perm-grid" data-module="${modKey}">
+            ${perms.map(p => `
+              <div class="sa-perm-item">
+                <input type="checkbox" class="perm-cb perm-mod-${modKey}" value="${p.id}" id="perm_${p.id}" ${assignedSet.has(p.id) ? 'checked' : ''}>
+                <label for="perm_${p.id}">
+                  <strong>${p.name || p.code}</strong>
+                  <small>${p.description || p.code}</small>
+                </label>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--danger)">Failed to load permissions catalog: ${err.message}</p>`;
+  }
+}
+
+function toggleModulePerms(modKey, isChecked) {
+  document.querySelectorAll(`.perm-mod-${modKey}`).forEach(cb => cb.checked = isChecked);
+}
+
+function toggleAllPerms(isChecked) {
+  document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = isChecked);
+  document.querySelectorAll('.sa-perm-module-header input[type="checkbox"]').forEach(cb => cb.checked = isChecked);
+}
+
+async function saveRoleBuilder() {
+  const roleId = document.getElementById('rbRoleId').value;
+  const name = document.getElementById('rbName').value.trim();
+  const slug = document.getElementById('rbSlug').value.trim();
+  const description = document.getElementById('rbDesc').value.trim();
+
+  if (!name) return showToast('Role display name is required', 'error');
+
+  const selectedPermIds = [];
+  document.querySelectorAll('.perm-cb:checked').forEach(cb => {
+    selectedPermIds.push(parseInt(cb.value, 10));
+  });
+
+  const payload = { name, slug, description, permission_ids: selectedPermIds, status: 'active' };
+
+  try {
+    let res;
+    if (roleId) {
+      res = await apiPost(`/super-admin/api/roles/${roleId}/edit`, payload);
+    } else {
+      res = await apiPost('/super-admin/api/roles/create', payload);
+    }
+
+    if (res.success) {
+      showToast(roleId ? 'Role permissions updated successfully!' : 'Custom role created successfully!', 'success');
+      closeModal('roleBuilderModal');
+      loadRolesCatalog();
+    } else {
+      showToast(res.error || 'Failed to save role', 'error');
+    }
+  } catch (err) {
+    showToast('Error saving role: ' + err.message, 'error');
+  }
+}
+
+function openCloneRoleModal(roleId, roleName) {
+  document.getElementById('crSourceId').value = roleId;
+  document.getElementById('crSourceName').textContent = roleName;
+  document.getElementById('crNewName').value = `${roleName} (Copy)`;
+  document.getElementById('crNewSlug').value = '';
+  document.getElementById('crNewDesc').value = `Cloned from ${roleName}`;
+  openModal('cloneRoleModal');
+}
+
+async function confirmCloneRole() {
+  const sourceId = document.getElementById('crSourceId').value;
+  const name = document.getElementById('crNewName').value.trim();
+  const slug = document.getElementById('crNewSlug').value.trim();
+  const description = document.getElementById('crNewDesc').value.trim();
+
+  if (!name) return showToast('New role name is required', 'error');
+
+  try {
+    const res = await apiPost(`/super-admin/api/roles/${sourceId}/clone`, { name, slug, description });
+    if (res.success) {
+      closeModal('cloneRoleModal');
+      showToast('Role cloned successfully!', 'success');
+      loadRolesCatalog();
+    } else {
+      showToast(res.error || 'Clone failed', 'error');
+    }
+  } catch (err) {
+    showToast('Error cloning role: ' + err.message, 'error');
+  }
+}
+
+async function deleteRole(roleId, roleName) {
+  if (!confirm(`Permanently delete custom role "${roleName}"? This cannot be undone.`)) return;
+  try {
+    const res = await apiPost(`/super-admin/api/roles/${roleId}/delete`, {});
+    if (res.success) {
+      showToast('Role deleted successfully', 'success');
+      loadRolesCatalog();
+    } else {
+      showToast(res.error || 'Failed to delete role', 'error');
+    }
+  } catch (err) {
+    showToast('Error deleting role: ' + err.message, 'error');
+  }
 }
 
 // ═══════════════════════════════════════
@@ -4428,35 +5844,9 @@ async function masterSearchFn(){
 //  PHASE 2 + 3 — NEW ENTITY HANDLERS
 // ═══════════════════════════════════════
 
-async function loadRolePerms() {
-  try {
-    const d = await (await fetch('/super-admin/role-permissions')).json();
-    const perms = d.permissions || {};
-    const roles = ['super_admin','admin','librarian','student','teacher','parent','personal'];
-    document.getElementById('rolePermWrap').innerHTML = `
-      <table class="sa-table">
-        <thead><tr><th>Role</th><th>Permissions JSON</th><th>Actions</th></tr></thead>
-        <tbody>${roles.map(r => `
-          <tr>
-            <td><span class="badge badge-indigo">${r}</span></td>
-            <td><textarea class="sa-textarea" style="min-height:60px" id="rp-${r}">${JSON.stringify(perms[r] || {}, null, 2)}</textarea></td>
-            <td><button class="sa-btn sa-btn-primary sa-btn-xs" onclick="saveRolePerm('${r}')">Save</button></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>`;
-  } catch (e) { document.getElementById('rolePermWrap').innerHTML = '<p style="color:#f87171">Failed to load.</p>'; }
-}
-async function saveRolePerm(role) {
-  const txt = document.getElementById('rp-' + role).value;
-  try {
-    let json;
-    try { json = JSON.parse(txt); } catch (e) { return showToast('Invalid JSON', 'error'); }
-    // Backend merges with existing config, so only send the role being saved.
-    const d = await apiPost('/super-admin/role-permissions', { permissions: { [role]: json } });
-    if (d.success) { showToast(`Saved ${role}`, 'success'); SA.rolePerms = { ...SA.rolePerms, [role]: json }; }
-    else showToast(d.error || 'Failed', 'error');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
-}
+// Role permissions now visually managed via loadRolesCatalog() & roleBuilderModal
+// Alias preserved for any legacy calls:
+// loadRolePerms -> loadRolesCatalog
 
 async function loadDigitalList(page=1) {
   document.getElementById('dlTableWrap').innerHTML='<div class="sa-loading"><span class="sa-spinner"></span>Loading...</div>';
