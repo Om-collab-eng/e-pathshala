@@ -397,7 +397,7 @@ async function migrateSuperAdminRbac() {
 
       if (roleId) {
         await db.query(`
-          INSERT INTO user_roles (user_id, role_id, portfolio_type, school_code)
+          INSERT IGNORE INTO user_roles (user_id, role_id, portfolio_type, school_code)
           VALUES ($1, $2, $3, $4)
         `, [u.id, roleId, cleanRole === 'personal' ? 'personal' : 'school', u.school_code || 'GLOBAL']).catch(() => {});
         backfilled++;
