@@ -12,14 +12,28 @@ const upload = multer({
   limits: { fileSize: 28 * 1024 * 1024 }
 });
 
-function studentOnly(req, res, next) {
+async function studentOnly(req, res, next) {
   if (!req.session || !req.session.user_id) {
     req.flash('error', 'Access denied. Please log in.');
     return res.redirect('/login');
   }
+  // Live sync from DB so role changes are immediately effective without re-login
+  try {
+    const uRes = await db.query('SELECT role, school_code, name FROM users WHERE id = $1', [req.session.user_id]);
+    if (uRes && uRes.rows && uRes.rows[0]) {
+      req.session.role = uRes.rows[0].role;
+      if (uRes.rows[0].school_code) req.session.school_code = uRes.rows[0].school_code;
+      if (uRes.rows[0].name) req.session.name = uRes.rows[0].name;
+    }
+  } catch (e) {}
+
+  const r = String(req.session.role || '').toLowerCase();
   // Role isolation: Librarians & Admins belong in /admin, not /student
-  if (req.session.role === 'admin' || req.session.role === 'librarian') {
+  if (['admin', 'librarian', 'school_admin', 'quiz_manager', 'content_manager', 'owner'].includes(r)) {
     return res.redirect('/admin');
+  }
+  if (['super_admin', 'superadmin', 'super_super_admin'].includes(r)) {
+    return res.redirect('/super-admin');
   }
   return next();
 }

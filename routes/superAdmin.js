@@ -579,7 +579,8 @@ router.get('/users/:id/profile', async (req, res) => {
         roles: rolesRes.rows || [],
         logins: loginsRes.rows || [],
         timeline: timelineRes.rows || []
-      }
+      },
+      available_roles: await getAllRoles().catch(() => [])
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -831,7 +832,7 @@ router.post('/users/:id/toggle-ban', async (req, res) => {
 
 // Change Role
 router.post('/users/:id/change-role', async (req, res) => {
-  const { role } = req.body;
+  const { role, school_code } = req.body;
   if (!role) return res.status(400).json({ error: 'Role is required' });
   try {
     const curUserRes = await db.query('SELECT role, name, school_code FROM users WHERE id = $1', [req.params.id]);
@@ -844,10 +845,22 @@ router.post('/users/:id/change-role', async (req, res) => {
       }
     }
 
+    const targetSchoolCode = (school_code !== undefined && school_code !== null) ? school_code : (user?.school_code || 'GLOBAL');
+
     await assignUserRole(req.params.id, role, {
-      school_code: user?.school_code || 'GLOBAL',
+      school_code: targetSchoolCode,
       assigned_by: req.session.user_id
     });
+
+    if (school_code) {
+      await db.query('UPDATE users SET school_code = $1 WHERE id = $2', [school_code, req.params.id]);
+    }
+
+    // If super admin modified their own role or active session
+    if (req.session && req.session.user_id == req.params.id) {
+      req.session.role = role;
+      if (school_code) req.session.school_code = school_code;
+    }
 
     await logActivity(req, {
       userId: req.session.user_id,
@@ -855,7 +868,7 @@ router.post('/users/:id/change-role', async (req, res) => {
       module: 'users'
     }).catch(() => {});
 
-    res.json({ success: true, message: `Role changed to ${role}` });
+    res.json({ success: true, message: `Role changed to ${role}`, role, school_code: targetSchoolCode });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

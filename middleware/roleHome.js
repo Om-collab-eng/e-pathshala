@@ -21,8 +21,11 @@ const ROLE_HOME = Object.freeze({
   super_super_admin:  '/super-admin',
 
   // School-side admins / librarians share /admin
-  admin:      '/admin',
-  librarian:  '/admin',
+  admin:              '/admin',
+  school_admin:       '/admin',
+  librarian:          '/admin',
+  quiz_manager:       '/admin',
+  content_manager:    '/admin',
 
   // End users share /student
   student:    '/student',
@@ -39,7 +42,10 @@ const ROLE_LABEL = Object.freeze({
   superadmin:         'Super Admin',
   super_super_admin:  'Super Admin',
   admin:              'School Admin',
+  school_admin:       'School Admin',
   librarian:          'Librarian',
+  quiz_manager:       'Quiz Manager',
+  content_manager:    'Content Manager',
   student:            'Student',
   teacher:            'Teacher',
   parent:             'Parent',

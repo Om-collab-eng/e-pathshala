@@ -20,10 +20,14 @@ const upload = multer({
 router.use(async (req, res, next) => {
   if (req.session && req.session.user_id) {
     try {
-      const uRes = await db.query('SELECT role FROM users WHERE id = $1', [req.session.user_id]);
+      const uRes = await db.query('SELECT role, school_code, name FROM users WHERE id = $1', [req.session.user_id]);
       if (uRes && uRes.rows && uRes.rows.length > 0) {
         const dbRole = uRes.rows[0].role;
         req.session.role = dbRole;
+        if (uRes.rows[0].school_code && !req.session.school_code) {
+          req.session.school_code = uRes.rows[0].school_code;
+        }
+        if (uRes.rows[0].name) req.session.name = uRes.rows[0].name;
         if (dbRole === 'super_admin' || dbRole === 'superadmin') {
           return res.redirect('/super-admin');
         }
@@ -37,7 +41,8 @@ router.use(async (req, res, next) => {
 });
 
 function adminOnly(req, res, next) {
-  if (req.session && (req.session.role === 'admin' || req.session.role === 'librarian' || req.session.role === 'super_admin' || req.session.role === 'superadmin' || req.session.role === 'owner')) return next();
+  const r = String((req.session && req.session.role) || '').toLowerCase();
+  if (['admin', 'librarian', 'school_admin', 'super_admin', 'superadmin', 'owner', 'quiz_manager', 'content_manager'].includes(r)) return next();
   req.flash('error', 'Access denied. Admin or Librarian login required.');
   return res.redirect('/login');
 }

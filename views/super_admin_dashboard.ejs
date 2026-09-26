@@ -2834,11 +2834,12 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
     </div>
     <div class="sa-profile-nav">
       <button class="sa-profile-nav-pill active" onclick="switchProfileTab('basic')">👤 Basic Info</button>
-      <button class="sa-profile-nav-pill" onclick="switchProfileTab('edu')">🎓 Education & Org</button>
-      <button class="sa-profile-nav-pill" onclick="switchProfileTab('interests')">⭐ Interests & Prefs</button>
-      <button class="sa-profile-nav-pill" onclick="switchProfileTab('account')">🔒 Account & Security</button>
-      <button class="sa-profile-nav-pill" onclick="switchProfileTab('avatar')">🖼️ Avatar & Photo</button>
-      <button class="sa-profile-nav-pill" onclick="switchProfileTab('timeline')">📜 Activity & Logins</button>
+      <button class="sa-profile-nav-pill" id="pill-up-role" onclick="switchProfileTab('role')">🛡️ Role &amp; Permissions</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('edu')">🎓 Education &amp; Org</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('interests')">⭐ Interests &amp; Prefs</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('account')">🔒 Account &amp; Security</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('avatar')">🖼️ Avatar &amp; Photo</button>
+      <button class="sa-profile-nav-pill" onclick="switchProfileTab('timeline')">📜 Activity &amp; Logins</button>
     </div>
     <div class="sa-modal-body" style="max-height:65vh;overflow-y:auto">
       <input type="hidden" id="upId">
@@ -2882,12 +2883,74 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
         </div>
       </div>
 
+      <!-- Tab: Role & Permissions -->
+      <div class="sa-profile-pane" id="pane-up-role">
+        <!-- Top Status Banner -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface-sub);border-radius:12px;border:1px solid var(--border);margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:1.8rem;" id="upCurrentRoleIcon">🛡️</div>
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:0.82rem;color:var(--text-secondary);font-weight:600;">Current Active Role:</span>
+                <span id="upCurrentRoleBadge" class="badge badge-blue" style="font-size:0.85rem;padding:3px 10px;">Student</span>
+              </div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">
+                School Scope: <strong id="upCurrentSchoolText" style="color:var(--text-primary)">Independent</strong>
+              </div>
+            </div>
+          </div>
+          <div>
+            <button type="button" class="sa-btn sa-btn-outline sa-btn-xs" onclick="closeModal('userProfileModal'); switchTab('roles', document.getElementById('nav-roles'));">
+              ⚙️ Open Roles Matrix &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- Role Selection Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <h4 style="margin:0;font-size:0.95rem;font-weight:800;">Choose User Role</h4>
+            <p style="margin:2px 0 0 0;font-size:0.78rem;color:var(--text-secondary);">Click any role card below to select. Click "Save &amp; Apply Role" to make it live across all user boards and admin consoles.</p>
+          </div>
+          <span style="font-size:0.75rem;font-weight:700;color:var(--primary);background:rgba(11,94,215,0.08);padding:4px 10px;border-radius:6px;border:1px solid rgba(11,94,215,0.2);" id="upSelectedRoleLabel">Selected: Student</span>
+        </div>
+
+        <!-- Interactive Role Selection Grid -->
+        <div id="upRoleSelectionList" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:10px;margin-bottom:16px;">
+          <!-- Dynamically populated by renderUserRoleSelection() -->
+        </div>
+
+        <!-- Role Properties & School Association -->
+        <div style="background:var(--surface-sub);padding:14px;border-radius:10px;border:1px solid var(--border);margin-bottom:16px;">
+          <div style="font-weight:700;font-size:0.85rem;margin-bottom:8px;">🏫 Role Scope &amp; Target School</div>
+          <div class="sa-form-row" style="margin:0;">
+            <div class="sa-form-group" style="margin:0;">
+              <label style="font-size:0.8rem;">Assigned School Code (Required for School Admin &amp; Librarian)</label>
+              <input type="text" class="sa-input" id="upRoleSchoolCode" placeholder="e.g. DPS123, DEMO01, or GLOBAL" onkeyup="document.getElementById('upSchoolCode').value = this.value">
+            </div>
+          </div>
+          <div id="upRolePrivilegeSummary" style="margin-top:10px;padding:10px 14px;background:#FFFFFF;border-radius:8px;border:1px solid var(--border);font-size:0.78rem;color:var(--text-secondary);line-height:1.4;">
+            <!-- Privileges text description -->
+          </div>
+        </div>
+
+        <!-- Action / Save and Apply Button -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);">
+          <div style="font-size:0.78rem;color:var(--text-secondary);">
+            ⚡ Real-time: Updates permissions, navigation, and access across user and admin boards instantly.
+          </div>
+          <button type="button" class="sa-btn sa-btn-primary" id="btnSaveApplyRole" onclick="saveAndApplyRole()" style="padding:10px 22px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            <span>⚡ Save &amp; Apply Role Changes</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Tab 2: Education & Org -->
       <div class="sa-profile-pane" id="pane-up-edu">
         <div class="sa-form-row">
-          <div class="sa-form-group"><label>Assigned School Code</label><input type="text" class="sa-input" id="upSchoolCode"></div>
+          <div class="sa-form-group"><label>Assigned School Code</label><input type="text" class="sa-input" id="upSchoolCode" onkeyup="document.getElementById('upRoleSchoolCode').value = this.value"></div>
           <div class="sa-form-group"><label>Primary Role</label>
-            <select class="sa-select" id="upRole">
+            <select class="sa-select" id="upRole" onchange="selectUserRole(this.value)">
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
               <option value="librarian">Librarian</option>
@@ -4048,8 +4111,8 @@ function renderUsersTable(users) {
               <div class="sa-action-dropdown-menu" id="uMenu-${u.id}">
                 <button class="sa-action-dropdown-item" onclick="openUserProfile(${u.id})">👁️ View Full Profile</button>
                 <button class="sa-action-dropdown-item" onclick="openUserProfileTab(${u.id}, 'basic')">✏️ Edit User Details</button>
-                <button class="sa-action-dropdown-item" onclick="changeRolePrompt(${u.id}, '${(u.name||'').replace(/'/g,"\\'")}', '${u.role||''}')">🔄 Change Role</button>
-                <button class="sa-action-dropdown-item" onclick="openRoleModalForUser('${u.role||''}')">🛡️ Manage Role Permissions</button>
+                <button class="sa-action-dropdown-item" onclick="openUserProfileTab(${u.id}, 'role')">🔄 Change Role</button>
+                <button class="sa-action-dropdown-item" onclick="openUserProfileTab(${u.id}, 'role')">🛡️ Manage Role &amp; Permissions</button>
                 <button class="sa-action-dropdown-item" onclick="toggleUserStatus(${u.id}, '${isBanned ? 'suspended' : 'active'}')">${isBanned ? '✅ Activate User' : '🚫 Suspend User'}</button>
                 <button class="sa-action-dropdown-item" onclick="resetPasswordPrompt(${u.id}, '${(u.name||'').replace(/'/g,"\\'")}')">🔑 Reset Password</button>
                 <button class="sa-action-dropdown-item" onclick="openUserProfileTab(${u.id}, 'timeline')">📜 Login & Activity Log</button>
@@ -4104,8 +4167,11 @@ function deselectAllUsers() {
 }
 
 // ─────────────────────────────────────────────
-//  USER PROFILE MODAL (6 TABS) LOGIC
+//  USER PROFILE MODAL (7 TABS) LOGIC
 // ─────────────────────────────────────────────
+let _selectedUserRole = 'student';
+let _userProfileAvailableRoles = [];
+
 function switchProfileTab(tab) {
   document.querySelectorAll('.sa-profile-nav-pill').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sa-profile-pane').forEach(p => p.classList.remove('active'));
@@ -4185,6 +4251,22 @@ async function openUserProfileTab(userId, initialTab = 'basic') {
     document.getElementById('upAvatarCurrentImg').src = currentAvatarSrc;
     document.getElementById('upAvatarCurrentName').textContent = u.profile_picture ? 'Custom Profile Picture' : `Character: ${_selectedAvatarId.replace('_', ' ').toUpperCase()}`;
     renderAvatarPickerGrid(_selectedAvatarId);
+
+    // Tab: Role & Permissions Init
+    _selectedUserRole = u.role || 'student';
+    _userProfileAvailableRoles = d.available_roles || [];
+    const upRoleSchool = document.getElementById('upRoleSchoolCode');
+    if (upRoleSchool) upRoleSchool.value = u.school_code || '';
+    const curBadge = document.getElementById('upCurrentRoleBadge');
+    if (curBadge) {
+      curBadge.textContent = u.role_name || u.role;
+      curBadge.className = 'badge ' + roleBadge(u.role);
+    }
+    const curSchool = document.getElementById('upCurrentSchoolText');
+    if (curSchool) curSchool.textContent = u.school_name || u.school_code || 'Independent';
+    const curIcon = document.getElementById('upCurrentRoleIcon');
+    if (curIcon) curIcon.textContent = getRoleIcon(u.role);
+    renderUserRoleSelection(_selectedUserRole, _userProfileAvailableRoles);
 
     // Tab 6: Activity Timeline & Login History
     renderProfileTimeline(u.timeline || []);
@@ -4301,6 +4383,163 @@ function renderProfileLogins(logins) {
   `;
 }
 
+// ─────────────────────────────────────────────
+//  USER ROLE & PERMISSIONS ASSIGNMENT LOGIC
+// ─────────────────────────────────────────────
+const STANDARD_USER_ROLES = [
+  { slug: 'super_admin', name: 'Super Admin', icon: '👑', badge: 'badge-purple', desc: 'Root platform administrator. Unrestricted control over all schools, user accounts, system settings, and audit logs.' },
+  { slug: 'admin', name: 'School Admin', icon: '🏢', badge: 'badge-blue', desc: 'School branch administrator. Full control over faculty, classes, student registers, and complete library console access.' },
+  { slug: 'librarian', name: 'Librarian', icon: '📚', badge: 'badge-teal', desc: 'Library operator. Complete circulation access: book issue/return, fines calculation, barcode tracking, and cataloging.' },
+  { slug: 'teacher', name: 'Teacher', icon: '👨‍🏫', badge: 'badge-orange', desc: 'Classroom educator. Curate reading lists, assign books to students, review student reading milestones and vault.' },
+  { slug: 'student', name: 'Student', icon: '🎒', badge: 'badge-green', desc: 'Student learner. Access to eBook vault, taking quizzes, book issue requests, and digital Librika library pass.' },
+  { slug: 'parent', name: 'Parent', icon: '👨‍👩‍👧', badge: 'badge-pink', desc: 'Parent observer. Monitor student reading progress, check due books, return alerts, and notices.' },
+  { slug: 'quiz_manager', name: 'Quiz Manager', icon: '🧠', badge: 'badge-cyan', desc: 'Quiz author. Create chapter quizzes, trivia assessments, question banks, and student test score analytics.' },
+  { slug: 'content_manager', name: 'Content Manager', icon: '🌐', badge: 'badge-indigo', desc: 'Digital curator. Upload eBooks and study materials (up to 28MB), and moderate student book reviews.' },
+  { slug: 'personal', name: 'Personal Reader', icon: '📖', badge: 'badge-gray', desc: 'Individual self-managed reader account with private personal digital library vault access.' }
+];
+
+function getRoleIcon(slug) {
+  const s = String(slug || '').toLowerCase();
+  const found = STANDARD_USER_ROLES.find(r => r.slug === s);
+  return found ? found.icon : '🛡️';
+}
+
+function renderUserRoleSelection(activeRole, dbRoles) {
+  const listEl = document.getElementById('upRoleSelectionList');
+  if (!listEl) return;
+
+  const currentSlug = String(activeRole || 'student').toLowerCase();
+  const labelEl = document.getElementById('upSelectedRoleLabel');
+  if (labelEl) labelEl.textContent = 'Selected: ' + (currentSlug.replace('_', ' ').toUpperCase());
+
+  // Merge standard roles with any custom roles from db
+  let rolesToRender = [...STANDARD_USER_ROLES];
+  if (Array.isArray(dbRoles)) {
+    dbRoles.forEach(dr => {
+      if (!rolesToRender.some(r => r.slug === dr.slug)) {
+        rolesToRender.push({
+          slug: dr.slug,
+          name: dr.name,
+          icon: '🛡️',
+          badge: 'badge-blue',
+          desc: dr.description || 'Custom organization role with custom permissions matrix.'
+        });
+      }
+    });
+  }
+
+  listEl.innerHTML = rolesToRender.map(r => {
+    const isSelected = r.slug === currentSlug;
+    return `
+      <div class="sa-role-option-card ${isSelected ? 'selected' : ''}" 
+           onclick="selectUserRole('${r.slug}')"
+           style="position:relative;border:${isSelected ? '2px solid var(--primary, #0B5ED7)' : '1px solid var(--border, #E2E8F0)'};border-radius:10px;padding:12px 14px;cursor:pointer;background:${isSelected ? 'rgba(11,94,215,0.06)' : '#FFFFFF'};transition:all .18s;box-shadow:${isSelected ? '0 0 0 1px rgba(11,94,215,0.2)' : 'none'};">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:1.25rem;">${r.icon}</span>
+            <strong style="font-size:0.9rem;color:var(--text-primary);">${r.name}</strong>
+          </div>
+          <span class="badge ${r.badge}" style="font-size:0.68rem;text-transform:none;">${r.slug}</span>
+        </div>
+        <p style="font-size:0.77rem;color:var(--text-secondary);margin:0;line-height:1.35;">${r.desc}</p>
+        ${isSelected ? '<span style="position:absolute;top:8px;right:8px;background:var(--primary,#0B5ED7);color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;">✓</span>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  updateRolePrivilegeSummary(currentSlug);
+}
+
+function selectUserRole(roleSlug) {
+  _selectedUserRole = roleSlug;
+  const upRole = document.getElementById('upRole');
+  if (upRole) upRole.value = roleSlug;
+
+  const labelEl = document.getElementById('upSelectedRoleLabel');
+  if (labelEl) labelEl.textContent = 'Selected: ' + (roleSlug.replace('_', ' ').toUpperCase());
+
+  renderUserRoleSelection(roleSlug, _userProfileAvailableRoles);
+}
+
+function updateRolePrivilegeSummary(slug) {
+  const sumEl = document.getElementById('upRolePrivilegeSummary');
+  if (!sumEl) return;
+  const s = String(slug || '').toLowerCase();
+
+  let text = '';
+  if (s === 'super_admin') {
+    text = '👑 <strong>Full Root Permissions</strong>: Complete control over all schools, user accounts, role definitions, audit logs, and system maintenance.';
+  } else if (s === 'admin' || s === 'school_admin') {
+    text = '🏢 <strong>School Administrator Privileges</strong>: Grants immediate access to the Librarian & Admin Console (/admin), faculty records, student management, and school settings.';
+  } else if (s === 'librarian') {
+    text = '📚 <strong>Library Operator Privileges</strong>: Grants immediate access to the Librarian Console (/admin), book issue/return circulation desk, barcode inventory, and fine collection.';
+  } else if (s === 'teacher') {
+    text = '👨‍🏫 <strong>Teacher Portal Privileges</strong>: Grants student class management, reading goal assignments, classroom study vault access, and book recommendations.';
+  } else if (s === 'student') {
+    text = '🎒 <strong>Student Privileges</strong>: Grants access to the Student Library Portal (/student), digital eBook reader, digital library pass, and book checkout requests.';
+  } else if (s === 'quiz_manager') {
+    text = '🧠 <strong>Quiz Assessment Privileges</strong>: Grants access to creating chapter quizzes, managing trivia, and tracking student comprehension.';
+  } else if (s === 'content_manager') {
+    text = '🌐 <strong>Content Curation Privileges</strong>: Grants access to digital library repository, uploading e-books/PDFs up to 28MB, and reviewing student ratings.';
+  } else {
+    text = '📖 <strong>Personal Privileges</strong>: Self-managed personal digital reader vault and individual library profile.';
+  }
+  sumEl.innerHTML = text;
+}
+
+async function saveAndApplyRole() {
+  const userId = document.getElementById('upId').value;
+  if (!userId) return showToast('User ID missing', 'error');
+
+  const selectedRole = _selectedUserRole || document.getElementById('upRole').value;
+  const schoolCode = document.getElementById('upRoleSchoolCode').value.trim();
+
+  const btn = document.getElementById('btnSaveApplyRole');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳ Applying Role...</span>';
+  }
+
+  try {
+    const res = await apiPost(`/super-admin/users/${userId}/change-role`, {
+      role: selectedRole,
+      school_code: schoolCode || null
+    });
+
+    if (res.success) {
+      showToast(`✓ Role successfully changed to "${selectedRole}"! Effective immediately across all boards.`, 'success');
+      
+      // Update modal display elements
+      document.getElementById('upRole').value = selectedRole;
+      document.getElementById('upSchoolCode').value = schoolCode;
+      const curBadge = document.getElementById('upCurrentRoleBadge');
+      if (curBadge) {
+        curBadge.textContent = selectedRole;
+        curBadge.className = 'badge ' + roleBadge(selectedRole);
+      }
+      const curSchool = document.getElementById('upCurrentSchoolText');
+      if (curSchool) curSchool.textContent = schoolCode || 'Independent';
+      const curIcon = document.getElementById('upCurrentRoleIcon');
+      if (curIcon) curIcon.textContent = getRoleIcon(selectedRole);
+      document.getElementById('upModalSubtitle').textContent = `User ID: #${userId} • ${selectedRole} • ${schoolCode || 'Independent'}`;
+      
+      renderUserRoleSelection(selectedRole, _userProfileAvailableRoles);
+
+      // Refresh table in background
+      if (typeof loadUsers === 'function') loadUsers(_usersPage);
+    } else {
+      showToast(res.error || 'Failed to update role', 'error');
+    }
+  } catch (err) {
+    showToast('Network error: ' + err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>⚡ Save &amp; Apply Role Changes</span>';
+    }
+  }
+}
+
 async function saveUserProfile() {
   const userId = document.getElementById('upId').value;
   if (!userId) return;
@@ -4330,8 +4569,8 @@ async function saveUserProfile() {
     state: document.getElementById('upState').value.trim(),
     country: document.getElementById('upCountry').value.trim(),
     pincode: document.getElementById('upPincode').value.trim(),
-    school_code: document.getElementById('upSchoolCode').value.trim(),
-    role: document.getElementById('upRole').value,
+    school_code: document.getElementById('upRoleSchoolCode')?.value.trim() || document.getElementById('upSchoolCode').value.trim(),
+    role: _selectedUserRole || document.getElementById('upRole').value,
     class: document.getElementById('upClass').value.trim(),
     section: document.getElementById('upSection').value.trim(),
     stream: document.getElementById('upStream').value.trim(),
