@@ -367,7 +367,7 @@ async function migrateSuperAdminRbac() {
         if (pId) {
           try {
             await db.query(
-              'INSERT INTO role_permissions (role_id, permission_id) VALUES ($1, $2)',
+              'INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES ($1, $2)',
               [r.id, pId]
             ).catch(() => {});
           } catch (e) {}
