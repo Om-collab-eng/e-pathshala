@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
+const bwipjs = require('bwip-js');
 const aiService = require('../services/aiService');
 const { logActivity, ensureSecurityTables } = require('../services/auditLogger');
 const { quotes: libraryQuotes, getRandomQuote } = require('../data/quotes');
@@ -1111,6 +1113,147 @@ router.get('/api/books/next-id', adminOnly, async (req, res) => {
     console.error('Error generating next book id:', err);
     const fallbackId = `VBPG${new Date().getFullYear()}0001`;
     return res.json({ success: true, bookId: fallbackId });
+  }
+});
+
+// Barcode Generator Endpoint (Code128 Barcode PNG for Book ID Label / Sticker)
+router.get('/api/barcode/:code', async (req, res) => {
+  const code = (req.params.code || '').trim();
+  if (!code || !/^[A-Za-z0-9_\-\.]+$/.test(code)) {
+    return res.status(400).send('Invalid barcode value');
+  }
+
+  try {
+    const pngBuffer = await bwipjs.toBuffer({
+      bcid: 'code128',
+      text: code,
+      scale: 3,
+      height: 12,
+      includetext: true,
+      textxalign: 'center',
+      backgroundcolor: 'ffffff'
+    });
+
+    res.set({
+      'Content-Type': 'image/png',
+      'Content-Length': pngBuffer.length,
+      'Cache-Control': 'public, max-age=86400'
+    });
+    return res.end(pngBuffer);
+  } catch (err) {
+    console.error('Barcode generation error:', err.message);
+    return res.status(500).send('Failed to generate barcode');
+  }
+});
+
+// Smart Camera Book Scanner (Front + Back Cover Snaps, AI Extraction & Google Books Enrichment)
+router.post('/api/books/smart-scan', adminOnly, async (req, res) => {
+  const { frontImageBase64, backImageBase64 } = req.body;
+  const sCode = req.session.school_code || 'DEMO01';
+
+  if (!frontImageBase64) {
+    return res.status(400).json({ success: false, error: 'Front cover snapshot is required.' });
+  }
+
+  try {
+    // 1. Save uploaded cover images locally to static/uploads/books/
+    const booksDir = path.join(__dirname, '..', 'static', 'uploads', 'books');
+    if (!fs.existsSync(booksDir)) {
+      fs.mkdirSync(booksDir, { recursive: true });
+    }
+
+    const timestamp = Date.now();
+    const rand = Math.random().toString(36).substring(2, 7);
+
+    let localFrontUrl = '';
+    let localBackUrl = '';
+
+    if (frontImageBase64 && frontImageBase64.includes('base64,')) {
+      const cleanFront = frontImageBase64.replace(/^data:image\/\w+;base64,/, '');
+      const frontFilename = `front_${timestamp}_${rand}.jpg`;
+      fs.writeFileSync(path.join(booksDir, frontFilename), Buffer.from(cleanFront, 'base64'));
+      localFrontUrl = `/uploads/books/${frontFilename}`;
+    }
+
+    if (backImageBase64 && backImageBase64.includes('base64,')) {
+      const cleanBack = backImageBase64.replace(/^data:image\/\w+;base64,/, '');
+      const backFilename = `back_${timestamp}_${rand}.jpg`;
+      fs.writeFileSync(path.join(booksDir, backFilename), Buffer.from(cleanBack, 'base64'));
+      localBackUrl = `/uploads/books/${backFilename}`;
+    }
+
+    // 2. Generate Next Unique Book ID (e.g. VBPG20260001)
+    const nextBookId = await generateNextBookId(sCode);
+
+    // 3. AI Cover Analysis & Field Extraction
+    let aiData = {};
+    try {
+      aiData = await aiService.extractBookFromCovers(frontImageBase64, backImageBase64);
+    } catch (aiErr) {
+      console.warn('AI cover extraction warning:', aiErr.message);
+      aiData = {};
+    }
+
+    // 4. Online Enrichment via Google Books / OpenLibrary
+    let onlineMeta = null;
+    const searchTarget = (aiData.isbn || '').trim() || (aiData.title ? `${aiData.title} ${aiData.author || ''}`.trim() : '');
+
+    if (searchTarget) {
+      try {
+        onlineMeta = await bookMetadataService.fetchBookMetadata(searchTarget);
+      } catch (metaErr) {
+        console.warn('Online metadata lookup warning:', metaErr.message);
+      }
+    }
+
+    // 5. Build Unified Book Details with intelligent merging
+    const resolvedTitle = (onlineMeta && onlineMeta.title) || aiData.title || '';
+    const resolvedAuthor = (onlineMeta && onlineMeta.author) || aiData.author || '';
+    const resolvedPublisher = (onlineMeta && onlineMeta.publisher) || aiData.publisher || '';
+    const resolvedYear = (onlineMeta && onlineMeta.published_year) || aiData.publication_year || '';
+    const resolvedIsbn = (onlineMeta && onlineMeta.isbn) || aiData.isbn || '';
+    const resolvedSubject = (onlineMeta && onlineMeta.category && onlineMeta.category !== 'General') ? onlineMeta.category : (aiData.subject || 'General');
+    const resolvedDescription = (onlineMeta && onlineMeta.description) || aiData.description || '';
+    const onlineCoverUrl = (onlineMeta && onlineMeta.cover_url) || '';
+
+    // Preferred cover: high-res online cover if available, otherwise local camera snap
+    const finalCoverUrl = onlineCoverUrl || localFrontUrl;
+
+    return res.json({
+      success: true,
+      bookId: nextBookId,
+      barcodeUrl: `/admin/api/barcode/${nextBookId}`,
+      onlineFound: !!onlineMeta,
+      onlineCoverUrl,
+      localFrontUrl,
+      localBackUrl,
+      book: {
+        book_id: nextBookId,
+        title: resolvedTitle,
+        author: resolvedAuthor,
+        publisher: resolvedPublisher,
+        edition: aiData.edition || '',
+        publication_year: resolvedYear,
+        isbn: resolvedIsbn,
+        price: aiData.price || '',
+        subject: resolvedSubject,
+        class: aiData.class || '',
+        language: aiData.language || 'English',
+        description: resolvedDescription,
+        cover_url: finalCoverUrl,
+        back_cover_url: localBackUrl,
+        total_copies: 1,
+        rack: 'A',
+        shelf: '1',
+        book_condition: 'GOOD'
+      }
+    });
+  } catch (err) {
+    console.error('Smart book scan error:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Smart scan failed: ' + err.message
+    });
   }
 });
 

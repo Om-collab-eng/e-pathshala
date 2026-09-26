@@ -61,7 +61,8 @@ async function callNvidiaAI(prompt, options = {}) {
 async function callOpenRouter(prompt, options = {}) {
   if (!openrouterKey) throw new Error("OpenRouter API key not configured");
 
-  const isVision = !!options.imageBase64;
+  const allImages = (options.images && options.images.length > 0) ? options.images : (options.imageBase64 ? [options.imageBase64] : []);
+  const isVision = allImages.length > 0;
   const modelsToTry = isVision
     ? ["meta-llama/llama-3.2-11b-vision-instruct:free", "google/gemini-flash-1.5"]
     : ["openai/gpt-3.5-turbo", "google/gemini-2.0-flash-001", "meta-llama/llama-3-8b-instruct:free", "openrouter/auto"];
@@ -71,11 +72,11 @@ async function callOpenRouter(prompt, options = {}) {
     try {
       let content;
       if (isVision) {
-        const base64Clean = options.imageBase64.replace(/^data:image\/\w+;base64,/, '');
-        content = [
-          { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Clean}` } }
-        ];
+        content = [{ type: "text", text: prompt }];
+        for (const img of allImages) {
+          const base64Clean = img.replace(/^data:image\/\w+;base64,/, '');
+          content.push({ type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Clean}` } });
+        }
       } else {
         content = prompt;
       }
@@ -185,7 +186,9 @@ async function callAI(prompt, options = {}) {
   // 3. Try Gemini API
   if (genAI) {
     try {
-      if (options.imageBase64) {
+      if (options.images && options.images.length > 0) {
+        options.parts = options.images.map(img => base64ToGenerativePart(img));
+      } else if (options.imageBase64) {
         options.parts = [base64ToGenerativePart(options.imageBase64)];
       }
       return await callGemini(prompt, options);
@@ -552,6 +555,84 @@ Return ONLY valid JSON. If a field is not visibly printed in the image, set it t
   }
 }
 
+/**
+ * Smart Book Scanner: Multi-cover (Front & Back) AI Analyzer
+ * Reads title, author, publisher from front cover, and printed ISBN, price/MRP, blurb from back cover.
+ */
+async function extractBookFromCovers(frontImageBase64, backImageBase64 = null) {
+  const images = [];
+  if (frontImageBase64) images.push(frontImageBase64);
+  if (backImageBase64) images.push(backImageBase64);
+
+  if (images.length === 0) {
+    throw new Error('No book cover images provided for analysis.');
+  }
+
+  try {
+    const prompt = `You are an expert librarian and library book cataloger. Analyze the provided book image(s).
+The first image is the Front Cover (and title page/spine).
+${backImageBase64 ? 'The second image is the Back Cover (blurb synopsis, printed ISBN, MRP price, publisher imprint).' : ''}
+
+Extract and detect all printed visible text from the book covers. Map them into the following JSON structure:
+{
+  "title": "Exact Title of the book",
+  "subtitle": "Subtitle if present or empty string",
+  "author": "Author(s), Editor(s), or Illustrator(s)",
+  "publisher": "Publishing House or Imprint",
+  "edition": "Edition (e.g. 1st Edition, 2nd Edition, Revised)",
+  "publication_year": "Publication year (e.g. 2023 or 2024 if visible)",
+  "language": "Language of the book (e.g. English, Hindi, Sanskrit)",
+  "isbn": "Printed ISBN number digits only (e.g. 9780132350884) - read from printed text or number near barcode",
+  "price": "Printed MRP or price number (e.g. 499 or 350)",
+  "class": "Target school grade / class / level if printed (e.g. Class 10, Grade 8, Middle School, General)",
+  "subject": "Subject or academic field (e.g. Science, Mathematics, English Literature, Fiction, Social Studies)",
+  "synopsis": "A concise 2 to 4 sentence synopsis/summary of the book extracted from the back cover blurb or front teaser"
+}
+
+Return ONLY valid JSON. If any field is not visibly detectable, use a sensible default or empty string "".`;
+
+    const result = await callAI(prompt, {
+      images,
+      imageBase64: frontImageBase64,
+      jsonMode: true,
+      temperature: 0.1
+    });
+
+    const parsed = parseJSONFromResponse(result) || {};
+    return {
+      title: parsed.title || '',
+      subtitle: parsed.subtitle || '',
+      author: parsed.author || '',
+      publisher: parsed.publisher || '',
+      edition: parsed.edition || '',
+      publication_year: parsed.publication_year ? String(parsed.publication_year).replace(/\D/g, '').slice(0, 4) : '',
+      language: parsed.language || 'English',
+      isbn: parsed.isbn ? String(parsed.isbn).replace(/[^0-9X]/gi, '') : '',
+      price: parsed.price ? String(parsed.price).replace(/[^0-9.]/g, '') : '',
+      class: parsed.class || '',
+      subject: parsed.subject || 'General',
+      synopsis: parsed.synopsis || ''
+    };
+  } catch (error) {
+    console.error("extractBookFromCovers error:", error.message);
+    // Fallback: return default structured object so the cataloger can proceed seamlessly
+    return {
+      title: '',
+      subtitle: '',
+      author: '',
+      publisher: '',
+      edition: '',
+      publication_year: '',
+      language: 'English',
+      isbn: '',
+      price: '',
+      class: '',
+      subject: 'General',
+      synopsis: ''
+    };
+  }
+}
+
 async function chatWithLibra(userMessage, conversationHistory = [], contextData = null) {
   try {
     let groundingContext = '';
@@ -672,6 +753,7 @@ module.exports = {
   analyzeBookCover,
   extractTextOCR,
   extractTextAndIdentifyFields,
+  extractBookFromCovers,
   callAI,
   callNvidiaAI,
   callOpenRouter,

@@ -1887,251 +1887,223 @@
   <!-- ═══════════════════════════════════════════════════════════════
        5. MODALS (ADD BOOK, ADD MEMBER)
        ═══════════════════════════════════════════════════════════════ -->
-  <!-- Add Book Modal -->
-  <!-- Add Book Modal (3 Input Modes: Normal Text Scan, Search Online, Manual Search - Strictly No Barcodes) -->
+  <!-- Add Book Modal: Smart Camera Book Scanner -->
+  <style>
+    @keyframes smartLaser {
+      0% { top: 6%; opacity: 0.7; }
+      50% { top: 88%; opacity: 1; }
+      100% { top: 6%; opacity: 0.7; }
+    }
+    @keyframes spinLoading {
+      to { transform: rotate(360deg); }
+    }
+    .scanner-active-border {
+      border: 2px solid #3B82F6 !important;
+      background: #EFF6FF !important;
+    }
+  </style>
+
   <div id="addBookModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;z-index:9999;">
-    <div class="card" style="width:95%;max-width:880px;max-height:92vh;overflow-y:auto;position:relative;padding:1.5rem;box-shadow:0 20px 40px rgba(0,0,0,0.18);">
+    <div class="card" style="width:96%;max-width:880px;max-height:92vh;overflow-y:auto;position:relative;padding:1.4rem;box-shadow:0 20px 40px rgba(0,0,0,0.18);border-radius:16px;">
+      <!-- Header -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #E2E8F0;padding-bottom:12px;">
-        <div>
-          <h3 style="margin:0;font-size:1.25rem;font-weight:800;color:#1E293B;">📚 Add New Book</h3>
-          <p style="margin:3px 0 0 0;font-size:0.82rem;color:#64748B;">Register physical books via text OCR scan, online metadata lookup, or manual entry. Strictly no barcode scanning.</p>
-        </div>
-        <button onclick="closeModal('addBookModal')" style="background:transparent;border:none;font-size:1.3rem;cursor:pointer;color:#64748B;line-height:1;">✕</button>
-      </div>
-
-      <!-- Mode Switcher Tabs (3 Distinct Modes) -->
-      <div class="lp-tabs-bar" style="margin-bottom:18px;display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;background:#F1F5F9;padding:4px;border-radius:10px;">
-        <button type="button" class="lp-tab-btn active" id="tabModeTextScan" onclick="switchAddBookMode('text_scan')" style="padding:10px 8px;font-size:0.83rem;font-weight:700;border-radius:8px;text-align:center;">
-          📷 Normal Text Scan
-        </button>
-        <button type="button" class="lp-tab-btn" id="tabModeOnlineSearch" onclick="switchAddBookMode('online_search')" style="padding:10px 8px;font-size:0.83rem;font-weight:700;border-radius:8px;text-align:center;">
-          🌐 Search Online
-        </button>
-        <button type="button" class="lp-tab-btn" id="tabModeManualSearch" onclick="switchAddBookMode('manual_search')" style="padding:10px 8px;font-size:0.83rem;font-weight:700;border-radius:8px;text-align:center;">
-          ⌨️ Manual Search
-        </button>
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════════════
-           MODE 1: NORMAL TEXT SCAN
-           Extract visible printed text via OCR from cover/pages
-           ═══════════════════════════════════════════════════════════════ -->
-      <div id="modeViewTextScan" class="add-book-mode-container" style="display:block;">
-        <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px;margin-bottom:16px;">
-          <div style="font-weight:700;color:#166534;font-size:0.85rem;margin-bottom:2px;">
-            📷 Mode 1: Normal Text Scan
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg, #3B82F6, #1D4ED8);display:flex;align-items:center;justify-content:center;color:#FFF;font-size:1.3rem;">
+            📸
           </div>
-          <div style="font-size:0.78rem;color:#15803D;">
-            Capture or upload a photo of the book (front cover, back cover, title page, publisher page, or blurb). OCR will read visible printed text and auto-identify fields.
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-          <!-- Camera / Upload Control -->
-          <div style="border:1px dashed #CBD5E1;border-radius:12px;padding:14px;background:#F8FAFC;text-align:center;display:flex;flex-direction:column;justify-content:center;">
-            <div id="ocrImagePreviewBox" style="height:140px;border-radius:8px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;">
-              <span id="ocrImagePlaceholder" style="font-size:0.8rem;color:#64748B;">No photo selected</span>
-              <img id="ocrImagePreview" style="display:none;width:100%;height:100%;object-fit:contain;">
-            </div>
-            <div style="display:flex;gap:8px;justify-content:center;">
-              <label class="btn-secondary" style="padding:6px 12px;font-size:0.8rem;cursor:pointer;">
-                📁 Upload Image
-                <input type="file" id="ocrFileInput" accept="image/*" style="display:none;" onchange="handleOcrImageSelected(event)">
-              </label>
-              <button type="button" class="btn-secondary" style="padding:6px 12px;font-size:0.8rem;" onclick="captureOcrCamera()">
-                📷 Camera
-              </button>
-              <button type="button" id="btnOcrClear" style="display:none;background:none;border:none;color:#DC2626;font-size:0.8rem;cursor:pointer;" onclick="clearOcrImage()">
-                Clear
-              </button>
-            </div>
-          </div>
-
-          <!-- OCR Action & Instructions -->
-          <div style="display:flex;flex-direction:column;justify-content:space-between;padding:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;">
-            <div>
-              <span style="font-size:0.8rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">OCR Text Recognition:</span>
-              <ul style="margin:0 0 10px 18px;padding:0;font-size:0.77rem;color:#64748B;line-height:1.45;">
-                <li>Detects visible text across covers, title pages &amp; blurbs</li>
-                <li>Extracts Title, Author, Publisher, Edition, MRP, and Class</li>
-                <li>ISBN is extracted as <strong>ordinary printed text</strong>, never via barcode</li>
-                <li>Review and edit the extracted text below before populating</li>
-              </ul>
-            </div>
-            <button type="button" id="btnRunOcr" class="btn-primary" onclick="runNormalTextScan()" style="width:100%;justify-content:center;padding:10px;font-size:0.88rem;" disabled>
-              ⚡ Extract Printed Text &amp; Identify Fields
-            </button>
-          </div>
-        </div>
-
-        <!-- OCR Status Indicator -->
-        <div id="ocrStatusMsg" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:0.83rem;"></div>
-
-        <!-- Extracted Text Review & Edit Section -->
-        <div id="ocrReviewSection" style="display:none;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px;margin-bottom:18px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <label style="font-size:0.82rem;font-weight:700;color:#1E293B;">
-              📝 Extracted Visible Text (Review &amp; Edit)
-            </label>
-            <span style="font-size:0.75rem;color:#64748B;">You can directly edit this text</span>
-          </div>
-          <textarea id="ocrRawTextarea" class="lp-search-input" style="width:100%;height:100px;font-family:monospace;font-size:0.82rem;resize:vertical;margin-bottom:12px;line-height:1.4;" placeholder="Extracted OCR text will appear here..."></textarea>
-
-          <!-- Auto-Identified Fields Preview -->
-          <div style="margin-bottom:12px;">
-            <span style="font-size:0.8rem;font-weight:700;color:#1E293B;display:block;margin-bottom:8px;">✨ Auto-Identified Book Fields:</span>
-            <div id="ocrIdentifiedPills" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px;font-size:0.78rem;">
-              <!-- Pills inserted dynamically -->
-            </div>
-          </div>
-
-          <div style="display:flex;justify-content:flex-end;">
-            <button type="button" class="btn-primary" onclick="applyOcrToCommonForm()" style="padding:8px 16px;font-size:0.85rem;">
-              ⬇️ Transfer Data to Common Form &amp; Review
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════════════
-           MODE 2: SEARCH ONLINE
-           Query Google Books & OpenLibrary via image OCR or manual text
-           ═══════════════════════════════════════════════════════════════ -->
-      <div id="modeViewOnlineSearch" class="add-book-mode-container" style="display:none;">
-        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:12px;margin-bottom:16px;">
-          <div style="font-weight:700;color:#1E40AF;font-size:0.85rem;margin-bottom:2px;">
-            🌐 Mode 2: Search Online
-          </div>
-          <div style="font-size:0.78rem;color:#1D4ED8;">
-            Identify the book using online repositories (Google Books &amp; OpenLibrary). Search by photo or enter book title / author. No barcode required.
-          </div>
-        </div>
-
-        <!-- Input options -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-          <!-- Option A: Photo-based online search -->
-          <div style="border:1px solid #E2E8F0;border-radius:10px;padding:12px;background:#F8FAFC;">
-            <span style="font-size:0.78rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">📸 Option A: Search via Book Photo</span>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <label class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;cursor:pointer;flex:1;text-align:center;">
-                Upload Cover
-                <input type="file" id="onlineSearchImageInput" accept="image/*" style="display:none;" onchange="handleOnlineSearchImage(event)">
-              </label>
-              <button type="button" class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;flex:1;" onclick="captureOnlineSearchCamera()">
-                Camera
-              </button>
-            </div>
-            <div id="onlineSearchImageName" style="font-size:0.72rem;color:#64748B;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-          </div>
-
-          <!-- Option B: Direct text search -->
-          <div style="border:1px solid #E2E8F0;border-radius:10px;padding:12px;background:#F8FAFC;">
-            <span style="font-size:0.78rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">✍️ Option B: Search by Title or Author</span>
-            <div style="display:flex;gap:6px;">
-              <input type="text" id="onlineSearchTextInput" placeholder="e.g. Harry Potter, NCERT Science, Premchand..." class="lp-search-input" style="flex:1;font-size:0.82rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();runOnlineSearch();}">
-              <button type="button" class="btn-primary" onclick="runOnlineSearch()" style="padding:6px 12px;font-size:0.8rem;white-space:nowrap;">
-                🔍 Search
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Online Search Results -->
-        <div id="onlineSearchStatus" style="font-size:0.82rem;margin-bottom:10px;display:none;"></div>
-        <div id="onlineSearchResultsGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;max-height:320px;overflow-y:auto;padding-right:4px;margin-bottom:16px;">
-          <!-- Result cards injected dynamically -->
-        </div>
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════════════
-           MODE 3: MANUAL SEARCH
-           Structured multi-field search or direct manual entry
-           ═══════════════════════════════════════════════════════════════ -->
-      <div id="modeViewManualSearch" class="add-book-mode-container" style="display:none;">
-        <div style="background:#FAF5FF;border:1px solid #E9D5FF;border-radius:12px;padding:12px;margin-bottom:16px;">
-          <div style="font-weight:700;color:#6B21A8;font-size:0.85rem;margin-bottom:2px;">
-            ⌨️ Mode 3: Manual Search
-          </div>
-          <div style="font-size:0.78rem;color:#7E22CE;">
-            Search online book databases using manual form fields when no camera or image is available, or proceed directly to manual entry.
-          </div>
-        </div>
-
-        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px;margin-bottom:16px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-            <div>
-              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Book Title</label>
-              <input type="text" id="msTitle" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. To Kill a Mockingbird">
-            </div>
-            <div>
-              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Author</label>
-              <input type="text" id="msAuthor" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. Harper Lee">
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
-            <div>
-              <label style="font-size:0.78rem;font-weight:700;color:#334155;">ISBN (Text Entry Only)</label>
-              <input type="text" id="msIsbn" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. 9780061120084">
-            </div>
-            <div>
-              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Publisher</label>
-              <input type="text" id="msPublisher" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. HarperCollins">
-            </div>
-            <div>
-              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Subject / Category</label>
-              <input type="text" id="msSubject" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. Fiction">
-            </div>
-          </div>
-
-          <div style="display:flex;gap:10px;justify-content:flex-end;">
-            <button type="button" class="btn-secondary" onclick="skipToCommonFormManual()" style="padding:7px 14px;font-size:0.82rem;">
-              ✍️ Fill Manually (Direct Entry)
-            </button>
-            <button type="button" class="btn-primary" onclick="runManualFieldSearch()" style="padding:7px 16px;font-size:0.82rem;">
-              🔍 Search Online Databases
-            </button>
-          </div>
-        </div>
-
-        <!-- Manual Search Results -->
-        <div id="manualSearchStatus" style="font-size:0.82rem;margin-bottom:10px;display:none;"></div>
-        <div id="manualSearchResultsGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;max-height:300px;overflow-y:auto;padding-right:4px;margin-bottom:16px;">
-        </div>
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════════════
-           COMMON BOOK INFORMATION FORM
-           The mandatory single confirmation form for all 3 modes.
-           Contains the System-Generated Book ID & 15 editable fields.
-           ═══════════════════════════════════════════════════════════════ -->
-      <div id="commonBookFormSection" style="margin-top:20px;border-top:2px solid #E2E8F0;padding-top:16px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div>
-            <h4 style="margin:0;font-size:1.05rem;font-weight:800;color:#1E293B;">📘 Common Book Information Form</h4>
-            <p style="margin:2px 0 0 0;font-size:0.78rem;color:#64748B;">
-              Review and edit all fields before saving to the library catalog.
+            <h3 style="margin:0;font-size:1.25rem;font-weight:800;color:#0F172A;">Smart Camera Book Scanner</h3>
+            <p style="margin:2px 0 0 0;font-size:0.8rem;color:#64748B;">
+              Snap front &amp; back covers — AI detects details, fetches Google Books cover &amp; summary, and creates printable barcode sticker.
             </p>
           </div>
-          <button type="button" class="btn-secondary" onclick="resetCommonForm()" style="padding:4px 8px;font-size:0.75rem;">
-            🔄 Clear Form
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn-secondary" onclick="toggleManualEntryMode()" id="btnToggleManual" style="padding:6px 12px;font-size:0.78rem;font-weight:700;">
+            ⌨️ Manual Entry
+          </button>
+          <button onclick="closeAddBookModal()" style="background:transparent;border:none;font-size:1.3rem;cursor:pointer;color:#64748B;line-height:1;padding:4px;">✕</button>
+        </div>
+      </div>
+
+      <!-- CAMERA & SCANNER SECTION -->
+      <div id="smartScannerSection" style="display:block;">
+        <!-- Camera Viewfinder & Controls Box -->
+        <div style="background:#0F172A;border-radius:14px;padding:12px;position:relative;overflow:hidden;margin-bottom:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+          <!-- Camera Feed -->
+          <div style="position:relative;width:100%;height:260px;border-radius:10px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;">
+            <video id="smartBookVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
+            <canvas id="smartBookCanvas" style="display:none;"></canvas>
+
+            <!-- Laser Scanning Line -->
+            <div id="smartLaserLine" style="position:absolute;left:8%;right:8%;height:2px;background:#38BDF8;box-shadow:0 0 12px #38BDF8;animation:smartLaser 2.5s infinite ease-in-out;pointer-events:none;z-index:2;"></div>
+
+            <!-- Viewfinder Overlay Guidelines -->
+            <div style="position:absolute;inset:20px;border:2px dashed rgba(255,255,255,0.45);border-radius:8px;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:1;">
+              <span style="background:rgba(0,0,0,0.65);color:#F8FAFC;font-size:0.75rem;padding:5px 12px;border-radius:20px;backdrop-filter:blur(4px);letter-spacing:0.3px;" id="cameraGuidelineText">
+                Align Front Cover inside frame and tap "Snap Front Cover"
+              </span>
+            </div>
+
+            <!-- Camera Inactive / Permission Fallback -->
+            <div id="cameraFallbackNotice" style="display:none;position:absolute;inset:0;background:rgba(15,23,42,0.92);flex-direction:column;align-items:center;justify-content:center;color:#FFF;padding:20px;text-align:center;z-index:3;">
+              <div style="font-size:2rem;margin-bottom:6px;">📷</div>
+              <div style="font-size:0.9rem;font-weight:700;margin-bottom:4px;" id="cameraFallbackTitle">Camera inactive or waiting for permission</div>
+              <div style="font-size:0.78rem;color:#94A3B8;max-width:340px;margin-bottom:12px;" id="cameraFallbackDesc">Click below to start camera or select book photos from your device.</div>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="btn-primary" onclick="startSmartCamera()" style="padding:6px 14px;font-size:0.8rem;">
+                  🔄 Start Camera
+                </button>
+                <label class="btn-secondary" style="padding:6px 14px;font-size:0.8rem;cursor:pointer;color:#0F172A;background:#FFF;">
+                  📁 Select Photo(s)
+                  <input type="file" accept="image/*" multiple style="display:none;" onchange="handleSmartPhotosUpload(event)">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Camera Action Bar -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:0 4px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn-secondary" onclick="flipSmartCamera()" style="padding:6px 10px;font-size:0.78rem;background:rgba(255,255,255,0.15);color:#FFF;border:none;border-radius:6px;cursor:pointer;">
+                🔄 <span id="cameraFlipLabel">Flip Camera</span>
+              </button>
+              <label class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;background:rgba(255,255,255,0.15);color:#FFF;border:none;border-radius:6px;cursor:pointer;">
+                📁 Upload Photos
+                <input type="file" id="smartUploadInput" accept="image/*" multiple style="display:none;" onchange="handleSmartPhotosUpload(event)">
+              </label>
+            </div>
+            <div style="font-size:0.75rem;color:#94A3B8;" id="cameraDeviceBadge">
+              Detecting camera...
+            </div>
+          </div>
+        </div>
+
+        <!-- TWO-SLOT SNAPSHOT BAR -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <!-- Slot 1: Front Cover -->
+          <div id="slotFrontCover" class="scanner-active-border" style="border-radius:12px;padding:12px;transition:all 0.2s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:0.82rem;font-weight:700;color:#1E40AF;">
+                1️⃣ Front Cover <span style="color:#DC2626;">*</span>
+              </span>
+              <span id="badgeFrontStatus" style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:6px;background:#DBEAFE;color:#1D4ED8;">
+                Step 1: Required
+              </span>
+            </div>
+            <div id="boxFrontPreview" style="height:90px;border-radius:8px;background:#DBEAFE;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative;">
+              <span id="txtFrontPlaceholder" style="font-size:0.76rem;color:#64748B;">No front snapshot yet</span>
+              <img id="imgFrontPreview" style="display:none;width:100%;height:100%;object-fit:cover;">
+            </div>
+            <button type="button" class="btn-primary" id="btnSnapFront" onclick="snapFrontCover()" style="width:100%;justify-content:center;padding:8px;font-size:0.84rem;font-weight:700;">
+              📸 Snap Front Cover
+            </button>
+          </div>
+
+          <!-- Slot 2: Back Cover (Optional) -->
+          <div id="slotBackCover" style="border:1px dashed #CBD5E1;border-radius:12px;padding:12px;background:#F8FAFC;transition:all 0.2s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:0.82rem;font-weight:700;color:#334155;">
+                2️⃣ Back Cover &amp; Blurb
+              </span>
+              <span id="badgeBackStatus" style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:6px;background:#E2E8F0;color:#475569;">
+                Step 2: Optional
+              </span>
+            </div>
+            <div id="boxBackPreview" style="height:90px;border-radius:8px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative;">
+              <span id="txtBackPlaceholder" style="font-size:0.76rem;color:#64748B;">No back snapshot yet</span>
+              <img id="imgBackPreview" style="display:none;width:100%;height:100%;object-fit:cover;">
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="btn-primary" id="btnSnapBack" onclick="snapBackCover()" style="flex:2;justify-content:center;padding:8px;font-size:0.84rem;font-weight:700;" disabled>
+                📸 Snap Back Cover
+              </button>
+              <button type="button" class="btn-secondary" id="btnSkipBack" onclick="skipBackCover()" style="flex:1;justify-content:center;padding:8px;font-size:0.8rem;" disabled>
+                ⏭️ Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKGROUND AI PROCESSING BANNER -->
+      <div id="smartScanProcessing" style="display:none;background:linear-gradient(135deg, #1E3A8A, #2563EB);border-radius:12px;padding:16px 20px;margin-bottom:16px;color:#FFF;box-shadow:0 8px 24px rgba(37,99,235,0.25);">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:38px;height:38px;border:3px solid rgba(255,255,255,0.3);border-top-color:#FFF;border-radius:50%;animation:spinLoading 0.8s linear infinite;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:0.95rem;margin-bottom:3px;" id="smartProcessStatus">
+              🧠 AI analyzing book cover text &amp; blurbs...
+            </div>
+            <div style="font-size:0.78rem;opacity:0.92;" id="smartProcessSubstatus">
+              Detecting Title, Author, ISBN, Publisher &amp; searching Google Books store in background...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOK DETAILS VERIFICATION SECTION -->
+      <div id="smartBookVerificationSection" style="display:none;border-top:2px solid #E2E8F0;padding-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <h4 style="margin:0;font-size:1.1rem;font-weight:800;color:#1E293B;">
+              📋 Review &amp; Verify Book Details
+            </h4>
+            <p style="margin:2px 0 0 0;font-size:0.78rem;color:#64748B;">
+              Auto-filled by AI &amp; Google Books. Review and adjust any details before saving.
+            </p>
+          </div>
+          <button type="button" class="btn-secondary" onclick="resetSmartScanner()" style="padding:5px 12px;font-size:0.78rem;">
+            🔄 Re-scan / Clear
           </button>
         </div>
 
-        <!-- Auto-Generated Internal Book ID Strip -->
-        <div style="background:#F8FAFC;border:1px solid #CBD5E1;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <div>
-            <span style="font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;display:block;">
-              System-Generated Book ID (Unique Internal Identifier)
-            </span>
-            <div style="font-size:1.15rem;font-weight:800;color:#0F172A;font-family:monospace;margin-top:2px;" id="cbfBookIdDisplay">
-              Loading...
+        <!-- Cover Choice & Barcode Strip -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <!-- Cover Image Selector Card -->
+          <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px;display:flex;align-items:center;gap:12px;">
+            <div id="cbfCoverPreviewBox" style="width:62px;height:82px;border-radius:6px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+              <span id="cbfCoverPlaceholder" style="font-size:0.68rem;color:#64748B;text-align:center;">No Cover</span>
+              <img id="cbfCoverImg" style="display:none;width:100%;height:100%;object-fit:cover;">
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.78rem;font-weight:700;color:#1E293B;margin-bottom:2px;" id="cbfCoverSourceLabel">Book Cover Image</div>
+              <div style="font-size:0.7rem;color:#64748B;margin-bottom:6px;" id="cbfCoverStatusDesc">Ready for library catalog</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <button type="button" class="btn-secondary" id="btnToggleOnlineCover" onclick="useOnlineCover()" style="display:none;padding:3px 8px;font-size:0.72rem;background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;">🌐 Google Store</button>
+                <button type="button" class="btn-secondary" id="btnToggleSnapCover" onclick="useSnapCover()" style="display:none;padding:3px 8px;font-size:0.72rem;background:#F0FDF4;color:#15803D;border-color:#BBF7D0;">📸 Camera Snap</button>
+                <label class="btn-secondary" style="padding:3px 8px;font-size:0.72rem;cursor:pointer;">
+                  📁 Custom
+                  <input type="file" accept="image/*" style="display:none;" onchange="handleCommonCoverUpload(event)">
+                </label>
+              </div>
             </div>
           </div>
-          <span style="background:#E2E8F0;color:#334155;font-size:0.72rem;font-weight:700;padding:4px 8px;border-radius:6px;">
-            Auto-Generated (VBPG+Year+Seq)
-          </span>
+
+          <!-- Barcode & Book ID Card -->
+          <div style="background:#F8FAFC;border:1px solid #CBD5E1;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">
+                Internal Book ID &amp; Barcode
+              </span>
+              <span style="background:#E2E8F0;color:#334155;font-size:0.7rem;font-weight:700;padding:2px 6px;border-radius:4px;">
+                Code128
+              </span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;">
+              <div style="font-size:1.1rem;font-weight:800;color:#0F172A;font-family:monospace;" id="cbfBookIdDisplay">
+                Loading...
+              </div>
+              <div id="barcodePreviewBox" style="height:36px;display:flex;align-items:center;">
+                <img id="barcodePreviewImg" style="height:36px;max-width:130px;object-fit:contain;display:none;" alt="Barcode">
+              </div>
+            </div>
+            <div style="font-size:0.68rem;color:#64748B;margin-top:3px;">
+              Printable barcode sticker ready to stick on physical book.
+            </div>
+          </div>
         </div>
 
+        <!-- Confirmation Form -->
         <form id="commonBookForm" onsubmit="submitCommonBookForm(event)">
           <input type="hidden" name="book_id" id="cbfBookId" value="">
           <input type="hidden" name="cover_url" id="cbfCoverUrl" value="">
@@ -2174,8 +2146,8 @@
           <!-- Row 3: ISBN, Price/MRP -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:0.8rem;font-weight:700;color:#334155;">ISBN (Text Entry Only)</label>
-              <input type="text" name="isbn" id="cbfIsbn" class="lp-search-input" style="width:100%;" placeholder="e.g. 978-0132350884 (plain text)">
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">ISBN (Printed)</label>
+              <input type="text" name="isbn" id="cbfIsbn" class="lp-search-input" style="width:100%;" placeholder="e.g. 978-0132350884">
             </div>
             <div>
               <label style="font-size:0.8rem;font-weight:700;color:#334155;">MRP / Price (₹)</label>
@@ -2221,44 +2193,55 @@
           </div>
 
           <!-- Row 6: Description / Notes -->
-          <div style="margin-bottom:12px;">
-            <label style="font-size:0.8rem;font-weight:700;color:#334155;">Description / Notes</label>
-            <textarea name="description" id="cbfDescription" class="lp-search-input" style="width:100%;height:60px;resize:vertical;" placeholder="Optional synopsis or librarian notes..."></textarea>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:0.8rem;font-weight:700;color:#334155;">Short Summary / Synopsis</label>
+            <textarea name="description" id="cbfDescription" class="lp-search-input" style="width:100%;height:68px;resize:vertical;" placeholder="Synopsis from Google Books store or back cover blurb..."></textarea>
           </div>
 
-          <!-- Row 7: Cover Image Preview & Upload -->
-          <div style="background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;padding:12px;margin-bottom:18px;">
-            <div style="display:flex;align-items:center;gap:14px;">
-              <div id="cbfCoverPreviewBox" style="width:65px;height:85px;border-radius:6px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
-                <span id="cbfCoverPlaceholder" style="font-size:0.7rem;color:#64748B;text-align:center;">No Cover</span>
-                <img id="cbfCoverImg" style="display:none;width:100%;height:100%;object-fit:cover;">
-              </div>
-              <div style="flex:1;">
-                <span style="font-size:0.78rem;font-weight:700;color:#334155;display:block;margin-bottom:4px;">Cover Image (Preview &amp; Upload)</span>
-                <p style="font-size:0.72rem;color:#64748B;margin:0 0 8px 0;">Cover image fetched from online metadata or upload directly.</p>
-                <div style="display:flex;gap:6px;">
-                  <label class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;cursor:pointer;">
-                    Upload Cover
-                    <input type="file" accept="image/*" style="display:none;" onchange="handleCommonCoverUpload(event)">
-                  </label>
-                  <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="captureCommonCoverCamera()">
-                    Camera
-                  </button>
-                  <button type="button" id="btnCbfClearCover" style="display:none;background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;" onclick="clearCommonCover()">
-                    Clear
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <button type="submit" id="btnSaveCommonBook" class="btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:1rem;font-weight:700;letter-spacing:0.3px;">
-            💾 Save Book to Library
+          <!-- Submit Action Button -->
+          <button type="submit" id="btnSaveCommonBook" class="btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:1.02rem;font-weight:800;letter-spacing:0.3px;background:linear-gradient(135deg, #16A34A, #15803D);border-color:#15803D;box-shadow:0 4px 12px rgba(22,163,74,0.3);">
+            💾 Verify &amp; Save Book to Library
           </button>
         </form>
       </div>
 
+    </div>
+  </div>
+
+  <!-- PRINTABLE BARCODE LABEL MODAL -->
+  <div id="barcodePrintModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;z-index:10000;">
+    <div class="card" style="width:90%;max-width:440px;position:relative;padding:1.5rem;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.25);border-radius:16px;">
+      <div style="font-size:2rem;margin-bottom:6px;">🎉</div>
+      <h3 style="margin:0 0 4px 0;font-size:1.2rem;font-weight:800;color:#0F172A;">Book Saved Successfully!</h3>
+      <p style="margin:0 0 16px 0;font-size:0.82rem;color:#64748B;">Print the barcode label sticker below to attach to the physical book.</p>
+
+      <!-- Thermal Label Sticker Container (50x30mm standard ratio) -->
+      <div id="printableBarcodeLabel" style="background:#FFF;border:2px dashed #0F172A;border-radius:8px;padding:12px 14px;margin:0 auto 18px auto;max-width:320px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <div style="font-size:0.72rem;font-weight:800;color:#0F172A;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;" id="lblSchoolName">
+          LIBRIKA DIGITAL LIBRARY
+        </div>
+        <div style="font-size:0.82rem;font-weight:700;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;margin:0 auto;" id="lblBookTitle">
+          Book Title
+        </div>
+        <div style="font-size:0.7rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;" id="lblBookAuthor">
+          Author Name
+        </div>
+        <div style="display:flex;justify-content:center;margin-bottom:4px;">
+          <img id="lblBarcodeImg" src="" style="max-height:48px;max-width:100%;object-fit:contain;" alt="Barcode">
+        </div>
+        <div style="font-family:monospace;font-size:0.85rem;font-weight:800;letter-spacing:1px;color:#0F172A;" id="lblBookId">
+          VBPG20260001
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button type="button" class="btn-primary" onclick="printBarcodeSticker()" style="padding:10px 18px;font-size:0.9rem;font-weight:700;display:flex;align-items:center;gap:6px;">
+          🖨️ Print Barcode Label
+        </button>
+        <button type="button" class="btn-secondary" onclick="closeBarcodeModal()" style="padding:10px 14px;font-size:0.85rem;">
+          ✓ Done / Next Book
+        </button>
+      </div>
     </div>
   </div>
 
@@ -3382,21 +3365,427 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // Book Adding Workflow (3 Input Modes — Strictly No Barcode Scanning)
-    // Mode 1: Normal Text Scan (OCR on camera/upload)
-    // Mode 2: Search Online (Image OCR or manual title/author query)
-    // Mode 3: Manual Search (Form fields online query)
-    // Common Book Information Form: System Book ID + 15 fields
+    // ─────────────────────────────────────────────────────────────────
+    // SMART CAMERA BOOK SCANNER & BARCODE STICKER WORKFLOW
+    // Front cam on Desktop, Back cam on Mobile, AI Extraction,
+    // Google Books Store Metadata & Printable Code128 Barcode Labels
     // ─────────────────────────────────────────────────────────────────
 
-    let currentAddBookMode = 'text_scan';
-    let currentOcrImageBase64 = null;
-    let onlineSearchImageBase64 = null;
-    let lastOcrIdentified = null;
+    let smartCameraStream = null;
+    let currentFacingMode = isMobileDevice() ? 'environment' : 'user';
+    let frontSnapBase64 = null;
+    let backSnapBase64 = null;
+    let lastSmartScanResult = null;
+    let currentSavedBook = null;
+
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+             (window.innerWidth <= 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+    }
 
     async function initAddBookWorkflow() {
+      resetSmartScannerState();
       await fetchNextBookId();
-      switchAddBookMode(currentAddBookMode || 'text_scan');
+      await startSmartCamera();
+    }
+
+    function closeAddBookModal() {
+      stopSmartCamera();
+      closeModal('addBookModal');
+    }
+
+    function resetSmartScannerState() {
+      frontSnapBase64 = null;
+      backSnapBase64 = null;
+      lastSmartScanResult = null;
+
+      const imgF = document.getElementById('imgFrontPreview');
+      const phF = document.getElementById('txtFrontPlaceholder');
+      const bdgF = document.getElementById('badgeFrontStatus');
+      const btnSnapF = document.getElementById('btnSnapFront');
+      if (imgF) { imgF.src = ''; imgF.style.display = 'none'; }
+      if (phF) phF.style.display = 'block';
+      if (bdgF) {
+        bdgF.textContent = 'Step 1: Required';
+        bdgF.style.background = '#DBEAFE';
+        bdgF.style.color = '#1D4ED8';
+      }
+      if (btnSnapF) { btnSnapF.disabled = false; btnSnapF.textContent = '📸 Snap Front Cover'; }
+
+      const imgB = document.getElementById('imgBackPreview');
+      const phB = document.getElementById('txtBackPlaceholder');
+      const bdgB = document.getElementById('badgeBackStatus');
+      const btnSnapB = document.getElementById('btnSnapBack');
+      const btnSkipB = document.getElementById('btnSkipBack');
+      const slotB = document.getElementById('slotBackCover');
+
+      if (imgB) { imgB.src = ''; imgB.style.display = 'none'; }
+      if (phB) phB.style.display = 'block';
+      if (bdgB) {
+        bdgB.textContent = 'Step 2: Optional';
+        bdgB.style.background = '#E2E8F0';
+        bdgB.style.color = '#475569';
+      }
+      if (btnSnapB) btnSnapB.disabled = true;
+      if (btnSkipB) btnSkipB.disabled = true;
+      if (slotB) {
+        slotB.style.borderColor = '#CBD5E1';
+        slotB.style.background = '#F8FAFC';
+      }
+
+      const guide = document.getElementById('cameraGuidelineText');
+      if (guide) guide.textContent = 'Align Front Cover inside frame and tap "Snap Front Cover"';
+
+      const scanSec = document.getElementById('smartScannerSection');
+      const procBanner = document.getElementById('smartScanProcessing');
+      const verifSec = document.getElementById('smartBookVerificationSection');
+      if (scanSec) scanSec.style.display = 'block';
+      if (procBanner) procBanner.style.display = 'none';
+      if (verifSec) verifSec.style.display = 'none';
+    }
+
+    async function startSmartCamera() {
+      stopSmartCamera();
+      const video = document.getElementById('smartBookVideo');
+      const fallback = document.getElementById('cameraFallbackNotice');
+      const badge = document.getElementById('cameraDeviceBadge');
+      const flipLbl = document.getElementById('cameraFlipLabel');
+
+      const isMobile = isMobileDevice();
+      if (badge) {
+        badge.textContent = isMobile
+          ? (currentFacingMode === 'user' ? '📱 Mobile (Front Camera)' : '📱 Mobile (Back Camera)')
+          : (currentFacingMode === 'user' ? '💻 Desktop (Front Webcam)' : '💻 Desktop (External Camera)');
+      }
+      if (flipLbl) {
+        flipLbl.textContent = (currentFacingMode === 'user') ? 'Switch to Back' : 'Switch to Front';
+      }
+
+      // Mirror front camera preview for intuitive feel; keep back camera unmirrored
+      if (video) {
+        video.style.transform = (currentFacingMode === 'user') ? 'scaleX(-1)' : 'scaleX(1)';
+      }
+
+      try {
+        const constraints = {
+          video: {
+            facingMode: currentFacingMode === 'user' ? 'user' : { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        };
+        smartCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (video) {
+          video.srcObject = smartCameraStream;
+          await video.play().catch(() => {});
+        }
+        if (fallback) fallback.style.display = 'none';
+      } catch (err) {
+        console.warn('Camera stream error:', err);
+        if (fallback) fallback.style.display = 'flex';
+      }
+    }
+
+    function stopSmartCamera() {
+      if (smartCameraStream) {
+        try {
+          smartCameraStream.getTracks().forEach(t => t.stop());
+        } catch(e) {}
+        smartCameraStream = null;
+      }
+    }
+
+    function flipSmartCamera() {
+      currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+      startSmartCamera();
+    }
+
+    function toggleManualEntryMode() {
+      const verifSec = document.getElementById('smartBookVerificationSection');
+      const scanSec = document.getElementById('smartScannerSection');
+      const btn = document.getElementById('btnToggleManual');
+
+      if (verifSec.style.display === 'none' || !verifSec.style.display) {
+        stopSmartCamera();
+        scanSec.style.display = 'none';
+        verifSec.style.display = 'block';
+        if (btn) btn.textContent = '📸 Camera Scan';
+        fetchNextBookId();
+      } else {
+        scanSec.style.display = 'block';
+        verifSec.style.display = 'none';
+        if (btn) btn.textContent = '⌨️ Manual Entry';
+        startSmartCamera();
+      }
+    }
+
+    function captureVideoFrame() {
+      const video = document.getElementById('smartBookVideo');
+      const canvas = document.getElementById('smartBookCanvas') || document.createElement('canvas');
+      if (!video || !video.videoWidth) return null;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.88);
+    }
+
+    function snapFrontCover() {
+      const frame = captureVideoFrame();
+      if (!frame) {
+        alert('Camera not ready. Make sure camera access is allowed, or click "Upload Photos".');
+        return;
+      }
+      setFrontCoverSnapshot(frame);
+    }
+
+    function setFrontCoverSnapshot(base64) {
+      frontSnapBase64 = base64;
+      const img = document.getElementById('imgFrontPreview');
+      const ph = document.getElementById('txtFrontPlaceholder');
+      const badge = document.getElementById('badgeFrontStatus');
+      const btnSnapF = document.getElementById('btnSnapFront');
+      const btnSnapB = document.getElementById('btnSnapBack');
+      const btnSkipB = document.getElementById('btnSkipBack');
+      const slotB = document.getElementById('slotBackCover');
+      const guide = document.getElementById('cameraGuidelineText');
+
+      if (img) { img.src = base64; img.style.display = 'block'; }
+      if (ph) ph.style.display = 'none';
+      if (badge) {
+        badge.textContent = '✓ Front Snapped';
+        badge.style.background = '#DCFCE7';
+        badge.style.color = '#15803D';
+      }
+      if (btnSnapF) btnSnapF.textContent = '🔄 Re-snap Front';
+
+      // Enable Slot 2 (Back Cover)
+      if (btnSnapB) btnSnapB.disabled = false;
+      if (btnSkipB) btnSkipB.disabled = false;
+      if (slotB) {
+        slotB.style.borderColor = '#3B82F6';
+        slotB.style.background = '#EFF6FF';
+      }
+      if (guide) guide.textContent = 'Step 2: Point at Back Cover & tap "Snap Back Cover" or "Skip"';
+    }
+
+    function snapBackCover() {
+      const frame = captureVideoFrame();
+      if (!frame) {
+        alert('Camera not ready.');
+        return;
+      }
+      setBackCoverSnapshot(frame);
+      triggerSmartScanProcessing();
+    }
+
+    function skipBackCover() {
+      backSnapBase64 = null;
+      const badge = document.getElementById('badgeBackStatus');
+      if (badge) {
+        badge.textContent = 'Skipped';
+        badge.style.background = '#F1F5F9';
+        badge.style.color = '#64748B';
+      }
+      triggerSmartScanProcessing();
+    }
+
+    function setBackCoverSnapshot(base64) {
+      backSnapBase64 = base64;
+      const img = document.getElementById('imgBackPreview');
+      const ph = document.getElementById('txtBackPlaceholder');
+      const badge = document.getElementById('badgeBackStatus');
+      if (img) { img.src = base64; img.style.display = 'block'; }
+      if (ph) ph.style.display = 'none';
+      if (badge) {
+        badge.textContent = '✓ Back Snapped';
+        badge.style.background = '#DCFCE7';
+        badge.style.color = '#15803D';
+      }
+    }
+
+    function handleSmartPhotosUpload(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const reader1 = new FileReader();
+      reader1.onload = (evt1) => {
+        setFrontCoverSnapshot(evt1.target.result);
+        if (files.length > 1) {
+          const reader2 = new FileReader();
+          reader2.onload = (evt2) => {
+            setBackCoverSnapshot(evt2.target.result);
+            triggerSmartScanProcessing();
+          };
+          reader2.readAsDataURL(files[1]);
+        } else {
+          triggerSmartScanProcessing();
+        }
+      };
+      reader1.readAsDataURL(files[0]);
+    }
+
+    async function triggerSmartScanProcessing() {
+      if (!frontSnapBase64) {
+        alert('Please snap the front cover first.');
+        return;
+      }
+
+      // Stop camera while processing in background
+      stopSmartCamera();
+
+      const procBanner = document.getElementById('smartScanProcessing');
+      const verifSec = document.getElementById('smartBookVerificationSection');
+      const statusTitle = document.getElementById('smartProcessStatus');
+      const statusSub = document.getElementById('smartProcessSubstatus');
+
+      if (procBanner) procBanner.style.display = 'block';
+      if (verifSec) verifSec.style.display = 'none';
+      if (statusTitle) statusTitle.textContent = '🧠 AI reading title, author, edition & ISBN from covers...';
+      if (statusSub) statusSub.textContent = 'Querying Google Books & OpenLibrary in background for high-res cover & synopsis...';
+
+      try {
+        const res = await fetch('/admin/api/books/smart-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            frontImageBase64: frontSnapBase64,
+            backImageBase64: backSnapBase64
+          })
+        });
+        const data = await res.json();
+
+        if (data.success && data.book) {
+          lastSmartScanResult = data;
+          populateSmartBookForm(data);
+          if (procBanner) procBanner.style.display = 'none';
+          if (verifSec) {
+            verifSec.style.display = 'block';
+            verifSec.scrollIntoView({ behavior: 'smooth' });
+          }
+        } else {
+          alert(data.error || 'AI analysis could not complete. Switching to review form.');
+          if (procBanner) procBanner.style.display = 'none';
+          if (verifSec) {
+            verifSec.style.display = 'block';
+            setCommonCover(frontSnapBase64);
+          }
+        }
+      } catch (err) {
+        console.error('Smart scan error:', err);
+        alert('Network or processing error. Switching to review form with your photos attached.');
+        if (procBanner) procBanner.style.display = 'none';
+        if (verifSec) {
+          verifSec.style.display = 'block';
+          setCommonCover(frontSnapBase64);
+        }
+      }
+    }
+
+    function populateSmartBookForm(data) {
+      const b = data.book || {};
+      const bookId = data.bookId || b.book_id || '';
+
+      const idDisp = document.getElementById('cbfBookIdDisplay');
+      const idInput = document.getElementById('cbfBookId');
+      if (idDisp) idDisp.textContent = bookId;
+      if (idInput) idInput.value = bookId;
+
+      // Barcode image
+      const barcodeImg = document.getElementById('barcodePreviewImg');
+      if (barcodeImg && data.barcodeUrl) {
+        barcodeImg.src = data.barcodeUrl;
+        barcodeImg.style.display = 'block';
+      }
+
+      // Cover switcher buttons
+      const btnOnline = document.getElementById('btnToggleOnlineCover');
+      const btnSnap = document.getElementById('btnToggleSnapCover');
+      const coverLabel = document.getElementById('cbfCoverSourceLabel');
+      const coverDesc = document.getElementById('cbfCoverStatusDesc');
+
+      if (data.onlineCoverUrl) {
+        if (btnOnline) btnOnline.style.display = 'inline-block';
+        if (btnSnap) btnSnap.style.display = 'inline-block';
+        if (coverLabel) coverLabel.innerHTML = 'Cover: <strong style="color:#2563EB;">Google Books Store</strong>';
+        if (coverDesc) coverDesc.textContent = 'High-resolution official cover fetched';
+      } else {
+        if (btnOnline) btnOnline.style.display = 'none';
+        if (btnSnap) btnSnap.style.display = 'none';
+        if (coverLabel) coverLabel.innerHTML = 'Cover: <strong style="color:#15803D;">Camera Snapshot</strong>';
+        if (coverDesc) coverDesc.textContent = 'Front cover photo ready';
+      }
+
+      setCommonCover(b.cover_url || data.localFrontUrl || frontSnapBase64 || '');
+      if (document.getElementById('cbfBackCoverUrl')) {
+        document.getElementById('cbfBackCoverUrl').value = b.back_cover_url || data.localBackUrl || backSnapBase64 || '';
+      }
+
+      // Fields
+      document.getElementById('cbfTitle').value = b.title || '';
+      document.getElementById('cbfAuthor').value = b.author || '';
+      document.getElementById('cbfPublisher').value = b.publisher || '';
+      document.getElementById('cbfEdition').value = b.edition || '';
+      document.getElementById('cbfYear').value = b.publication_year || '';
+      document.getElementById('cbfLanguage').value = b.language || 'English';
+      document.getElementById('cbfIsbn').value = b.isbn || '';
+      document.getElementById('cbfPrice').value = b.price || '';
+      document.getElementById('cbfSubject').value = b.subject || 'General';
+      document.getElementById('cbfClass').value = b.class || '';
+      document.getElementById('cbfCopies').value = b.total_copies || 1;
+      document.getElementById('cbfRack').value = b.rack || 'A';
+      document.getElementById('cbfShelf').value = b.shelf || '1';
+      document.getElementById('cbfCondition').value = b.book_condition || 'GOOD';
+      document.getElementById('cbfDescription').value = b.description || '';
+    }
+
+    function useOnlineCover() {
+      if (lastSmartScanResult && lastSmartScanResult.onlineCoverUrl) {
+        setCommonCover(lastSmartScanResult.onlineCoverUrl);
+        const coverLabel = document.getElementById('cbfCoverSourceLabel');
+        if (coverLabel) coverLabel.innerHTML = 'Cover: <strong style="color:#2563EB;">Google Books Store</strong>';
+      }
+    }
+
+    function useSnapCover() {
+      const snapUrl = (lastSmartScanResult && lastSmartScanResult.localFrontUrl) || frontSnapBase64;
+      if (snapUrl) {
+        setCommonCover(snapUrl);
+        const coverLabel = document.getElementById('cbfCoverSourceLabel');
+        if (coverLabel) coverLabel.innerHTML = 'Cover: <strong style="color:#15803D;">Camera Snapshot</strong>';
+      }
+    }
+
+    function setCommonCover(url) {
+      document.getElementById('cbfCoverUrl').value = url || '';
+      const img = document.getElementById('cbfCoverImg');
+      const ph = document.getElementById('cbfCoverPlaceholder');
+      if (url) {
+        if (img) { img.src = url; img.style.display = 'block'; }
+        if (ph) ph.style.display = 'none';
+      } else {
+        if (img) { img.src = ''; img.style.display = 'none'; }
+        if (ph) ph.style.display = 'block';
+      }
+    }
+
+    function handleCommonCoverUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        setCommonCover(evt.target.result);
+        const coverLabel = document.getElementById('cbfCoverSourceLabel');
+        if (coverLabel) coverLabel.innerHTML = 'Cover: <strong style="color:#475569;">Custom Upload</strong>';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetSmartScanner() {
+      resetSmartScannerState();
+      startSmartCamera();
     }
 
     async function fetchNextBookId() {
@@ -3409,10 +3798,11 @@
         if (data.success && data.bookId) {
           if (displayEl) displayEl.textContent = data.bookId;
           if (inputEl) inputEl.value = data.bookId;
-        } else {
-          const fallback = 'VBPG' + new Date().getFullYear() + '0001';
-          if (displayEl) displayEl.textContent = fallback;
-          if (inputEl) inputEl.value = fallback;
+          const barcodeImg = document.getElementById('barcodePreviewImg');
+          if (barcodeImg) {
+            barcodeImg.src = '/admin/api/barcode/' + encodeURIComponent(data.bookId);
+            barcodeImg.style.display = 'block';
+          }
         }
       } catch (e) {
         const fallback = 'VBPG' + new Date().getFullYear() + '0001';
@@ -3421,482 +3811,10 @@
       }
     }
 
-    function switchAddBookMode(mode) {
-      currentAddBookMode = mode;
-      const vText = document.getElementById('modeViewTextScan');
-      const vOnline = document.getElementById('modeViewOnlineSearch');
-      const vManual = document.getElementById('modeViewManualSearch');
-
-      const tText = document.getElementById('tabModeTextScan');
-      const tOnline = document.getElementById('tabModeOnlineSearch');
-      const tManual = document.getElementById('tabModeManualSearch');
-
-      if (vText) vText.style.display = (mode === 'text_scan') ? 'block' : 'none';
-      if (vOnline) vOnline.style.display = (mode === 'online_search') ? 'block' : 'none';
-      if (vManual) vManual.style.display = (mode === 'manual_search') ? 'block' : 'none';
-
-      if (tText) tText.classList.toggle('active', mode === 'text_scan');
-      if (tOnline) tOnline.classList.toggle('active', mode === 'online_search');
-      if (tManual) tManual.classList.toggle('active', mode === 'manual_search');
-    }
-
-    // ── MODE 1: NORMAL TEXT SCAN (OCR) ──
-    function handleOcrImageSelected(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        currentOcrImageBase64 = evt.target.result;
-        const img = document.getElementById('ocrImagePreview');
-        const ph = document.getElementById('ocrImagePlaceholder');
-        const clr = document.getElementById('btnOcrClear');
-        const btnRun = document.getElementById('btnRunOcr');
-        if (img) { img.src = currentOcrImageBase64; img.style.display = 'block'; }
-        if (ph) ph.style.display = 'none';
-        if (clr) clr.style.display = 'inline-block';
-        if (btnRun) btnRun.disabled = false;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function captureOcrCamera() {
-      const cam = document.createElement('input');
-      cam.type = 'file';
-      cam.accept = 'image/*';
-      cam.capture = 'environment';
-      cam.onchange = handleOcrImageSelected;
-      cam.click();
-    }
-
-    function clearOcrImage() {
-      currentOcrImageBase64 = null;
-      const fileInput = document.getElementById('ocrFileInput');
-      if (fileInput) fileInput.value = '';
-      const img = document.getElementById('ocrImagePreview');
-      const ph = document.getElementById('ocrImagePlaceholder');
-      const clr = document.getElementById('btnOcrClear');
-      const btnRun = document.getElementById('btnRunOcr');
-      if (img) { img.src = ''; img.style.display = 'none'; }
-      if (ph) ph.style.display = 'block';
-      if (clr) clr.style.display = 'none';
-      if (btnRun) btnRun.disabled = true;
-    }
-
-    async function runNormalTextScan() {
-      if (!currentOcrImageBase64) {
-        alert('Please capture or upload an image of the physical book first.');
-        return;
-      }
-      const btn = document.getElementById('btnRunOcr');
-      const statusEl = document.getElementById('ocrStatusMsg');
-      const reviewSec = document.getElementById('ocrReviewSection');
-      const textarea = document.getElementById('ocrRawTextarea');
-      const pillsBox = document.getElementById('ocrIdentifiedPills');
-
-      if (btn) { btn.disabled = true; btn.textContent = '⏳ Processing OCR & Identifying Fields...'; }
-      if (statusEl) {
-        statusEl.style.display = 'block';
-        statusEl.style.background = '#EFF6FF';
-        statusEl.style.color = '#1D4ED8';
-        statusEl.style.border = '1px solid #BFDBFE';
-        statusEl.textContent = '🔍 Reading visible printed text via OCR...';
-      }
-
-      try {
-        const res = await fetch('/admin/api/books/ocr-text', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: currentOcrImageBase64 })
-        });
-        const data = await res.json();
-        if (data.success) {
-          lastOcrIdentified = data.identified || {};
-          if (textarea) textarea.value = data.rawText || '';
-          if (pillsBox) {
-            const iden = lastOcrIdentified;
-            pillsBox.innerHTML = `
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Title:</strong> ${escapeHtml(iden.title || 'Not detected')}</div>
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Author:</strong> ${escapeHtml(iden.author || 'Not detected')}</div>
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Publisher:</strong> ${escapeHtml(iden.publisher || 'Not detected')}</div>
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Edition:</strong> ${escapeHtml(iden.edition || 'Not detected')}</div>
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Language:</strong> ${escapeHtml(iden.language || 'English')}</div>
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>ISBN (printed):</strong> ${escapeHtml(iden.isbn || 'Not detected')}</div>
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>MRP / Price:</strong> ${escapeHtml(iden.price ? '₹' + iden.price : 'Not detected')}</div>
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Subject:</strong> ${escapeHtml(iden.subject || 'Not detected')}</div>
-              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Class/Grade:</strong> ${escapeHtml(iden.class || 'Not detected')}</div>
-            `;
-          }
-          if (reviewSec) reviewSec.style.display = 'block';
-          if (statusEl) {
-            statusEl.style.background = '#ECFDF5';
-            statusEl.style.color = '#065F46';
-            statusEl.style.border = '1px solid #A7F3D0';
-            statusEl.textContent = '✓ Visible text successfully extracted! Review and edit the text or transfer directly into Common Form.';
-          }
-        } else {
-          if (statusEl) {
-            statusEl.style.background = '#FEF2F2';
-            statusEl.style.color = '#B91C1C';
-            statusEl.style.border = '1px solid #FECACA';
-            statusEl.textContent = data.error || 'Unable to extract text from the photo. You can fill details manually in the Common Form.';
-          }
-        }
-      } catch (err) {
-        if (statusEl) {
-          statusEl.style.background = '#FEF2F2';
-          statusEl.style.color = '#B91C1C';
-          statusEl.style.border = '1px solid #FECACA';
-          statusEl.textContent = 'OCR service offline or network issue. You can fill details manually in the Common Form.';
-        }
-      } finally {
-        if (btn) { btn.disabled = false; btn.textContent = '⚡ Extract Printed Text & Identify Fields'; }
-      }
-    }
-
-    function applyOcrToCommonForm() {
-      const iden = lastOcrIdentified || {};
-      const raw = document.getElementById('ocrRawTextarea')?.value || '';
-
-      // If user edited raw text and title is missing, take first line
-      let fallbackTitle = iden.title;
-      if (!fallbackTitle && raw) {
-        const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-        if (lines.length > 0) fallbackTitle = lines[0];
-      }
-
-      populateCommonBookForm({
-        title: fallbackTitle || '',
-        author: iden.author || '',
-        publisher: iden.publisher || '',
-        edition: iden.edition || '',
-        language: iden.language || 'English',
-        isbn: iden.isbn || '',
-        price: iden.price || '',
-        subject: iden.subject || '',
-        class: iden.class || '',
-        cover_url: currentOcrImageBase64 || ''
-      });
-
-      const commonSec = document.getElementById('commonBookFormSection');
-      if (commonSec) {
-        commonSec.scrollIntoView({ behavior: 'smooth' });
-        commonSec.style.transition = 'background-color 0.5s';
-        commonSec.style.backgroundColor = '#F0FDF4';
-        setTimeout(() => commonSec.style.backgroundColor = 'transparent', 1200);
-      }
-    }
-
-    // ── MODE 2: SEARCH ONLINE ──
-    function handleOnlineSearchImage(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const nameEl = document.getElementById('onlineSearchImageName');
-      if (nameEl) nameEl.textContent = `Selected: ${file.name}`;
-      const reader = new FileReader();
-      reader.onload = async function(evt) {
-        onlineSearchImageBase64 = evt.target.result;
-        // Automatically run OCR to extract query for online search
-        const statusEl = document.getElementById('onlineSearchStatus');
-        if (statusEl) {
-          statusEl.style.display = 'block';
-          statusEl.style.color = '#2563EB';
-          statusEl.textContent = '🔍 Reading photo text to identify book online...';
-        }
-        try {
-          const ocrRes = await fetch('/admin/api/books/ocr-text', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageBase64: onlineSearchImageBase64 })
-          });
-          const ocrData = await ocrRes.json();
-          const query = (ocrData.identified?.title || ocrData.identified?.isbn || ocrData.rawText?.split('\n')[0] || '').trim();
-          if (query) {
-            document.getElementById('onlineSearchTextInput').value = query;
-            runOnlineSearch(query);
-          } else {
-            if (statusEl) {
-              statusEl.style.color = '#D97706';
-              statusEl.textContent = 'Could not read clear title from photo. Please enter title or author in search box.';
-            }
-          }
-        } catch (err) {
-          if (statusEl) {
-            statusEl.style.color = '#DC2626';
-            statusEl.textContent = 'Error processing photo. Enter title manually in the search box.';
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function captureOnlineSearchCamera() {
-      const cam = document.createElement('input');
-      cam.type = 'file';
-      cam.accept = 'image/*';
-      cam.capture = 'environment';
-      cam.onchange = handleOnlineSearchImage;
-      cam.click();
-    }
-
-    async function runOnlineSearch(customQuery) {
-      const query = (customQuery || document.getElementById('onlineSearchTextInput')?.value || '').trim();
-      const statusEl = document.getElementById('onlineSearchStatus');
-      const grid = document.getElementById('onlineSearchResultsGrid');
-
-      if (!query && !onlineSearchImageBase64) {
-        alert('Please enter a search term or provide a book photo.');
-        return;
-      }
-
-      if (statusEl) {
-        statusEl.style.display = 'block';
-        statusEl.style.color = '#2563EB';
-        statusEl.textContent = `🔍 Querying Google Books & OpenLibrary for "${query}"...`;
-      }
-      if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748B;">Searching online repositories...</div>';
-
-      try {
-        const res = await fetch(`/admin/api/books/search-online?q=${encodeURIComponent(query)}`);
-        const data = await res.json();
-        if (data.success && data.books && data.books.length > 0) {
-          if (statusEl) {
-            statusEl.style.color = '#16A34A';
-            statusEl.textContent = `✓ Found ${data.books.length} matching books online. Click "Select This Book" to import.`;
-          }
-          renderOnlineResults(data.books, grid);
-        } else {
-          if (statusEl) {
-            statusEl.style.color = '#D97706';
-            statusEl.textContent = 'No matching books found online. You can enter details manually in the Common Form.';
-          }
-          if (grid) {
-            grid.innerHTML = `
-              <div style="grid-column:1/-1;text-align:center;padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;">
-                <p style="color:#64748B;font-size:0.85rem;margin-bottom:10px;">No online records found for "${escapeHtml(query)}".</p>
-                <button type="button" class="btn-primary" onclick="skipToCommonFormManual('${escapeHtml(query)}')">
-                  ✍️ Enter Details Manually in Common Form
-                </button>
-              </div>
-            `;
-          }
-        }
-      } catch (err) {
-        if (statusEl) {
-          statusEl.style.color = '#DC2626';
-          statusEl.textContent = 'Error querying online database. You can proceed with manual entry.';
-        }
-        if (grid) grid.innerHTML = '';
-      }
-    }
-
-    function renderOnlineResults(books, containerEl) {
-      if (!containerEl) return;
-      containerEl.innerHTML = books.map((b, idx) => {
-        const coverHtml = b.cover_url 
-          ? `<img src="${escapeHtml(b.cover_url)}" style="width:48px;height:66px;object-fit:cover;border-radius:4px;flex-shrink:0;">`
-          : `<div style="width:48px;height:66px;background:#E2E8F0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.68rem;color:#64748B;flex-shrink:0;">No Img</div>`;
-
-        // Store book object in global list or encode
-        const bJson = encodeURIComponent(JSON.stringify(b));
-        return `
-          <div style="border:1px solid #E2E8F0;border-radius:10px;padding:10px;background:#FFFFFF;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-            <div style="display:flex;gap:10px;margin-bottom:8px;">
-              ${coverHtml}
-              <div style="flex:1;min-width:0;">
-                <div style="font-weight:700;font-size:0.85rem;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(b.title)}">${escapeHtml(b.title)}</div>
-                <div style="font-size:0.75rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(b.author || 'Unknown')}</div>
-                <div style="font-size:0.7rem;color:#94A3B8;margin-top:2px;">
-                  ${b.publication_year ? escapeHtml(b.publication_year) : ''} ${b.publisher ? '• ' + escapeHtml(b.publisher) : ''}
-                </div>
-                ${b.isbn ? `<div style="font-size:0.68rem;color:#0B5ED7;font-family:monospace;margin-top:2px;">ISBN: ${escapeHtml(b.isbn)}</div>` : ''}
-              </div>
-            </div>
-            <button type="button" class="btn-primary" onclick="selectOnlineBook('${bJson}')" style="width:100%;justify-content:center;padding:6px;font-size:0.78rem;">
-              ✓ Select This Book &amp; Import
-            </button>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function selectOnlineBook(bJsonEncoded) {
-      try {
-        const b = JSON.parse(decodeURIComponent(bJsonEncoded));
-        populateCommonBookForm({
-          title: b.title || '',
-          author: b.author || '',
-          publisher: b.publisher || '',
-          edition: b.edition || '',
-          publication_year: b.publication_year || '',
-          isbn: b.isbn || '',
-          language: b.language || 'English',
-          subject: b.subject || '',
-          description: b.description || '',
-          cover_url: b.cover_url || ''
-        });
-
-        const commonSec = document.getElementById('commonBookFormSection');
-        if (commonSec) {
-          commonSec.scrollIntoView({ behavior: 'smooth' });
-          commonSec.style.transition = 'background-color 0.5s';
-          commonSec.style.backgroundColor = '#EFF6FF';
-          setTimeout(() => commonSec.style.backgroundColor = 'transparent', 1200);
-        }
-      } catch (e) {
-        alert('Could not import selected book metadata.');
-      }
-    }
-
-    // ── MODE 3: MANUAL SEARCH ──
-    async function runManualFieldSearch() {
-      const title = (document.getElementById('msTitle')?.value || '').trim();
-      const author = (document.getElementById('msAuthor')?.value || '').trim();
-      const isbn = (document.getElementById('msIsbn')?.value || '').trim();
-      const publisher = (document.getElementById('msPublisher')?.value || '').trim();
-      const subject = (document.getElementById('msSubject')?.value || '').trim();
-
-      const statusEl = document.getElementById('manualSearchStatus');
-      const grid = document.getElementById('manualSearchResultsGrid');
-
-      if (!title && !author && !isbn && !publisher && !subject) {
-        alert('Please fill at least one search field.');
-        return;
-      }
-
-      if (statusEl) {
-        statusEl.style.display = 'block';
-        statusEl.style.color = '#6B21A8';
-        statusEl.textContent = '🔍 Querying online databases with specified fields...';
-      }
-      if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#64748B;">Searching online...</div>';
-
-      try {
-        const queryParams = new URLSearchParams({ title, author, isbn, publisher, subject }).toString();
-        const res = await fetch(`/admin/api/books/search-online?${queryParams}`);
-        const data = await res.json();
-        if (data.success && data.books && data.books.length > 0) {
-          if (statusEl) {
-            statusEl.style.color = '#16A34A';
-            statusEl.textContent = `✓ Found ${data.books.length} matching books. Click "Select This Book" to import.`;
-          }
-          renderOnlineResults(data.books, grid);
-        } else {
-          if (statusEl) {
-            statusEl.style.color = '#D97706';
-            statusEl.textContent = 'No matching books found online. Proceed to fill details directly in the Common Form.';
-          }
-          if (grid) {
-            grid.innerHTML = `
-              <div style="grid-column:1/-1;text-align:center;padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;">
-                <p style="color:#64748B;font-size:0.85rem;margin-bottom:10px;">No online records found with those parameters.</p>
-                <button type="button" class="btn-primary" onclick="skipToCommonFormManual()">
-                  ✍️ Proceed with Manual Entry in Common Form
-                </button>
-              </div>
-            `;
-          }
-        }
-      } catch (e) {
-        if (statusEl) {
-          statusEl.style.color = '#DC2626';
-          statusEl.textContent = 'Search failed. You can enter details directly in the Common Form.';
-        }
-      }
-    }
-
-    function skipToCommonFormManual(presetTitle) {
-      const title = presetTitle || (document.getElementById('msTitle')?.value || '').trim();
-      const author = (document.getElementById('msAuthor')?.value || '').trim();
-      const isbn = (document.getElementById('msIsbn')?.value || '').trim();
-      const publisher = (document.getElementById('msPublisher')?.value || '').trim();
-      const subject = (document.getElementById('msSubject')?.value || '').trim();
-
-      populateCommonBookForm({
-        title, author, publisher, isbn, subject
-      });
-
-      const commonSec = document.getElementById('commonBookFormSection');
-      if (commonSec) {
-        commonSec.scrollIntoView({ behavior: 'smooth' });
-        commonSec.style.transition = 'background-color 0.5s';
-        commonSec.style.backgroundColor = '#FAF5FF';
-        setTimeout(() => commonSec.style.backgroundColor = 'transparent', 1200);
-      }
-    }
-
-    // ── COMMON BOOK INFORMATION FORM HANDLERS ──
-    function populateCommonBookForm(b) {
-      if (b.title !== undefined && b.title !== '') document.getElementById('cbfTitle').value = b.title;
-      if (b.author !== undefined && b.author !== '') document.getElementById('cbfAuthor').value = b.author;
-      if (b.publisher !== undefined && b.publisher !== '') document.getElementById('cbfPublisher').value = b.publisher;
-      if (b.edition !== undefined && b.edition !== '') document.getElementById('cbfEdition').value = b.edition;
-      if (b.publication_year !== undefined && b.publication_year !== '') document.getElementById('cbfYear').value = b.publication_year;
-      if (b.language !== undefined && b.language !== '') document.getElementById('cbfLanguage').value = b.language;
-      if (b.isbn !== undefined && b.isbn !== '') document.getElementById('cbfIsbn').value = b.isbn;
-      if (b.price !== undefined && b.price !== '') document.getElementById('cbfPrice').value = b.price;
-      if (b.subject !== undefined && b.subject !== '') document.getElementById('cbfSubject').value = b.subject;
-      if (b.class !== undefined && b.class !== '') document.getElementById('cbfClass').value = b.class;
-      if (b.description !== undefined && b.description !== '') document.getElementById('cbfDescription').value = b.description;
-
-      if (b.cover_url) {
-        document.getElementById('cbfCoverUrl').value = b.cover_url;
-        const img = document.getElementById('cbfCoverImg');
-        const ph = document.getElementById('cbfCoverPlaceholder');
-        const clr = document.getElementById('btnCbfClearCover');
-        if (img && ph) {
-          img.src = b.cover_url;
-          img.style.display = 'block';
-          ph.style.display = 'none';
-          if (clr) clr.style.display = 'inline-block';
-        }
-      }
-    }
-
-    function handleCommonCoverUpload(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        document.getElementById('cbfCoverUrl').value = evt.target.result;
-        const img = document.getElementById('cbfCoverImg');
-        const ph = document.getElementById('cbfCoverPlaceholder');
-        const clr = document.getElementById('btnCbfClearCover');
-        if (img) { img.src = evt.target.result; img.style.display = 'block'; }
-        if (ph) ph.style.display = 'none';
-        if (clr) clr.style.display = 'inline-block';
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function captureCommonCoverCamera() {
-      const cam = document.createElement('input');
-      cam.type = 'file';
-      cam.accept = 'image/*';
-      cam.capture = 'environment';
-      cam.onchange = handleCommonCoverUpload;
-      cam.click();
-    }
-
-    function clearCommonCover() {
-      document.getElementById('cbfCoverUrl').value = '';
-      const img = document.getElementById('cbfCoverImg');
-      const ph = document.getElementById('cbfCoverPlaceholder');
-      const clr = document.getElementById('btnCbfClearCover');
-      if (img) { img.src = ''; img.style.display = 'none'; }
-      if (ph) ph.style.display = 'block';
-      if (clr) clr.style.display = 'none';
-    }
-
-    function resetCommonForm() {
-      document.getElementById('commonBookForm').reset();
-      clearCommonCover();
-      fetchNextBookId();
-    }
-
     async function submitCommonBookForm(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSaveCommonBook');
-      if (btn) { btn.disabled = true; btn.textContent = '💾 Saving Book to Catalog...'; }
+      if (btn) { btn.disabled = true; btn.textContent = '💾 Saving Book & Preparing Barcode...'; }
 
       const payload = {
         book_id: document.getElementById('cbfBookId').value.trim(),
@@ -3922,7 +3840,7 @@
 
       if (!payload.title) {
         alert('Book Title is required.');
-        if (btn) { btn.disabled = false; btn.textContent = '💾 Save Book to Library'; }
+        if (btn) { btn.disabled = false; btn.textContent = '💾 Verify & Save Book to Library'; }
         return;
       }
 
@@ -3934,18 +3852,116 @@
         });
         const data = await res.json();
         if (data.success) {
-          const assignedId = (data.book && data.book.book_id) ? data.book.book_id : payload.book_id;
-          alert(`✓ Book "${payload.title}" saved successfully!\nAssigned Internal Book ID: ${assignedId}`);
-          closeModal('addBookModal');
-          window.location.reload();
+          const assignedId = (data.book && data.book.book_id) ? data.book.book_id : (data.bookId || payload.book_id);
+          currentSavedBook = {
+            bookId: assignedId,
+            title: payload.title,
+            author: payload.author || 'Unknown'
+          };
+          // Close scanner modal and open print barcode modal
+          closeAddBookModal();
+          showBarcodePrintModal(currentSavedBook);
         } else {
           alert(data.error || 'Failed to save book.');
-          if (btn) { btn.disabled = false; btn.textContent = '💾 Save Book to Library'; }
+          if (btn) { btn.disabled = false; btn.textContent = '💾 Verify & Save Book to Library'; }
         }
       } catch (err) {
         alert('Network or server error while saving book.');
-        if (btn) { btn.disabled = false; btn.textContent = '💾 Save Book to Library'; }
+        if (btn) { btn.disabled = false; btn.textContent = '💾 Verify & Save Book to Library'; }
       }
+    }
+
+    // ── BARCODE LABEL PRINTING MODAL & ACTION ──
+    function showBarcodePrintModal(book) {
+      const modal = document.getElementById('barcodePrintModal');
+      if (!modal) return;
+
+      const titleEl = document.getElementById('lblBookTitle');
+      const authorEl = document.getElementById('lblBookAuthor');
+      const idEl = document.getElementById('lblBookId');
+      const imgEl = document.getElementById('lblBarcodeImg');
+
+      if (titleEl) titleEl.textContent = book.title || 'Untitled Book';
+      if (authorEl) authorEl.textContent = book.author ? ('by ' + book.author) : '';
+      if (idEl) idEl.textContent = book.bookId || '';
+      if (imgEl && book.bookId) {
+        imgEl.src = '/admin/api/barcode/' + encodeURIComponent(book.bookId);
+      }
+
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+      document.body.classList.add('modal-open');
+    }
+
+    function printBarcodeSticker() {
+      const labelContent = document.getElementById('printableBarcodeLabel');
+      if (!labelContent) return;
+
+      const printWin = window.open('', '_blank', 'width=460,height=360');
+      if (!printWin) {
+        alert('Please allow popups to print the barcode label.');
+        return;
+      }
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Print Barcode Label - ${document.getElementById('lblBookId')?.textContent || ''}</title>
+            <style>
+              @page { size: auto; margin: 4mm; }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                margin: 0;
+                padding: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #FFF;
+              }
+              #printableBarcodeLabel {
+                border: 1px dashed #333 !important;
+                border-radius: 6px;
+                padding: 8px 12px;
+                text-align: center;
+                width: 100%;
+                max-width: 60mm;
+                box-sizing: border-box;
+              }
+              img { max-width: 100%; height: auto; display: block; margin: 4px auto; }
+            </style>
+          </head>
+          <body>
+            ${labelContent.outerHTML}
+            <script>
+              window.onload = function() {
+                window.focus();
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWin.document.close();
+    }
+
+    function closeBarcodeModal() {
+      const modal = document.getElementById('barcodePrintModal');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+      }
+      window.location.reload();
+    }
+
+    function printBarcodeLabel(barcode) {
+      if (!barcode) return;
+      showBarcodePrintModal({
+        bookId: barcode,
+        title: 'Library Book',
+        author: ''
+      });
     }
 
     // Export Helpers
