@@ -1043,9 +1043,9 @@ async function generateNextBookId(schoolCode) {
   try {
     const res = await db.query(
       `SELECT book_id, barcode_id FROM books 
-       WHERE (book_id LIKE $1 OR barcode_id LIKE $1) 
+       WHERE (book_id LIKE $1 OR barcode_id LIKE $2) 
        ORDER BY id DESC LIMIT 100`,
-      [`${prefix}%`]
+      [`${prefix}%`, `${prefix}%`]
     ).catch(() => ({ rows: [] }));
 
     let maxSeq = 0;

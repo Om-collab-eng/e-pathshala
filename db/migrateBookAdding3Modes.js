@@ -46,7 +46,7 @@ async function migrateBookAdding3Modes() {
 
   // Backfill book_id for existing books if missing (format: VBPG + YYYY + 4-digit sequence)
   try {
-    const booksRes = await db.query('SELECT id, book_id, barcode_id, created_at FROM books ORDER BY id ASC');
+    const booksRes = await db.query('SELECT id, book_id, barcode_id FROM books ORDER BY id ASC');
     const rows = booksRes.rows || [];
     let seq = 1;
     const year = new Date().getFullYear();
