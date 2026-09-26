@@ -4,6 +4,7 @@ const http = require('http');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const path = require('path');
+const fs = require('fs');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { Pool } = require('pg');
