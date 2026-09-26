@@ -343,12 +343,18 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     // 10. Fetch Student Learning Progress (Books, Quizzes, Courses)
     const studentProgressData = await fetchStudentProgress(sCode);
 
+    // 11. Fetch Logged-in Librarian Profile (Avatar & Contact)
+    const curUserRes = await db.query('SELECT * FROM users WHERE id = $1', [req.session.user_id]).catch(() => ({ rows: [] }));
+    const librarianUser = (curUserRes.rows && curUserRes.rows[0]) || req.session || {};
+
     res.render('admin', {
       title: 'Librika Librarian Console - Intelligent Workspace',
       currentModule: targetModule,
       currentTab: targetTab,
       renderDate,
       school,
+      librarian: librarianUser,
+      session: req.session,
       settings: settingsMap,
       stats: {
         total_books: books.length,
@@ -957,6 +963,30 @@ router.post('/api/settings', adminOnly, async (req, res) => {
     console.error('Settings update error:', err);
     req.flash('error', 'Failed to save settings: ' + err.message);
     return res.redirect('/admin/settings');
+  }
+});
+
+// 5b. Librarian & Admin Profile & Avatar Update
+router.post('/api/profile/update', adminOnly, async (req, res) => {
+  const userId = req.session.user_id;
+  const { name, phone, email, avatar_id, profile_picture } = req.body;
+  try {
+    await db.query(
+      `UPDATE users SET 
+        name = COALESCE($1, name), 
+        phone = COALESCE($2, phone), 
+        email = COALESCE($3, email),
+        avatar_id = COALESCE($4, avatar_id),
+        profile_picture = COALESCE($5, profile_picture)
+       WHERE id = $6`,
+      [name || null, phone || null, email || null, avatar_id || null, profile_picture || null, userId]
+    );
+    if (avatar_id) req.session.avatar_id = avatar_id;
+    if (profile_picture) req.session.profile_picture = profile_picture;
+    if (name) req.session.name = name;
+    res.json({ success: true, message: 'Profile & avatar updated successfully!', avatar_id, profile_picture });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

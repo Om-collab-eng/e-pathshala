@@ -1273,8 +1273,8 @@
       <!-- Sidebar User Footer -->
       <div class="sp-sidebar-footer">
         <a href="javascript:void(0)" onclick="switchStudentModule('profile')" class="sp-user-compact" style="min-width:0;flex:1;">
-          <div class="sp-avatar-sm">
-            <%= (student.name || 'S')[0].toUpperCase() %>
+          <div class="sp-avatar-sm" style="overflow:hidden;padding:0;background:none;border:1px solid var(--border);">
+            <img id="studentSidebarAvatar" src="<%= student.profile_picture || ('/static/avatars/' + (student.avatar_id || 'avatar_01') + '.svg') %>" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.src='/static/avatars/avatar_01.svg';">
             <span class="sp-online-dot"></span>
           </div>
           <div class="sp-user-info" style="min-width:0;">
@@ -2489,8 +2489,8 @@
               </div>
 
               <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-                <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--indigo));display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;">
-                  <%= (student.name || 'S')[0].toUpperCase() %>
+                <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--indigo));display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,0.25);">
+                  <img id="studentPassAvatar" src="<%= student.profile_picture || ('/static/avatars/' + (student.avatar_id || 'avatar_01') + '.svg') %>" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.src='/static/avatars/avatar_01.svg';">
                 </div>
                 <div>
                   <h3 style="margin:0;font-size:1.2rem;font-weight:800;"><%= student.name %></h3>
@@ -2511,9 +2511,41 @@
               </div>
             </div>
 
-            <!-- Right: Edit Profile Information -->
+            <!-- Right: Edit Profile Information & Character Avatar Selection -->
             <div class="sp-card">
-              <h3 class="sp-card-title" style="margin-bottom:16px;">👤 Student Account Settings</h3>
+              <h3 class="sp-card-title" style="margin-bottom:16px;">👤 Student Profile &amp; ID Settings</h3>
+              
+              <!-- Character Avatar Selector -->
+              <div style="margin-bottom:18px;padding:14px;background:var(--surface-sub, #F8FAFC);border-radius:12px;border:1px solid var(--border);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <label style="font-size:0.85rem;font-weight:800;color:var(--text-primary);margin:0;">Choose Your Character Avatar</label>
+                  <label class="btn-secondary" style="font-size:0.75rem;padding:4px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                    📷 Upload Photo
+                    <input type="file" id="studentPhotoUpload" accept="image/*" style="display:none" onchange="uploadStudentPhoto(this)">
+                  </label>
+                </div>
+                <input type="hidden" id="selectedStudentAvatarId" value="<%= student.avatar_id || 'avatar_01' %>">
+                <div class="sp-avatar-picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:8px;max-height:190px;overflow-y:auto;padding:2px;">
+                  <% 
+                    const avList = [
+                      { id: 'avatar_01', name: 'Aarav' }, { id: 'avatar_02', name: 'Ananya' },
+                      { id: 'avatar_03', name: 'Rohan' }, { id: 'avatar_04', name: 'Priya' },
+                      { id: 'avatar_05', name: 'Kabir' }, { id: 'avatar_06', name: 'Diya' },
+                      { id: 'avatar_07', name: 'Vikram' }, { id: 'avatar_08', name: 'Meera' },
+                      { id: 'avatar_09', name: 'Arjun' }, { id: 'avatar_10', name: 'Kavya' },
+                      { id: 'avatar_11', name: 'Dev' }, { id: 'avatar_12', name: 'Isha' }
+                    ];
+                    const curAv = student.avatar_id || 'avatar_01';
+                  %>
+                  <% avList.forEach(a => { %>
+                    <div class="sp-avatar-item <%= a.id === curAv ? 'selected' : '' %>" data-avatar-id="<%= a.id %>" onclick="selectStudentAvatar('<%= a.id %>')" style="border:2px solid <%= a.id === curAv ? 'var(--primary, #0B5ED7)' : 'var(--border, #E2E8F0)' %>;border-radius:10px;padding:6px 2px;text-align:center;cursor:pointer;background:<%= a.id === curAv ? '#EEF2FF' : '#fff' %>;transition:all 0.15s;">
+                      <img src="/static/avatars/<%= a.id %>.svg" alt="<%= a.name %>" style="width:38px;height:38px;border-radius:50%;display:block;margin:0 auto 3px;">
+                      <span style="font-size:0.68rem;font-weight:700;color:var(--text-secondary);display:block;"><%= a.name %></span>
+                    </div>
+                  <% }) %>
+                </div>
+              </div>
+
               <form id="profileUpdateForm" onsubmit="handleProfileUpdate(event)">
                 <div style="margin-bottom:14px;">
                   <label style="font-size:0.8rem;font-weight:700;">Full Name</label>
@@ -2533,7 +2565,7 @@
                   <label style="font-size:0.8rem;font-weight:700;">Email Address</label>
                   <input type="email" id="profileEmail" value="<%= student.email || '' %>" placeholder="student@school.edu" style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
                 </div>
-                <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Save Profile Changes</button>
+                <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Save Profile &amp; Avatar Changes</button>
               </form>
             </div>
 
@@ -3388,17 +3420,56 @@
       handleCatalogGenreSelect('ALL', allBtn);
     }
 
+    function selectStudentAvatar(avatarId) {
+      document.getElementById('selectedStudentAvatarId').value = avatarId;
+      document.querySelectorAll('.sp-avatar-item').forEach(el => {
+        el.style.borderColor = 'var(--border, #E2E8F0)';
+        el.style.background = '#fff';
+      });
+      const selectedCard = document.querySelector(`.sp-avatar-item[data-avatar-id="${avatarId}"]`);
+      if (selectedCard) {
+        selectedCard.style.borderColor = 'var(--primary, #0B5ED7)';
+        selectedCard.style.background = '#EEF2FF';
+      }
+      const passImg = document.getElementById('studentPassAvatar');
+      if (passImg) passImg.src = `/static/avatars/${avatarId}.svg`;
+      const sideImg = document.getElementById('studentSidebarAvatar');
+      if (sideImg) sideImg.src = `/static/avatars/${avatarId}.svg`;
+    }
+
+    async function uploadStudentPhoto(input) {
+      if (!input.files || !input.files[0]) return;
+      const formData = new FormData();
+      formData.append('picture', input.files[0]);
+      try {
+        const res = await fetch('/api/user/upload-picture', { method: 'POST', body: formData });
+        const d = await res.json();
+        if (d.status === 'success' && d.profile_picture) {
+          const passImg = document.getElementById('studentPassAvatar');
+          if (passImg) passImg.src = d.profile_picture;
+          const sideImg = document.getElementById('studentSidebarAvatar');
+          if (sideImg) sideImg.src = d.profile_picture;
+          alert('Profile picture uploaded successfully!');
+        } else {
+          alert(d.message || 'Upload failed');
+        }
+      } catch (e) {
+        alert('Upload failed: ' + e.message);
+      }
+    }
+
     async function handleProfileUpdate(e) {
       e.preventDefault();
       const name = document.getElementById('profileName').value.trim();
       const className = document.getElementById('profileClass').value.trim();
       const phone = document.getElementById('profilePhone').value.trim();
       const email = document.getElementById('profileEmail').value.trim();
+      const avatar_id = document.getElementById('selectedStudentAvatarId')?.value || 'avatar_01';
       try {
         const res = await fetch('/student/profile/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, className, phone, email })
+          body: JSON.stringify({ name, className, phone, email, avatar_id })
         });
         const data = await res.json();
         alert(data.message || 'Profile updated!');

@@ -167,15 +167,15 @@
 
       <!-- Sidebar Footer User Profile -->
       <div class="lp-sidebar-footer">
-        <div class="lp-user-pill">
-          <div class="lp-user-avatar">
-            <%= ((typeof session !== 'undefined' && session && session.name) ? session.name[0] : 'L').toUpperCase() %>
+        <div class="lp-user-pill" style="cursor:pointer;" onclick="navigateToModule('settings'); switchSettingsTab('profile', document.getElementById('btn-tab-settings-profile'));" title="View &amp; Edit Librarian Profile &amp; Avatar">
+          <div class="lp-user-avatar" style="overflow:hidden;padding:0;background:transparent;display:flex;align-items:center;justify-content:center;">
+            <img id="librarianSidebarAvatar" src="<%= (typeof librarian !== 'undefined' && librarian && librarian.profile_picture) || (typeof session !== 'undefined' && session && session.profile_picture) || ('/static/avatars/' + ((typeof librarian !== 'undefined' && librarian && librarian.avatar_id) || (typeof session !== 'undefined' && session && session.avatar_id) || 'avatar_01') + '.svg') %>" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.onerror=null;this.src='/static/avatars/avatar_01.svg';" alt="Avatar">
           </div>
           <div class="lp-user-info" style="min-width:0;flex:1;">
-            <h4 class="lp-user-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= (typeof session !== 'undefined' && session && session.name) ? session.name : 'Chief Librarian' %></h4>
+            <h4 class="lp-user-name" id="librarianSidebarName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= (typeof librarian !== 'undefined' && librarian && librarian.name) || (typeof session !== 'undefined' && session && session.name) ? ((librarian && librarian.name) || session.name) : 'Chief Librarian' %></h4>
             <p class="lp-user-role" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= school.name %></p>
           </div>
-          <a href="/logout" class="lp-logout-btn" title="Sign Out">
+          <a href="/logout" class="lp-logout-btn" title="Sign Out" onclick="event.stopPropagation();">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             <span>Logout</span>
           </a>
@@ -1600,12 +1600,13 @@
         <section id="module-settings" class="lp-module-view" style="display:<%= currentModule === 'settings' ? 'block' : 'none' %>;">
           
           <div class="lp-tabs-bar">
-            <button class="lp-tab-btn active" onclick="switchSettingsTab('rules', this)">⚙️ Lending &amp; Policy Rules</button>
-            <button class="lp-tab-btn" onclick="switchSettingsTab('audit', this)">🔒 Audit Trail (<%= auditLogs.length %>)</button>
+            <button class="lp-tab-btn <%= currentTab === 'profile' ? '' : 'active' %>" id="btn-tab-settings-rules" onclick="switchSettingsTab('rules', this)">⚙️ Lending &amp; Policy Rules</button>
+            <button class="lp-tab-btn <%= currentTab === 'profile' ? 'active' : '' %>" id="btn-tab-settings-profile" onclick="switchSettingsTab('profile', this)">👤 Profile &amp; ID Avatar</button>
+            <button class="lp-tab-btn" id="btn-tab-settings-audit" onclick="switchSettingsTab('audit', this)">🔒 Audit Trail (<%= auditLogs.length %>)</button>
           </div>
 
           <!-- Settings Tab 1: Rules -->
-          <div id="settings-pane-rules" class="lp-tab-pane active">
+          <div id="settings-pane-rules" class="lp-tab-pane <%= currentTab === 'profile' ? '' : 'active' %>">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1050px;">
               <div class="card">
                 <h3 class="lp-card-title" style="margin-bottom:14px;">⚙️ Library Policy &amp; Loan Quotas</h3>
@@ -1662,6 +1663,127 @@
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Settings Tab 2: Librarian Profile & ID Avatar -->
+          <div id="settings-pane-profile" class="lp-tab-pane <%= currentTab === 'profile' ? 'active' : '' %>">
+            <div style="display:grid;grid-template-columns:340px 1fr;gap:24px;max-width:1150px;align-items:start;">
+              
+              <!-- Left: Digital Librarian ID Pass Card -->
+              <div class="card" style="background:linear-gradient(135deg, #0F172A, #1E293B);color:white;position:relative;overflow:hidden;border:none;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3);padding:24px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1.4rem;">🛡️</span>
+                    <div>
+                      <div style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:900;letter-spacing:1px;color:#F8FAFC;">LIBRIKA STAFF PASS</div>
+                      <div style="font-size:0.7rem;color:#94A3B8;letter-spacing:0.5px;text-transform:uppercase;"><%= school.name %></div>
+                    </div>
+                  </div>
+                  <span class="sp-pill green" style="background:#16A34A;color:white;padding:3px 8px;border-radius:20px;font-size:0.7rem;font-weight:800;">VERIFIED</span>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:18px;margin-bottom:20px;">
+                  <div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#0B5ED7,#6366F1);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:2.5px solid rgba(255,255,255,0.3);box-shadow:0 4px 12px rgba(0,0,0,0.25);">
+                    <img id="librarianPassAvatar" src="<%= (typeof librarian !== 'undefined' && librarian && librarian.profile_picture) || (typeof session !== 'undefined' && session && session.profile_picture) || ('/static/avatars/' + ((typeof librarian !== 'undefined' && librarian && librarian.avatar_id) || (typeof session !== 'undefined' && session && session.avatar_id) || 'avatar_01') + '.svg') %>" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.src='/static/avatars/avatar_01.svg';" alt="Librarian Avatar">
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <h3 id="librarianPassName" style="margin:0;font-size:1.15rem;font-weight:800;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= (typeof librarian !== 'undefined' && librarian && librarian.name) || (typeof session !== 'undefined' && session && session.name) ? ((librarian && librarian.name) || session.name) : 'Chief Librarian' %></h3>
+                    <div style="font-size:0.8rem;color:#93C5FD;font-weight:600;margin-top:2px;">Library Administrator</div>
+                    <div style="font-family:monospace;font-size:0.75rem;color:#CBD5E1;margin-top:3px;">ID: <%= (typeof librarian !== 'undefined' && librarian && librarian.id) || (typeof session !== 'undefined' && session && session.user_id) || 'LIB-01' %> · <%= school.school_code || 'DEMO01' %></div>
+                  </div>
+                </div>
+
+                <!-- Digital Staff Security Badge & Barcode Simulation -->
+                <div style="background:#FFFFFF;padding:12px 14px;border-radius:10px;text-align:center;margin-bottom:14px;">
+                  <div style="font-family:'JetBrains Mono',monospace;letter-spacing:5px;font-size:1.15rem;color:#0F172A;font-weight:900;">
+                    ||||| ||| |||| | ||||| ||||
+                  </div>
+                  <div style="font-size:0.7rem;font-family:monospace;color:#64748B;letter-spacing:1.5px;margin-top:4px;">SEC-AUTH-<%= ((typeof librarian !== 'undefined' && librarian && librarian.id) || 1).toString().padStart(6, '0') %></div>
+                </div>
+                <div style="font-size:0.72rem;color:rgba(255,255,255,0.65);text-align:center;line-height:1.4;">
+                  Authorized Personnel for Circulation, Inventory &amp; System Configuration.
+                </div>
+              </div>
+
+              <!-- Right: Avatar Selector & Profile Edit Form -->
+              <div class="card" style="padding:24px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                  <div>
+                    <h3 class="lp-card-title" style="margin:0;">👤 Staff Profile &amp; Avatar Customizer</h3>
+                    <p style="font-size:0.82rem;color:#64748B;margin:4px 0 0 0;">Select your custom character avatar or upload your photo for your Librika ID badge.</p>
+                  </div>
+                  <label class="btn-secondary" style="font-size:0.78rem;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                    📷 Upload Photo
+                    <input type="file" id="librarianPhotoUpload" accept="image/*" style="display:none" onchange="uploadLibrarianPhoto(this)">
+                  </label>
+                </div>
+
+                <!-- 12 Character Avatar Selector Grid -->
+                <div style="margin-bottom:20px;padding:16px;background:#F8FAFC;border-radius:12px;border:1px solid #E2E8F0;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <label style="font-size:0.85rem;font-weight:700;color:#1E293B;margin:0;">Choose Your Librika Character Avatar</label>
+                    <span style="font-size:0.75rem;color:#64748B;">Instant synchronization</span>
+                  </div>
+                  <input type="hidden" id="selectedLibrarianAvatarId" value="<%= (typeof librarian !== 'undefined' && librarian && librarian.avatar_id) || (typeof session !== 'undefined' && session && session.avatar_id) || 'avatar_01' %>">
+                  <input type="hidden" id="selectedLibrarianPictureUrl" value="<%= (typeof librarian !== 'undefined' && librarian && librarian.profile_picture) || (typeof session !== 'undefined' && session && session.profile_picture) || '' %>">
+                  
+                  <div class="lp-avatar-picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;padding:2px;">
+                    <% 
+                      const libAvList = [
+                        { id: 'avatar_01', name: 'Aarav' }, { id: 'avatar_02', name: 'Ananya' },
+                        { id: 'avatar_03', name: 'Rohan' }, { id: 'avatar_04', name: 'Priya' },
+                        { id: 'avatar_05', name: 'Kabir' }, { id: 'avatar_06', name: 'Diya' },
+                        { id: 'avatar_07', name: 'Vikram' }, { id: 'avatar_08', name: 'Meera' },
+                        { id: 'avatar_09', name: 'Arjun' }, { id: 'avatar_10', name: 'Kavya' },
+                        { id: 'avatar_11', name: 'Dev' }, { id: 'avatar_12', name: 'Isha' }
+                      ];
+                      const currentLibAv = (typeof librarian !== 'undefined' && librarian && librarian.avatar_id) || (typeof session !== 'undefined' && session && session.avatar_id) || 'avatar_01';
+                    %>
+                    <% libAvList.forEach(a => { %>
+                      <div class="lp-avatar-item <%= a.id === currentLibAv ? 'selected' : '' %>" data-avatar-id="<%= a.id %>" onclick="selectLibrarianAvatar('<%= a.id %>')" style="border:2px solid <%= a.id === currentLibAv ? '#0B5ED7' : '#E2E8F0' %>;border-radius:12px;padding:8px 4px;text-align:center;cursor:pointer;background:<%= a.id === currentLibAv ? '#EEF2FF' : '#FFFFFF' %>;transition:all 0.15s ease-in-out;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <img src="/static/avatars/<%= a.id %>.svg" alt="<%= a.name %>" style="width:42px;height:42px;border-radius:50%;display:block;margin:0 auto 4px;">
+                        <span style="font-size:0.7rem;font-weight:700;color:#334155;display:block;"><%= a.name %></span>
+                      </div>
+                    <% }) %>
+                  </div>
+                </div>
+
+                <!-- Librarian Contact Details Form -->
+                <form id="librarianProfileForm" onsubmit="handleLibrarianProfileUpdate(event)">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Full Name</label>
+                      <input type="text" id="librarianProfileName" class="lp-search-input" style="width:100%;" value="<%= (typeof librarian !== 'undefined' && librarian && librarian.name) || (typeof session !== 'undefined' && session && session.name) || 'Chief Librarian' %>" required>
+                    </div>
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Email Address</label>
+                      <input type="email" id="librarianProfileEmail" class="lp-search-input" style="width:100%;" value="<%= (typeof librarian !== 'undefined' && librarian && librarian.email) || (typeof session !== 'undefined' && session && session.email) || '' %>" placeholder="librarian@school.edu">
+                    </div>
+                  </div>
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Phone Number</label>
+                      <input type="text" id="librarianProfilePhone" class="lp-search-input" style="width:100%;" value="<%= (typeof librarian !== 'undefined' && librarian && librarian.phone) || (typeof session !== 'undefined' && session && session.phone) || '' %>" placeholder="+91 9876543210">
+                    </div>
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Staff Role</label>
+                      <input type="text" class="lp-search-input" style="width:100%;background:#F1F5F9;color:#64748B;cursor:not-allowed;" value="<%= (typeof librarian !== 'undefined' && librarian && librarian.role) || (typeof session !== 'undefined' && session && session.role) || 'librarian' %>" readonly>
+                    </div>
+                  </div>
+
+                  <div id="librarianProfileFeedback" style="display:none;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:0.85rem;font-weight:600;"></div>
+
+                  <div style="display:flex;gap:12px;align-items:center;">
+                    <button type="submit" id="btnSaveLibrarianProfile" class="btn-primary" style="padding:9px 20px;font-size:0.88rem;display:inline-flex;align-items:center;gap:6px;">
+                      💾 Save Profile &amp; Avatar
+                    </button>
+                    <span id="librarianProfileSaving" style="display:none;font-size:0.82rem;color:#64748B;">Saving changes...</span>
+                  </div>
+                </form>
+              </div>
+
             </div>
           </div>
 
@@ -3864,6 +3986,121 @@
       if (icon) {
         icon.textContent = theme === 'dark' ? '☀️' : '🌙';
       }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // LIBRARIAN PROFILE & AVATAR MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════
+    function selectLibrarianAvatar(avatarId) {
+      document.getElementById('selectedLibrarianAvatarId').value = avatarId;
+      document.getElementById('selectedLibrarianPictureUrl').value = '';
+      
+      // Update UI selection highlight
+      document.querySelectorAll('.lp-avatar-item').forEach(el => {
+        const isMatch = el.getAttribute('data-avatar-id') === avatarId;
+        el.style.border = isMatch ? '2px solid #0B5ED7' : '2px solid #E2E8F0';
+        el.style.background = isMatch ? '#EEF2FF' : '#FFFFFF';
+        if (isMatch) el.classList.add('selected');
+        else el.classList.remove('selected');
+      });
+
+      // Update previews
+      const avatarSrc = `/static/avatars/${avatarId}.svg`;
+      const passImg = document.getElementById('librarianPassAvatar');
+      if (passImg) passImg.src = avatarSrc;
+      const sideImg = document.getElementById('librarianSidebarAvatar');
+      if (sideImg) sideImg.src = avatarSrc;
+    }
+
+    async function uploadLibrarianPhoto(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append('picture', file);
+
+      try {
+        const res = await fetch('/api/user/upload-picture', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.status === 'success' && data.profile_picture) {
+          document.getElementById('selectedLibrarianPictureUrl').value = data.profile_picture;
+          const passImg = document.getElementById('librarianPassAvatar');
+          if (passImg) passImg.src = data.profile_picture;
+          const sideImg = document.getElementById('librarianSidebarAvatar');
+          if (sideImg) sideImg.src = data.profile_picture;
+
+          // Clear selection from SVG grid
+          document.querySelectorAll('.lp-avatar-item').forEach(el => {
+            el.style.border = '2px solid #E2E8F0';
+            el.style.background = '#FFFFFF';
+            el.classList.remove('selected');
+          });
+
+          showLibrarianFeedback('Photo uploaded successfully! Remember to save profile.', 'success');
+        } else {
+          alert(data.message || 'Failed to upload photo');
+        }
+      } catch (err) {
+        console.error('Photo upload error:', err);
+        alert('Error uploading photo: ' + err.message);
+      }
+    }
+
+    async function handleLibrarianProfileUpdate(e) {
+      e.preventDefault();
+      const name = document.getElementById('librarianProfileName').value.trim();
+      const email = document.getElementById('librarianProfileEmail').value.trim();
+      const phone = document.getElementById('librarianProfilePhone').value.trim();
+      const avatar_id = document.getElementById('selectedLibrarianAvatarId').value;
+      const profile_picture = document.getElementById('selectedLibrarianPictureUrl').value;
+
+      const savingEl = document.getElementById('librarianProfileSaving');
+      const btnSave = document.getElementById('btnSaveLibrarianProfile');
+      if (savingEl) savingEl.style.display = 'inline';
+      if (btnSave) btnSave.disabled = true;
+
+      try {
+        const res = await fetch('/admin/api/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, avatar_id, profile_picture })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showLibrarianFeedback('✓ Profile & Avatar updated successfully!', 'success');
+          // Update live elements
+          const passName = document.getElementById('librarianPassName');
+          if (passName) passName.textContent = name;
+          const sideName = document.getElementById('librarianSidebarName');
+          if (sideName) sideName.textContent = name;
+        } else {
+          showLibrarianFeedback(data.error || 'Failed to update profile', 'error');
+        }
+      } catch (err) {
+        showLibrarianFeedback('Network error: ' + err.message, 'error');
+      } finally {
+        if (savingEl) savingEl.style.display = 'none';
+        if (btnSave) btnSave.disabled = false;
+      }
+    }
+
+    function showLibrarianFeedback(msg, type) {
+      const fb = document.getElementById('librarianProfileFeedback');
+      if (!fb) return;
+      fb.style.display = 'block';
+      if (type === 'success') {
+        fb.style.background = '#DCFCE7';
+        fb.style.color = '#166534';
+        fb.style.border = '1px solid #BBF7D0';
+      } else {
+        fb.style.background = '#FEE2E2';
+        fb.style.color = '#991B1B';
+        fb.style.border = '1px solid #FECACA';
+      }
+      fb.textContent = msg;
+      setTimeout(() => { fb.style.display = 'none'; }, 4000);
     }
 
     (function initTheme() {

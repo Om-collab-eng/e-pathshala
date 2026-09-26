@@ -623,13 +623,23 @@ router.post('/learn/assignment/:id/submit', studentOnly, upload.single('submissi
 // 9. Profile Update
 router.post('/profile/update', studentOnly, async (req, res) => {
   const userId = req.session.user_id;
-  const { name, phone, email, className, section } = req.body;
+  const { name, phone, email, className, section, avatar_id, profile_picture } = req.body;
   try {
-    if (name || phone || email || className) {
+    if (name || phone || email || className || avatar_id || profile_picture) {
       await pool.query(
-        `UPDATE users SET name = COALESCE($1, name), phone = COALESCE($2, phone), email = COALESCE($3, email), class = COALESCE($4, class) WHERE id = $5`,
-        [name, phone, email, className, userId]
+        `UPDATE users SET 
+          name = COALESCE($1, name), 
+          phone = COALESCE($2, phone), 
+          email = COALESCE($3, email), 
+          class = COALESCE($4, class),
+          avatar_id = COALESCE($5, avatar_id),
+          profile_picture = COALESCE($6, profile_picture)
+         WHERE id = $7`,
+        [name || null, phone || null, email || null, className || null, avatar_id || null, profile_picture || null, userId]
       );
+      if (avatar_id) req.session.avatar_id = avatar_id;
+      if (profile_picture) req.session.profile_picture = profile_picture;
+      if (name) req.session.name = name;
     }
     if (className || section) {
       await pool.query(
@@ -647,7 +657,7 @@ router.post('/profile/update', studentOnly, async (req, res) => {
       });
     }
 
-    res.json({ success: true, message: 'Profile updated successfully!' });
+    res.json({ success: true, message: 'Profile updated successfully!', avatar_id, profile_picture });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

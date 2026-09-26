@@ -256,8 +256,20 @@ async function migrateSuperAdminRbac() {
     { name: 'phone_verified', type: 'TINYINT(1) DEFAULT 0' },
     { name: 'deleted_at', type: 'DATETIME NULL' },
     { name: 'last_login_at', type: 'DATETIME NULL' },
-    { name: 'last_password_change', type: 'DATETIME NULL' }
+    { name: 'last_password_change', type: 'DATETIME NULL' },
+    { name: 'created_at', type: 'DATETIME DEFAULT CURRENT_TIMESTAMP' }
   ];
+
+  if (isMysql) {
+    try {
+      await db.query('ALTER TABLE roles CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+      await db.query('ALTER TABLE permissions CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+      await db.query('ALTER TABLE role_permissions CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+      await db.query('ALTER TABLE user_roles CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+      await db.query('ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+      await db.query('ALTER TABLE schools CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    } catch (e) {}
+  }
 
   for (const col of userColumns) {
     try {

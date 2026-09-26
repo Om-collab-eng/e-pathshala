@@ -552,4 +552,38 @@ router.get('/presence/online-users', async (req, res) => {
   }
 });
 
+// Universal User Avatar Picker API (Students, Librarians, Teachers, Admins)
+router.post('/user/avatar', async (req, res) => {
+  const userId = getUserId(req);
+  if (!userId) return res.status(401).json({ status: 'error', message: 'Authentication required' });
+  const { avatar_id, profile_picture } = req.body;
+  try {
+    const db = require('../db');
+    await db.query('UPDATE users SET avatar_id = $1, profile_picture = $2 WHERE id = $3', [avatar_id || 'avatar_01', profile_picture || null, userId]);
+    if (req.session) {
+      req.session.avatar_id = avatar_id || 'avatar_01';
+      if (profile_picture) req.session.profile_picture = profile_picture;
+    }
+    res.json({ status: 'success', message: 'Avatar updated successfully', avatar_id, profile_picture });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// Universal User Profile Picture Upload API
+router.post('/user/upload-picture', upload.single('picture'), async (req, res) => {
+  const userId = getUserId(req);
+  if (!userId) return res.status(401).json({ status: 'error', message: 'Authentication required' });
+  if (!req.file) return res.status(400).json({ status: 'error', message: 'No image uploaded' });
+  try {
+    const db = require('../db');
+    const pictureUrl = `/uploads/${req.file.filename}`;
+    await db.query('UPDATE users SET profile_picture = $1 WHERE id = $2', [pictureUrl, userId]);
+    if (req.session) req.session.profile_picture = pictureUrl;
+    res.json({ status: 'success', message: 'Profile picture uploaded', profile_picture: pictureUrl });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 module.exports = router;

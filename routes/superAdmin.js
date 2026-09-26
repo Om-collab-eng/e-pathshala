@@ -401,8 +401,8 @@ router.get('/users', async (req, res) => {
               COALESCE(s.name, u.school_code, 'Independent') as school_name,
               COALESCE(r.name, u.role) as role_name
        FROM users u
-       LEFT JOIN schools s ON u.school_code = s.school_code
-       LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug)
+       LEFT JOIN schools s ON u.school_code = s.school_code COLLATE utf8mb4_unicode_ci
+       LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug) COLLATE utf8mb4_unicode_ci
        WHERE ${where}
        ORDER BY u.id DESC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
@@ -500,8 +500,8 @@ router.get('/users/:id/profile', async (req, res) => {
              COALESCE(s.name, u.school_code, 'Independent') as school_name,
              COALESCE(r.name, u.role) as role_name
       FROM users u
-      LEFT JOIN schools s ON u.school_code = s.school_code
-      LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug)
+      LEFT JOIN schools s ON u.school_code = s.school_code COLLATE utf8mb4_unicode_ci
+      LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug) COLLATE utf8mb4_unicode_ci
       WHERE u.id = $1
     `, [id]);
 
@@ -1000,8 +1000,8 @@ router.get('/users/export-csv', async (req, res) => {
              u.class, u.section, u.admission_no, u.student_id, u.gender, u.dob,
              u.status, u.created_at
       FROM users u
-      LEFT JOIN schools s ON u.school_code = s.school_code
-      LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug)
+      LEFT JOIN schools s ON u.school_code = s.school_code COLLATE utf8mb4_unicode_ci
+      LEFT JOIN roles r ON LOWER(u.role) = LOWER(r.slug) COLLATE utf8mb4_unicode_ci
       WHERE ${where}
       ORDER BY u.id DESC
     `, params);
