@@ -3978,10 +3978,41 @@ let _currentProfileUser = null;
 let _selectedAvatarId = 'avatar_01';
 let _csvValidatedRows = [];
 
-// Close action dropdown menus when clicking outside
+const STANDARD_USER_ROLES = [
+  { slug: 'super_admin', name: 'Super Admin', icon: '👑', badge: 'badge-purple', desc: 'Root platform administrator. Unrestricted control over all schools, user accounts, system settings, and audit logs.' },
+  { slug: 'admin', name: 'School Admin', icon: '🏢', badge: 'badge-blue', desc: 'School branch administrator. Full control over faculty, classes, student registers, and complete library console access.' },
+  { slug: 'librarian', name: 'Librarian', icon: '📚', badge: 'badge-teal', desc: 'Library operator. Complete circulation access: book issue/return, fines calculation, barcode tracking, and cataloging.' },
+  { slug: 'teacher', name: 'Teacher', icon: '👨‍🏫', badge: 'badge-orange', desc: 'Classroom educator. Curate reading lists, assign books to students, review student reading milestones and vault.' },
+  { slug: 'student', name: 'Student', icon: '🎒', badge: 'badge-green', desc: 'Student learner. Access to eBook vault, taking quizzes, book issue requests, and digital Librika library pass.' },
+  { slug: 'parent', name: 'Parent', icon: '👨‍👩‍👧', badge: 'badge-pink', desc: 'Parent observer. Monitor student reading progress, check due books, return alerts, and notices.' },
+  { slug: 'quiz_manager', name: 'Quiz Manager', icon: '🧠', badge: 'badge-cyan', desc: 'Quiz author. Create chapter quizzes, trivia assessments, question banks, and student test score analytics.' },
+  { slug: 'content_manager', name: 'Content Manager', icon: '🌐', badge: 'badge-indigo', desc: 'Digital curator. Upload eBooks and study materials (up to 28MB), and moderate student book reviews.' },
+  { slug: 'personal', name: 'Personal Reader', icon: '📖', badge: 'badge-gray', desc: 'Individual self-managed reader account with private personal digital library vault access.' }
+];
+
+function getRoleIcon(slug) {
+  const s = String(slug || '').toLowerCase();
+  const found = STANDARD_USER_ROLES.find(r => r.slug === s);
+  return found ? found.icon : '🛡️';
+}
+
+function roleBadge(r) {
+  const map = {
+    'super_admin':'badge-yellow', 'admin':'badge-blue', 'school_admin':'badge-blue', 'librarian':'badge-green',
+    'student':'badge-indigo', 'teacher':'badge-purple', 'parent':'badge-pink',
+    'quiz_manager':'badge-yellow', 'content_manager':'badge-blue', 'personal':'badge-gray'
+  };
+  return map[String(r || '').toLowerCase()] || 'badge-gray';
+}
+
+function closeAllActionDropdowns() {
+  document.querySelectorAll('.sa-action-dropdown-menu').forEach(m => m.style.display = 'none');
+}
+
+// Close action dropdown menus when clicking outside or when an action item is clicked
 window.addEventListener('click', e => {
-  if (!e.target.closest('.sa-dropdown-wrap')) {
-    document.querySelectorAll('.sa-action-dropdown-menu').forEach(m => m.style.display = 'none');
+  if (e.target.closest('.sa-action-dropdown-item') || !e.target.closest('.sa-dropdown-wrap')) {
+    closeAllActionDropdowns();
   }
 });
 
@@ -3989,7 +4020,7 @@ function toggleActionDropdown(e, menuId) {
   e.stopPropagation();
   const menu = document.getElementById(menuId);
   const isOpen = menu && menu.style.display === 'block';
-  document.querySelectorAll('.sa-action-dropdown-menu').forEach(m => m.style.display = 'none');
+  closeAllActionDropdowns();
   if (menu && !isOpen) menu.style.display = 'block';
 }
 
@@ -4052,11 +4083,6 @@ function renderUsersTable(users) {
     document.getElementById('usersTableWrap').innerHTML = '<div class="sa-empty"><div class="sa-empty-icon">👥</div><p>No matching users found in directory.</p></div>';
     return;
   }
-  const roleBadge = r => ({
-    'super_admin':'badge-yellow', 'admin':'badge-blue', 'librarian':'badge-green',
-    'student':'badge-indigo', 'teacher':'badge-purple', 'parent':'badge-pink',
-    'quiz_manager':'badge-yellow', 'content_manager':'badge-blue', 'personal':'badge-gray'
-  }[r] || 'badge-gray');
 
   document.getElementById('usersTableWrap').innerHTML = `
     <div class="sa-table-wrap"><table class="sa-table">
@@ -4187,6 +4213,7 @@ async function openUserProfile(userId) {
 }
 
 async function openUserProfileTab(userId, initialTab = 'basic') {
+  closeAllActionDropdowns();
   try {
     const r = await fetch(`/super-admin/users/${userId}/profile`);
     const d = await r.json();
@@ -4386,24 +4413,6 @@ function renderProfileLogins(logins) {
 // ─────────────────────────────────────────────
 //  USER ROLE & PERMISSIONS ASSIGNMENT LOGIC
 // ─────────────────────────────────────────────
-const STANDARD_USER_ROLES = [
-  { slug: 'super_admin', name: 'Super Admin', icon: '👑', badge: 'badge-purple', desc: 'Root platform administrator. Unrestricted control over all schools, user accounts, system settings, and audit logs.' },
-  { slug: 'admin', name: 'School Admin', icon: '🏢', badge: 'badge-blue', desc: 'School branch administrator. Full control over faculty, classes, student registers, and complete library console access.' },
-  { slug: 'librarian', name: 'Librarian', icon: '📚', badge: 'badge-teal', desc: 'Library operator. Complete circulation access: book issue/return, fines calculation, barcode tracking, and cataloging.' },
-  { slug: 'teacher', name: 'Teacher', icon: '👨‍🏫', badge: 'badge-orange', desc: 'Classroom educator. Curate reading lists, assign books to students, review student reading milestones and vault.' },
-  { slug: 'student', name: 'Student', icon: '🎒', badge: 'badge-green', desc: 'Student learner. Access to eBook vault, taking quizzes, book issue requests, and digital Librika library pass.' },
-  { slug: 'parent', name: 'Parent', icon: '👨‍👩‍👧', badge: 'badge-pink', desc: 'Parent observer. Monitor student reading progress, check due books, return alerts, and notices.' },
-  { slug: 'quiz_manager', name: 'Quiz Manager', icon: '🧠', badge: 'badge-cyan', desc: 'Quiz author. Create chapter quizzes, trivia assessments, question banks, and student test score analytics.' },
-  { slug: 'content_manager', name: 'Content Manager', icon: '🌐', badge: 'badge-indigo', desc: 'Digital curator. Upload eBooks and study materials (up to 28MB), and moderate student book reviews.' },
-  { slug: 'personal', name: 'Personal Reader', icon: '📖', badge: 'badge-gray', desc: 'Individual self-managed reader account with private personal digital library vault access.' }
-];
-
-function getRoleIcon(slug) {
-  const s = String(slug || '').toLowerCase();
-  const found = STANDARD_USER_ROLES.find(r => r.slug === s);
-  return found ? found.icon : '🛡️';
-}
-
 function renderUserRoleSelection(activeRole, dbRoles) {
   const listEl = document.getElementById('upRoleSelectionList');
   if (!listEl) return;
