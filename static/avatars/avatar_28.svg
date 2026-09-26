@@ -1,23 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
   <!-- Background Circle (Colorable via id="avatar-bg") -->
-  <circle id="avatar-bg" cx="60" cy="60" r="58" fill="#059669"/>
+  <circle id="avatar-bg" cx="60" cy="60" r="58" fill="#F472B6"/>
 
   <defs>
-    <clipPath id="clip_avatar_05">
+    <clipPath id="clip_avatar_28">
       <circle cx="60" cy="60" r="58"/>
     </clipPath>
   </defs>
 
-  <g clip-path="url(#clip_avatar_05)">
+  <g clip-path="url(#clip_avatar_28)">
     <!-- Back Hair (if applicable) -->
     
 
     <!-- Shoulders & Clothes -->
-    <path d="M16 120 C16 94 36 84 60 84 C84 84 104 94 104 120 Z" fill="#065F46"/>
+    <path d="M16 120 C16 94 36 84 60 84 C84 84 104 94 104 120 Z" fill="#DB2777"/>
 
     <!-- Clothing Collar / Neckline -->
-    <path d="M48 84 L60 96 L72 84 Z" fill="#D1FAE5"/>
-    <path d="M52 84 L60 92 L68 84 Z" fill="#065F46" opacity="0.3"/>
+    <path d="M48 84 L60 96 L72 84 Z" fill="#FCE7F3"/>
+    <path d="M52 84 L60 92 L68 84 Z" fill="#DB2777" opacity="0.3"/>
 
     <!-- Neck Shadow & Neck -->
     <path d="M51 72 L51 90 C51 95 69 95 69 90 L69 72 Z" fill="#C48D52"/>
@@ -37,8 +37,8 @@
     <circle cx="73" cy="62" r="3.5" fill="#F43F5E" opacity="0.35"/>
 
     <!-- Eyebrows -->
-    <path d="M45 47 Q50 44 55 46" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-    <path d="M65 46 Q70 44 75 47" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+    <path d="M45 47 Q50 44 55 46" stroke="#3A271C" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+    <path d="M65 46 Q70 44 75 47" stroke="#3A271C" stroke-width="2.2" stroke-linecap="round" fill="none"/>
 
     <!-- Eyes (Big, Bright & Friendly) -->
     <ellipse cx="50" cy="53" rx="3.2" ry="3.8" fill="#0F172A"/>
@@ -54,27 +54,17 @@
 
     <!-- Smile -->
     
-    <!-- Gentle Warm Smile -->
-    <path d="M54 66 Q60 71 66 66" stroke="#991B1B" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-  
+      <!-- Cheerful Open Smile with Teeth -->
+      <path d="M53 66 Q60 75 67 66 Z" fill="#991B1B"/>
+      <path d="M54 66 Q60 70 66 66 Z" fill="#FFFFFF"/>
+    
 
     <!-- Glasses (if applicable) -->
     
-      <!-- Round Glasses Black -->
-      <circle cx="50" cy="54" r="8" fill="rgba(255,255,255,0.15)" stroke="#18181B" stroke-width="2"/>
-      <circle cx="70" cy="54" r="8" fill="rgba(255,255,255,0.15)" stroke="#18181B" stroke-width="2"/>
-      <line x1="58" y1="54" x2="62" y2="54" stroke="#18181B" stroke-width="2"/>
-      <line x1="42" y1="53" x2="38" y2="51" stroke="#18181B" stroke-width="1.8"/>
-      <line x1="78" y1="53" x2="82" y2="51" stroke="#18181B" stroke-width="1.8"/>
-    
 
     <!-- Front Hair -->
-    <circle cx="44" cy="32" r="9" fill="#1A1A1A"/>
-              <circle cx="56" cy="28" r="9" fill="#1A1A1A"/>
-              <circle cx="68" cy="28" r="9" fill="#1A1A1A"/>
-              <circle cx="78" cy="34" r="8" fill="#1A1A1A"/>
-              <circle cx="38" cy="40" r="7" fill="#1A1A1A"/>
-              <circle cx="82" cy="42" r="7" fill="#1A1A1A"/>
-              <path d="M38 46 C44 38 76 38 82 46 C78 40 68 37 60 37 C52 37 42 40 38 46 Z" fill="#1A1A1A"/>
+    <path d="M34 52 C34 34 46 25 60 25 C74 25 86 34 86 52 C84 62 82 72 84 76 C80 70 78 62 78 52 C76 42 70 36 60 36 C50 36 44 42 42 52 C42 62 40 70 36 76 C38 72 36 62 34 52 Z" fill="#3A271C"/>
+              <path d="M40 46 C44 40 50 38 56 42 C52 46 47 48 42 48 Z" fill="#3A271C"/>
+              <path d="M80 46 C76 40 70 38 64 42 C68 46 73 48 78 48 Z" fill="#3A271C"/>
   </g>
 </svg>

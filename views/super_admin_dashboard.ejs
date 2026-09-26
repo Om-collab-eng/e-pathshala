@@ -1081,18 +1081,19 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
 
 .sa-avatar-picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 8px;
   margin-top: 10px;
 }
 .sa-avatar-option {
   border: 2px solid var(--border);
   border-radius: 12px;
-  padding: 10px;
+  padding: 8px 4px;
   text-align: center;
   cursor: pointer;
   background: #fff;
-  transition: all 0.15s;
+  transition: all 0.15s ease-in-out;
+  position: relative;
 }
 .sa-avatar-option:hover {
   border-color: var(--primary);
@@ -1102,20 +1103,66 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
 .sa-avatar-option.selected {
   border-color: var(--primary);
   background: var(--primary-light);
-  box-shadow: 0 0 0 2px var(--primary);
+  box-shadow: 0 0 0 2.5px var(--primary);
 }
 .sa-avatar-option img {
-  width: 54px;
-  height: 54px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  margin: 0 auto 6px;
+  margin: 0 auto 5px;
 }
 .sa-avatar-option span {
   font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sa-avatar-option small {
+  font-size: 0.62rem;
   font-weight: 600;
   color: var(--text-secondary);
+  display: block;
+}
+.sa-color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--border);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: inline-block;
+}
+.sa-color-swatch:hover {
+  transform: scale(1.18);
+}
+.sa-color-swatch.active {
+  transform: scale(1.22);
+  box-shadow: 0 0 0 2.5px var(--primary);
+}
+.sa-avatar-filter-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sa-avatar-filter-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+.sa-avatar-filter-btn.active {
+  background: var(--primary) !important;
+  color: #fff !important;
+  border-color: var(--primary) !important;
 }
 
 .sa-action-dropdown-menu {
@@ -3027,20 +3074,47 @@ input[type=checkbox].sa-check { width: 18px; height: 18px; accent-color: var(--p
 
       <!-- Tab 5: Avatar & Photo -->
       <div class="sa-profile-pane" id="pane-up-avatar">
-        <div style="display:flex;gap:20px;align-items:center;margin-bottom:1.4rem;padding:14px;background:var(--surface-sub);border-radius:12px">
-          <img id="upAvatarCurrentImg" src="/static/avatars/avatar_01.svg" style="width:72px;height:72px;border-radius:50%;border:3px solid var(--primary);object-fit:cover">
+        <div style="display:flex;gap:20px;align-items:center;margin-bottom:1.2rem;padding:14px;background:var(--surface-sub);border-radius:12px">
+          <img id="upAvatarCurrentImg" src="/static/avatars/avatar_01.svg" style="width:76px;height:76px;border-radius:50%;border:3px solid var(--primary);object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.1)">
           <div>
-            <div style="font-weight:700;font-size:1rem" id="upAvatarCurrentName">Current Character Avatar</div>
-            <p style="color:var(--text-secondary);font-size:.78rem;margin:2px 0 8px">Select from Librika's 12 friendly SVG avatars or upload a custom profile photo.</p>
+            <div style="font-weight:700;font-size:1.05rem" id="upAvatarCurrentName">Current Character Avatar</div>
+            <p style="color:var(--text-secondary);font-size:.78rem;margin:2px 0 8px">Select from Librika's 36 diverse human character avatars (boys &amp; girls with distinct hairstyles, tones &amp; customizable colors) or upload a custom photo.</p>
             <label class="sa-btn sa-btn-primary sa-btn-xs" style="cursor:pointer">
               📷 Upload Custom Photo
               <input type="file" id="upPhotoUploadInput" accept="image/*" style="display:none" onchange="uploadUserProfilePicture(this)">
             </label>
           </div>
         </div>
-        <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">Pick an Official Librika Character Avatar:</div>
-        <div class="sa-avatar-picker-grid" id="upAvatarGrid">
-          <!-- Populated dynamically with 12 friendly SVG avatars -->
+
+        <!-- Color Palette Selection -->
+        <div style="margin-bottom:14px;padding:12px 14px;background:var(--surface-sub);border-radius:10px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-weight:700;font-size:.84rem;display:flex;align-items:center;gap:6px">🎨 Choose Avatar Background Tone / Color:</span>
+            <span id="upSelectedColorCode" style="font-size:.75rem;font-weight:700;font-family:monospace;color:var(--primary);background:var(--surface);padding:2px 8px;border-radius:6px;border:1px solid var(--border)">#4F46E5</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div id="upColorSwatches" style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+              <!-- Rendered dynamically from AVATAR_COLOR_PALETTE -->
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+              <label for="upCustomColorInput" style="font-size:.75rem;font-weight:600;color:var(--text-secondary);cursor:pointer">Custom:</label>
+              <input type="color" id="upCustomColorInput" value="#4F46E5" onchange="selectAvatarColor(this.value)" style="width:30px;height:30px;padding:0;border:none;border-radius:50%;cursor:pointer;background:transparent">
+            </div>
+          </div>
+        </div>
+
+        <!-- Gender Filter Tabs -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-weight:700;font-size:.85rem">Choose Character (<span id="upAvatarCountLabel">36</span>):</div>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="sa-avatar-filter-btn active" id="btnFilterAll" onclick="filterAvatars('all')">All (36)</button>
+            <button type="button" class="sa-avatar-filter-btn" id="btnFilterBoys" onclick="filterAvatars('boy')">👦 Boys (18)</button>
+            <button type="button" class="sa-avatar-filter-btn" id="btnFilterGirls" onclick="filterAvatars('girl')">👧 Girls (18)</button>
+          </div>
+        </div>
+
+        <div class="sa-avatar-picker-grid" id="upAvatarGrid" style="max-height:300px;overflow-y:auto;padding-right:4px">
+          <!-- Populated dynamically with 36 human avatars -->
         </div>
       </div>
 
@@ -4274,10 +4348,16 @@ async function openUserProfileTab(userId, initialTab = 'basic') {
 
     // Tab 5: Avatar & Photo
     _selectedAvatarId = u.avatar_id || 'avatar_01';
-    const currentAvatarSrc = u.profile_picture || `/static/avatars/${_selectedAvatarId}.svg`;
+    let baseAv = _selectedAvatarId.split('__')[0];
+    let customColor = _selectedAvatarId.includes('__') ? '#' + _selectedAvatarId.split('__')[1] : null;
+    const foundAv = LIBRIKA_AVATARS.find(a => a.id === baseAv);
+    _selectedAvatarColor = customColor || (foundAv ? foundAv.defaultBg : '#4F46E5');
+
+    renderColorSwatches(_selectedAvatarColor);
+    const currentAvatarSrc = u.profile_picture || getAvatarUrl(_selectedAvatarId, _selectedAvatarColor);
     document.getElementById('upAvatarCurrentImg').src = currentAvatarSrc;
-    document.getElementById('upAvatarCurrentName').textContent = u.profile_picture ? 'Custom Profile Picture' : `Character: ${_selectedAvatarId.replace('_', ' ').toUpperCase()}`;
-    renderAvatarPickerGrid(_selectedAvatarId);
+    document.getElementById('upAvatarCurrentName').textContent = u.profile_picture ? 'Custom Profile Picture' : `${foundAv ? foundAv.name : 'Character'} (${foundAv ? (foundAv.gender === 'boy' ? 'Boy' : 'Girl') : 'Avatar'})`;
+    renderAvatarPickerGrid(_selectedAvatarId, _avatarGenderFilter);
 
     // Tab: Role & Permissions Init
     _selectedUserRole = u.role || 'student';
@@ -4306,39 +4386,173 @@ async function openUserProfileTab(userId, initialTab = 'basic') {
   }
 }
 
-function renderAvatarPickerGrid(activeAvatarId) {
-  const grid = document.getElementById('upAvatarGrid');
-  if (!grid) return;
-  const avatars = [
-    { id: 'avatar_01', name: 'Aarav' }, { id: 'avatar_02', name: 'Ananya' },
-    { id: 'avatar_03', name: 'Rohan' }, { id: 'avatar_04', name: 'Priya' },
-    { id: 'avatar_05', name: 'Kabir' }, { id: 'avatar_06', name: 'Diya' },
-    { id: 'avatar_07', name: 'Vikram' }, { id: 'avatar_08', name: 'Meera' },
-    { id: 'avatar_09', name: 'Arjun' }, { id: 'avatar_10', name: 'Kavya' },
-    { id: 'avatar_11', name: 'Dev' }, { id: 'avatar_12', name: 'Isha' }
-  ];
+// ─────────────────────────────────────────────
+//  36 HUMAN AVATARS & DYNAMIC COLOR PALETTE
+// ─────────────────────────────────────────────
+let _selectedAvatarColor = '#4F46E5';
+let _avatarGenderFilter = 'all';
 
-  grid.innerHTML = avatars.map(a => `
-    <div class="sa-avatar-option ${a.id === activeAvatarId ? 'selected' : ''}" onclick="selectAvatarOption('${a.id}')">
-      <img src="/static/avatars/${a.id}.svg" alt="${a.name}">
-      <span>${a.name}</span>
-    </div>
-  `).join('');
+const LIBRIKA_AVATARS = [
+  // ─── 18 BOYS ───
+  { id: 'avatar_01', name: 'Aarav', gender: 'boy', defaultBg: '#4F46E5', desc: 'Side-part, wheatish' },
+  { id: 'avatar_03', name: 'Rohan', gender: 'boy', defaultBg: '#EA580C', desc: 'Wavy quiff, caramel' },
+  { id: 'avatar_05', name: 'Kabir', gender: 'boy', defaultBg: '#059669', desc: 'Curly mop, glasses' },
+  { id: 'avatar_07', name: 'Vikram', gender: 'boy', defaultBg: '#2563EB', desc: 'Fade cut, brown' },
+  { id: 'avatar_09', name: 'Arjun', gender: 'boy', defaultBg: '#9333EA', desc: 'Textured spikes, deep' },
+  { id: 'avatar_11', name: 'Dev', gender: 'boy', defaultBg: '#D97706', desc: 'Straight fringe, fair' },
+  { id: 'avatar_13', name: 'Reyansh', gender: 'boy', defaultBg: '#0D9488', desc: 'Afro fade, espresso' },
+  { id: 'avatar_15', name: 'Vihaan', gender: 'boy', defaultBg: '#E11D48', desc: 'Modern quiff, wheatish' },
+  { id: 'avatar_17', name: 'Aditya', gender: 'boy', defaultBg: '#475569', desc: 'Buzz cut, glasses' },
+  { id: 'avatar_19', name: 'Aryan', gender: 'boy', defaultBg: '#0284C7', desc: 'Curtain bangs, fair' },
+  { id: 'avatar_21', name: 'Sai', gender: 'boy', defaultBg: '#F97316', desc: 'Side fade, rich brown' },
+  { id: 'avatar_23', name: 'Atharv', gender: 'boy', defaultBg: '#16A34A', desc: 'Thick waves, warm' },
+  { id: 'avatar_25', name: 'Dhruv', gender: 'boy', defaultBg: '#3B82F6', desc: 'Crop neat, glasses' },
+  { id: 'avatar_27', name: 'Ishaan', gender: 'boy', defaultBg: '#6366F1', desc: 'Playful spikes, caramel' },
+  { id: 'avatar_29', name: 'Ansh', gender: 'boy', defaultBg: '#7C3AED', desc: 'Swept fringe, warm' },
+  { id: 'avatar_31', name: 'Vivaan', gender: 'boy', defaultBg: '#BE123C', desc: 'Short neat, wheatish' },
+  { id: 'avatar_33', name: 'Krish', gender: 'boy', defaultBg: '#0F766E', desc: 'Undercut curls, dark' },
+  { id: 'avatar_35', name: 'Pranav', gender: 'boy', defaultBg: '#1E3A8A', desc: 'Brushed back, glasses' },
+
+  // ─── 18 GIRLS ───
+  { id: 'avatar_02', name: 'Ananya', gender: 'girl', defaultBg: '#EC4899', desc: 'Long sleek, wheatish' },
+  { id: 'avatar_04', name: 'Priya', gender: 'girl', defaultBg: '#EAB308', desc: 'High ponytail, caramel' },
+  { id: 'avatar_06', name: 'Diya', gender: 'girl', defaultBg: '#06B6D4', desc: 'Wavy bob, glasses' },
+  { id: 'avatar_08', name: 'Meera', gender: 'girl', defaultBg: '#8B5CF6', desc: 'Side braid, brown' },
+  { id: 'avatar_10', name: 'Kavya', gender: 'girl', defaultBg: '#10B981', desc: 'Space buns, chocolate' },
+  { id: 'avatar_12', name: 'Isha', gender: 'girl', defaultBg: '#F43F5E', desc: 'Straight bob, warm' },
+  { id: 'avatar_14', name: 'Saanvi', gender: 'girl', defaultBg: '#2563EB', desc: 'Cascading waves' },
+  { id: 'avatar_16', name: 'Aadhya', gender: 'girl', defaultBg: '#F59E0B', desc: 'Afro puffs, espresso' },
+  { id: 'avatar_18', name: 'Tara', gender: 'girl', defaultBg: '#A855F7', desc: 'Headband, fair' },
+  { id: 'avatar_20', name: 'Anika', gender: 'girl', defaultBg: '#14B8A6', desc: 'Pixie cut, glasses' },
+  { id: 'avatar_22', name: 'Riya', gender: 'girl', defaultBg: '#DC2626', desc: 'Side braid, caramel' },
+  { id: 'avatar_24', name: 'Myra', gender: 'girl', defaultBg: '#6D28D9', desc: 'Voluminous curls' },
+  { id: 'avatar_26', name: 'Naira', gender: 'girl', defaultBg: '#0891B2', desc: 'Low ponytail, wheatish' },
+  { id: 'avatar_28', name: 'Sanya', gender: 'girl', defaultBg: '#F472B6', desc: 'Curtain layers, tan' },
+  { id: 'avatar_30', name: 'Tanvi', gender: 'girl', defaultBg: '#047857', desc: 'Topknot bun, brown' },
+  { id: 'avatar_32', name: 'Avani', gender: 'girl', defaultBg: '#4F46E5', desc: 'Blunt bob, glasses' },
+  { id: 'avatar_34', name: 'Shreya', gender: 'girl', defaultBg: '#D97706', desc: 'Twin pigtails, warm' },
+  { id: 'avatar_36', name: 'Navya', gender: 'girl', defaultBg: '#9F1239', desc: 'Layered curls, dark' }
+];
+
+const AVATAR_COLOR_PALETTE = [
+  { name: 'Indigo', hex: '#4F46E5' },
+  { name: 'Royal Blue', hex: '#2563EB' },
+  { name: 'Emerald', hex: '#059669' },
+  { name: 'Sunset Orange', hex: '#EA580C' },
+  { name: 'Crimson', hex: '#DC2626' },
+  { name: 'Rose Pink', hex: '#EC4899' },
+  { name: 'Electric Violet', hex: '#7C3AED' },
+  { name: 'Amber Gold', hex: '#D97706' },
+  { name: 'Cyan Teal', hex: '#0891B2' },
+  { name: 'Forest Green', hex: '#15803D' },
+  { name: 'Lavender', hex: '#8B5CF6' },
+  { name: 'Slate Dark', hex: '#334155' }
+];
+
+function getAvatarUrl(avatarId, color) {
+  if (!avatarId) avatarId = 'avatar_01';
+  let base = avatarId;
+  let c = color;
+  if (avatarId.includes('__')) {
+    const parts = avatarId.split('__');
+    base = parts[0];
+    if (!c) c = '#' + parts[1];
+  }
+  if (c) {
+    const clean = c.replace('#', '');
+    return `/static/avatars/${base}__${clean}.svg`;
+  }
+  return `/static/avatars/${base}.svg`;
 }
 
-async function selectAvatarOption(avatarId) {
-  _selectedAvatarId = avatarId;
-  document.querySelectorAll('.sa-avatar-option').forEach(el => el.classList.remove('selected'));
-  const selectedEl = document.querySelector(`.sa-avatar-option[onclick*="'${avatarId}'"]`);
-  if (selectedEl) selectedEl.classList.add('selected');
+function renderColorSwatches(activeHex) {
+  const container = document.getElementById('upColorSwatches');
+  if (!container) return;
+  const current = (activeHex || '#4F46E5').toUpperCase();
 
-  document.getElementById('upAvatarCurrentImg').src = `/static/avatars/${avatarId}.svg`;
-  document.getElementById('upAvatarCurrentName').textContent = `Character: ${avatarId.replace('_', ' ').toUpperCase()}`;
+  container.innerHTML = AVATAR_COLOR_PALETTE.map(c => `
+    <span class="sa-color-swatch ${c.hex.toUpperCase() === current ? 'active' : ''}"
+          style="background:${c.hex};"
+          data-color="${c.hex}"
+          title="${c.name} (${c.hex})"
+          onclick="selectAvatarColor('${c.hex}')"></span>
+  `).join('');
 
-  const userId = document.getElementById('upId').value;
+  const codeEl = document.getElementById('upSelectedColorCode');
+  if (codeEl) codeEl.textContent = current;
+  const customInput = document.getElementById('upCustomColorInput');
+  if (customInput) customInput.value = activeHex || '#4F46E5';
+}
+
+function selectAvatarColor(colorHex) {
+  _selectedAvatarColor = colorHex;
+  const clean = colorHex.replace('#', '');
+  const baseId = (_selectedAvatarId || 'avatar_01').split('__')[0];
+  _selectedAvatarId = `${baseId}__${clean}`;
+
+  renderColorSwatches(colorHex);
+
+  const previewImg = document.getElementById('upAvatarCurrentImg');
+  if (previewImg) previewImg.src = getAvatarUrl(baseId, colorHex);
+
+  renderAvatarPickerGrid(_selectedAvatarId, _avatarGenderFilter);
+
+  const userId = document.getElementById('upId')?.value;
   if (userId) {
-    await apiPost(`/super-admin/users/${userId}/avatar`, { avatar_id: avatarId, profile_picture: null });
-    showToast('Avatar character updated!', 'success');
+    apiPost(`/super-admin/users/${userId}/avatar`, { avatar_id: _selectedAvatarId, profile_picture: null });
+  }
+}
+
+function filterAvatars(gender) {
+  _avatarGenderFilter = gender;
+  document.getElementById('btnFilterAll')?.classList.toggle('active', gender === 'all');
+  document.getElementById('btnFilterBoys')?.classList.toggle('active', gender === 'boy');
+  document.getElementById('btnFilterGirls')?.classList.toggle('active', gender === 'girl');
+  renderAvatarPickerGrid(_selectedAvatarId, gender);
+}
+
+function renderAvatarPickerGrid(activeAvatarId, filter = 'all') {
+  const grid = document.getElementById('upAvatarGrid');
+  if (!grid) return;
+
+  const currentBaseId = (activeAvatarId || 'avatar_01').split('__')[0];
+  let list = LIBRIKA_AVATARS;
+  if (filter === 'boy' || filter === 'girl') {
+    list = list.filter(a => a.gender === filter);
+  }
+
+  const countLabel = document.getElementById('upAvatarCountLabel');
+  if (countLabel) countLabel.textContent = list.length;
+
+  grid.innerHTML = list.map(a => {
+    const isSelected = a.id === currentBaseId;
+    const avUrl = getAvatarUrl(a.id, _selectedAvatarColor);
+    return `
+      <div class="sa-avatar-option ${isSelected ? 'selected' : ''}" onclick="selectAvatarOption('${a.id}')">
+        <img src="${avUrl}" alt="${a.name}">
+        <span>${a.name}</span>
+        <small>${a.gender === 'boy' ? '👦 Boy' : '👧 Girl'}</small>
+      </div>
+    `;
+  }).join('');
+}
+
+async function selectAvatarOption(avatarBaseId) {
+  const clean = (_selectedAvatarColor || '#4F46E5').replace('#', '');
+  _selectedAvatarId = `${avatarBaseId}__${clean}`;
+
+  const found = LIBRIKA_AVATARS.find(a => a.id === avatarBaseId);
+  const name = found ? found.name : avatarBaseId;
+
+  document.getElementById('upAvatarCurrentImg').src = getAvatarUrl(avatarBaseId, _selectedAvatarColor);
+  document.getElementById('upAvatarCurrentName').textContent = `${name} (${found ? (found.gender === 'boy' ? 'Boy' : 'Girl') : 'Avatar'})`;
+
+  renderAvatarPickerGrid(_selectedAvatarId, _avatarGenderFilter);
+
+  const userId = document.getElementById('upId')?.value;
+  if (userId) {
+    await apiPost(`/super-admin/users/${userId}/avatar`, { avatar_id: _selectedAvatarId, profile_picture: null });
+    showToast(`Avatar changed to ${name}!`, 'success');
   }
 }
 

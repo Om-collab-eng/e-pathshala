@@ -1,23 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
   <!-- Background Circle (Colorable via id="avatar-bg") -->
-  <circle id="avatar-bg" cx="60" cy="60" r="58" fill="#F43F5E"/>
+  <circle id="avatar-bg" cx="60" cy="60" r="58" fill="#D97706"/>
 
   <defs>
-    <clipPath id="clip_avatar_12">
+    <clipPath id="clip_avatar_34">
       <circle cx="60" cy="60" r="58"/>
     </clipPath>
   </defs>
 
-  <g clip-path="url(#clip_avatar_12)">
+  <g clip-path="url(#clip_avatar_34)">
     <!-- Back Hair (if applicable) -->
-    
+    <path d="M34 50 C24 64 22 84 26 96 C28 98 34 96 32 90 C30 80 32 68 38 56 Z" fill="#1C1917"/>
+              <path d="M86 50 C96 64 98 84 94 96 C92 98 86 96 88 90 C90 80 88 68 82 56 Z" fill="#1C1917"/>
+              <ellipse cx="32" cy="52" rx="4" ry="3" fill="#D97706"/>
+              <ellipse cx="88" cy="52" rx="4" ry="3" fill="#D97706"/>
 
     <!-- Shoulders & Clothes -->
-    <path d="M16 120 C16 94 36 84 60 84 C84 84 104 94 104 120 Z" fill="#E11D48"/>
+    <path d="M16 120 C16 94 36 84 60 84 C84 84 104 94 104 120 Z" fill="#B45309"/>
 
     <!-- Clothing Collar / Neckline -->
-    <path d="M48 84 L60 96 L72 84 Z" fill="#FFE4E6"/>
-    <path d="M52 84 L60 92 L68 84 Z" fill="#E11D48" opacity="0.3"/>
+    <path d="M48 84 L60 96 L72 84 Z" fill="#FEF3C7"/>
+    <path d="M52 84 L60 92 L68 84 Z" fill="#B45309" opacity="0.3"/>
 
     <!-- Neck Shadow & Neck -->
     <path d="M51 72 L51 90 C51 95 69 95 69 90 L69 72 Z" fill="#C68949"/>
@@ -54,15 +57,17 @@
 
     <!-- Smile -->
     
-    <!-- Gentle Warm Smile -->
-    <path d="M54 66 Q60 71 66 66" stroke="#991B1B" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-  
+      <!-- Cheerful Open Smile with Teeth -->
+      <path d="M53 66 Q60 75 67 66 Z" fill="#991B1B"/>
+      <path d="M54 66 Q60 70 66 66 Z" fill="#FFFFFF"/>
+    
 
     <!-- Glasses (if applicable) -->
     
 
     <!-- Front Hair -->
-    <path d="M34 50 C34 32 46 24 60 24 C74 24 86 32 86 50 C86 64 84 74 80 78 C80 72 80 60 80 50 C78 40 72 36 60 36 C48 36 42 40 40 50 C40 60 40 72 40 78 C36 74 34 64 34 50 Z" fill="#1C1917"/>
-              <rect x="40" y="36" width="40" height="8" rx="2" fill="#1C1917"/>
+    <path d="M36 50 C36 34 46 27 60 27 C74 27 84 34 84 50 C80 40 72 35 60 35 C48 35 40 40 36 50 Z" fill="#1C1917"/>
+              <path d="M42 44 C48 40 54 38 60 40 C54 42 48 46 44 48 Z" fill="#1C1917"/>
+              <path d="M78 44 C72 40 66 38 60 40 C66 42 72 46 76 48 Z" fill="#1C1917"/>
   </g>
 </svg>

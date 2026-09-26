@@ -2517,32 +2517,41 @@
               
               <!-- Character Avatar Selector -->
               <div style="margin-bottom:18px;padding:14px;background:var(--surface-sub, #F8FAFC);border-radius:12px;border:1px solid var(--border);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                   <label style="font-size:0.85rem;font-weight:800;color:var(--text-primary);margin:0;">Choose Your Character Avatar</label>
                   <label class="btn-secondary" style="font-size:0.75rem;padding:4px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
                     📷 Upload Photo
                     <input type="file" id="studentPhotoUpload" accept="image/*" style="display:none" onchange="uploadStudentPhoto(this)">
                   </label>
                 </div>
-                <input type="hidden" id="selectedStudentAvatarId" value="<%= student.avatar_id || 'avatar_01' %>">
-                <div class="sp-avatar-picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:8px;max-height:190px;overflow-y:auto;padding:2px;">
-                  <% 
-                    const avList = [
-                      { id: 'avatar_01', name: 'Aarav' }, { id: 'avatar_02', name: 'Ananya' },
-                      { id: 'avatar_03', name: 'Rohan' }, { id: 'avatar_04', name: 'Priya' },
-                      { id: 'avatar_05', name: 'Kabir' }, { id: 'avatar_06', name: 'Diya' },
-                      { id: 'avatar_07', name: 'Vikram' }, { id: 'avatar_08', name: 'Meera' },
-                      { id: 'avatar_09', name: 'Arjun' }, { id: 'avatar_10', name: 'Kavya' },
-                      { id: 'avatar_11', name: 'Dev' }, { id: 'avatar_12', name: 'Isha' }
-                    ];
-                    const curAv = student.avatar_id || 'avatar_01';
-                  %>
-                  <% avList.forEach(a => { %>
-                    <div class="sp-avatar-item <%= a.id === curAv ? 'selected' : '' %>" data-avatar-id="<%= a.id %>" onclick="selectStudentAvatar('<%= a.id %>')" style="border:2px solid <%= a.id === curAv ? 'var(--primary, #0B5ED7)' : 'var(--border, #E2E8F0)' %>;border-radius:10px;padding:6px 2px;text-align:center;cursor:pointer;background:<%= a.id === curAv ? '#EEF2FF' : '#fff' %>;transition:all 0.15s;">
-                      <img src="/static/avatars/<%= a.id %>.svg" alt="<%= a.name %>" style="width:38px;height:38px;border-radius:50%;display:block;margin:0 auto 3px;">
-                      <span style="font-size:0.68rem;font-weight:700;color:var(--text-secondary);display:block;"><%= a.name %></span>
+
+                <!-- Color Palette -->
+                <div style="margin-bottom:10px;padding:8px 10px;background:#F8FAFC;border-radius:10px;border:1px solid #E2E8F0;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-size:0.75rem;font-weight:700;color:#334155;">🎨 Choose Tone / Background:</span>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span id="studentColorCode" style="font-size:0.7rem;font-weight:700;font-family:monospace;color:#0B5ED7;">#4F46E5</span>
+                      <input type="color" id="studentCustomColor" value="#4F46E5" onchange="selectStudentColor(this.value)" style="width:24px;height:24px;padding:0;border:none;border-radius:50%;cursor:pointer;background:transparent;">
                     </div>
-                  <% }) %>
+                  </div>
+                  <div id="studentColorSwatches" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                    <!-- swatches populated via JS -->
+                  </div>
+                </div>
+
+                <!-- Gender filter buttons -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <span style="font-size:0.75rem;font-weight:700;color:#64748B;">Select Character:</span>
+                  <div style="display:flex;gap:4px;">
+                    <button type="button" class="sp-filter-btn active" id="spFilterAll" onclick="filterStudentAvatars('all')" style="font-size:0.7rem;padding:2px 8px;border-radius:12px;border:1px solid #CBD5E1;background:#0B5ED7;color:#fff;cursor:pointer;">All (36)</button>
+                    <button type="button" class="sp-filter-btn" id="spFilterBoys" onclick="filterStudentAvatars('boy')" style="font-size:0.7rem;padding:2px 8px;border-radius:12px;border:1px solid #CBD5E1;background:#fff;color:#64748B;cursor:pointer;">👦 Boys (18)</button>
+                    <button type="button" class="sp-filter-btn" id="spFilterGirls" onclick="filterStudentAvatars('girl')" style="font-size:0.7rem;padding:2px 8px;border-radius:12px;border:1px solid #CBD5E1;background:#fff;color:#64748B;cursor:pointer;">👧 Girls (18)</button>
+                  </div>
+                </div>
+
+                <input type="hidden" id="selectedStudentAvatarId" value="<%= student.avatar_id || 'avatar_01' %>">
+                <div class="sp-avatar-picker-grid" id="studentAvatarGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:8px;max-height:210px;overflow-y:auto;padding:2px;">
+                  <!-- Populated dynamically via renderStudentAvatarGrid -->
                 </div>
               </div>
 
@@ -3420,21 +3429,153 @@
       handleCatalogGenreSelect('ALL', allBtn);
     }
 
-    function selectStudentAvatar(avatarId) {
-      document.getElementById('selectedStudentAvatarId').value = avatarId;
-      document.querySelectorAll('.sp-avatar-item').forEach(el => {
-        el.style.borderColor = 'var(--border, #E2E8F0)';
-        el.style.background = '#fff';
-      });
-      const selectedCard = document.querySelector(`.sp-avatar-item[data-avatar-id="${avatarId}"]`);
-      if (selectedCard) {
-        selectedCard.style.borderColor = 'var(--primary, #0B5ED7)';
-        selectedCard.style.background = '#EEF2FF';
+    // 36 Human Avatars & Color Selection for Student Portal
+    const STUDENT_AVATARS = [
+      { id: 'avatar_01', name: 'Aarav', gender: 'boy', defaultBg: '#4F46E5' },
+      { id: 'avatar_03', name: 'Rohan', gender: 'boy', defaultBg: '#EA580C' },
+      { id: 'avatar_05', name: 'Kabir', gender: 'boy', defaultBg: '#059669' },
+      { id: 'avatar_07', name: 'Vikram', gender: 'boy', defaultBg: '#2563EB' },
+      { id: 'avatar_09', name: 'Arjun', gender: 'boy', defaultBg: '#9333EA' },
+      { id: 'avatar_11', name: 'Dev', gender: 'boy', defaultBg: '#D97706' },
+      { id: 'avatar_13', name: 'Reyansh', gender: 'boy', defaultBg: '#0D9488' },
+      { id: 'avatar_15', name: 'Vihaan', gender: 'boy', defaultBg: '#E11D48' },
+      { id: 'avatar_17', name: 'Aditya', gender: 'boy', defaultBg: '#475569' },
+      { id: 'avatar_19', name: 'Aryan', gender: 'boy', defaultBg: '#0284C7' },
+      { id: 'avatar_21', name: 'Sai', gender: 'boy', defaultBg: '#F97316' },
+      { id: 'avatar_23', name: 'Atharv', gender: 'boy', defaultBg: '#16A34A' },
+      { id: 'avatar_25', name: 'Dhruv', gender: 'boy', defaultBg: '#3B82F6' },
+      { id: 'avatar_27', name: 'Ishaan', gender: 'boy', defaultBg: '#6366F1' },
+      { id: 'avatar_29', name: 'Ansh', gender: 'boy', defaultBg: '#7C3AED' },
+      { id: 'avatar_31', name: 'Vivaan', gender: 'boy', defaultBg: '#BE123C' },
+      { id: 'avatar_33', name: 'Krish', gender: 'boy', defaultBg: '#0F766E' },
+      { id: 'avatar_35', name: 'Pranav', gender: 'boy', defaultBg: '#1E3A8A' },
+      { id: 'avatar_02', name: 'Ananya', gender: 'girl', defaultBg: '#EC4899' },
+      { id: 'avatar_04', name: 'Priya', gender: 'girl', defaultBg: '#EAB308' },
+      { id: 'avatar_06', name: 'Diya', gender: 'girl', defaultBg: '#06B6D4' },
+      { id: 'avatar_08', name: 'Meera', gender: 'girl', defaultBg: '#8B5CF6' },
+      { id: 'avatar_10', name: 'Kavya', gender: 'girl', defaultBg: '#10B981' },
+      { id: 'avatar_12', name: 'Isha', gender: 'girl', defaultBg: '#F43F5E' },
+      { id: 'avatar_14', name: 'Saanvi', gender: 'girl', defaultBg: '#2563EB' },
+      { id: 'avatar_16', name: 'Aadhya', gender: 'girl', defaultBg: '#F59E0B' },
+      { id: 'avatar_18', name: 'Tara', gender: 'girl', defaultBg: '#A855F7' },
+      { id: 'avatar_20', name: 'Anika', gender: 'girl', defaultBg: '#14B8A6' },
+      { id: 'avatar_22', name: 'Riya', gender: 'girl', defaultBg: '#DC2626' },
+      { id: 'avatar_24', name: 'Myra', gender: 'girl', defaultBg: '#6D28D9' },
+      { id: 'avatar_26', name: 'Naira', gender: 'girl', defaultBg: '#0891B2' },
+      { id: 'avatar_28', name: 'Sanya', gender: 'girl', defaultBg: '#F472B6' },
+      { id: 'avatar_30', name: 'Tanvi', gender: 'girl', defaultBg: '#047857' },
+      { id: 'avatar_32', name: 'Avani', gender: 'girl', defaultBg: '#4F46E5' },
+      { id: 'avatar_34', name: 'Shreya', gender: 'girl', defaultBg: '#D97706' },
+      { id: 'avatar_36', name: 'Navya', gender: 'girl', defaultBg: '#9F1239' }
+    ];
+
+    const STUDENT_PALETTE = ['#4F46E5', '#2563EB', '#059669', '#EA580C', '#DC2626', '#EC4899', '#7C3AED', '#D97706', '#0891B2', '#15803D', '#8B5CF6', '#334155'];
+    let _studentCurColor = '#4F46E5';
+    let _studentGenderFilter = 'all';
+
+    function initStudentAvatarPicker() {
+      const curInputVal = document.getElementById('selectedStudentAvatarId')?.value || 'avatar_01';
+      if (curInputVal.includes('__')) {
+        _studentCurColor = '#' + curInputVal.split('__')[1];
       }
+      renderStudentColorSwatches(_studentCurColor);
+      renderStudentAvatarGrid(curInputVal, _studentGenderFilter);
+    }
+
+    function renderStudentColorSwatches(activeHex) {
+      const container = document.getElementById('studentColorSwatches');
+      if (!container) return;
+      const cur = (activeHex || '#4F46E5').toUpperCase();
+      container.innerHTML = STUDENT_PALETTE.map(hex => `
+        <span style="width:20px;height:20px;border-radius:50%;background:${hex};cursor:pointer;display:inline-block;border:2px solid #fff;box-shadow:0 0 0 ${hex.toUpperCase() === cur ? '2px #0B5ED7' : '1px #CBD5E1'};transform:${hex.toUpperCase() === cur ? 'scale(1.2)' : 'none'};transition:all 0.15s;"
+              onclick="selectStudentColor('${hex}')"></span>
+      `).join('');
+      const code = document.getElementById('studentColorCode');
+      if (code) code.textContent = cur;
+      const custom = document.getElementById('studentCustomColor');
+      if (custom) custom.value = activeHex || '#4F46E5';
+    }
+
+    function selectStudentColor(colorHex) {
+      _studentCurColor = colorHex;
+      const curInput = document.getElementById('selectedStudentAvatarId');
+      const baseId = (curInput?.value || 'avatar_01').split('__')[0];
+      const clean = colorHex.replace('#', '');
+      const fullId = `${baseId}__${clean}`;
+      if (curInput) curInput.value = fullId;
+
+      renderStudentColorSwatches(colorHex);
+      renderStudentAvatarGrid(fullId, _studentGenderFilter);
+
+      const url = `/static/avatars/${baseId}__${clean}.svg`;
       const passImg = document.getElementById('studentPassAvatar');
-      if (passImg) passImg.src = `/static/avatars/${avatarId}.svg`;
+      if (passImg) passImg.src = url;
       const sideImg = document.getElementById('studentSidebarAvatar');
-      if (sideImg) sideImg.src = `/static/avatars/${avatarId}.svg`;
+      if (sideImg) sideImg.src = url;
+    }
+
+    function filterStudentAvatars(gender) {
+      _studentGenderFilter = gender;
+      document.getElementById('spFilterAll')?.classList.toggle('active', gender === 'all');
+      document.getElementById('spFilterBoys')?.classList.toggle('active', gender === 'boy');
+      document.getElementById('spFilterGirls')?.classList.toggle('active', gender === 'girl');
+
+      ['spFilterAll', 'spFilterBoys', 'spFilterGirls'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          const isActive = btn.classList.contains('active');
+          btn.style.background = isActive ? '#0B5ED7' : '#fff';
+          btn.style.color = isActive ? '#fff' : '#64748B';
+        }
+      });
+
+      const curVal = document.getElementById('selectedStudentAvatarId')?.value || 'avatar_01';
+      renderStudentAvatarGrid(curVal, gender);
+    }
+
+    function renderStudentAvatarGrid(activeFullId, filter = 'all') {
+      const grid = document.getElementById('studentAvatarGrid');
+      if (!grid) return;
+      const activeBase = (activeFullId || 'avatar_01').split('__')[0];
+      let list = STUDENT_AVATARS;
+      if (filter === 'boy' || filter === 'girl') {
+        list = list.filter(a => a.gender === filter);
+      }
+
+      const cleanHex = (_studentCurColor || '#4F46E5').replace('#', '');
+      grid.innerHTML = list.map(a => {
+        const isSel = a.id === activeBase;
+        const avUrl = `/static/avatars/${a.id}__${cleanHex}.svg`;
+        return `
+          <div class="sp-avatar-item ${isSel ? 'selected' : ''}" data-avatar-id="${a.id}" onclick="selectStudentAvatar('${a.id}')"
+               style="border:2px solid ${isSel ? 'var(--primary, #0B5ED7)' : 'var(--border, #E2E8F0)'};border-radius:10px;padding:6px 2px;text-align:center;cursor:pointer;background:${isSel ? '#EEF2FF' : '#fff'};transition:all 0.15s;">
+            <img src="${avUrl}" alt="${a.name}" style="width:40px;height:40px;border-radius:50%;display:block;margin:0 auto 3px;">
+            <span style="font-size:0.68rem;font-weight:700;color:var(--text-primary, #1E293B);display:block;">${a.name}</span>
+            <small style="font-size:0.58rem;color:var(--text-secondary, #64748B);display:block;">${a.gender === 'boy' ? '👦 Boy' : '👧 Girl'}</small>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectStudentAvatar(avatarBaseId) {
+      const clean = (_studentCurColor || '#4F46E5').replace('#', '');
+      const fullId = `${avatarBaseId}__${clean}`;
+      document.getElementById('selectedStudentAvatarId').value = fullId;
+
+      renderStudentAvatarGrid(fullId, _studentGenderFilter);
+
+      const url = `/static/avatars/${avatarBaseId}__${clean}.svg`;
+      const passImg = document.getElementById('studentPassAvatar');
+      if (passImg) passImg.src = url;
+      const sideImg = document.getElementById('studentSidebarAvatar');
+      if (sideImg) sideImg.src = url;
+    }
+
+    // Initialize student avatar picker on load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initStudentAvatarPicker);
+    } else {
+      initStudentAvatarPicker();
     }
 
     async function uploadStudentPhoto(input) {

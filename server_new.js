@@ -45,6 +45,44 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'base');
 
+// Dynamic SVG Avatar endpoint: Serves 36 human avatars with optional custom background colors (?bg=HEX or avatar_XX__HEX.svg)
+app.get(['/static/avatars/:file', '/avatars/:file'], (req, res, next) => {
+  const file = req.params.file;
+  if (!file || !file.toLowerCase().endsWith('.svg')) return next();
+
+  let baseId = file.replace(/\.svg$/i, '');
+  let bg = req.query.bg || null;
+
+  if (baseId.includes('__')) {
+    const parts = baseId.split('__');
+    baseId = parts[0];
+    if (!bg) bg = parts[1];
+  }
+
+  const svgPath = path.join(__dirname, 'static', 'avatars', `${baseId}.svg`);
+  if (!fs.existsSync(svgPath)) {
+    return next();
+  }
+
+  try {
+    let svgContent = fs.readFileSync(svgPath, 'utf8');
+    if (bg) {
+      const cleanHex = String(bg).replace(/[^a-fA-F0-9]/g, '');
+      if (cleanHex.length === 3 || cleanHex.length === 6) {
+        svgContent = svgContent.replace(
+          /id="avatar-bg"\s+cx="60"\s+cy="60"\s+r="58"\s+fill="[^"]*"/,
+          `id="avatar-bg" cx="60" cy="60" r="58" fill="#${cleanHex}"`
+        );
+      }
+    }
+    res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(svgContent);
+  } catch (err) {
+    return next(err);
+  }
+});
+
 // Serve static assets at root (e.g. /coursera-librika.css, /logo.png, /student.css) and under /static
 app.use(express.static(path.join(__dirname, 'static'), { index: false }));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
