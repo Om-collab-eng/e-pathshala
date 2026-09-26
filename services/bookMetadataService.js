@@ -168,8 +168,111 @@ async function checkDuplicateAndAcquisitions(isbn, title, author, schoolCode) {
   return { duplicateBook, matchingAcquisition };
 }
 
+/**
+ * Search online books returning multiple candidates from Google Books & OpenLibrary.
+ * Supports query string OR structured params { query, title, author, publisher, isbn, subject }.
+ */
+async function searchOnlineBooks(searchParams, limit = 8) {
+  let q = '';
+  let structured = false;
+
+  if (typeof searchParams === 'object' && searchParams !== null) {
+    structured = true;
+    const parts = [];
+    if (searchParams.isbn) parts.push(`isbn:${cleanIsbn(searchParams.isbn)}`);
+    if (searchParams.title) parts.push(`intitle:${searchParams.title.trim()}`);
+    if (searchParams.author) parts.push(`inauthor:${searchParams.author.trim()}`);
+    if (searchParams.publisher) parts.push(`inpublisher:${searchParams.publisher.trim()}`);
+    if (searchParams.subject) parts.push(`subject:${searchParams.subject.trim()}`);
+    if (searchParams.query) parts.push(searchParams.query.trim());
+
+    q = parts.length > 0 ? parts.join(' ') : (searchParams.query || '');
+  } else {
+    q = String(searchParams || '').trim();
+  }
+
+  if (!q) return [];
+
+  const results = [];
+  try {
+    const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${limit}`;
+    const googleData = await fetchJson(googleUrl);
+
+    if (googleData && googleData.items && googleData.items.length > 0) {
+      for (const item of googleData.items) {
+        const vol = item.volumeInfo || {};
+        const img = vol.imageLinks || {};
+        const coverUrl = (img.thumbnail || img.smallThumbnail || '').replace(/^http:\/\//i, 'https://');
+        
+        // Extract plain text ISBN
+        const identifiers = vol.industryIdentifiers || [];
+        const isbnObj = identifiers.find(i => i.type.includes('13')) || identifiers[0];
+        const plainIsbn = isbnObj ? isbnObj.identifier : '';
+
+        // Extract edition if present
+        let editionStr = vol.contentVersion || '';
+        if (vol.subtitle && vol.subtitle.toLowerCase().includes('edition')) {
+          editionStr = vol.subtitle;
+        }
+
+        results.push({
+          title: vol.title || 'Untitled',
+          author: (vol.authors && vol.authors.length) ? vol.authors.join(', ') : 'Unknown',
+          publisher: vol.publisher || '',
+          published_year: vol.publishedDate ? vol.publishedDate.substring(0, 4) : '',
+          edition: editionStr,
+          isbn: plainIsbn,
+          language: vol.language ? (vol.language === 'en' ? 'English' : (vol.language === 'hi' ? 'Hindi' : vol.language.toUpperCase())) : 'English',
+          subject: (vol.categories && vol.categories.length) ? vol.categories[0] : 'General',
+          description: vol.description ? (vol.description.length > 300 ? vol.description.substring(0, 300) + '...' : vol.description) : '',
+          cover_url: coverUrl,
+          page_count: vol.pageCount || 0,
+          source: 'Google Books'
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[METADATA] searchOnlineBooks Google error:', err.message);
+  }
+
+  // If few results and query had terms, fallback to OpenLibrary
+  if (results.length < 3) {
+    try {
+      const olQuery = (typeof searchParams === 'object' && searchParams !== null)
+        ? (searchParams.title || searchParams.author || searchParams.isbn || q)
+        : q;
+      const olUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(olQuery)}&limit=${limit}`;
+      const olData = await fetchJson(olUrl);
+      if (olData && olData.docs && olData.docs.length > 0) {
+        for (const doc of olData.docs.slice(0, limit - results.length)) {
+          const coverUrl = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : '';
+          const plainIsbn = (doc.isbn && doc.isbn.length) ? doc.isbn[0] : '';
+          results.push({
+            title: doc.title || 'Untitled',
+            author: (doc.author_name && doc.author_name.length) ? doc.author_name.join(', ') : 'Unknown',
+            publisher: (doc.publisher && doc.publisher.length) ? doc.publisher[0] : '',
+            published_year: doc.first_publish_year ? String(doc.first_publish_year) : '',
+            edition: doc.edition_count ? `${doc.edition_count} Editions` : '',
+            isbn: plainIsbn,
+            language: (doc.language && doc.language.length && doc.language[0] === 'eng') ? 'English' : 'English',
+            subject: (doc.subject && doc.subject.length) ? doc.subject[0] : 'General',
+            description: '',
+            cover_url: coverUrl,
+            source: 'OpenLibrary'
+          });
+        }
+      }
+    } catch (olErr) {
+      console.warn('[METADATA] searchOnlineBooks OpenLibrary error:', olErr.message);
+    }
+  }
+
+  return results;
+}
+
 module.exports = {
   cleanIsbn,
   fetchBookMetadata,
+  searchOnlineBooks,
   checkDuplicateAndAcquisitions
 };

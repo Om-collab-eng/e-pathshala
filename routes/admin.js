@@ -1032,10 +1032,99 @@ router.get(['/e-library/read/:id', '/digital/read/:id'], adminOnly, async (req, 
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. ADD BOOK, METADATA LOOKUP, BATCH REGISTRATION, AND ACQUISITIONS
+// 8. BOOK REGISTRATION (3 MODES: NORMAL TEXT SCAN, SEARCH ONLINE, MANUAL SEARCH)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Metadata Lookup via Google Books / OpenLibrary
+// Internal Library Book ID Generator: VBPG + Year + Sequence (e.g. VBPG20260001)
+async function generateNextBookId(schoolCode) {
+  const year = new Date().getFullYear();
+  const prefix = `VBPG${year}`;
+
+  try {
+    const res = await db.query(
+      `SELECT book_id, barcode_id FROM books 
+       WHERE (book_id LIKE $1 OR barcode_id LIKE $1) 
+       ORDER BY id DESC LIMIT 100`,
+      [`${prefix}%`]
+    ).catch(() => ({ rows: [] }));
+
+    let maxSeq = 0;
+    for (const r of (res.rows || [])) {
+      const candidate = String(r.book_id || r.barcode_id || '');
+      const match = candidate.match(new RegExp(`^${prefix}(\\d+)`));
+      if (match) {
+        const val = parseInt(match[1], 10);
+        if (val > maxSeq) maxSeq = val;
+      }
+    }
+
+    const nextSeq = String(maxSeq + 1).padStart(4, '0');
+    return `${prefix}${nextSeq}`;
+  } catch (err) {
+    console.error('generateNextBookId error:', err.message);
+    return `${prefix}0001`;
+  }
+}
+
+// Get next system Book ID (VBPG20260001)
+router.get('/api/books/next-id', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DPS123';
+  try {
+    const nextBookId = await generateNextBookId(sCode);
+    return res.json({ success: true, bookId: nextBookId });
+  } catch (err) {
+    console.error('Error generating next book id:', err);
+    const fallbackId = `VBPG${new Date().getFullYear()}0001`;
+    return res.json({ success: true, bookId: fallbackId });
+  }
+});
+
+// Mode 1: Normal Text Scan OCR & Field Extraction (No barcodes!)
+router.post('/api/books/ocr-text', adminOnly, async (req, res) => {
+  const { imageBase64 } = req.body;
+  if (!imageBase64) {
+    return res.status(400).json({ success: false, error: 'Please provide an image of the physical book.' });
+  }
+
+  try {
+    const ocrData = await aiService.extractTextAndIdentifyFields(imageBase64);
+    return res.json({
+      success: true,
+      rawText: ocrData.rawText || '',
+      identified: ocrData.identified || {}
+    });
+  } catch (err) {
+    console.error('OCR text extraction error:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to extract text from book image: ' + err.message
+    });
+  }
+});
+
+// Mode 2 & Mode 3: Search Online Book Databases (Google Books & OpenLibrary)
+router.all('/api/books/search-online', adminOnly, async (req, res) => {
+  const params = req.method === 'POST' ? req.body : req.query;
+  const { query, title, author, publisher, isbn, subject } = params || {};
+
+  if (!query && !title && !author && !isbn && !publisher && !subject) {
+    return res.status(400).json({ success: false, error: 'Please enter a book title, author, or keyword to search.' });
+  }
+
+  try {
+    const searchArgs = (title || author || publisher || isbn || subject) 
+      ? { query, title, author, publisher, isbn, subject }
+      : (query || title);
+
+    const results = await bookMetadataService.searchOnlineBooks(searchArgs, 8);
+    return res.json({ success: true, results });
+  } catch (err) {
+    console.error('Online book search error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to search online books: ' + err.message });
+  }
+});
+
+// Metadata Lookup via Google Books / OpenLibrary (Single Lookup)
 router.get('/api/books/lookup', adminOnly, async (req, res) => {
   const isbn = (req.query.isbn || req.query.q || '').trim();
   const title = (req.query.title || '').trim();
@@ -1077,15 +1166,16 @@ router.get('/api/books/lookup', adminOnly, async (req, res) => {
   }
 });
 
-// Single Book Add / Registration (supports both /admin/book/add and /admin/books/add)
+// Unified Book Add / Registration (Strict No-Barcode with VBPG Book ID)
 router.post(['/book/add', '/books/add'], adminOnly, async (req, res) => {
   const sCode = req.session.school_code || 'DEMO01';
   const { 
-    title, author, genre, total_copies, isbn, rack, shelf, description, language,
-    cover_url, back_cover_url, acquisition_item_id
+    book_id: inputBookId, title, author, publisher, edition, isbn, language, subject,
+    class: bookClass, price, publication_year, total_copies, shelf_location, rack, shelf,
+    book_condition, description, cover_url, back_cover_url, acquisition_item_id, genre
   } = req.body;
 
-  if (!title) {
+  if (!title || !title.trim()) {
     if (req.is('json') || req.headers.accept?.includes('application/json')) {
       return res.status(400).json({ success: false, error: 'Book Title is required' });
     }
@@ -1095,37 +1185,56 @@ router.post(['/book/add', '/books/add'], adminOnly, async (req, res) => {
 
   try {
     const copies = parseInt(total_copies, 10) || 1;
-    const barcodeId = isbn || `LIB-${Date.now().toString().slice(-8)}`;
-    const shelfLoc = `${rack || 'A'}-${shelf || '1'}`;
+    // Generate or format unique VBPG Book ID (never a barcode!)
+    let finalBookId = (inputBookId && inputBookId.trim().startsWith('VBPG')) 
+      ? inputBookId.trim() 
+      : await generateNextBookId(sCode);
+
+    // Shelf location
+    const shelfLoc = shelf_location ? shelf_location.trim() : `${rack || 'A'}-${shelf || '1'}`;
+    const cleanSub = subject || genre || 'General';
 
     const insRes = await db.query(`
-      INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language, cover_url, back_cover_url)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      INSERT INTO books (
+        book_id, title, author, publisher, edition, isbn, language, subject, class,
+        price, publication_year, genre, barcode_id, total_copies, available_copies,
+        school_code, description, shelf_location, book_condition, cover_url, back_cover_url
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
       RETURNING id
     `, [
-      title, author || 'Unknown', genre || 'General', barcodeId, copies, copies, sCode,
-      description || null, isbn || null, shelfLoc, language || 'English',
+      finalBookId, title.trim(), author || 'Unknown', publisher || '', edition || '',
+      isbn || '', language || 'English', cleanSub, bookClass || '',
+      price || '', publication_year || '', cleanSub, finalBookId, copies, copies,
+      sCode, description || '', shelfLoc, book_condition || 'GOOD',
       cover_url || '', back_cover_url || ''
     ]).catch(async () => {
+      // Fallback for MySQL/SQLite without RETURNING
       return await db.query(`
-        INSERT INTO books (title, author, genre, barcode_id, total_copies, available_copies, school_code, description, isbn, shelf_location, language, cover_url, back_cover_url)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        INSERT INTO books (
+          book_id, title, author, publisher, edition, isbn, language, subject, class,
+          price, publication_year, genre, barcode_id, total_copies, available_copies,
+          school_code, description, shelf_location, book_condition, cover_url, back_cover_url
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
       `, [
-        title, author || 'Unknown', genre || 'General', barcodeId, copies, copies, sCode,
-        description || null, isbn || null, shelfLoc, language || 'English',
+        finalBookId, title.trim(), author || 'Unknown', publisher || '', edition || '',
+        isbn || '', language || 'English', cleanSub, bookClass || '',
+        price || '', publication_year || '', cleanSub, finalBookId, copies, copies,
+        sCode, description || '', shelfLoc, book_condition || 'GOOD',
         cover_url || '', back_cover_url || ''
       ]);
     });
 
-    const bookId = (insRes.rows && insRes.rows[0]) ? insRes.rows[0].id : insRes.lastId;
+    const dbId = (insRes.rows && insRes.rows[0]) ? insRes.rows[0].id : insRes.lastId;
 
-    // Generate individual copy records
-    if (bookId) {
+    // Generate individual copy records using the unique Book ID
+    if (dbId) {
       for (let i = 1; i <= copies; i++) {
         await db.query(`
           INSERT INTO book_copies (book_id, barcode, condition_status, availability_status, school_code)
-          VALUES ($1, $2, 'GOOD', 'AVAILABLE', $3)
-        `, [bookId, `${barcodeId}-C${i}`, sCode]).catch(() => {});
+          VALUES ($1, $2, $3, 'AVAILABLE', $4)
+        `, [dbId, `${finalBookId}-C${i}`, book_condition || 'GOOD', sCode]).catch(() => {});
       }
     }
 
@@ -1141,13 +1250,30 @@ router.post(['/book/add', '/books/add'], adminOnly, async (req, res) => {
     if (req.is('json') || req.headers.accept?.includes('application/json')) {
       return res.json({
         success: true,
-        bookId,
-        message: `Book '${title}' registered successfully with ${copies} copies!`,
-        book: { id: bookId, title, author, total_copies: copies, isbn, cover_url, back_cover_url }
+        bookId: finalBookId,
+        id: dbId,
+        message: `Book '${title}' registered successfully with Book ID: ${finalBookId}!`,
+        book: {
+          book_id: finalBookId,
+          title,
+          author,
+          publisher,
+          edition,
+          isbn,
+          language: language || 'English',
+          subject: cleanSub,
+          class: bookClass || '',
+          price: price || '',
+          publication_year: publication_year || '',
+          total_copies: copies,
+          shelf_location: shelfLoc,
+          book_condition: book_condition || 'GOOD',
+          cover_url: cover_url || ''
+        }
       });
     }
 
-    req.flash('success', `Book '${title}' added with ${copies} copies!`);
+    req.flash('success', `Book '${title}' registered successfully with Book ID ${finalBookId}!`);
     return res.redirect('/admin/catalog');
   } catch (err) {
     console.error('Add book error:', err);

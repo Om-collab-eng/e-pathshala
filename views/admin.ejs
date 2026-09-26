@@ -1757,195 +1757,375 @@
        5. MODALS (ADD BOOK, ADD MEMBER)
        ═══════════════════════════════════════════════════════════════ -->
   <!-- Add Book Modal -->
-  <!-- Enhanced Add Book Modal (Single & Bulk Scan, Covers, Duplicate Detection & Acquisition Linking) -->
+  <!-- Add Book Modal (3 Input Modes: Normal Text Scan, Search Online, Manual Search - Strictly No Barcodes) -->
   <div id="addBookModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;z-index:9999;">
-    <div class="card" style="width:95%;max-width:820px;max-height:92vh;overflow-y:auto;position:relative;padding:1.5rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div class="card" style="width:95%;max-width:880px;max-height:92vh;overflow-y:auto;position:relative;padding:1.5rem;box-shadow:0 20px 40px rgba(0,0,0,0.18);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #E2E8F0;padding-bottom:12px;">
         <div>
-          <h3 style="margin:0;font-size:1.25rem;font-weight:800;">📚 Book Registration &amp; Barcode Scanner</h3>
-          <p style="margin:2px 0 0 0;font-size:0.8rem;color:#64748B;">Register physical titles with live web metadata, dual cover photos, and duplicate reconciliation.</p>
+          <h3 style="margin:0;font-size:1.25rem;font-weight:800;color:#1E293B;">📚 Add New Book</h3>
+          <p style="margin:3px 0 0 0;font-size:0.82rem;color:#64748B;">Register physical books via text OCR scan, online metadata lookup, or manual entry. Strictly no barcode scanning.</p>
         </div>
-        <button onclick="closeModal('addBookModal')" style="background:transparent;border:none;font-size:1.3rem;cursor:pointer;color:#64748B;">✕</button>
+        <button onclick="closeModal('addBookModal')" style="background:transparent;border:none;font-size:1.3rem;cursor:pointer;color:#64748B;line-height:1;">✕</button>
       </div>
 
-      <!-- Mode Switcher Tabs -->
-      <div class="lp-tabs-bar" style="margin-bottom:18px;">
-        <button type="button" class="lp-tab-btn active" id="btnModeSingle" onclick="switchAddBookMode('single')">
-          📖 Single Book Registration
+      <!-- Mode Switcher Tabs (3 Distinct Modes) -->
+      <div class="lp-tabs-bar" style="margin-bottom:18px;display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;background:#F1F5F9;padding:4px;border-radius:10px;">
+        <button type="button" class="lp-tab-btn active" id="tabModeTextScan" onclick="switchAddBookMode('text_scan')" style="padding:10px 8px;font-size:0.83rem;font-weight:700;border-radius:8px;text-align:center;">
+          📷 Normal Text Scan
         </button>
-        <button type="button" class="lp-tab-btn" id="btnModeBulk" onclick="switchAddBookMode('bulk')">
-          ⚡ Bulk Barcode Scan Queue (<span id="bulkQueueBadge">0</span>)
+        <button type="button" class="lp-tab-btn" id="tabModeOnlineSearch" onclick="switchAddBookMode('online_search')" style="padding:10px 8px;font-size:0.83rem;font-weight:700;border-radius:8px;text-align:center;">
+          🌐 Search Online
+        </button>
+        <button type="button" class="lp-tab-btn" id="tabModeManualSearch" onclick="switchAddBookMode('manual_search')" style="padding:10px 8px;font-size:0.83rem;font-weight:700;border-radius:8px;text-align:center;">
+          ⌨️ Manual Search
         </button>
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════
-           MODE 1: SINGLE BOOK SCAN & REGISTRATION
+           MODE 1: NORMAL TEXT SCAN
+           Extract visible printed text via OCR from cover/pages
            ═══════════════════════════════════════════════════════════════ -->
-      <div id="viewSingleBook">
-        <!-- Quick Web Metadata Lookup Strip -->
-        <div style="background:#F1F5F9;border:1px solid #E2E8F0;border-radius:12px;padding:12px;margin-bottom:18px;">
-          <label style="font-size:0.75rem;font-weight:700;color:#475569;display:block;margin-bottom:6px;">
-            🔍 QUICK METADATA LOOKUP (GOOGLE BOOKS &amp; OPENLIBRARY)
-          </label>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="singleLookupInput" placeholder="Scan Barcode or enter 10/13-digit ISBN / Title..." class="lp-search-input" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupSingleBookMetadata();}">
-            <button type="button" class="btn-primary" onclick="lookupSingleBookMetadata()" id="btnLookupMetadata" style="padding:6px 14px;font-size:0.85rem;white-space:nowrap;">
-              🔍 Fetch Metadata
+      <div id="modeViewTextScan" class="add-book-mode-container" style="display:block;">
+        <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px;margin-bottom:16px;">
+          <div style="font-weight:700;color:#166534;font-size:0.85rem;margin-bottom:2px;">
+            📷 Mode 1: Normal Text Scan
+          </div>
+          <div style="font-size:0.78rem;color:#15803D;">
+            Capture or upload a photo of the book (front cover, back cover, title page, publisher page, or blurb). OCR will read visible printed text and auto-identify fields.
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <!-- Camera / Upload Control -->
+          <div style="border:1px dashed #CBD5E1;border-radius:12px;padding:14px;background:#F8FAFC;text-align:center;display:flex;flex-direction:column;justify-content:center;">
+            <div id="ocrImagePreviewBox" style="height:140px;border-radius:8px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;">
+              <span id="ocrImagePlaceholder" style="font-size:0.8rem;color:#64748B;">No photo selected</span>
+              <img id="ocrImagePreview" style="display:none;width:100%;height:100%;object-fit:contain;">
+            </div>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <label class="btn-secondary" style="padding:6px 12px;font-size:0.8rem;cursor:pointer;">
+                📁 Upload Image
+                <input type="file" id="ocrFileInput" accept="image/*" style="display:none;" onchange="handleOcrImageSelected(event)">
+              </label>
+              <button type="button" class="btn-secondary" style="padding:6px 12px;font-size:0.8rem;" onclick="captureOcrCamera()">
+                📷 Camera
+              </button>
+              <button type="button" id="btnOcrClear" style="display:none;background:none;border:none;color:#DC2626;font-size:0.8rem;cursor:pointer;" onclick="clearOcrImage()">
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- OCR Action & Instructions -->
+          <div style="display:flex;flex-direction:column;justify-content:space-between;padding:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;">
+            <div>
+              <span style="font-size:0.8rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">OCR Text Recognition:</span>
+              <ul style="margin:0 0 10px 18px;padding:0;font-size:0.77rem;color:#64748B;line-height:1.45;">
+                <li>Detects visible text across covers, title pages &amp; blurbs</li>
+                <li>Extracts Title, Author, Publisher, Edition, MRP, and Class</li>
+                <li>ISBN is extracted as <strong>ordinary printed text</strong>, never via barcode</li>
+                <li>Review and edit the extracted text below before populating</li>
+              </ul>
+            </div>
+            <button type="button" id="btnRunOcr" class="btn-primary" onclick="runNormalTextScan()" style="width:100%;justify-content:center;padding:10px;font-size:0.88rem;" disabled>
+              ⚡ Extract Printed Text &amp; Identify Fields
             </button>
           </div>
-          <div id="singleLookupStatus" style="font-size:0.8rem;margin-top:6px;display:none;"></div>
         </div>
 
-        <!-- Live Status Indicators: Duplicate & Acquisition Match Alert Banners -->
-        <div id="singleDuplicateAlert" style="display:none;margin-bottom:14px;padding:10px 14px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;font-size:0.85rem;color:#92400E;">
-        </div>
+        <!-- OCR Status Indicator -->
+        <div id="ocrStatusMsg" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:0.83rem;"></div>
 
-        <div id="singleAcquisitionAlert" style="display:none;margin-bottom:14px;padding:10px 14px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;font-size:0.85rem;color:#065F46;">
-        </div>
-
-        <form id="singleBookForm" onsubmit="submitSingleBookForm(event)">
-          <input type="hidden" name="acquisition_item_id" id="singleAcqItemId" value="">
-          <input type="hidden" name="cover_url" id="singleCoverUrl" value="">
-          <input type="hidden" name="back_cover_url" id="singleBackCoverUrl" value="">
-
-          <!-- Front & Back Cover Upload Cards -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
-            <!-- Front Cover Card -->
-            <div style="border:1px dashed #CBD5E1;border-radius:12px;padding:12px;background:#F8FAFC;text-align:center;">
-              <span style="font-size:0.78rem;font-weight:700;color:#475569;display:block;margin-bottom:8px;">📷 Front Cover Photo</span>
-              <div id="frontCoverBox" style="height:110px;border-radius:8px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;">
-                <span id="frontCoverPlaceholder" style="font-size:0.78rem;color:#64748B;">No front cover selected</span>
-                <img id="frontCoverImg" style="display:none;width:100%;height:100%;object-fit:cover;">
-              </div>
-              <div style="display:flex;gap:6px;justify-content:center;">
-                <label class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;cursor:pointer;">
-                  Upload
-                  <input type="file" accept="image/*" style="display:none;" onchange="handleCoverUpload(event, 'front')">
-                </label>
-                <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="captureCameraPhoto('front')">Camera</button>
-                <button type="button" id="btnFrontClear" style="display:none;background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;" onclick="clearCoverPhoto('front')">Clear</button>
-              </div>
-            </div>
-
-            <!-- Back Cover Card -->
-            <div style="border:1px dashed #CBD5E1;border-radius:12px;padding:12px;background:#F8FAFC;text-align:center;">
-              <span style="font-size:0.78rem;font-weight:700;color:#475569;display:block;margin-bottom:8px;">📷 Back Cover (Blurb/Barcode)</span>
-              <div id="backCoverBox" style="height:110px;border-radius:8px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;">
-                <span id="backCoverPlaceholder" style="font-size:0.78rem;color:#64748B;">No back cover selected</span>
-                <img id="backCoverImg" style="display:none;width:100%;height:100%;object-fit:cover;">
-              </div>
-              <div style="display:flex;gap:6px;justify-content:center;">
-                <label class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;cursor:pointer;">
-                  Upload
-                  <input type="file" accept="image/*" style="display:none;" onchange="handleCoverUpload(event, 'back')">
-                </label>
-                <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="captureCameraPhoto('back')">Camera</button>
-                <button type="button" id="btnBackClear" style="display:none;background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;" onclick="clearCoverPhoto('back')">Clear</button>
-              </div>
-            </div>
+        <!-- Extracted Text Review & Edit Section -->
+        <div id="ocrReviewSection" style="display:none;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px;margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <label style="font-size:0.82rem;font-weight:700;color:#1E293B;">
+              📝 Extracted Visible Text (Review &amp; Edit)
+            </label>
+            <span style="font-size:0.75rem;color:#64748B;">You can directly edit this text</span>
           </div>
+          <textarea id="ocrRawTextarea" class="lp-search-input" style="width:100%;height:100px;font-family:monospace;font-size:0.82rem;resize:vertical;margin-bottom:12px;line-height:1.4;" placeholder="Extracted OCR text will appear here..."></textarea>
 
-          <!-- Metadata Fields -->
+          <!-- Auto-Identified Fields Preview -->
           <div style="margin-bottom:12px;">
-            <label style="font-size:0.8rem;font-weight:700;">Book Title *</label>
-            <input type="text" name="title" id="sbTitle" required class="lp-search-input" style="width:100%;">
+            <span style="font-size:0.8rem;font-weight:700;color:#1E293B;display:block;margin-bottom:8px;">✨ Auto-Identified Book Fields:</span>
+            <div id="ocrIdentifiedPills" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px;font-size:0.78rem;">
+              <!-- Pills inserted dynamically -->
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;">
+            <button type="button" class="btn-primary" onclick="applyOcrToCommonForm()" style="padding:8px 16px;font-size:0.85rem;">
+              ⬇️ Transfer Data to Common Form &amp; Review
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           MODE 2: SEARCH ONLINE
+           Query Google Books & OpenLibrary via image OCR or manual text
+           ═══════════════════════════════════════════════════════════════ -->
+      <div id="modeViewOnlineSearch" class="add-book-mode-container" style="display:none;">
+        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:12px;margin-bottom:16px;">
+          <div style="font-weight:700;color:#1E40AF;font-size:0.85rem;margin-bottom:2px;">
+            🌐 Mode 2: Search Online
+          </div>
+          <div style="font-size:0.78rem;color:#1D4ED8;">
+            Identify the book using online repositories (Google Books &amp; OpenLibrary). Search by photo or enter book title / author. No barcode required.
+          </div>
+        </div>
+
+        <!-- Input options -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <!-- Option A: Photo-based online search -->
+          <div style="border:1px solid #E2E8F0;border-radius:10px;padding:12px;background:#F8FAFC;">
+            <span style="font-size:0.78rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">📸 Option A: Search via Book Photo</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <label class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;cursor:pointer;flex:1;text-align:center;">
+                Upload Cover
+                <input type="file" id="onlineSearchImageInput" accept="image/*" style="display:none;" onchange="handleOnlineSearchImage(event)">
+              </label>
+              <button type="button" class="btn-secondary" style="padding:6px 10px;font-size:0.78rem;flex:1;" onclick="captureOnlineSearchCamera()">
+                Camera
+              </button>
+            </div>
+            <div id="onlineSearchImageName" style="font-size:0.72rem;color:#64748B;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          </div>
+
+          <!-- Option B: Direct text search -->
+          <div style="border:1px solid #E2E8F0;border-radius:10px;padding:12px;background:#F8FAFC;">
+            <span style="font-size:0.78rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">✍️ Option B: Search by Title or Author</span>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="onlineSearchTextInput" placeholder="e.g. Harry Potter, NCERT Science, Premchand..." class="lp-search-input" style="flex:1;font-size:0.82rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();runOnlineSearch();}">
+              <button type="button" class="btn-primary" onclick="runOnlineSearch()" style="padding:6px 12px;font-size:0.8rem;white-space:nowrap;">
+                🔍 Search
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Online Search Results -->
+        <div id="onlineSearchStatus" style="font-size:0.82rem;margin-bottom:10px;display:none;"></div>
+        <div id="onlineSearchResultsGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;max-height:320px;overflow-y:auto;padding-right:4px;margin-bottom:16px;">
+          <!-- Result cards injected dynamically -->
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           MODE 3: MANUAL SEARCH
+           Structured multi-field search or direct manual entry
+           ═══════════════════════════════════════════════════════════════ -->
+      <div id="modeViewManualSearch" class="add-book-mode-container" style="display:none;">
+        <div style="background:#FAF5FF;border:1px solid #E9D5FF;border-radius:12px;padding:12px;margin-bottom:16px;">
+          <div style="font-weight:700;color:#6B21A8;font-size:0.85rem;margin-bottom:2px;">
+            ⌨️ Mode 3: Manual Search
+          </div>
+          <div style="font-size:0.78rem;color:#7E22CE;">
+            Search online book databases using manual form fields when no camera or image is available, or proceed directly to manual entry.
+          </div>
+        </div>
+
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px;margin-bottom:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Book Title</label>
+              <input type="text" id="msTitle" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. To Kill a Mockingbird">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Author</label>
+              <input type="text" id="msAuthor" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. Harper Lee">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <label style="font-size:0.78rem;font-weight:700;color:#334155;">ISBN (Text Entry Only)</label>
+              <input type="text" id="msIsbn" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. 9780061120084">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Publisher</label>
+              <input type="text" id="msPublisher" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. HarperCollins">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Subject / Category</label>
+              <input type="text" id="msSubject" class="lp-search-input" style="width:100%;font-size:0.82rem;" placeholder="e.g. Fiction">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" onclick="skipToCommonFormManual()" style="padding:7px 14px;font-size:0.82rem;">
+              ✍️ Fill Manually (Direct Entry)
+            </button>
+            <button type="button" class="btn-primary" onclick="runManualFieldSearch()" style="padding:7px 16px;font-size:0.82rem;">
+              🔍 Search Online Databases
+            </button>
+          </div>
+        </div>
+
+        <!-- Manual Search Results -->
+        <div id="manualSearchStatus" style="font-size:0.82rem;margin-bottom:10px;display:none;"></div>
+        <div id="manualSearchResultsGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;max-height:300px;overflow-y:auto;padding-right:4px;margin-bottom:16px;">
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           COMMON BOOK INFORMATION FORM
+           The mandatory single confirmation form for all 3 modes.
+           Contains the System-Generated Book ID & 15 editable fields.
+           ═══════════════════════════════════════════════════════════════ -->
+      <div id="commonBookFormSection" style="margin-top:20px;border-top:2px solid #E2E8F0;padding-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <h4 style="margin:0;font-size:1.05rem;font-weight:800;color:#1E293B;">📘 Common Book Information Form</h4>
+            <p style="margin:2px 0 0 0;font-size:0.78rem;color:#64748B;">
+              Review and edit all fields before saving to the library catalog.
+            </p>
+          </div>
+          <button type="button" class="btn-secondary" onclick="resetCommonForm()" style="padding:4px 8px;font-size:0.75rem;">
+            🔄 Clear Form
+          </button>
+        </div>
+
+        <!-- Auto-Generated Internal Book ID Strip -->
+        <div style="background:#F8FAFC;border:1px solid #CBD5E1;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <span style="font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;display:block;">
+              System-Generated Book ID (Unique Internal Identifier)
+            </span>
+            <div style="font-size:1.15rem;font-weight:800;color:#0F172A;font-family:monospace;margin-top:2px;" id="cbfBookIdDisplay">
+              Loading...
+            </div>
+          </div>
+          <span style="background:#E2E8F0;color:#334155;font-size:0.72rem;font-weight:700;padding:4px 8px;border-radius:6px;">
+            Auto-Generated (VBPG+Year+Seq)
+          </span>
+        </div>
+
+        <form id="commonBookForm" onsubmit="submitCommonBookForm(event)">
+          <input type="hidden" name="book_id" id="cbfBookId" value="">
+          <input type="hidden" name="cover_url" id="cbfCoverUrl" value="">
+          <input type="hidden" name="back_cover_url" id="cbfBackCoverUrl" value="">
+          <input type="hidden" name="acquisition_item_id" id="cbfAcqItemId" value="">
+
+          <!-- Row 1: Title & Author -->
+          <div style="margin-bottom:12px;">
+            <label style="font-size:0.8rem;font-weight:700;color:#334155;">Book Title *</label>
+            <input type="text" name="title" id="cbfTitle" required class="lp-search-input" style="width:100%;font-size:0.88rem;" placeholder="Enter book title">
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:0.8rem;font-weight:700;">Author</label>
-              <input type="text" name="author" id="sbAuthor" class="lp-search-input" style="width:100%;">
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Author *</label>
+              <input type="text" name="author" id="cbfAuthor" required class="lp-search-input" style="width:100%;" placeholder="Author name(s)">
             </div>
             <div>
-              <label style="font-size:0.8rem;font-weight:700;">Genre / Category</label>
-              <input type="text" name="genre" id="sbGenre" class="lp-search-input" style="width:100%;" placeholder="Science, Fiction...">
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Publisher</label>
+              <input type="text" name="publisher" id="cbfPublisher" class="lp-search-input" style="width:100%;" placeholder="Publisher name">
             </div>
           </div>
 
+          <!-- Row 2: Edition, Year, Language -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Edition</label>
+              <input type="text" name="edition" id="cbfEdition" class="lp-search-input" style="width:100%;" placeholder="e.g. 1st Edition, Revised">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Publication Year</label>
+              <input type="text" name="publication_year" id="cbfYear" class="lp-search-input" style="width:100%;" placeholder="e.g. 2024">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Language</label>
+              <input type="text" name="language" id="cbfLanguage" value="English" class="lp-search-input" style="width:100%;" placeholder="e.g. English, Hindi">
+            </div>
+          </div>
+
+          <!-- Row 3: ISBN, Price/MRP -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:0.8rem;font-weight:700;">ISBN / Barcode</label>
-              <input type="text" name="isbn" id="sbIsbn" class="lp-search-input" style="width:100%;">
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">ISBN (Text Entry Only)</label>
+              <input type="text" name="isbn" id="cbfIsbn" class="lp-search-input" style="width:100%;" placeholder="e.g. 978-0132350884 (plain text)">
             </div>
             <div>
-              <label style="font-size:0.8rem;font-weight:700;">Total Copies</label>
-              <input type="number" name="total_copies" id="sbCopies" value="1" min="1" class="lp-search-input" style="width:100%;">
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">MRP / Price (₹)</label>
+              <input type="text" name="price" id="cbfPrice" class="lp-search-input" style="width:100%;" placeholder="e.g. 499">
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <!-- Row 4: Subject/Category, Class/Grade -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:0.8rem;font-weight:700;">Rack / Aisle</label>
-              <input type="text" name="rack" id="sbRack" value="A" class="lp-search-input" style="width:100%;">
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Subject / Category</label>
+              <input type="text" name="subject" id="cbfSubject" class="lp-search-input" style="width:100%;" placeholder="e.g. Science, Mathematics, Fiction">
             </div>
             <div>
-              <label style="font-size:0.8rem;font-weight:700;">Shelf No</label>
-              <input type="text" name="shelf" id="sbShelf" value="1" class="lp-search-input" style="width:100%;">
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Class / Grade (Optional)</label>
+              <input type="text" name="class" id="cbfClass" class="lp-search-input" style="width:100%;" placeholder="e.g. Class 10, Grade 8, General">
             </div>
           </div>
 
-          <div style="margin-bottom:18px;">
-            <label style="font-size:0.8rem;font-weight:700;">Description / Synopsis (Optional)</label>
-            <textarea name="description" id="sbDescription" class="lp-search-input" style="width:100%;height:60px;resize:vertical;"></textarea>
+          <!-- Row 5: Copies, Shelf/Rack, Condition -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Number of Copies</label>
+              <input type="number" name="total_copies" id="cbfCopies" value="1" min="1" class="lp-search-input" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Rack Location</label>
+              <input type="text" name="rack" id="cbfRack" value="A" class="lp-search-input" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Shelf No</label>
+              <input type="text" name="shelf" id="cbfShelf" value="1" class="lp-search-input" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:700;color:#334155;">Book Condition</label>
+              <select name="book_condition" id="cbfCondition" class="lp-search-input" style="width:100%;">
+                <option value="NEW">New</option>
+                <option value="GOOD" selected>Good</option>
+                <option value="FAIR">Fair</option>
+                <option value="DAMAGED">Damaged</option>
+              </select>
+            </div>
           </div>
 
-          <button type="submit" id="btnSubmitSingleBook" class="btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:0.95rem;">
-            💾 Register Book into Catalog
+          <!-- Row 6: Description / Notes -->
+          <div style="margin-bottom:12px;">
+            <label style="font-size:0.8rem;font-weight:700;color:#334155;">Description / Notes</label>
+            <textarea name="description" id="cbfDescription" class="lp-search-input" style="width:100%;height:60px;resize:vertical;" placeholder="Optional synopsis or librarian notes..."></textarea>
+          </div>
+
+          <!-- Row 7: Cover Image Preview & Upload -->
+          <div style="background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;padding:12px;margin-bottom:18px;">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div id="cbfCoverPreviewBox" style="width:65px;height:85px;border-radius:6px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                <span id="cbfCoverPlaceholder" style="font-size:0.7rem;color:#64748B;text-align:center;">No Cover</span>
+                <img id="cbfCoverImg" style="display:none;width:100%;height:100%;object-fit:cover;">
+              </div>
+              <div style="flex:1;">
+                <span style="font-size:0.78rem;font-weight:700;color:#334155;display:block;margin-bottom:4px;">Cover Image (Preview &amp; Upload)</span>
+                <p style="font-size:0.72rem;color:#64748B;margin:0 0 8px 0;">Cover image fetched from online metadata or upload directly.</p>
+                <div style="display:flex;gap:6px;">
+                  <label class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;cursor:pointer;">
+                    Upload Cover
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleCommonCoverUpload(event)">
+                  </label>
+                  <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="captureCommonCoverCamera()">
+                    Camera
+                  </button>
+                  <button type="button" id="btnCbfClearCover" style="display:none;background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;" onclick="clearCommonCover()">
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="btnSaveCommonBook" class="btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:1rem;font-weight:700;letter-spacing:0.3px;">
+            💾 Save Book to Library
           </button>
         </form>
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════════════
-           MODE 2: BULK SCANNING SEQUENTIAL QUEUE
-           ═══════════════════════════════════════════════════════════════ -->
-      <div id="viewBulkBook" style="display:none;">
-        <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:12px;padding:12px;margin-bottom:16px;">
-          <label style="font-size:0.75rem;font-weight:700;color:#3730A3;display:block;margin-bottom:6px;">
-            ⚡ RAPID BARCODE SCANNER (SCAN SEQUENTIALLY)
-          </label>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="bulkScannerInput" placeholder="Scan barcode with scanner gun or type ISBN and press Enter..." class="lp-search-input" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addBarcodeToBulkQueue();}">
-            <button type="button" class="btn-primary" onclick="addBarcodeToBulkQueue()" style="padding:6px 14px;font-size:0.85rem;">
-              + Add to Queue
-            </button>
-          </div>
-          <div id="bulkScanNotice" style="font-size:0.8rem;color:#4F46E5;margin-top:6px;">
-            Point scanner at book barcodes. Each scan automatically queries metadata and enqueues the title.
-          </div>
-        </div>
-
-        <!-- Bulk Queue Table -->
-        <div class="lp-table-container" style="max-height:300px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:10px;margin-bottom:16px;">
-          <table class="lp-table" style="font-size:0.82rem;">
-            <thead>
-              <tr>
-                <th style="width:40px;">#</th>
-                <th>Title &amp; Author</th>
-                <th>ISBN</th>
-                <th style="width:90px;">Copies</th>
-                <th>Reconciliation Status</th>
-                <th style="width:40px;"></th>
-              </tr>
-            </thead>
-            <tbody id="bulkQueueTbody">
-              <tr>
-                <td colspan="6" style="text-align:center;padding:32px;color:#94A3B8;">
-                  No scanned books in queue. Scan book barcodes to begin bulk registration.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Bulk Action Controls -->
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <button type="button" class="btn-secondary" onclick="clearBulkQueue()" style="padding:6px 12px;font-size:0.8rem;color:#DC2626;">
-            🗑️ Clear Queue
-          </button>
-          <button type="button" id="btnBatchRegister" class="btn-primary" onclick="submitBatchRegistration()" style="padding:8px 18px;font-size:0.9rem;" disabled>
-            🚀 Batch Register (0) Books
-          </button>
-        </div>
       </div>
 
     </div>
@@ -2536,6 +2716,9 @@
         m.style.display = 'flex';
         m.classList.add('active');
         document.body.classList.add('modal-open');
+        if (id === 'addBookModal' && typeof initAddBookWorkflow === 'function') {
+          initAddBookWorkflow();
+        }
       }
     }
 
@@ -3068,185 +3251,549 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // Book Registration & Scanning (Single & Bulk Queue)
+    // Book Adding Workflow (3 Input Modes — Strictly No Barcode Scanning)
+    // Mode 1: Normal Text Scan (OCR on camera/upload)
+    // Mode 2: Search Online (Image OCR or manual title/author query)
+    // Mode 3: Manual Search (Form fields online query)
+    // Common Book Information Form: System Book ID + 15 fields
     // ─────────────────────────────────────────────────────────────────
-    function switchAddBookMode(mode) {
-      const vSingle = document.getElementById('viewSingleBook');
-      const vBulk = document.getElementById('viewBulkBook');
-      const bSingle = document.getElementById('btnModeSingle');
-      const bBulk = document.getElementById('btnModeBulk');
-      if (mode === 'single') {
-        if (vSingle) vSingle.style.display = 'block';
-        if (vBulk) vBulk.style.display = 'none';
-        if (bSingle) bSingle.classList.add('active');
-        if (bBulk) bBulk.classList.remove('active');
-      } else {
-        if (vSingle) vSingle.style.display = 'none';
-        if (vBulk) vBulk.style.display = 'block';
-        if (bSingle) bSingle.classList.remove('active');
-        if (bBulk) bBulk.classList.add('active');
-        const input = document.getElementById('bulkScannerInput');
-        if (input) setTimeout(() => input.focus(), 100);
+
+    let currentAddBookMode = 'text_scan';
+    let currentOcrImageBase64 = null;
+    let onlineSearchImageBase64 = null;
+    let lastOcrIdentified = null;
+
+    async function initAddBookWorkflow() {
+      await fetchNextBookId();
+      switchAddBookMode(currentAddBookMode || 'text_scan');
+    }
+
+    async function fetchNextBookId() {
+      const displayEl = document.getElementById('cbfBookIdDisplay');
+      const inputEl = document.getElementById('cbfBookId');
+      if (displayEl) displayEl.textContent = 'Generating ID...';
+      try {
+        const res = await fetch('/admin/api/books/next-id');
+        const data = await res.json();
+        if (data.success && data.bookId) {
+          if (displayEl) displayEl.textContent = data.bookId;
+          if (inputEl) inputEl.value = data.bookId;
+        } else {
+          const fallback = 'VBPG' + new Date().getFullYear() + '0001';
+          if (displayEl) displayEl.textContent = fallback;
+          if (inputEl) inputEl.value = fallback;
+        }
+      } catch (e) {
+        const fallback = 'VBPG' + new Date().getFullYear() + '0001';
+        if (displayEl) displayEl.textContent = fallback;
+        if (inputEl) inputEl.value = fallback;
       }
     }
 
-    async function lookupSingleBookMetadata() {
-      const query = (document.getElementById('singleLookupInput')?.value || '').trim();
-      const statusEl = document.getElementById('singleLookupStatus');
-      const dupAlert = document.getElementById('singleDuplicateAlert');
-      const acqAlert = document.getElementById('singleAcquisitionAlert');
+    function switchAddBookMode(mode) {
+      currentAddBookMode = mode;
+      const vText = document.getElementById('modeViewTextScan');
+      const vOnline = document.getElementById('modeViewOnlineSearch');
+      const vManual = document.getElementById('modeViewManualSearch');
 
-      if (!query) {
-        if (statusEl) {
-          statusEl.style.display = 'block';
-          statusEl.style.color = '#DC2626';
-          statusEl.textContent = 'Please enter an ISBN or book title.';
-        }
+      const tText = document.getElementById('tabModeTextScan');
+      const tOnline = document.getElementById('tabModeOnlineSearch');
+      const tManual = document.getElementById('tabModeManualSearch');
+
+      if (vText) vText.style.display = (mode === 'text_scan') ? 'block' : 'none';
+      if (vOnline) vOnline.style.display = (mode === 'online_search') ? 'block' : 'none';
+      if (vManual) vManual.style.display = (mode === 'manual_search') ? 'block' : 'none';
+
+      if (tText) tText.classList.toggle('active', mode === 'text_scan');
+      if (tOnline) tOnline.classList.toggle('active', mode === 'online_search');
+      if (tManual) tManual.classList.toggle('active', mode === 'manual_search');
+    }
+
+    // ── MODE 1: NORMAL TEXT SCAN (OCR) ──
+    function handleOcrImageSelected(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        currentOcrImageBase64 = evt.target.result;
+        const img = document.getElementById('ocrImagePreview');
+        const ph = document.getElementById('ocrImagePlaceholder');
+        const clr = document.getElementById('btnOcrClear');
+        const btnRun = document.getElementById('btnRunOcr');
+        if (img) { img.src = currentOcrImageBase64; img.style.display = 'block'; }
+        if (ph) ph.style.display = 'none';
+        if (clr) clr.style.display = 'inline-block';
+        if (btnRun) btnRun.disabled = false;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function captureOcrCamera() {
+      const cam = document.createElement('input');
+      cam.type = 'file';
+      cam.accept = 'image/*';
+      cam.capture = 'environment';
+      cam.onchange = handleOcrImageSelected;
+      cam.click();
+    }
+
+    function clearOcrImage() {
+      currentOcrImageBase64 = null;
+      const fileInput = document.getElementById('ocrFileInput');
+      if (fileInput) fileInput.value = '';
+      const img = document.getElementById('ocrImagePreview');
+      const ph = document.getElementById('ocrImagePlaceholder');
+      const clr = document.getElementById('btnOcrClear');
+      const btnRun = document.getElementById('btnRunOcr');
+      if (img) { img.src = ''; img.style.display = 'none'; }
+      if (ph) ph.style.display = 'block';
+      if (clr) clr.style.display = 'none';
+      if (btnRun) btnRun.disabled = true;
+    }
+
+    async function runNormalTextScan() {
+      if (!currentOcrImageBase64) {
+        alert('Please capture or upload an image of the physical book first.');
         return;
       }
+      const btn = document.getElementById('btnRunOcr');
+      const statusEl = document.getElementById('ocrStatusMsg');
+      const reviewSec = document.getElementById('ocrReviewSection');
+      const textarea = document.getElementById('ocrRawTextarea');
+      const pillsBox = document.getElementById('ocrIdentifiedPills');
 
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Processing OCR & Identifying Fields...'; }
       if (statusEl) {
         statusEl.style.display = 'block';
-        statusEl.style.color = '#4F46E5';
-        statusEl.textContent = '🔍 Querying Google Books & OpenLibrary...';
+        statusEl.style.background = '#EFF6FF';
+        statusEl.style.color = '#1D4ED8';
+        statusEl.style.border = '1px solid #BFDBFE';
+        statusEl.textContent = '🔍 Reading visible printed text via OCR...';
       }
-      if (dupAlert) dupAlert.style.display = 'none';
-      if (acqAlert) acqAlert.style.display = 'none';
 
       try {
-        const res = await fetch(`/admin/api/books/lookup?isbn=${encodeURIComponent(query)}`);
+        const res = await fetch('/admin/api/books/ocr-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: currentOcrImageBase64 })
+        });
         const data = await res.json();
-        if (!data.success) {
+        if (data.success) {
+          lastOcrIdentified = data.identified || {};
+          if (textarea) textarea.value = data.rawText || '';
+          if (pillsBox) {
+            const iden = lastOcrIdentified;
+            pillsBox.innerHTML = `
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Title:</strong> ${escapeHtml(iden.title || 'Not detected')}</div>
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Author:</strong> ${escapeHtml(iden.author || 'Not detected')}</div>
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Publisher:</strong> ${escapeHtml(iden.publisher || 'Not detected')}</div>
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Edition:</strong> ${escapeHtml(iden.edition || 'Not detected')}</div>
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Language:</strong> ${escapeHtml(iden.language || 'English')}</div>
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>ISBN (printed):</strong> ${escapeHtml(iden.isbn || 'Not detected')}</div>
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>MRP / Price:</strong> ${escapeHtml(iden.price ? '₹' + iden.price : 'Not detected')}</div>
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Subject:</strong> ${escapeHtml(iden.subject || 'Not detected')}</div>
+              <div style="background:#FFF;border:1px solid #E2E8F0;padding:6px 10px;border-radius:6px;"><strong>Class/Grade:</strong> ${escapeHtml(iden.class || 'Not detected')}</div>
+            `;
+          }
+          if (reviewSec) reviewSec.style.display = 'block';
           if (statusEl) {
-            statusEl.style.color = '#D97706';
-            statusEl.textContent = 'No web metadata found. You can fill details manually.';
+            statusEl.style.background = '#ECFDF5';
+            statusEl.style.color = '#065F46';
+            statusEl.style.border = '1px solid #A7F3D0';
+            statusEl.textContent = '✓ Visible text successfully extracted! Review and edit the text or transfer directly into Common Form.';
           }
-          return;
-        }
-
-        const b = data.book || {};
-        if (b.title) document.getElementById('sbTitle').value = b.title;
-        if (b.author) document.getElementById('sbAuthor').value = b.author;
-        if (b.genre) document.getElementById('sbGenre').value = b.genre;
-        if (b.isbn) document.getElementById('sbIsbn').value = b.isbn;
-        if (b.description) document.getElementById('sbDescription').value = b.description;
-
-        if (b.cover_url) {
-          document.getElementById('singleCoverUrl').value = b.cover_url;
-          const fImg = document.getElementById('frontCoverImg');
-          const fPh = document.getElementById('frontCoverPlaceholder');
-          const fClr = document.getElementById('btnFrontClear');
-          if (fImg && fPh) {
-            fImg.src = b.cover_url;
-            fImg.style.display = 'block';
-            fPh.style.display = 'none';
-            if (fClr) fClr.style.display = 'inline-block';
-          }
-        }
-
-        if (statusEl) {
-          statusEl.style.color = '#16A34A';
-          statusEl.textContent = `✓ Found metadata from ${b.source || 'Web Repository'}`;
-        }
-
-        if (data.duplicate) {
-          const dup = data.duplicate;
-          if (dupAlert) {
-            dupAlert.innerHTML = `⚠️ <strong>Duplicate Title Detected:</strong> "${escapeHtml(dup.title)}" is already in your library catalog (${dup.total_copies} total copies). Registering will increase copy inventory.`;
-            dupAlert.style.display = 'block';
-          }
-        }
-
-        if (data.acquisition_match) {
-          const acq = data.acquisition_match;
-          document.getElementById('singleAcqItemId').value = acq.item_id || '';
-          if (acqAlert) {
-            acqAlert.innerHTML = `📦 <strong>Invoice Match:</strong> Linked to purchase invoice #${acq.invoice_number || acq.acquisition_id} from ${escapeHtml(acq.vendor_name || 'Vendor')} (Expected ${acq.expected_copies}, Registered ${acq.registered_copies}).`;
-            acqAlert.style.display = 'block';
+        } else {
+          if (statusEl) {
+            statusEl.style.background = '#FEF2F2';
+            statusEl.style.color = '#B91C1C';
+            statusEl.style.border = '1px solid #FECACA';
+            statusEl.textContent = data.error || 'Unable to extract text from the photo. You can fill details manually in the Common Form.';
           }
         }
       } catch (err) {
         if (statusEl) {
-          statusEl.style.color = '#DC2626';
-          statusEl.textContent = 'Error querying metadata service.';
+          statusEl.style.background = '#FEF2F2';
+          statusEl.style.color = '#B91C1C';
+          statusEl.style.border = '1px solid #FECACA';
+          statusEl.textContent = 'OCR service offline or network issue. You can fill details manually in the Common Form.';
         }
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '⚡ Extract Printed Text & Identify Fields'; }
       }
     }
 
-    function handleCoverUpload(event, type) {
-      const file = event.target.files && event.target.files[0];
+    function applyOcrToCommonForm() {
+      const iden = lastOcrIdentified || {};
+      const raw = document.getElementById('ocrRawTextarea')?.value || '';
+
+      // If user edited raw text and title is missing, take first line
+      let fallbackTitle = iden.title;
+      if (!fallbackTitle && raw) {
+        const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length > 0) fallbackTitle = lines[0];
+      }
+
+      populateCommonBookForm({
+        title: fallbackTitle || '',
+        author: iden.author || '',
+        publisher: iden.publisher || '',
+        edition: iden.edition || '',
+        language: iden.language || 'English',
+        isbn: iden.isbn || '',
+        price: iden.price || '',
+        subject: iden.subject || '',
+        class: iden.class || '',
+        cover_url: currentOcrImageBase64 || ''
+      });
+
+      const commonSec = document.getElementById('commonBookFormSection');
+      if (commonSec) {
+        commonSec.scrollIntoView({ behavior: 'smooth' });
+        commonSec.style.transition = 'background-color 0.5s';
+        commonSec.style.backgroundColor = '#F0FDF4';
+        setTimeout(() => commonSec.style.backgroundColor = 'transparent', 1200);
+      }
+    }
+
+    // ── MODE 2: SEARCH ONLINE ──
+    function handleOnlineSearchImage(e) {
+      const file = e.target.files && e.target.files[0];
       if (!file) return;
+      const nameEl = document.getElementById('onlineSearchImageName');
+      if (nameEl) nameEl.textContent = `Selected: ${file.name}`;
       const reader = new FileReader();
-      reader.onload = function(e) {
-        const dataUrl = e.target.result;
-        if (type === 'front') {
-          document.getElementById('singleCoverUrl').value = dataUrl;
-          const img = document.getElementById('frontCoverImg');
-          const ph = document.getElementById('frontCoverPlaceholder');
-          const clr = document.getElementById('btnFrontClear');
-          if (img) { img.src = dataUrl; img.style.display = 'block'; }
-          if (ph) ph.style.display = 'none';
-          if (clr) clr.style.display = 'inline-block';
-        } else {
-          document.getElementById('singleBackCoverUrl').value = dataUrl;
-          const img = document.getElementById('backCoverImg');
-          const ph = document.getElementById('backCoverPlaceholder');
-          const clr = document.getElementById('btnBackClear');
-          if (img) { img.src = dataUrl; img.style.display = 'block'; }
-          if (ph) ph.style.display = 'none';
-          if (clr) clr.style.display = 'inline-block';
+      reader.onload = async function(evt) {
+        onlineSearchImageBase64 = evt.target.result;
+        // Automatically run OCR to extract query for online search
+        const statusEl = document.getElementById('onlineSearchStatus');
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.style.color = '#2563EB';
+          statusEl.textContent = '🔍 Reading photo text to identify book online...';
+        }
+        try {
+          const ocrRes = await fetch('/admin/api/books/ocr-text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64: onlineSearchImageBase64 })
+          });
+          const ocrData = await ocrRes.json();
+          const query = (ocrData.identified?.title || ocrData.identified?.isbn || ocrData.rawText?.split('\n')[0] || '').trim();
+          if (query) {
+            document.getElementById('onlineSearchTextInput').value = query;
+            runOnlineSearch(query);
+          } else {
+            if (statusEl) {
+              statusEl.style.color = '#D97706';
+              statusEl.textContent = 'Could not read clear title from photo. Please enter title or author in search box.';
+            }
+          }
+        } catch (err) {
+          if (statusEl) {
+            statusEl.style.color = '#DC2626';
+            statusEl.textContent = 'Error processing photo. Enter title manually in the search box.';
+          }
         }
       };
       reader.readAsDataURL(file);
     }
 
-    function captureCameraPhoto(type) {
-      const camInput = document.createElement('input');
-      camInput.type = 'file';
-      camInput.accept = 'image/*';
-      camInput.capture = 'environment';
-      camInput.onchange = (e) => handleCoverUpload(e, type);
-      camInput.click();
+    function captureOnlineSearchCamera() {
+      const cam = document.createElement('input');
+      cam.type = 'file';
+      cam.accept = 'image/*';
+      cam.capture = 'environment';
+      cam.onchange = handleOnlineSearchImage;
+      cam.click();
     }
 
-    function clearCoverPhoto(type) {
-      if (type === 'front') {
-        document.getElementById('singleCoverUrl').value = '';
-        const img = document.getElementById('frontCoverImg');
-        const ph = document.getElementById('frontCoverPlaceholder');
-        const clr = document.getElementById('btnFrontClear');
-        if (img) { img.src = ''; img.style.display = 'none'; }
-        if (ph) ph.style.display = 'block';
-        if (clr) clr.style.display = 'none';
-      } else {
-        document.getElementById('singleBackCoverUrl').value = '';
-        const img = document.getElementById('backCoverImg');
-        const ph = document.getElementById('backCoverPlaceholder');
-        const clr = document.getElementById('btnBackClear');
-        if (img) { img.src = ''; img.style.display = 'none'; }
-        if (ph) ph.style.display = 'block';
-        if (clr) clr.style.display = 'none';
+    async function runOnlineSearch(customQuery) {
+      const query = (customQuery || document.getElementById('onlineSearchTextInput')?.value || '').trim();
+      const statusEl = document.getElementById('onlineSearchStatus');
+      const grid = document.getElementById('onlineSearchResultsGrid');
+
+      if (!query && !onlineSearchImageBase64) {
+        alert('Please enter a search term or provide a book photo.');
+        return;
+      }
+
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#2563EB';
+        statusEl.textContent = `🔍 Querying Google Books & OpenLibrary for "${query}"...`;
+      }
+      if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748B;">Searching online repositories...</div>';
+
+      try {
+        const res = await fetch(`/admin/api/books/search-online?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (data.success && data.books && data.books.length > 0) {
+          if (statusEl) {
+            statusEl.style.color = '#16A34A';
+            statusEl.textContent = `✓ Found ${data.books.length} matching books online. Click "Select This Book" to import.`;
+          }
+          renderOnlineResults(data.books, grid);
+        } else {
+          if (statusEl) {
+            statusEl.style.color = '#D97706';
+            statusEl.textContent = 'No matching books found online. You can enter details manually in the Common Form.';
+          }
+          if (grid) {
+            grid.innerHTML = `
+              <div style="grid-column:1/-1;text-align:center;padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;">
+                <p style="color:#64748B;font-size:0.85rem;margin-bottom:10px;">No online records found for "${escapeHtml(query)}".</p>
+                <button type="button" class="btn-primary" onclick="skipToCommonFormManual('${escapeHtml(query)}')">
+                  ✍️ Enter Details Manually in Common Form
+                </button>
+              </div>
+            `;
+          }
+        }
+      } catch (err) {
+        if (statusEl) {
+          statusEl.style.color = '#DC2626';
+          statusEl.textContent = 'Error querying online database. You can proceed with manual entry.';
+        }
+        if (grid) grid.innerHTML = '';
       }
     }
 
-    async function submitSingleBookForm(e) {
+    function renderOnlineResults(books, containerEl) {
+      if (!containerEl) return;
+      containerEl.innerHTML = books.map((b, idx) => {
+        const coverHtml = b.cover_url 
+          ? `<img src="${escapeHtml(b.cover_url)}" style="width:48px;height:66px;object-fit:cover;border-radius:4px;flex-shrink:0;">`
+          : `<div style="width:48px;height:66px;background:#E2E8F0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.68rem;color:#64748B;flex-shrink:0;">No Img</div>`;
+
+        // Store book object in global list or encode
+        const bJson = encodeURIComponent(JSON.stringify(b));
+        return `
+          <div style="border:1px solid #E2E8F0;border-radius:10px;padding:10px;background:#FFFFFF;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display:flex;gap:10px;margin-bottom:8px;">
+              ${coverHtml}
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:0.85rem;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(b.title)}">${escapeHtml(b.title)}</div>
+                <div style="font-size:0.75rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(b.author || 'Unknown')}</div>
+                <div style="font-size:0.7rem;color:#94A3B8;margin-top:2px;">
+                  ${b.publication_year ? escapeHtml(b.publication_year) : ''} ${b.publisher ? '• ' + escapeHtml(b.publisher) : ''}
+                </div>
+                ${b.isbn ? `<div style="font-size:0.68rem;color:#0B5ED7;font-family:monospace;margin-top:2px;">ISBN: ${escapeHtml(b.isbn)}</div>` : ''}
+              </div>
+            </div>
+            <button type="button" class="btn-primary" onclick="selectOnlineBook('${bJson}')" style="width:100%;justify-content:center;padding:6px;font-size:0.78rem;">
+              ✓ Select This Book &amp; Import
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectOnlineBook(bJsonEncoded) {
+      try {
+        const b = JSON.parse(decodeURIComponent(bJsonEncoded));
+        populateCommonBookForm({
+          title: b.title || '',
+          author: b.author || '',
+          publisher: b.publisher || '',
+          edition: b.edition || '',
+          publication_year: b.publication_year || '',
+          isbn: b.isbn || '',
+          language: b.language || 'English',
+          subject: b.subject || '',
+          description: b.description || '',
+          cover_url: b.cover_url || ''
+        });
+
+        const commonSec = document.getElementById('commonBookFormSection');
+        if (commonSec) {
+          commonSec.scrollIntoView({ behavior: 'smooth' });
+          commonSec.style.transition = 'background-color 0.5s';
+          commonSec.style.backgroundColor = '#EFF6FF';
+          setTimeout(() => commonSec.style.backgroundColor = 'transparent', 1200);
+        }
+      } catch (e) {
+        alert('Could not import selected book metadata.');
+      }
+    }
+
+    // ── MODE 3: MANUAL SEARCH ──
+    async function runManualFieldSearch() {
+      const title = (document.getElementById('msTitle')?.value || '').trim();
+      const author = (document.getElementById('msAuthor')?.value || '').trim();
+      const isbn = (document.getElementById('msIsbn')?.value || '').trim();
+      const publisher = (document.getElementById('msPublisher')?.value || '').trim();
+      const subject = (document.getElementById('msSubject')?.value || '').trim();
+
+      const statusEl = document.getElementById('manualSearchStatus');
+      const grid = document.getElementById('manualSearchResultsGrid');
+
+      if (!title && !author && !isbn && !publisher && !subject) {
+        alert('Please fill at least one search field.');
+        return;
+      }
+
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#6B21A8';
+        statusEl.textContent = '🔍 Querying online databases with specified fields...';
+      }
+      if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#64748B;">Searching online...</div>';
+
+      try {
+        const queryParams = new URLSearchParams({ title, author, isbn, publisher, subject }).toString();
+        const res = await fetch(`/admin/api/books/search-online?${queryParams}`);
+        const data = await res.json();
+        if (data.success && data.books && data.books.length > 0) {
+          if (statusEl) {
+            statusEl.style.color = '#16A34A';
+            statusEl.textContent = `✓ Found ${data.books.length} matching books. Click "Select This Book" to import.`;
+          }
+          renderOnlineResults(data.books, grid);
+        } else {
+          if (statusEl) {
+            statusEl.style.color = '#D97706';
+            statusEl.textContent = 'No matching books found online. Proceed to fill details directly in the Common Form.';
+          }
+          if (grid) {
+            grid.innerHTML = `
+              <div style="grid-column:1/-1;text-align:center;padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;">
+                <p style="color:#64748B;font-size:0.85rem;margin-bottom:10px;">No online records found with those parameters.</p>
+                <button type="button" class="btn-primary" onclick="skipToCommonFormManual()">
+                  ✍️ Proceed with Manual Entry in Common Form
+                </button>
+              </div>
+            `;
+          }
+        }
+      } catch (e) {
+        if (statusEl) {
+          statusEl.style.color = '#DC2626';
+          statusEl.textContent = 'Search failed. You can enter details directly in the Common Form.';
+        }
+      }
+    }
+
+    function skipToCommonFormManual(presetTitle) {
+      const title = presetTitle || (document.getElementById('msTitle')?.value || '').trim();
+      const author = (document.getElementById('msAuthor')?.value || '').trim();
+      const isbn = (document.getElementById('msIsbn')?.value || '').trim();
+      const publisher = (document.getElementById('msPublisher')?.value || '').trim();
+      const subject = (document.getElementById('msSubject')?.value || '').trim();
+
+      populateCommonBookForm({
+        title, author, publisher, isbn, subject
+      });
+
+      const commonSec = document.getElementById('commonBookFormSection');
+      if (commonSec) {
+        commonSec.scrollIntoView({ behavior: 'smooth' });
+        commonSec.style.transition = 'background-color 0.5s';
+        commonSec.style.backgroundColor = '#FAF5FF';
+        setTimeout(() => commonSec.style.backgroundColor = 'transparent', 1200);
+      }
+    }
+
+    // ── COMMON BOOK INFORMATION FORM HANDLERS ──
+    function populateCommonBookForm(b) {
+      if (b.title !== undefined && b.title !== '') document.getElementById('cbfTitle').value = b.title;
+      if (b.author !== undefined && b.author !== '') document.getElementById('cbfAuthor').value = b.author;
+      if (b.publisher !== undefined && b.publisher !== '') document.getElementById('cbfPublisher').value = b.publisher;
+      if (b.edition !== undefined && b.edition !== '') document.getElementById('cbfEdition').value = b.edition;
+      if (b.publication_year !== undefined && b.publication_year !== '') document.getElementById('cbfYear').value = b.publication_year;
+      if (b.language !== undefined && b.language !== '') document.getElementById('cbfLanguage').value = b.language;
+      if (b.isbn !== undefined && b.isbn !== '') document.getElementById('cbfIsbn').value = b.isbn;
+      if (b.price !== undefined && b.price !== '') document.getElementById('cbfPrice').value = b.price;
+      if (b.subject !== undefined && b.subject !== '') document.getElementById('cbfSubject').value = b.subject;
+      if (b.class !== undefined && b.class !== '') document.getElementById('cbfClass').value = b.class;
+      if (b.description !== undefined && b.description !== '') document.getElementById('cbfDescription').value = b.description;
+
+      if (b.cover_url) {
+        document.getElementById('cbfCoverUrl').value = b.cover_url;
+        const img = document.getElementById('cbfCoverImg');
+        const ph = document.getElementById('cbfCoverPlaceholder');
+        const clr = document.getElementById('btnCbfClearCover');
+        if (img && ph) {
+          img.src = b.cover_url;
+          img.style.display = 'block';
+          ph.style.display = 'none';
+          if (clr) clr.style.display = 'inline-block';
+        }
+      }
+    }
+
+    function handleCommonCoverUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('cbfCoverUrl').value = evt.target.result;
+        const img = document.getElementById('cbfCoverImg');
+        const ph = document.getElementById('cbfCoverPlaceholder');
+        const clr = document.getElementById('btnCbfClearCover');
+        if (img) { img.src = evt.target.result; img.style.display = 'block'; }
+        if (ph) ph.style.display = 'none';
+        if (clr) clr.style.display = 'inline-block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function captureCommonCoverCamera() {
+      const cam = document.createElement('input');
+      cam.type = 'file';
+      cam.accept = 'image/*';
+      cam.capture = 'environment';
+      cam.onchange = handleCommonCoverUpload;
+      cam.click();
+    }
+
+    function clearCommonCover() {
+      document.getElementById('cbfCoverUrl').value = '';
+      const img = document.getElementById('cbfCoverImg');
+      const ph = document.getElementById('cbfCoverPlaceholder');
+      const clr = document.getElementById('btnCbfClearCover');
+      if (img) { img.src = ''; img.style.display = 'none'; }
+      if (ph) ph.style.display = 'block';
+      if (clr) clr.style.display = 'none';
+    }
+
+    function resetCommonForm() {
+      document.getElementById('commonBookForm').reset();
+      clearCommonCover();
+      fetchNextBookId();
+    }
+
+    async function submitCommonBookForm(e) {
       e.preventDefault();
-      const btn = document.getElementById('btnSubmitSingleBook');
-      if (btn) { btn.disabled = true; btn.textContent = 'Saving to Catalog...'; }
+      const btn = document.getElementById('btnSaveCommonBook');
+      if (btn) { btn.disabled = true; btn.textContent = '💾 Saving Book to Catalog...'; }
 
       const payload = {
-        title: document.getElementById('sbTitle').value.trim(),
-        author: document.getElementById('sbAuthor').value.trim(),
-        genre: document.getElementById('sbGenre').value.trim(),
-        isbn: document.getElementById('sbIsbn').value.trim(),
-        total_copies: parseInt(document.getElementById('sbCopies').value, 10) || 1,
-        rack: document.getElementById('sbRack').value.trim() || 'A',
-        shelf: document.getElementById('sbShelf').value.trim() || '1',
-        description: document.getElementById('sbDescription').value.trim(),
-        cover_url: document.getElementById('singleCoverUrl').value.trim(),
-        back_cover_url: document.getElementById('singleBackCoverUrl').value.trim(),
-        acquisition_item_id: document.getElementById('singleAcqItemId').value.trim()
+        book_id: document.getElementById('cbfBookId').value.trim(),
+        title: document.getElementById('cbfTitle').value.trim(),
+        author: document.getElementById('cbfAuthor').value.trim(),
+        publisher: document.getElementById('cbfPublisher').value.trim(),
+        edition: document.getElementById('cbfEdition').value.trim(),
+        publication_year: document.getElementById('cbfYear').value.trim(),
+        language: document.getElementById('cbfLanguage').value.trim() || 'English',
+        isbn: document.getElementById('cbfIsbn').value.trim(),
+        price: document.getElementById('cbfPrice').value.trim(),
+        subject: document.getElementById('cbfSubject').value.trim(),
+        class: document.getElementById('cbfClass').value.trim(),
+        total_copies: parseInt(document.getElementById('cbfCopies').value, 10) || 1,
+        rack: document.getElementById('cbfRack').value.trim() || 'A',
+        shelf: document.getElementById('cbfShelf').value.trim() || '1',
+        book_condition: document.getElementById('cbfCondition').value || 'GOOD',
+        description: document.getElementById('cbfDescription').value.trim(),
+        cover_url: document.getElementById('cbfCoverUrl').value.trim(),
+        back_cover_url: document.getElementById('cbfBackCoverUrl')?.value?.trim() || '',
+        acquisition_item_id: document.getElementById('cbfAcqItemId')?.value?.trim() || ''
       };
+
+      if (!payload.title) {
+        alert('Book Title is required.');
+        if (btn) { btn.disabled = false; btn.textContent = '💾 Save Book to Library'; }
+        return;
+      }
 
       try {
         const res = await fetch('/admin/book/add', {
@@ -3256,187 +3803,17 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert(`✓ Book "${payload.title}" registered successfully!`);
+          const assignedId = (data.book && data.book.book_id) ? data.book.book_id : payload.book_id;
+          alert(`✓ Book "${payload.title}" saved successfully!\nAssigned Internal Book ID: ${assignedId}`);
           closeModal('addBookModal');
           window.location.reload();
         } else {
-          alert(data.error || 'Failed to register book.');
-          if (btn) { btn.disabled = false; btn.textContent = '💾 Register Book into Catalog'; }
+          alert(data.error || 'Failed to save book.');
+          if (btn) { btn.disabled = false; btn.textContent = '💾 Save Book to Library'; }
         }
       } catch (err) {
-        window.location.reload();
-      }
-    }
-
-    // Bulk Scan Sequential Queue State & Operations
-    let bulkScanQueue = [];
-
-    async function addBarcodeToBulkQueue() {
-      const input = document.getElementById('bulkScannerInput');
-      const code = (input?.value || '').trim();
-      if (!code) return;
-      input.value = '';
-      input.focus();
-
-      const existing = bulkScanQueue.find(item => item.barcode.toLowerCase() === code.toLowerCase() || (item.isbn && item.isbn.toLowerCase() === code.toLowerCase()));
-      if (existing) {
-        existing.copies = (existing.copies || 1) + 1;
-        renderBulkQueue();
-        return;
-      }
-
-      const tempId = Date.now();
-      const queueItem = {
-        id: tempId,
-        barcode: code,
-        isbn: code,
-        title: 'Fetching metadata...',
-        author: 'Please wait...',
-        genre: 'General',
-        copies: 1,
-        cover_url: '',
-        duplicate: null,
-        acquisition_item_id: null,
-        loading: true
-      };
-      bulkScanQueue.unshift(queueItem);
-      renderBulkQueue();
-
-      try {
-        const res = await fetch(`/admin/api/books/lookup?isbn=${encodeURIComponent(code)}`);
-        const data = await res.json();
-        const item = bulkScanQueue.find(it => it.id === tempId);
-        if (item) {
-          item.loading = false;
-          if (data.success && data.book) {
-            item.title = data.book.title || code;
-            item.author = data.book.author || 'Unknown Author';
-            item.genre = data.book.genre || 'General';
-            item.isbn = data.book.isbn || code;
-            item.cover_url = data.book.cover_url || '';
-          } else {
-            item.title = `Barcode ${code}`;
-            item.author = 'Unknown (Manual Review)';
-          }
-          if (data.duplicate) {
-            item.duplicate = data.duplicate;
-          }
-          if (data.acquisition_match) {
-            item.acquisition_match = data.acquisition_match;
-            item.acquisition_item_id = data.acquisition_match.item_id;
-          }
-        }
-      } catch (err) {
-        const item = bulkScanQueue.find(it => it.id === tempId);
-        if (item) {
-          item.loading = false;
-          item.title = `Barcode ${code}`;
-          item.author = 'Lookup Offline';
-        }
-      }
-      renderBulkQueue();
-    }
-
-    function renderBulkQueue() {
-      const tbody = document.getElementById('bulkQueueTbody');
-      const badge = document.getElementById('bulkQueueBadge');
-      const btn = document.getElementById('btnBatchRegister');
-      if (badge) badge.textContent = bulkScanQueue.length;
-      if (btn) {
-        btn.disabled = bulkScanQueue.length === 0;
-        btn.textContent = `🚀 Batch Register (${bulkScanQueue.length}) Books`;
-      }
-      if (!tbody) return;
-
-      if (bulkScanQueue.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8;">No scanned books in queue. Scan book barcodes to begin bulk registration.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = bulkScanQueue.map((item, idx) => {
-        let reconBadge = '<span class="lp-status-pill available">New Title</span>';
-        if (item.duplicate) {
-          reconBadge = `<span class="lp-status-pill overdue" title="Exists: ${escapeHtml(item.duplicate.title)}">Duplicate (+${item.duplicate.total_copies} copies)</span>`;
-        } else if (item.acquisition_match) {
-          reconBadge = `<span class="lp-status-pill in-review" title="Invoice #${item.acquisition_match.invoice_number}">Matched Invoice</span>`;
-        }
-
-        return `
-          <tr>
-            <td style="font-weight:700;color:#64748B;">${idx + 1}</td>
-            <td>
-              <div style="font-weight:700;color:#1E293B;">${escapeHtml(item.title)}</div>
-              <div style="font-size:0.75rem;color:#64748B;">${escapeHtml(item.author)}</div>
-            </td>
-            <td style="font-family:monospace;font-size:0.8rem;">${escapeHtml(item.barcode)}</td>
-            <td>
-              <input type="number" min="1" value="${item.copies}" style="width:60px;padding:3px 6px;border:1px solid #CBD5E1;border-radius:6px;font-size:0.82rem;" onchange="updateBulkItemCopies(${item.id}, this.value)">
-            </td>
-            <td>${reconBadge}</td>
-            <td>
-              <button type="button" onclick="removeBulkQueueItem(${item.id})" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:1rem;">✕</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function updateBulkItemCopies(id, val) {
-      const item = bulkScanQueue.find(it => it.id === id);
-      if (item) {
-        item.copies = Math.max(1, parseInt(val, 10) || 1);
-      }
-    }
-
-    function removeBulkQueueItem(id) {
-      bulkScanQueue = bulkScanQueue.filter(it => it.id !== id);
-      renderBulkQueue();
-    }
-
-    function clearBulkQueue() {
-      if (bulkScanQueue.length === 0) return;
-      if (confirm('Clear all scanned books from queue?')) {
-        bulkScanQueue = [];
-        renderBulkQueue();
-      }
-    }
-
-    async function submitBatchRegistration() {
-      if (bulkScanQueue.length === 0) return;
-      const btn = document.getElementById('btnBatchRegister');
-      if (btn) { btn.disabled = true; btn.textContent = 'Registering Batch...'; }
-
-      const payload = {
-        books: bulkScanQueue.map(item => ({
-          title: item.title,
-          author: item.author,
-          genre: item.genre || 'General',
-          isbn: item.isbn || item.barcode,
-          total_copies: item.copies || 1,
-          cover_url: item.cover_url || '',
-          acquisition_item_id: item.acquisition_item_id || null
-        }))
-      };
-
-      try {
-        const res = await fetch('/admin/api/books/batch-register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert(`✓ Successfully batch registered ${data.registered} books into catalog!`);
-          bulkScanQueue = [];
-          closeModal('addBookModal');
-          window.location.reload();
-        } else {
-          alert(data.error || 'Failed to complete batch registration.');
-          if (btn) { btn.disabled = false; btn.textContent = `🚀 Batch Register (${bulkScanQueue.length}) Books`; }
-        }
-      } catch (err) {
-        alert('Network error during batch registration.');
-        if (btn) { btn.disabled = false; btn.textContent = `🚀 Batch Register (${bulkScanQueue.length}) Books`; }
+        alert('Network or server error while saving book.');
+        if (btn) { btn.disabled = false; btn.textContent = '💾 Save Book to Library'; }
       }
     }
 

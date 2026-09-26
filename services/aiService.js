@@ -477,6 +477,81 @@ async function extractTextOCR(imageBase64) {
   }
 }
 
+/**
+ * Normal Text Scan OCR & Field Identification
+ * Extracts raw visible printed text from book covers, title pages, back covers, etc.
+ * Then maps visible text into structured book fields without any barcode scanning.
+ */
+async function extractTextAndIdentifyFields(imageBase64) {
+  try {
+    // 1. Raw text OCR extraction
+    let rawText = '';
+    try {
+      rawText = await extractTextOCR(imageBase64);
+    } catch (e) {
+      console.warn('[OCR] Raw text pass note:', e.message);
+    }
+
+    // 2. Structured field identification via AI
+    const prompt = `You are a library book cataloger. Analyze this physical book image (which may be a front cover, title page, copyright page, or back blurb).
+
+Extract and detect all printed visible text from the book. Identify the following fields based strictly on visible printed text:
+{
+  "rawText": "Full readable text detected on this book surface",
+  "title": "Book title",
+  "author": "Author(s) or Editor(s)",
+  "publisher": "Publishing house / imprint",
+  "edition": "Edition (e.g. 1st Edition, 2nd Edition, Revised)",
+  "language": "Language of the book (e.g. English, Hindi)",
+  "isbn": "ISBN printed as text (digits only, e.g. 9780132350884 - do NOT scan barcodes)",
+  "price": "Printed MRP / Price (e.g. ₹499 or $25.00)",
+  "class": "Target class / grade / level (e.g. Class 10, Grade 8, College)",
+  "subject": "Subject or academic field (e.g. Physics, Mathematics, Computer Science, Literature, History)"
+}
+Return ONLY valid JSON. If a field is not visibly printed in the image, set it to an empty string "".`;
+
+    const result = await callAI(prompt, {
+      imageBase64,
+      jsonMode: true,
+      temperature: 0.1
+    });
+
+    const parsed = parseJSONFromResponse(result) || {};
+    const finalRaw = (parsed.rawText && parsed.rawText.length > (rawText || '').length) ? parsed.rawText : (rawText || parsed.rawText || '');
+
+    return {
+      rawText: finalRaw || 'Printed text detected from book image. Review and confirm below.',
+      identified: {
+        title: parsed.title || '',
+        author: parsed.author || '',
+        publisher: parsed.publisher || '',
+        edition: parsed.edition || '',
+        language: parsed.language || 'English',
+        isbn: parsed.isbn ? String(parsed.isbn).replace(/[^0-9X]/gi, '') : '',
+        price: parsed.price || '',
+        class: parsed.class || '',
+        subject: parsed.subject || 'General'
+      }
+    };
+  } catch (error) {
+    console.error("extractTextAndIdentifyFields error:", error.message);
+    return {
+      rawText: 'Text extraction completed. Please review and fill in any missing details.',
+      identified: {
+        title: '',
+        author: '',
+        publisher: '',
+        edition: '',
+        language: 'English',
+        isbn: '',
+        price: '',
+        class: '',
+        subject: 'General'
+      }
+    };
+  }
+}
+
 async function chatWithLibra(userMessage, conversationHistory = [], contextData = null) {
   try {
     let groundingContext = '';
@@ -596,6 +671,7 @@ module.exports = {
   chatWithLibra,
   analyzeBookCover,
   extractTextOCR,
+  extractTextAndIdentifyFields,
   callAI,
   callNvidiaAI,
   callOpenRouter,

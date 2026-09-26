@@ -46,6 +46,7 @@ node db/initQuizTables.js || true
 node db/initPushSubscriptionsTable.js || true
 node db/migrateLoadingAndCleanDemo.js || true
 node db/migrateLibrikaProductFixes.js || true
+node db/migrateBookAdding3Modes.js || true
 
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
 mkdir -p tmp
@@ -64,6 +65,7 @@ node db/initQuizTables.js || true
 node db/initPushSubscriptionsTable.js || true
 node db/migrateLoadingAndCleanDemo.js || true
 node db/migrateLibrikaProductFixes.js || true
+node db/migrateBookAdding3Modes.js || true
 
 
 pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
