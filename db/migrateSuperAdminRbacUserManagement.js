@@ -388,6 +388,7 @@ async function migrateSuperAdminRbac() {
 
     let backfilled = 0;
     for (const u of (usersRes.rows || [])) {
+      if (!u || !u.id) continue;
       const cleanRole = String(u.role || '').toLowerCase().trim();
       let roleId = slugToId[cleanRole];
       if (!roleId && cleanRole.includes('super')) roleId = slugToId['super_admin'];
