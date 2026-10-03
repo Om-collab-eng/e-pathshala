@@ -3649,9 +3649,6 @@
       } catch(e) {}
     });
 
-    let activeCheckoutMember = null;
-    let activeCheckoutBook = null;
-
     function navigateToModule(moduleName, subTab = null) {
       document.querySelectorAll('.lp-module-view').forEach(m => m.style.display = 'none');
       document.querySelectorAll('.lp-nav-item').forEach(btn => btn.classList.remove('active'));

@@ -10,6 +10,9 @@ echo "=================================================="
 echo "  ⬆️  Pushing changes to MilesWeb server..."
 echo "=================================================="
 
+# Run Triple-Check Pre-Push Validation before touching server
+node scripts/pre_push_triple_check.js
+
 if command -v sshpass >/dev/null 2>&1; then
   R_SSH="sshpass -p $PASS ssh -p $PORT -o StrictHostKeyChecking=no -o PubkeyAuthentication=no"
 else

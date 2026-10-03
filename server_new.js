@@ -103,6 +103,14 @@ app.use(express.urlencoded({ extended: true, limit: '35mb' }));
 
 app.use(expressLayouts);
 
+app.post(['/api/log-error', '/log-error'], (req, res) => {
+  const { message, error, url } = req.body || {};
+  if (message || error) {
+    console.warn('[CLIENT ERROR REPORT]:', message || error, url || '');
+  }
+  res.status(200).json({ success: true });
+});
+
 
 let MySQLStore;
 try {
