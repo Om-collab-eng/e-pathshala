@@ -30,6 +30,12 @@ const convertPlaceholders = (text, params = [], isMysql = false) => {
   // Strip RETURNING clause for MySQL/SQLite
   cleanedSql = cleanedSql.replace(/\s+RETURNING\s+([a-z0-9_,\*\s]+)/gi, '');
 
+  // MySQL compatibility for CAST types
+  if (isMysql) {
+    cleanedSql = cleanedSql.replace(/CAST\((.*?)\s+AS\s+TEXT\)/gi, 'CAST($1 AS CHAR)');
+    cleanedSql = cleanedSql.replace(/CAST\((.*?)\s+AS\s+INTEGER\)/gi, 'CAST($1 AS SIGNED)');
+  }
+
   if (!params || !Array.isArray(params) || params.length === 0) {
     return { sql: cleanedSql.replace(/\$\d+/g, '?'), newParams: params || [] };
   }

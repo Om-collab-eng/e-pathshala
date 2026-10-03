@@ -627,6 +627,7 @@ router.all('/api/circulation/search-students', adminOnly, async (req, res) => {
         WHERE (LOWER(u.school_code) = LOWER($1) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
           AND (
             LOWER(u.name) LIKE LOWER($2) OR
+            LOWER(COALESCE(u.role, '')) LIKE LOWER($2) OR
             LOWER(COALESCE(u.admission_no, '')) LIKE LOWER($2) OR
             LOWER(COALESCE(u.student_id, '')) LIKE LOWER($2) OR
             LOWER(COALESCE(u.class, '')) LIKE LOWER($2) OR
@@ -638,9 +639,10 @@ router.all('/api/circulation/search-students', adminOnly, async (req, res) => {
         ORDER BY 
           CASE WHEN LOWER(u.name) LIKE LOWER($3) THEN 1
                WHEN LOWER(COALESCE(u.admission_no, '')) LIKE LOWER($3) THEN 2
-               ELSE 3 END,
+               WHEN LOWER(COALESCE(u.student_id, '')) LIKE LOWER($3) THEN 3
+               ELSE 4 END,
           u.name ASC
-        LIMIT 20
+        LIMIT 25
       `;
       params = [sCode, term, `${q}%`];
     }

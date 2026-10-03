@@ -4087,6 +4087,13 @@
               </div>
             `;
           }).join('');
+        } else if (data.status === 'error') {
+          dd.style.display = 'block';
+          dd.innerHTML = `
+            <div style="padding:14px;text-align:center;color:#DC2626;font-size:0.85rem;background:#FEF2F2;">
+              ⚠️ Search error: ${escapeHtml(data.message || 'Server error')}
+            </div>
+          `;
         } else {
           dd.style.display = 'block';
           dd.innerHTML = `
@@ -4097,6 +4104,12 @@
         }
       } catch (e) {
         console.error('Member search error:', e);
+        dd.style.display = 'block';
+        dd.innerHTML = `
+          <div style="padding:14px;text-align:center;color:#DC2626;font-size:0.85rem;background:#FEF2F2;">
+            ⚠️ Network error searching students. Please try again.
+          </div>
+        `;
       }
     }
 
@@ -4206,6 +4219,13 @@
               </div>
             `;
           }).join('');
+        } else if (data.status === 'error') {
+          dd.style.display = 'block';
+          dd.innerHTML = `
+            <div style="padding:14px;text-align:center;color:#DC2626;font-size:0.85rem;background:#FEF2F2;">
+              ⚠️ Book search error: ${escapeHtml(data.message || 'Server error')}
+            </div>
+          `;
         } else {
           dd.style.display = 'block';
           dd.innerHTML = `
@@ -4216,6 +4236,12 @@
         }
       } catch (e) {
         console.error('Book search error:', e);
+        dd.style.display = 'block';
+        dd.innerHTML = `
+          <div style="padding:14px;text-align:center;color:#DC2626;font-size:0.85rem;background:#FEF2F2;">
+            ⚠️ Network error searching books. Please try again.
+          </div>
+        `;
       }
     }
 
@@ -4554,6 +4580,13 @@
               </div>
             `;
           }).join('');
+        } else if (data.status === 'error') {
+          dd.style.display = 'block';
+          dd.innerHTML = `
+            <div style="padding:14px;text-align:center;color:#DC2626;font-size:0.85rem;background:#FEF2F2;">
+              ⚠️ Search error: ${escapeHtml(data.message || 'Server error')}
+            </div>
+          `;
         } else {
           dd.style.display = 'block';
           dd.innerHTML = `
@@ -4564,6 +4597,12 @@
         }
       } catch (e) {
         console.error('Return member search error:', e);
+        dd.style.display = 'block';
+        dd.innerHTML = `
+          <div style="padding:14px;text-align:center;color:#DC2626;font-size:0.85rem;background:#FEF2F2;">
+            ⚠️ Network error searching students. Please try again.
+          </div>
+        `;
       }
     }
 
