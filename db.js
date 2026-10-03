@@ -30,10 +30,14 @@ const convertPlaceholders = (text, params = [], isMysql = false) => {
   // Strip RETURNING clause for MySQL/SQLite
   cleanedSql = cleanedSql.replace(/\s+RETURNING\s+([a-z0-9_,\*\s]+)/gi, '');
 
-  // MySQL compatibility for CAST types
+  // MySQL compatibility for CAST types and scalar functions
   if (isMysql) {
     cleanedSql = cleanedSql.replace(/CAST\((.*?)\s+AS\s+TEXT\)/gi, 'CAST($1 AS CHAR)');
     cleanedSql = cleanedSql.replace(/CAST\((.*?)\s+AS\s+INTEGER\)/gi, 'CAST($1 AS SIGNED)');
+    // SQLite scalar MAX(a, b) and MIN(a, b) -> MariaDB/MySQL GREATEST(a, b) and LEAST(a, b)
+    // Only match when followed by arguments containing a comma (to not break aggregate MAX(column))
+    cleanedSql = cleanedSql.replace(/\bMAX\s*\(\s*0\s*,/gi, 'GREATEST(0,');
+    cleanedSql = cleanedSql.replace(/\bMIN\s*\(\s*0\s*,/gi, 'LEAST(0,');
   }
 
   if (!params || !Array.isArray(params) || params.length === 0) {

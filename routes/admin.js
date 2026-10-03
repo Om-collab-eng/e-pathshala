@@ -1129,7 +1129,15 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
     });
 
     // 5. Decrement Available Copies
-    await db.query('UPDATE books SET available_copies = MAX(0, CAST(COALESCE(available_copies, 1) AS INTEGER) - 1) WHERE id = $1', [book.id]);
+    await db.query(`
+      UPDATE books 
+      SET available_copies = CASE 
+        WHEN CAST(COALESCE(available_copies, 1) AS INTEGER) > 0 
+        THEN CAST(COALESCE(available_copies, 1) AS INTEGER) - 1 
+        ELSE 0 
+      END 
+      WHERE id = $1
+    `, [book.id]);
 
     // 6. Update Physical Copy Status
     if (targetCopy) {
@@ -1233,7 +1241,11 @@ router.post('/api/circulation/return', adminOnly, async (req, res) => {
     // 2. Increment Available Copies (capped at total_copies)
     await db.query(`
       UPDATE books 
-      SET available_copies = MIN(CAST(COALESCE(total_copies, '1') AS INTEGER), CAST(COALESCE(available_copies, '0') AS INTEGER) + 1)
+      SET available_copies = CASE 
+        WHEN CAST(COALESCE(available_copies, 0) AS INTEGER) < CAST(COALESCE(total_copies, 1) AS INTEGER) 
+        THEN CAST(COALESCE(available_copies, 0) AS INTEGER) + 1 
+        ELSE CAST(COALESCE(total_copies, 1) AS INTEGER) 
+      END
       WHERE id = $1
     `, [loan.book_id]);
 
