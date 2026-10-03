@@ -177,7 +177,7 @@
 <div class="orb w-96 h-96 bg-secondary top-[-10%] left-[-10%]"></div>
 <div class="orb w-80 h-80 bg-primary bottom-[-10%] right-[-10%]"></div>
 
-<main class="w-full max-w-[480px] z-10 my-6">
+<main class="w-full max-w-[560px] z-10 my-6">
     <!-- Secure Gateway Badge -->
     <div class="flex justify-center mb-6">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary-fixed-dim">
@@ -206,79 +206,333 @@
             </button>
         </div>
 
-        <!-- 1-Click Demo Accounts (Same School: DPS123) -->
-        <div class="mb-8 p-4 rounded-xl bg-blue-50 border border-blue-200">
+        <!-- 1-Click Sample Logins with School Switcher (VBPGZ & VBPNO) -->
+        <div class="mb-8 p-4 rounded-xl bg-blue-50/90 border border-blue-200 shadow-sm" id="demoAccountsContainer">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-blue-600 text-[20px]">bolt</span>
-                    <span class="font-label-bold text-xs uppercase tracking-wider text-blue-900">Demo Accounts (DPS123)</span>
+                    <span class="font-label-bold text-xs uppercase tracking-wider text-blue-900">Sample Logins (All User Types)</span>
                 </div>
-                <span class="text-[11px] bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">Click to Auto-Login</span>
+                <span class="text-[11px] bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">1-Click Auto-Fill &amp; Enter</span>
             </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <!-- 1. Super Admin -->
-                <button type="button" onclick="fillDemoCredentials('DPS123', 'superadmin', 'admin123', true)" 
-                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
-                    <div class="flex items-center justify-between">
-                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">
-                            👑 Super Admin
-                        </span>
-                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
-                    </div>
-                    <div class="mt-1.5">
-                        <div class="text-xs font-bold text-gray-800">Master Admin</div>
-                        <div class="text-[11px] text-gray-500 font-mono">User: superadmin</div>
-                    </div>
-                </button>
 
-                <!-- 2. Librarian (School Admin) -->
-                <button type="button" onclick="fillDemoCredentials('DPS123', '9898989898', 'libpassword', true)" 
-                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
-                    <div class="flex items-center justify-between">
-                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
-                            📖 Librarian
-                        </span>
-                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
-                    </div>
-                    <div class="mt-1.5">
-                        <div class="text-xs font-bold text-gray-800">Mrs. Sharma</div>
-                        <div class="text-[11px] text-gray-500 font-mono">User: 9898989898</div>
-                    </div>
+            <!-- School Switcher Tabs -->
+            <div class="flex p-1 bg-white rounded-lg border border-blue-200 mb-3 shadow-sm">
+                <button type="button" id="schoolBtnVBPGZ" onclick="switchDemoSchool('VBPGZ')" 
+                        class="flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-[16px]">apartment</span>
+                    <span>VBPS Ghaziabad <span class="font-mono text-[10px] opacity-90">(VBPGZ)</span></span>
                 </button>
-
-                <!-- 3. Student 1 -->
-                <button type="button" onclick="fillDemoCredentials('DPS123', '9797979797', 'studentpass1', true)" 
-                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
-                    <div class="flex items-center justify-between">
-                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                            🎓 Student 1
-                        </span>
-                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
-                    </div>
-                    <div class="mt-1.5">
-                        <div class="text-xs font-bold text-gray-800">Aarav Patel (Gr 10)</div>
-                        <div class="text-[11px] text-gray-500 font-mono">User: 9797979797</div>
-                    </div>
-                </button>
-
-                <!-- 4. Student 2 -->
-                <button type="button" onclick="fillDemoCredentials('DPS123', '9898989696', 'studentpass2', true)" 
-                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
-                    <div class="flex items-center justify-between">
-                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                            🎓 Student 2
-                        </span>
-                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
-                    </div>
-                    <div class="mt-1.5">
-                        <div class="text-xs font-bold text-gray-800">Diya Sharma (Gr 12)</div>
-                        <div class="text-[11px] text-gray-500 font-mono">User: 9898989696</div>
-                    </div>
+                <button type="button" id="schoolBtnVBPNO" onclick="switchDemoSchool('VBPNO')" 
+                        class="flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-gray-600 hover:text-blue-700 hover:bg-blue-50 cursor-pointer">
+                    <span class="material-symbols-outlined text-[16px]">apartment</span>
+                    <span>VBPS Noida <span class="font-mono text-[10px] opacity-90">(VBPNO)</span></span>
                 </button>
             </div>
-            <div class="mt-2 text-center text-[11px] text-gray-500">
-                School Code: <span class="font-bold text-gray-700">DPS123</span> &bull; All 4 accounts belong to the same school
+
+            <!-- Role Filter Pills -->
+            <div class="flex flex-wrap gap-1 mb-3">
+                <button type="button" onclick="filterDemoRole('all')" class="demo-role-pill active px-2.5 py-0.5 text-[11px] rounded font-bold transition-colors bg-blue-600 text-white shadow-xs cursor-pointer" data-role="all">All (10)</button>
+                <button type="button" onclick="filterDemoRole('admin')" class="demo-role-pill px-2 py-0.5 text-[11px] rounded font-semibold transition-colors bg-white text-gray-700 hover:bg-blue-50 border border-gray-200 cursor-pointer" data-role="admin">Admin (2)</button>
+                <button type="button" onclick="filterDemoRole('librarian')" class="demo-role-pill px-2 py-0.5 text-[11px] rounded font-semibold transition-colors bg-white text-gray-700 hover:bg-blue-50 border border-gray-200 cursor-pointer" data-role="librarian">Librarian (2)</button>
+                <button type="button" onclick="filterDemoRole('teacher')" class="demo-role-pill px-2 py-0.5 text-[11px] rounded font-semibold transition-colors bg-white text-gray-700 hover:bg-blue-50 border border-gray-200 cursor-pointer" data-role="teacher">Teacher (2)</button>
+                <button type="button" onclick="filterDemoRole('student')" class="demo-role-pill px-2 py-0.5 text-[11px] rounded font-semibold transition-colors bg-white text-gray-700 hover:bg-blue-50 border border-gray-200 cursor-pointer" data-role="student">Student (2)</button>
+                <button type="button" onclick="filterDemoRole('parent')" class="demo-role-pill px-2 py-0.5 text-[11px] rounded font-semibold transition-colors bg-white text-gray-700 hover:bg-blue-50 border border-gray-200 cursor-pointer" data-role="parent">Parent (2)</button>
+            </div>
+
+            <!-- Accounts Container for School 1: VBPS Ghaziabad (VBPGZ) -->
+            <div id="demoSchool_VBPGZ" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                <!-- 1. School Admin 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100001', 'Admin@123', true)" data-role="admin"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">👑 Admin 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Rajesh Sharma</div>
+                        <div class="text-[10px] text-gray-500">Vice Principal &amp; Admin</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100001 &bull; Admin@123</div>
+                    </div>
+                </button>
+
+                <!-- 2. School Admin 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100002', 'Admin@123', true)" data-role="admin"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">👑 Admin 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Sunita Verma</div>
+                        <div class="text-[10px] text-gray-500">Academic Coordinator</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100002 &bull; Admin@123</div>
+                    </div>
+                </button>
+
+                <!-- 3. Librarian 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100003', 'Lib@123', true)" data-role="librarian"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">📖 Librarian 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Meenakshi Rao</div>
+                        <div class="text-[10px] text-gray-500">Head Librarian</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100003 &bull; Lib@123</div>
+                    </div>
+                </button>
+
+                <!-- 4. Librarian 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100004', 'Lib@123', true)" data-role="librarian"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">📖 Librarian 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Alok Tripathi</div>
+                        <div class="text-[10px] text-gray-500">Assistant Librarian</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100004 &bull; Lib@123</div>
+                    </div>
+                </button>
+
+                <!-- 5. Teacher 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100005', 'Teach@123', true)" data-role="teacher"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">👩‍🏫 Teacher 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Vikram Malhotra</div>
+                        <div class="text-[10px] text-gray-500">PGT English (Languages)</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100005 &bull; Teach@123</div>
+                    </div>
+                </button>
+
+                <!-- 6. Teacher 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100006', 'Teach@123', true)" data-role="teacher"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">👩‍🏫 Teacher 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Pooja Saxena</div>
+                        <div class="text-[10px] text-gray-500">TGT Science &amp; Math</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100006 &bull; Teach@123</div>
+                    </div>
+                </button>
+
+                <!-- 7. Student 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100007', 'Student@123', true)" data-role="student"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">🎓 Student 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Aarav Singhania</div>
+                        <div class="text-[10px] text-gray-500">Class 10-A &bull; STU-1001</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100007 &bull; Student@123</div>
+                    </div>
+                </button>
+
+                <!-- 8. Parent 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100008', 'Parent@123', true)" data-role="parent"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">👨‍👩‍👧 Parent 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Sanjay Singhania</div>
+                        <div class="text-[10px] text-gray-500">Father of Aarav (10-A)</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100008 &bull; Parent@123</div>
+                    </div>
+                </button>
+
+                <!-- 9. Student 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100009', 'Student@123', true)" data-role="student"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">🎓 Student 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Ananya Gupta</div>
+                        <div class="text-[10px] text-gray-500">Class 11-B &bull; STU-1002</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100009 &bull; Student@123</div>
+                    </div>
+                </button>
+
+                <!-- 10. Parent 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPGZ', '9810100010', 'Parent@123', true)" data-role="parent"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">👨‍👩‍👧 Parent 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Rakesh Gupta</div>
+                        <div class="text-[10px] text-gray-500">Father of Ananya (11-B)</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9810100010 &bull; Parent@123</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Accounts Container for School 2: VBPS Noida (VBPNO) -->
+            <div id="demoSchool_VBPNO" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1" style="display: none;">
+                <!-- 1. School Admin 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200001', 'Admin@123', true)" data-role="admin"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">👑 Admin 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Amitabh Sen</div>
+                        <div class="text-[10px] text-gray-500">Headmaster &amp; Admin</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200001 &bull; Admin@123</div>
+                    </div>
+                </button>
+
+                <!-- 2. School Admin 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200002', 'Admin@123', true)" data-role="admin"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">👑 Admin 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Kavita Nambiar</div>
+                        <div class="text-[10px] text-gray-500">Senior Administrator</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200002 &bull; Admin@123</div>
+                    </div>
+                </button>
+
+                <!-- 3. Librarian 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200003', 'Lib@123', true)" data-role="librarian"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">📖 Librarian 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Deepak Chawla</div>
+                        <div class="text-[10px] text-gray-500">Chief Librarian</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200003 &bull; Lib@123</div>
+                    </div>
+                </button>
+
+                <!-- 4. Librarian 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200004', 'Lib@123', true)" data-role="librarian"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">📖 Librarian 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Rashmi Deshmukh</div>
+                        <div class="text-[10px] text-gray-500">Resource Specialist</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200004 &bull; Lib@123</div>
+                    </div>
+                </button>
+
+                <!-- 5. Teacher 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200005', 'Teach@123', true)" data-role="teacher"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">👩‍🏫 Teacher 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Pradeep Joshi</div>
+                        <div class="text-[10px] text-gray-500">PGT Computer Science (IT)</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200005 &bull; Teach@123</div>
+                    </div>
+                </button>
+
+                <!-- 6. Teacher 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200006', 'Teach@123', true)" data-role="teacher"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">👩‍🏫 Teacher 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Neha Kapoor</div>
+                        <div class="text-[10px] text-gray-500">TGT Social Sciences</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200006 &bull; Teach@123</div>
+                    </div>
+                </button>
+
+                <!-- 7. Student 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200007', 'Student@123', true)" data-role="student"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">🎓 Student 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Kabir Mehta</div>
+                        <div class="text-[10px] text-gray-500">Class 9-C &bull; STU-2001</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200007 &bull; Student@123</div>
+                    </div>
+                </button>
+
+                <!-- 8. Parent 1 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200008', 'Parent@123', true)" data-role="parent"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">👨‍👩‍👧 Parent 1</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Naveen Mehta</div>
+                        <div class="text-[10px] text-gray-500">Father of Kabir (9-C)</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200008 &bull; Parent@123</div>
+                    </div>
+                </button>
+
+                <!-- 9. Student 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200009', 'Student@123', true)" data-role="student"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">🎓 Student 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Rhea Nair</div>
+                        <div class="text-[10px] text-gray-500">Class 12-A &bull; STU-2002</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200009 &bull; Student@123</div>
+                    </div>
+                </button>
+
+                <!-- 10. Parent 2 -->
+                <button type="button" onclick="fillDemoCredentials('VBPNO', '9820200010', 'Parent@123', true)" data-role="parent"
+                        class="demo-card text-left p-2.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">👨‍👩‍👧 Parent 2</span>
+                        <span class="text-[10px] text-gray-400 group-hover:text-blue-600 font-bold">1-Click →</span>
+                    </div>
+                    <div class="mt-1.5">
+                        <div class="text-xs font-bold text-gray-800">Girish Nair</div>
+                        <div class="text-[10px] text-gray-500">Father of Rhea (12-A)</div>
+                        <div class="text-[11px] text-gray-600 font-mono mt-0.5">ID: 9820200010 &bull; Parent@123</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Active School Code Badge & Master Admin shortcut -->
+            <div class="mt-3 pt-2.5 border-t border-blue-200 flex items-center justify-between text-[11px] text-gray-600">
+                <div>Active School: <strong id="lblActiveSchool" class="text-blue-900 font-mono">VBPS Ghaziabad (VBPGZ)</strong></div>
+                <button type="button" onclick="fillDemoCredentials('GLOBAL', 'superadmin', 'admin123', true)" 
+                        class="text-purple-700 hover:text-purple-900 font-bold flex items-center gap-1 hover:underline cursor-pointer">
+                    👑 Master Super Admin &rarr;
+                </button>
             </div>
         </div>
 
@@ -403,6 +657,62 @@
         }
     }
 
+    let currentDemoSchool = 'VBPGZ';
+    let currentDemoRole = 'all';
+
+    function switchDemoSchool(schoolCode) {
+        currentDemoSchool = schoolCode;
+        const btnGZ = document.getElementById('schoolBtnVBPGZ');
+        const btnNO = document.getElementById('schoolBtnVBPNO');
+        const schoolGZ = document.getElementById('demoSchool_VBPGZ');
+        const schoolNO = document.getElementById('demoSchool_VBPNO');
+        const lblActive = document.getElementById('lblActiveSchool');
+        const schoolInput = document.getElementById('school_code');
+
+        if (schoolCode === 'VBPGZ') {
+            if (btnGZ) btnGZ.className = 'flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer';
+            if (btnNO) btnNO.className = 'flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-gray-600 hover:text-blue-700 hover:bg-blue-50 cursor-pointer';
+            if (schoolGZ) schoolGZ.style.display = 'grid';
+            if (schoolNO) schoolNO.style.display = 'none';
+            if (lblActive) lblActive.textContent = 'VBPS Ghaziabad (VBPGZ)';
+            if (schoolInput) schoolInput.value = 'VBPGZ';
+        } else {
+            if (btnNO) btnNO.className = 'flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer';
+            if (btnGZ) btnGZ.className = 'flex-1 py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-gray-600 hover:text-blue-700 hover:bg-blue-50 cursor-pointer';
+            if (schoolNO) schoolNO.style.display = 'grid';
+            if (schoolGZ) schoolGZ.style.display = 'none';
+            if (lblActive) lblActive.textContent = 'VBPS Noida (VBPNO)';
+            if (schoolInput) schoolInput.value = 'VBPNO';
+        }
+        applyDemoRoleFilter();
+    }
+
+    function filterDemoRole(role) {
+        currentDemoRole = role;
+        document.querySelectorAll('.demo-role-pill').forEach(btn => {
+            if (btn.getAttribute('data-role') === role) {
+                btn.className = 'demo-role-pill active px-2.5 py-0.5 text-[11px] rounded font-bold transition-colors bg-blue-600 text-white shadow-xs cursor-pointer';
+            } else {
+                btn.className = 'demo-role-pill px-2 py-0.5 text-[11px] rounded font-semibold transition-colors bg-white text-gray-700 hover:bg-blue-50 border border-gray-200 cursor-pointer';
+            }
+        });
+        applyDemoRoleFilter();
+    }
+
+    function applyDemoRoleFilter() {
+        const activeContainer = document.getElementById(`demoSchool_${currentDemoSchool}`);
+        if (!activeContainer) return;
+        const cards = activeContainer.querySelectorAll('.demo-card');
+        cards.forEach(card => {
+            const cardRole = card.getAttribute('data-role');
+            if (currentDemoRole === 'all' || cardRole === currentDemoRole) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
     function fillDemoCredentials(schoolCode, username, password, autoSubmit) {
         selectWorkspace('school');
         const schoolInput = document.getElementById('school_code');
@@ -411,13 +721,13 @@
         const loginBtn = document.getElementById('loginBtn');
         const form = document.getElementById('loginForm');
 
-        if (schoolInput) schoolInput.value = schoolCode || '';
+        if (schoolInput) schoolInput.value = (schoolCode && schoolCode !== 'GLOBAL') ? schoolCode : '';
         if (userInput) userInput.value = username || '';
         if (passInput) passInput.value = password || '';
 
         if (autoSubmit && form) {
             if (loginBtn) {
-                loginBtn.innerHTML = '<span class="font-label-bold text-white">Logging in as demo account...</span>';
+                loginBtn.innerHTML = '<span class="font-label-bold text-white">Logging in as ' + (username || 'demo user') + '...</span>';
                 loginBtn.style.opacity = '0.85';
             }
             setTimeout(() => {

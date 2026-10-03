@@ -135,6 +135,9 @@ npm run dev
 
 ## 📋 Recent Changelog & Completed Work
 
+- **Fixed Librarian Portal UI Script Crash**:
+  - Identified and fixed an unescaped inline `</script>` tag inside `printWin.document.write(...)` in `views/admin.ejs` (line 3935-3941) that prematurely terminated the browser's script element, causing an uncaught `SyntaxError: Unexpected end of input`. This fatal parser error was killing the entire JavaScript engine on the Librarian portal, causing all navigation tabs (`navigateToModule`), modals (`openModal`), and action buttons (`toggleAiCopilot`) to become unresponsive.
+  - Restored local SQLite database (`library_v3.db`) from production MySQL schema, resolving `SQLITE_CORRUPT: database disk image is malformed` on local development.
 - **Multi-Device Notifications (Phone, Laptop & Web)**:
   - **VAPID Web Push Engine**: Standards-compliant Web Push (`web-push` RFC 8291/8292) using Service Worker (`static/sw.js`) supporting mobile devices (Android Chrome/Edge, iOS 16.4+ PWA) and laptops/desktops (macOS, Windows, Linux).
   - **Socket.IO Real-Time Sync**: Instant cross-device notification event emission to `user_${userId}` room so all logged-in devices update simultaneously in real time.

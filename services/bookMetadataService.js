@@ -3,30 +3,50 @@
  * Comprehensive book metadata fetcher with Google Books API + OpenLibrary fallback,
  * duplicate detection, and acquisition record matching.
  */
+const axios = require('axios');
 const https = require('https');
-const http = require('http');
 const { query } = require('../db');
 
-function fetchJson(url) {
-  return new Promise((resolve, reject) => {
-    const client = url.startsWith('https') ? https : http;
-    const req = client.get(url, { headers: { 'User-Agent': 'Librika-LMS/2.0' } }, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch (e) {
-          resolve(null);
-        }
-      });
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+
+async function fetchJson(url, timeoutMs = 5000) {
+  try {
+    const res = await axios.get(url, {
+      headers: { 'User-Agent': 'Librika-LMS/2.0' },
+      httpsAgent,
+      timeout: timeoutMs
     });
-    req.on('error', err => resolve(null));
-    req.setTimeout(4000, () => {
-      req.destroy();
-      resolve(null);
+    return res.data;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function fetchJsonDetailed(url, timeoutMs = 5000) {
+  const t0 = Date.now();
+  try {
+    const res = await axios.get(url, {
+      headers: { 'User-Agent': 'Librika-LMS/2.0' },
+      httpsAgent,
+      timeout: timeoutMs
     });
-  });
+    return {
+      success: true,
+      status: res.status,
+      statusText: res.statusText,
+      durationMs: Date.now() - t0,
+      data: res.data
+    };
+  } catch (err) {
+    return {
+      success: false,
+      status: (err.response && err.response.status) || 0,
+      statusText: (err.response && err.response.statusText) || err.message,
+      durationMs: Date.now() - t0,
+      error: err.message,
+      data: null
+    };
+  }
 }
 
 function cleanIsbn(str) {
@@ -273,6 +293,7 @@ async function searchOnlineBooks(searchParams, limit = 8) {
 module.exports = {
   cleanIsbn,
   fetchBookMetadata,
+  fetchJsonDetailed,
   searchOnlineBooks,
   checkDuplicateAndAcquisitions
 };

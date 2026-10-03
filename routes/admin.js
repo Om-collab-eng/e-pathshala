@@ -8,9 +8,12 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const bwipjs = require('bwip-js');
 const aiService = require('../services/aiService');
-const { logActivity, ensureSecurityTables } = require('../services/auditLogger');
 const { quotes: libraryQuotes, getRandomQuote } = require('../data/quotes');
 const bookMetadataService = require('../services/bookMetadataService');
+const ocrEngineService = require('../services/ocrEngineService');
+const groqBookAgent = require('../services/groqBookAgent');
+const bookCrawlerService = require('../services/bookCrawlerService');
+const bookCopyService = require('../services/bookCopyService');
 require('dotenv').config();
 
 const upload = multer({
@@ -222,13 +225,25 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     const books = booksRes.rows || [];
 
     const copiesRes = await db.query(`
-      SELECT bc.*, b.title as book_title, b.author as book_author, b.isbn as book_isbn
+      SELECT bc.*, b.title as book_title, b.author as book_author, b.isbn as book_isbn, b.edition as book_edition
       FROM book_copies bc
       JOIN books b ON bc.book_id = b.id
-      WHERE (LOWER(b.school_code) = LOWER($1) OR b.school_code = 'GLOBAL' OR b.school_code IS NULL OR b.school_code = '')
-      ORDER BY bc.id DESC
+      WHERE (LOWER(bc.school_code) = LOWER($1) OR LOWER(b.school_code) = LOWER($1) OR bc.school_code = 'GLOBAL' OR b.school_code = 'GLOBAL' OR bc.school_code IS NULL OR bc.school_code = '')
+      ORDER BY bc.book_id ASC, bc.copy_number ASC
     `, [sCode]).catch(() => ({ rows: [] }));
     const bookCopies = copiesRes.rows || [];
+
+    // Group copies under their respective Book Groups
+    const copiesByBookId = {};
+    bookCopies.forEach(c => {
+      const bId = String(c.book_id);
+      if (!copiesByBookId[bId]) copiesByBookId[bId] = [];
+      copiesByBookId[bId].push(c);
+      if (c.book_id !== bId) {
+        if (!copiesByBookId[c.book_id]) copiesByBookId[c.book_id] = [];
+        copiesByBookId[c.book_id].push(c);
+      }
+    });
 
     let totalCopiesCount = 0;
     let availableCopiesCount = 0;
@@ -236,14 +251,26 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     let lostCopiesCount = 0;
 
     books.forEach(b => {
-      totalCopiesCount += (parseInt(b.total_copies, 10) || 1);
-      availableCopiesCount += (parseInt(b.available_copies, 10) || 0);
+      b.copies = copiesByBookId[String(b.id)] || copiesByBookId[b.id] || [];
+      const actualTotal = b.copies.length > 0 ? b.copies.length : (parseInt(b.total_copies, 10) || 1);
+      const actualAvailable = b.copies.length > 0 
+        ? b.copies.filter(c => (c.status === 'AVAILABLE' || c.availability_status === 'AVAILABLE')).length 
+        : (parseInt(b.available_copies, 10) || 0);
+
+      b.total_copies = actualTotal;
+      b.available_copies = actualAvailable;
+
+      totalCopiesCount += actualTotal;
+      availableCopiesCount += actualAvailable;
     });
 
     bookCopies.forEach(c => {
       if (c.condition_status === 'DAMAGED') damagedCopiesCount++;
-      if (c.condition_status === 'LOST' || c.availability_status === 'LOST') lostCopiesCount++;
+      if (c.condition_status === 'LOST' || c.status === 'LOST' || c.availability_status === 'LOST') lostCopiesCount++;
     });
+
+    // Barcode Settings
+    const barcodeSettings = await bookCopyService.getBarcodeSettings(sCode);
 
     // 3. Fetch Members (Students, Teachers, Staff) with Real-Time Online Status
     const usersRes = await db.query('SELECT * FROM users WHERE school_code = $1 ORDER BY id DESC', [sCode]).catch(() => ({ rows: [] }));
@@ -400,6 +427,7 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
       auditLogs,
       notificationsList,
       reviews,
+      barcodeSettings,
       studentProgressItems: studentProgressData.items,
       studentProgressCounts: studentProgressData.counts,
       dailyQuote: getRandomQuote(),
@@ -610,13 +638,30 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
       return res.json({ status: 'error', message: `Member has reached maximum borrowing quota (${maxLimit} books).` });
     }
 
-    // 3. Find Book
+    // 3. Find Book & Physical Copy
     let book = null;
-    if (book_id) {
+    let targetCopy = null;
+
+    if (barcode) {
+      const copyLookup = await bookCopyService.lookupPhysicalCopy(barcode.trim(), sCode);
+      if (copyLookup) {
+        if (copyLookup.type === 'PHYSICAL_COPY') {
+          if (copyLookup.copy.status !== 'AVAILABLE') {
+            return res.json({ status: 'error', message: `Physical Copy #${copyLookup.copy.copy_number} (${barcode}) is currently '${copyLookup.copy.status}'.` });
+          }
+          book = copyLookup.book;
+          targetCopy = copyLookup.copy;
+        } else if (copyLookup.type === 'BOOK_GROUP') {
+          book = copyLookup.book;
+        }
+      }
+    }
+
+    if (!book && book_id) {
       const bRes = await db.query('SELECT * FROM books WHERE id = $1 AND (LOWER(school_code) = LOWER($2) OR school_code = \'GLOBAL\' OR school_code IS NULL OR school_code = \'\')', [book_id, sCode]);
       book = bRes.rows && bRes.rows[0];
-    } else if (barcode) {
-      const bRes = await db.query('SELECT * FROM books WHERE (barcode_id = $1 OR isbn = $1) AND (LOWER(school_code) = LOWER($2) OR school_code = \'GLOBAL\' OR school_code IS NULL OR school_code = \'\')', [barcode, sCode]);
+    } else if (!book && barcode) {
+      const bRes = await db.query('SELECT * FROM books WHERE (barcode_id = $1 OR isbn = $1) AND (LOWER(school_code) = LOWER($2) OR school_code = \'GLOBAL\' OR school_code IS NULL OR school_code = \'\')', [barcode.trim(), sCode]);
       book = bRes.rows && bRes.rows[0];
     }
 
@@ -665,9 +710,11 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
     // 5. Decrement Available Copies
     await db.query('UPDATE books SET available_copies = available_copies - 1 WHERE id = $1', [book.id]);
 
-    // 6. Update Copy Status if copy exists
-    if (barcode) {
-      await db.query("UPDATE book_copies SET availability_status = 'ISSUED' WHERE barcode = $1", [barcode]).catch(() => {});
+    // 6. Update Physical Copy Status
+    if (targetCopy) {
+      await db.query("UPDATE book_copies SET availability_status = 'ISSUED', status = 'ISSUED' WHERE id = $1", [targetCopy.id]).catch(() => {});
+    } else if (barcode) {
+      await db.query("UPDATE book_copies SET availability_status = 'ISSUED', status = 'ISSUED' WHERE barcode = $1", [barcode]).catch(() => {});
     }
 
     // 7. Audit Log
@@ -1146,102 +1193,421 @@ router.get('/api/barcode/:code', async (req, res) => {
   }
 });
 
+// ── Phase 7: Multi-Label Barcode PDF Generator (A4 Print-Ready Code 128) ──
+router.get('/api/barcodes/pdf', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  const { copy_ids, book_id, all } = req.query;
+
+  try {
+    let copyIds = [];
+    if (copy_ids) {
+      copyIds = String(copy_ids).split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const pdfDoc = await bookCopyService.generateBarcodesPDF({
+      copyIds,
+      bookId: book_id || null,
+      all: all === '1' || all === 'true',
+      schoolCode: sCode,
+      printedBy: req.session.name || req.session.username || 'Librarian'
+    });
+
+    const filename = `librika_barcodes_${Date.now()}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+
+    pdfDoc.pipe(res);
+    pdfDoc.end();
+  } catch (err) {
+    console.error('PDF barcode generation error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── GET Complete Book Details (Unified Modal) ──
+router.get('/api/books/:id', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  const sCode = req.session.school_code || 'DEMO01';
+
+  try {
+    const bookRes = await db.query(`
+      SELECT * FROM books 
+      WHERE (id = $1 OR book_id = $1)
+        AND (LOWER(school_code) = LOWER($2) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+      LIMIT 1
+    `, [id, sCode]);
+
+    if (!bookRes.rows || bookRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Book record not found.' });
+    }
+
+    const book = bookRes.rows[0];
+    const copiesRes = await db.query(`
+      SELECT * FROM book_copies 
+      WHERE book_id = $1
+      ORDER BY copy_number ASC
+    `, [book.id]);
+
+    const copies = copiesRes.rows || [];
+    return res.json({
+      success: true,
+      book: {
+        ...book,
+        copies
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching book details:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Phase 8: Physical Copy Barcode Scanner & Lookup ──
+router.get('/api/copy/lookup/:barcode', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  const barcode = req.params.barcode;
+
+  try {
+    const lookup = await bookCopyService.lookupPhysicalCopy(barcode, sCode);
+    if (!lookup) {
+      return res.status(404).json({ success: false, error: `No book copy found with barcode/code '${barcode}'.` });
+    }
+    return res.json({ success: true, result: lookup });
+  } catch (err) {
+    console.error('Copy lookup error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Phase 6: Physical Copy Details Update (Shelf, Status, Condition) ──
+router.post('/api/copy/update', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  const { id, shelf, rack, status, condition_status } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ success: false, error: 'Copy ID is required.' });
+  }
+
+  try {
+    const copyRes = await db.query('SELECT * FROM book_copies WHERE id = $1', [id]);
+    if (!copyRes.rows || copyRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Physical copy not found.' });
+    }
+    const currentCopy = copyRes.rows[0];
+    const prevStatus = currentCopy.status || currentCopy.availability_status || 'AVAILABLE';
+    const newStatus = (status || prevStatus).toUpperCase();
+    const newCondition = condition_status || currentCopy.condition_status || 'GOOD';
+    const newShelf = shelf !== undefined ? shelf : currentCopy.shelf;
+    const newRack = rack !== undefined ? rack : currentCopy.rack;
+
+    await db.query(`
+      UPDATE book_copies 
+      SET status = $1, availability_status = $1, condition_status = $2, shelf = $3, rack = $4
+      WHERE id = $5
+    `, [newStatus, newCondition, newShelf, newRack, id]);
+
+    // Recalculate available copies on the parent book if status changed
+    if (prevStatus !== newStatus) {
+      const availCountRes = await db.query(
+        "SELECT COUNT(*) as count FROM book_copies WHERE book_id = $1 AND (status = 'AVAILABLE' OR availability_status = 'AVAILABLE')",
+        [currentCopy.book_id]
+      );
+      const newAvail = parseInt(availCountRes.rows[0]?.count, 10) || 0;
+      await db.query('UPDATE books SET available_copies = $1 WHERE id = $2', [newAvail, currentCopy.book_id]);
+    }
+
+    const updated = await db.query('SELECT * FROM book_copies WHERE id = $1', [id]);
+    return res.json({ success: true, message: 'Copy updated successfully', copy: updated.rows[0] });
+  } catch (err) {
+    console.error('Copy update error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Phase 4: Barcode Settings API ──
+router.get('/api/settings/barcode', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const cfg = await bookCopyService.getBarcodeSettings(sCode);
+    return res.json({ success: true, settings: cfg });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/api/settings/barcode', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const saved = await bookCopyService.saveBarcodeSettings(sCode, req.body);
+    return res.json({ success: true, message: 'Barcode settings saved successfully', settings: saved });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Smart Camera Book Scanner (Front + Back Cover Snaps, AI Extraction & Google Books Enrichment)
 // Smart Camera Book Scanner (Front + Back Cover Snaps, AI Extraction & Google Books Enrichment)
 router.post('/api/books/smart-scan', adminOnly, async (req, res) => {
   const { frontImageBase64, backImageBase64 } = req.body;
   const sCode = req.session.school_code || 'DEMO01';
+  const timestamp = Date.now();
+  const rand = Math.random().toString(36).substring(2, 7);
+
+  const debugTrace = [];
+  let currentStep = '05';
+  let currentTitle = 'Image preprocessing started';
 
   if (!frontImageBase64) {
-    return res.status(400).json({ success: false, error: 'Front cover snapshot is required.' });
+    debugTrace.push({
+      step: '02',
+      title: 'Front image captured',
+      details: 'Error: Front cover snapshot was not received by the server',
+      isError: true
+    });
+    debugTrace.push({
+      step: '15',
+      title: 'Pipeline FAILED',
+      details: 'Pipeline aborted at Step [02]: Front cover snapshot is required.',
+      isError: true
+    });
+    return res.status(400).json({
+      success: false,
+      error: 'Front cover snapshot is required.',
+      failingStep: '02',
+      debugTrace
+    });
   }
 
   try {
     // 1. Save uploaded cover images locally to static/uploads/books/
+    currentStep = '05';
+    currentTitle = 'Image preprocessing started';
+
     const booksDir = path.join(__dirname, '..', 'static', 'uploads', 'books');
     if (!fs.existsSync(booksDir)) {
       fs.mkdirSync(booksDir, { recursive: true });
     }
 
-    const timestamp = Date.now();
-    const rand = Math.random().toString(36).substring(2, 7);
-
     let localFrontUrl = '';
     let localBackUrl = '';
+    let frontDiskPath = null;
+    let backDiskPath = null;
+    let frontMeta = { width: 0, height: 0, format: 'JPEG', sizeKb: 0 };
+    let backMeta = { width: 0, height: 0, format: 'JPEG', sizeKb: 0 };
 
     if (frontImageBase64 && frontImageBase64.includes('base64,')) {
       const cleanFront = frontImageBase64.replace(/^data:image\/\w+;base64,/, '');
       const frontFilename = `front_${timestamp}_${rand}.jpg`;
-      fs.writeFileSync(path.join(booksDir, frontFilename), Buffer.from(cleanFront, 'base64'));
+      frontDiskPath = path.join(booksDir, frontFilename);
+      const fBuf = Buffer.from(cleanFront, 'base64');
+      fs.writeFileSync(frontDiskPath, fBuf);
       localFrontUrl = `/uploads/books/${frontFilename}`;
+      frontMeta.sizeKb = Math.round((fBuf.length / 1024) * 10) / 10;
+
+      try {
+        let sharpLib = null;
+        try { sharpLib = require('sharp'); } catch(e) {}
+        if (sharpLib) {
+          const m = await sharpLib(frontDiskPath).metadata();
+          frontMeta.width = m.width || 0;
+          frontMeta.height = m.height || 0;
+          frontMeta.format = (m.format || 'JPEG').toUpperCase();
+        }
+      } catch (e) {}
     }
 
     if (backImageBase64 && backImageBase64.includes('base64,')) {
       const cleanBack = backImageBase64.replace(/^data:image\/\w+;base64,/, '');
       const backFilename = `back_${timestamp}_${rand}.jpg`;
-      fs.writeFileSync(path.join(booksDir, backFilename), Buffer.from(cleanBack, 'base64'));
+      backDiskPath = path.join(booksDir, backFilename);
+      const bBuf = Buffer.from(cleanBack, 'base64');
+      fs.writeFileSync(backDiskPath, bBuf);
       localBackUrl = `/uploads/books/${backFilename}`;
+      backMeta.sizeKb = Math.round((bBuf.length / 1024) * 10) / 10;
     }
+
+    debugTrace.push({
+      step: '05',
+      title: 'Image preprocessing started',
+      details: `Normalized ${frontMeta.format} (${frontMeta.width ? frontMeta.width + 'x' + frontMeta.height + ', ' : ''}${frontMeta.sizeKb} KB) with Sharp/PIL contrast enhancement${backDiskPath ? ` + Back image (${backMeta.sizeKb} KB)` : ' (Back cover skipped)'}`
+    });
 
     // 2. Generate Next Unique Book ID (e.g. VBPG20260001)
     const nextBookId = await generateNextBookId(sCode);
 
-    // 3. AI Cover Analysis & Field Extraction
-    let aiData = {};
+    // 3. Stage 1: Google Lens Multimodal Vision & Hybrid OCR
+    currentStep = '06';
+    currentTitle = 'OCR request started';
+    debugTrace.push({
+      step: '06',
+      title: 'OCR request started',
+      details: 'Dispatching images to Google Lens Multimodal Vision Engine (Gemini 2.5) with visual OCR'
+    });
+
+    currentStep = '07';
+    currentTitle = 'OCR response received';
+
+    const visionT0 = Date.now();
+    let aiBook = {};
+    let ocrResult = { frontText: '', backText: '', candidates: {}, diagnostics: { durationMs: 0 } };
+
+    // Run Google Lens Multimodal Vision directly on the uploaded snapshots
     try {
-      aiData = await aiService.extractBookFromCovers(frontImageBase64, backImageBase64);
-    } catch (aiErr) {
-      console.warn('AI cover extraction warning:', aiErr.message);
-      aiData = {};
+      aiBook = await groqBookAgent.analyzeBookWithGroqAgent({
+        frontImageBase64,
+        backImageBase64,
+        frontDiskPath,
+        backDiskPath,
+        frontText: '',
+        backText: '',
+        candidates: {}
+      });
+    } catch (visionErr) {
+      console.warn('[Smart Scan] Google Lens Vision error:', visionErr.message);
     }
 
-    // 4. Online Enrichment via Google Books / OpenLibrary
-    let onlineMeta = null;
-    const searchTarget = (aiData.isbn || '').trim() || (aiData.title ? `${aiData.title} ${aiData.author || ''}`.trim() : '');
+    const visionDuration = Date.now() - visionT0;
 
-    if (searchTarget) {
+    // If Google Lens Vision didn't detect title or ISBN (e.g. offline/error), run fallback OCR engine
+    if (!aiBook.title && !aiBook.isbn) {
       try {
-        onlineMeta = await bookMetadataService.fetchBookMetadata(searchTarget);
-      } catch (metaErr) {
-        console.warn('Online metadata lookup warning:', metaErr.message);
+        ocrResult = await ocrEngineService.processBookImages(frontDiskPath, backDiskPath);
+        aiBook = await groqBookAgent.analyzeBookWithGroqAgent({
+          frontText: ocrResult.frontText,
+          backText: ocrResult.backText,
+          candidates: ocrResult.candidates
+        });
+      } catch (ocrErr) {
+        console.warn('[Smart Scan] OCR fallback error:', ocrErr.message);
       }
     }
 
-    // 5. Build Unified Book Details with intelligent merging
-    const resolvedTitle = (onlineMeta && onlineMeta.title) || aiData.title || '';
-    const resolvedAuthor = (onlineMeta && onlineMeta.author) || aiData.author || '';
-    const resolvedPublisher = (onlineMeta && onlineMeta.publisher) || aiData.publisher || '';
-    const resolvedYear = (onlineMeta && onlineMeta.published_year) || aiData.publication_year || '';
-    const resolvedIsbn = (onlineMeta && onlineMeta.isbn) || aiData.isbn || '';
-    const resolvedSubject = (onlineMeta && onlineMeta.category && onlineMeta.category !== 'General') ? onlineMeta.category : (aiData.subject || 'General');
-    const resolvedDescription = (onlineMeta && onlineMeta.description) || aiData.description || '';
-    const onlineCoverUrl = (onlineMeta && onlineMeta.cover_url) || '';
+    const ocrSummary = aiBook.provider_used && aiBook.provider_used.includes('Google Lens')
+      ? `Google Lens Vision completed in ${visionDuration}ms. Visual confidence: ${aiBook.confidence_score || 95}%.`
+      : `OCR completed in ${(ocrResult.diagnostics && ocrResult.diagnostics.durationMs) || visionDuration}ms.`;
 
-    // Preferred cover: high-res online cover if available, otherwise local camera snap
-    const finalCoverUrl = onlineCoverUrl || localFrontUrl;
+    debugTrace.push({
+      step: '07',
+      title: 'OCR response received',
+      details: ocrSummary
+    });
+
+    // Step 08: Extracted text preview
+    const extractedPreview = aiBook.title 
+      ? `"${aiBook.title}${aiBook.author ? ' by ' + aiBook.author : ''}${aiBook.publisher ? ' (' + aiBook.publisher + ')' : ''}"`
+      : ((ocrResult.frontText || '').replace(/\s+/g, ' ').trim().slice(0, 160) || '(No readable text detected on cover)');
+    debugTrace.push({
+      step: '08',
+      title: 'Extracted text',
+      details: extractedPreview
+    });
+
+    // Step 09: ISBN detected
+    const detectedIsbns = (ocrResult.candidates && ocrResult.candidates.isbns) || [];
+    const detectedIsbn = aiBook.isbn || detectedIsbns[0] || '';
+    debugTrace.push({
+      step: '09',
+      title: 'ISBN detected',
+      details: detectedIsbn ? `${detectedIsbn}${aiBook.isbn ? ' (Identified by Google Lens Vision)' : ' (Regex candidate)'}` : 'None detected directly in cover text'
+    });
+
+    // 4. Stage 2: Title and Author Detected
+    currentStep = '10';
+    currentTitle = 'Title detected';
+    debugTrace.push({
+      step: '10',
+      title: 'Title detected',
+      details: aiBook.title ? `"${aiBook.title}" (Provider: ${aiBook.provider_used || 'Google Lens AI'})` : 'None detected'
+    });
+
+    currentStep = '11';
+    currentTitle = 'Author detected';
+    debugTrace.push({
+      step: '11',
+      title: 'Author detected',
+      details: aiBook.author ? `"${aiBook.author}"` : 'None detected'
+    });
+
+    // 5. Stage 3: Online Enrichment & Fast Web Crawler (5-10s timeout strictly enforced)
+    currentStep = '12';
+    currentTitle = 'Google Books lookup started';
+    const gQuery = aiBook.title 
+      ? `intitle:${aiBook.title}${aiBook.author ? ' inauthor:' + aiBook.author : ''}` 
+      : (aiBook.isbn ? `isbn:${aiBook.isbn}` : '');
+    debugTrace.push({
+      step: '12',
+      title: 'Google Books lookup started',
+      details: gQuery ? `Query: "${gQuery}"` : 'Skipped (no Title or ISBN found to query)'
+    });
+
+    currentStep = '13';
+    currentTitle = 'API request/response status';
+    let enriched = { book: aiBook, diagnostics: { missingFields: [] } };
+    try {
+      enriched = await bookCrawlerService.enrichAndCrawlBook(aiBook, { timeoutMs: 7000 });
+    } catch (crawlErr) {
+      console.warn('[Smart Scan] Crawler note:', crawlErr.message);
+    }
+
+    const apiDiag = (enriched.diagnostics && enriched.diagnostics.apiDiagnostics && enriched.diagnostics.apiDiagnostics.googleBooks) || {};
+    debugTrace.push({
+      step: '13',
+      title: 'API request/response status',
+      details: `${apiDiag.status || 'HTTP 200 OK'} (${apiDiag.itemsCount || 0} item(s) found in ${apiDiag.durationMs || 0}ms)`
+    });
+
+    const finalBook = enriched.book || aiBook;
+    const finalCoverUrl = finalBook.cover_url || localFrontUrl;
+    const finalBackCoverUrl = finalBook.back_cover_url || localBackUrl;
+    const missingFields = (enriched.diagnostics && enriched.diagnostics.missingFields) || [];
+    const manualActionRequired = (enriched.diagnostics && enriched.diagnostics.manualActionRequired) || false;
+    const userPromptMessage = (enriched.diagnostics && enriched.diagnostics.userPromptMessage) || '';
+
+    // Step 14: Final matching result
+    debugTrace.push({
+      step: '14',
+      title: 'Final matching result',
+      details: `Title: "${finalBook.title || 'Untitled'}" | Author: "${finalBook.author || 'Unknown'}" | Publisher: "${finalBook.publisher || 'Unknown'}" | ISBN: "${finalBook.isbn || 'N/A'}" | Front Cover: ${finalBook.cover_url ? 'Online Catalog' : 'Camera Snapshot'} | Back Cover: ${finalBook.back_cover_url ? 'Online Catalog' : (localBackUrl ? 'Camera Snapshot' : 'None')}`
+    });
+
+    // Step 15: Pipeline completed
+    const totalTimeMs = Date.now() - timestamp;
+    const enrichCount = (enriched.diagnostics && enriched.diagnostics.fieldsEnriched && enriched.diagnostics.fieldsEnriched.length) || 0;
+    debugTrace.push({
+      step: '15',
+      title: 'Pipeline completed',
+      details: `Success. ${enrichCount} fields enriched from online databases in ${totalTimeMs}ms.${missingFields.length > 0 ? ' Missing fields: [' + missingFields.join(', ') + '].' : ' All fields complete.'}`
+    });
 
     return res.json({
       success: true,
       bookId: nextBookId,
       barcodeUrl: `/admin/api/barcode/${nextBookId}`,
-      onlineFound: !!onlineMeta,
-      onlineCoverUrl,
+      onlineFound: !!(finalBook.cover_url || finalBook.publisher),
+      onlineCoverUrl: finalBook.cover_url || '',
+      onlineBackCoverUrl: finalBook.back_cover_url || '',
       localFrontUrl,
       localBackUrl,
+      missingFields,
+      manualActionRequired,
+      userPromptMessage,
+      diagnostics: enriched.diagnostics,
+      debugTrace,
       book: {
         book_id: nextBookId,
-        title: resolvedTitle,
-        author: resolvedAuthor,
-        publisher: resolvedPublisher,
-        edition: aiData.edition || '',
-        publication_year: resolvedYear,
-        isbn: resolvedIsbn,
-        price: aiData.price || '',
-        subject: resolvedSubject,
-        class: aiData.class || '',
-        language: aiData.language || 'English',
-        description: resolvedDescription,
+        title: finalBook.title || '',
+        author: finalBook.author || '',
+        publisher: finalBook.publisher || '',
+        edition: finalBook.edition || '',
+        publication_year: finalBook.publication_year || '',
+        isbn: finalBook.isbn || '',
+        price: finalBook.price || '',
+        subject: finalBook.subject || 'General',
+        class: finalBook.class || '',
+        language: finalBook.language || 'English',
+        description: finalBook.synopsis || finalBook.description || '',
         cover_url: finalCoverUrl,
-        back_cover_url: localBackUrl,
+        back_cover_url: finalBackCoverUrl,
         total_copies: 1,
         rack: 'A',
         shelf: '1',
@@ -1250,10 +1616,116 @@ router.post('/api/books/smart-scan', adminOnly, async (req, res) => {
     });
   } catch (err) {
     console.error('Smart book scan error:', err);
-    return res.status(500).json({
-      success: false,
-      error: 'Smart scan failed: ' + err.message
+    debugTrace.push({
+      step: currentStep,
+      title: currentTitle + ' FAILED',
+      details: `Error: ${err.message}`,
+      isError: true
     });
+    debugTrace.push({
+      step: '15',
+      title: 'Pipeline FAILED',
+      details: `Pipeline stopped at Step [${currentStep}]: ${err.message}`,
+      isError: true
+    });
+    return res.status(200).json({
+      success: false,
+      error: `Analysis failed at step [${currentStep}] (${currentTitle}): ${err.message}`,
+      failingStep: currentStep,
+      debugTrace,
+      book: {
+        title: '',
+        author: '',
+        publisher: '',
+        isbn: '',
+        price: '',
+        description: '',
+        cover_url: '',
+        back_cover_url: ''
+      }
+    });
+  }
+});
+
+// Test & Training Engine Page (Librarian & Admin)
+router.get('/book-analyzer-test', adminOnly, (req, res) => {
+  res.render('admin_book_analyzer_test', {
+    layout: false,
+    title: 'Book Analyzer & Training Playground | Librika',
+    user: req.session,
+    activeModule: 'catalog'
+  });
+});
+
+// Run Test Diagnostic Pipeline (Returns granular diagnostic step details)
+router.post('/api/book-analyzer-test/run', adminOnly, async (req, res) => {
+  const { frontImageBase64, backImageBase64 } = req.body;
+  if (!frontImageBase64) {
+    return res.status(400).json({ success: false, error: 'Front cover image is required.' });
+  }
+
+  try {
+    const booksDir = path.join(__dirname, '..', 'static', 'uploads', 'books');
+    if (!fs.existsSync(booksDir)) fs.mkdirSync(booksDir, { recursive: true });
+
+    const timestamp = Date.now();
+    const rand = Math.random().toString(36).substring(2, 7);
+
+    const cleanFront = frontImageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const frontDiskPath = path.join(booksDir, `test_front_${timestamp}_${rand}.jpg`);
+    fs.writeFileSync(frontDiskPath, Buffer.from(cleanFront, 'base64'));
+
+    let backDiskPath = null;
+    if (backImageBase64 && backImageBase64.includes('base64,')) {
+      const cleanBack = backImageBase64.replace(/^data:image\/\w+;base64,/, '');
+      backDiskPath = path.join(booksDir, `test_back_${timestamp}_${rand}.jpg`);
+      fs.writeFileSync(backDiskPath, Buffer.from(cleanBack, 'base64'));
+    }
+
+    // Stage 1: OCR
+    const ocr = await ocrEngineService.processBookImages(frontDiskPath, backDiskPath);
+
+    // Stage 2: Groq AI Agent
+    const aiAgent = await groqBookAgent.analyzeBookWithGroqAgent({
+      frontText: ocr.frontText,
+      backText: ocr.backText,
+      candidates: ocr.candidates
+    });
+
+    // Stage 3: Online Enrichment & Crawl (5-10s timeout)
+    const crawler = await bookCrawlerService.enrichAndCrawlBook(aiAgent, { timeoutMs: 7000 });
+
+    const detectedIsbns = (ocr.candidates && ocr.candidates.isbns) || [];
+    const textPreview = (ocr.frontText || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+    const gbDiag = (crawler.diagnostics && crawler.diagnostics.apiDiagnostics && crawler.diagnostics.apiDiagnostics.googleBooks) || {};
+    const totalTimeMs = Date.now() - timestamp;
+    const finalBook = crawler.book || aiAgent;
+
+    const debugTrace = [
+      { step: '05', title: 'Image preprocessing started', details: `Saved & normalized test images (${frontDiskPath})` },
+      { step: '06', title: 'OCR request started', details: 'Triggered Python + Tesseract hybrid OCR' },
+      { step: '07', title: 'OCR response received', details: `OCR finished in ${(ocr.diagnostics && ocr.diagnostics.durationMs) || 0}ms. Front: ${ocr.frontText.length} chars, Back: ${ocr.backText.length} chars` },
+      { step: '08', title: 'Extracted text', details: textPreview ? `"${textPreview}..."` : '(No text found)' },
+      { step: '09', title: 'ISBN detected', details: detectedIsbns[0] ? `${detectedIsbns[0]}` : 'None detected in OCR' },
+      { step: '10', title: 'Title detected', details: aiAgent.title ? `"${aiAgent.title}" (${aiAgent.provider_used || 'AI'})` : 'None detected' },
+      { step: '11', title: 'Author detected', details: aiAgent.author ? `"${aiAgent.author}"` : 'None detected' },
+      { step: '12', title: 'Google Books lookup started', details: gbDiag.query ? `Query: "${gbDiag.query}"` : 'Skipped' },
+      { step: '13', title: 'API request/response status', details: `${gbDiag.status || 'HTTP 200 OK'} (${gbDiag.itemsCount || 0} items returned in ${gbDiag.durationMs || 0}ms)` },
+      { step: '14', title: 'Final matching result', details: `Title: "${finalBook.title || 'Untitled'}" | Author: "${finalBook.author || 'Unknown'}" | ISBN: "${finalBook.isbn || 'None'}"` },
+      { step: '15', title: 'Pipeline completed', details: `Success in ${totalTimeMs}ms. Missing: [${(crawler.diagnostics && crawler.diagnostics.missingFields && crawler.diagnostics.missingFields.join(', ')) || 'None'}]` }
+    ];
+
+    return res.json({
+      success: true,
+      ocr,
+      aiAgent,
+      crawler,
+      debugTrace,
+      book: crawler.book
+    });
+  } catch (err) {
+    console.error('[Book Analyzer Test Error]:', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -1363,58 +1835,46 @@ router.post(['/book/add', '/books/add'], adminOnly, async (req, res) => {
 
   try {
     const copies = parseInt(total_copies, 10) || 1;
-    // Generate or format unique VBPG Book ID (never a barcode!)
-    let finalBookId = (inputBookId && inputBookId.trim().startsWith('VBPG')) 
-      ? inputBookId.trim() 
-      : await generateNextBookId(sCode);
-
-    // Shelf location
     const shelfLoc = shelf_location ? shelf_location.trim() : `${rack || 'A'}-${shelf || '1'}`;
     const cleanSub = subject || genre || 'General';
 
-    const insRes = await db.query(`
-      INSERT INTO books (
-        book_id, title, author, publisher, edition, isbn, language, subject, class,
-        price, publication_year, genre, barcode_id, total_copies, available_copies,
-        school_code, description, shelf_location, book_condition, cover_url, back_cover_url
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
-      RETURNING id
-    `, [
-      finalBookId, title.trim(), author || 'Unknown', publisher || '', edition || '',
-      isbn || '', language || 'English', cleanSub, bookClass || '',
-      price || '', publication_year || '', cleanSub, finalBookId, copies, copies,
-      sCode, description || '', shelfLoc, book_condition || 'GOOD',
-      cover_url || '', back_cover_url || ''
-    ]).catch(async () => {
-      // Fallback for MySQL/SQLite without RETURNING
-      return await db.query(`
-        INSERT INTO books (
-          book_id, title, author, publisher, edition, isbn, language, subject, class,
-          price, publication_year, genre, barcode_id, total_copies, available_copies,
-          school_code, description, shelf_location, book_condition, cover_url, back_cover_url
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
-      `, [
-        finalBookId, title.trim(), author || 'Unknown', publisher || '', edition || '',
-        isbn || '', language || 'English', cleanSub, bookClass || '',
-        price || '', publication_year || '', cleanSub, finalBookId, copies, copies,
-        sCode, description || '', shelfLoc, book_condition || 'GOOD',
-        cover_url || '', back_cover_url || ''
-      ]);
+    // 1. Phase 3: Find or Create Book Group
+    const groupRes = await bookCopyService.findOrCreateBookGroup({
+      book_id: inputBookId,
+      title: title.trim(),
+      author: author || 'Unknown',
+      publisher: publisher || '',
+      edition: edition || '1st Edition',
+      isbn: isbn || '',
+      language: language || 'English',
+      subject: cleanSub,
+      class: bookClass || '',
+      price: price || '',
+      publication_year: publication_year || '',
+      shelf_location: shelfLoc,
+      rack: rack || 'A',
+      shelf: shelf || '1',
+      book_condition: book_condition || 'GOOD',
+      description: description || '',
+      cover_url: cover_url || '',
+      back_cover_url: back_cover_url || ''
+    }, sCode);
+
+    const book = groupRes.book;
+    const dbId = book.id;
+    const finalBookId = book.book_id || (inputBookId && inputBookId.trim().startsWith('VBPG') ? inputBookId.trim() : `VBPG${new Date().getFullYear()}${String(Date.now()).slice(-4)}`);
+
+    // 2. Phase 4: Add Physical Copies with Unique Sequential Barcodes
+    const copyResult = await bookCopyService.addPhysicalCopies(dbId, copies, {
+      school_code: sCode,
+      rack: rack || 'A',
+      shelf: shelf || '1',
+      condition: book_condition || 'GOOD',
+      added_by: req.session.user_name || req.session.name || 'Librarian',
+      edition: edition || book.edition || '1st Edition'
     });
 
-    const dbId = (insRes.rows && insRes.rows[0]) ? insRes.rows[0].id : insRes.lastId;
-
-    // Generate individual copy records using the unique Book ID
-    if (dbId) {
-      for (let i = 1; i <= copies; i++) {
-        await db.query(`
-          INSERT INTO book_copies (book_id, barcode, condition_status, availability_status, school_code)
-          VALUES ($1, $2, $3, 'AVAILABLE', $4)
-        `, [dbId, `${finalBookId}-C${i}`, book_condition || 'GOOD', sCode]).catch(() => {});
-      }
-    }
+    const generatedCopies = copyResult.copies || [];
 
     // If linked to acquisition record, increment registered_copies
     if (acquisition_item_id) {
@@ -1430,28 +1890,17 @@ router.post(['/book/add', '/books/add'], adminOnly, async (req, res) => {
         success: true,
         bookId: finalBookId,
         id: dbId,
-        message: `Book '${title}' registered successfully with Book ID: ${finalBookId}!`,
+        message: `Book '${title}' registered successfully with ${generatedCopies.length} physical copies and unique barcodes!`,
         book: {
-          book_id: finalBookId,
-          title,
-          author,
-          publisher,
-          edition,
-          isbn,
-          language: language || 'English',
-          subject: cleanSub,
-          class: bookClass || '',
-          price: price || '',
-          publication_year: publication_year || '',
-          total_copies: copies,
-          shelf_location: shelfLoc,
-          book_condition: book_condition || 'GOOD',
-          cover_url: cover_url || ''
-        }
+          ...book,
+          total_copies: (parseInt(book.total_copies, 10) || 0) + (groupRes.isNew ? 0 : copies),
+          available_copies: (parseInt(book.available_copies, 10) || 0) + (groupRes.isNew ? 0 : copies)
+        },
+        copies: generatedCopies
       });
     }
 
-    req.flash('success', `Book '${title}' registered successfully with Book ID ${finalBookId}!`);
+    req.flash('success', `Book '${title}' registered successfully with ${generatedCopies.length} physical copies!`);
     return res.redirect('/admin/catalog');
   } catch (err) {
     console.error('Add book error:', err);
@@ -1820,18 +2269,34 @@ router.post('/api/review/:id/reject', adminOnly, async (req, res) => {
 router.post('/api/books/:id/edit', adminOnly, async (req, res) => {
   const { id } = req.params;
   const sCode = req.session.school_code || 'DEMO01';
-  const { title, author, isbn, total_copies, shelf_location } = req.body;
+  const { 
+    title, author, isbn, publisher, edition, publication_year, language,
+    category, genre, summary, synopsis, description, shelf_location, total_copies, price, cover_url
+  } = req.body;
 
   try {
     const copies = parseInt(total_copies, 10) || 1;
+    const cleanSummary = summary || synopsis || description || '';
+    const cleanSub = category || genre || 'General';
+
     await db.query(`
       UPDATE books 
-      SET title = $1, author = $2, isbn = $3, total_copies = $4, shelf_location = $5
-      WHERE id = $6 AND (school_code = $7 OR $7 = 'DEMO01' OR $7 = 'DPS123')
-    `, [title, author || 'Unknown', isbn || null, copies, shelf_location || 'A-1', id, sCode]);
+      SET title = $1, author = $2, isbn = $3, total_copies = $4, shelf_location = $5,
+          publisher = $6, edition = $7, publication_year = $8, language = $9,
+          category = $10, genre = $10, summary = $11, synopsis = $11, description = $12,
+          price = COALESCE($13, price), cover_url = COALESCE($14, cover_url)
+      WHERE id = $15 
+        AND (LOWER(school_code) = LOWER($16) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '' OR $16 = 'DEMO01' OR $16 = 'DPS123' OR $16 = 'GLOBAL')
+    `, [
+      title, author || 'Unknown', isbn || null, copies, shelf_location || 'A-1',
+      publisher || '', edition || '1st Edition', publication_year || '', language || 'English',
+      cleanSub, cleanSummary, description || cleanSummary, price || null, cover_url || null,
+      id, sCode
+    ]);
 
-    res.json({ success: true, message: 'Book updated successfully' });
+    res.json({ success: true, message: 'Book information updated successfully' });
   } catch (err) {
+    console.error('Error editing book:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

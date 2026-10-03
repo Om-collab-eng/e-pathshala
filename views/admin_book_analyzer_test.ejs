@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Analyzer & Test Engine Playground | Librika</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-dark: #1D4ED8;
+      --primary-light: #EFF6FF;
+      --accent: #8B5CF6;
+      --surface: #FFFFFF;
+      --bg: #F8FAFC;
+      --border: #E2E8F0;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --amber: #D97706;
+      --amber-bg: #FEF3C7;
+      --green: #10B981;
+      --green-bg: #ECFDF5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-primary { background: #DBEAFE; color: #1D4ED8; }
+    .badge-amber { background: var(--amber-bg); color: var(--amber); }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.86rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--primary); color: #FFF; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #F1F5F9; color: #334155; border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #E2E8F0; }
+    .btn-success { background: #10B981; color: #FFF; }
+    .btn-success:hover { background: #059669; }
+    .container {
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 1024px) {
+      .container { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dropzone {
+      border: 2px dashed #CBD5E1;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      background: #F8FAFC;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: #EFF6FF;
+    }
+    .dropzone img {
+      max-height: 140px;
+      max-width: 100%;
+      border-radius: 8px;
+      object-fit: contain;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      margin-top: 8px;
+    }
+    .camera-box {
+      background: #0F172A;
+      border-radius: 12px;
+      padding: 12px;
+      color: #FFF;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .camera-video {
+      width: 100%;
+      height: 200px;
+      background: #000;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .tabs-nav {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-weight: 700;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .code-viewer {
+      font-family: 'JetBrains Mono', monospace;
+      background: #0F172A;
+      color: #E2E8F0;
+      padding: 16px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      max-height: 480px;
+      white-space: pre-wrap;
+    }
+    .missing-field-chip {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid #FCD34D;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .metric-card {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .metric-val {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .metric-lbl {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-family: inherit;
+    }
+    .form-group input.missing, .form-group textarea.missing {
+      border: 2px solid var(--amber) !important;
+      background: #FFFBEB;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="/admin/catalog" class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem;">← Back to Catalog</a>
+      <div style="font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:8px;">
+        🧪 Book Analyzer &amp; Training Test Engine
+        <span class="badge badge-primary">Groq AI + Python OCR</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="badge badge-green" id="engineStatusBadge">● Engine Ready</span>
+      <a href="/admin" class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem;">Librarian Pro</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- LEFT PANEL: Image Inputs (Gallery Upload & Camera) -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>📸 Book Cover Inputs</span>
+        <span class="badge badge-primary">Step 1</span>
+      </div>
+
+      <!-- Mode Selector Tabs: Upload vs Camera -->
+      <div class="tabs-nav" style="margin-bottom:12px;">
+        <button class="tab-btn active" id="inputTabUpload" onclick="switchInputMode('upload')">📁 Gallery Upload</button>
+        <button class="tab-btn" id="inputTabCamera" onclick="switchInputMode('camera')">📷 Live Camera</button>
+      </div>
+
+      <!-- GALLERY UPLOAD MODE -->
+      <div id="modeUpload">
+        <!-- Front Cover Dropzone -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.82rem;font-weight:700;">
+            <span>1️⃣ Front Cover <span style="color:#DC2626;">*</span></span>
+            <span id="frontFileSize" style="font-size:0.75rem;color:var(--text-muted);">Required</span>
+          </div>
+          <div class="dropzone" id="frontDropzone" onclick="document.getElementById('fileFrontInput').click()">
+            <div id="frontDropText">
+              <div style="font-size:1.6rem;margin-bottom:4px;">🖼️</div>
+              <div style="font-weight:700;font-size:0.84rem;">Click or Drag &amp; Drop Front Cover</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">PNG, JPG, WEBP up to 10MB</div>
+            </div>
+            <img id="frontPreviewImg" style="display:none;" alt="Front Preview">
+            <input type="file" id="fileFrontInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'front')">
+          </div>
+        </div>
+
+        <!-- Back Cover Dropzone -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.82rem;font-weight:700;">
+            <span>2️⃣ Back Cover &amp; Blurb</span>
+            <span id="backFileSize" style="font-size:0.75rem;color:var(--text-muted);">Optional (Recommended)</span>
+          </div>
+          <div class="dropzone" id="backDropzone" onclick="document.getElementById('fileBackInput').click()">
+            <div id="backDropText">
+              <div style="font-size:1.6rem;margin-bottom:4px;">📄</div>
+              <div style="font-weight:700;font-size:0.84rem;">Click or Drag &amp; Drop Back Cover</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">Captures ISBN barcode, MRP price, synopsis</div>
+            </div>
+            <img id="backPreviewImg" style="display:none;" alt="Back Preview">
+            <input type="file" id="fileBackInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'back')">
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE CAMERA MODE (2:3 Portrait Book Aspect Ratio) -->
+      <div id="modeCamera" style="display:none;">
+        <div style="background:#0F172A;border-radius:14px;padding:14px;color:#FFF;margin-bottom:14px;box-shadow:0 4px 14px rgba(0,0,0,0.2);">
+          <!-- Centered 2:3 Portrait Viewport -->
+          <div style="display:flex;justify-content:center;margin-bottom:10px;">
+            <div style="position:relative;width:100%;max-width:320px;aspect-ratio:2/3;height:450px;border-radius:12px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;border:2px solid #334155;">
+              <video id="liveVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
+              <canvas id="cameraCanvas" style="display:none;"></canvas>
+
+              <!-- 2:3 Portrait Viewfinder Alignment Guide -->
+              <div style="position:absolute;inset:18px;border:2px dashed rgba(56,189,248,0.7);border-radius:8px;pointer-events:none;z-index:2;">
+                <!-- Corner Brackets -->
+                <div style="position:absolute;top:-2px;left:-2px;width:20px;height:20px;border-top:3px solid #38BDF8;border-left:3px solid #38BDF8;border-top-left-radius:6px;"></div>
+                <div style="position:absolute;top:-2px;right:-2px;width:20px;height:20px;border-top:3px solid #38BDF8;border-right:3px solid #38BDF8;border-top-right-radius:6px;"></div>
+                <div style="position:absolute;bottom:-2px;left:-2px;width:20px;height:20px;border-bottom:3px solid #38BDF8;border-left:3px solid #38BDF8;border-bottom-left-radius:6px;"></div>
+                <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-bottom:3px solid #38BDF8;border-right:3px solid #38BDF8;border-bottom-right-radius:6px;"></div>
+
+                <div id="testLaserLine" style="position:absolute;left:4px;right:4px;height:2px;background:#38BDF8;box-shadow:0 0 10px #38BDF8;animation:smartLaser 2.2s infinite ease-in-out;pointer-events:none;"></div>
+
+                <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,0.85);color:#F8FAFC;font-size:0.72rem;padding:4px 10px;border-radius:14px;white-space:nowrap;">
+                  Align book inside 2:3 frame
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;max-width:320px;margin:0 auto;gap:6px;">
+            <button type="button" class="btn btn-secondary" onclick="startCamera()" style="padding:6px 10px;font-size:0.75rem;background:#334155;color:#FFF;border:none;border-radius:6px;">
+              🔄 Start
+            </button>
+            <button type="button" id="btnTestFlippedToggle" class="btn btn-secondary" onclick="toggleTestFlippedModel()" style="padding:6px 10px;font-size:0.75rem;background:#334155;color:#94A3B8;border:1px solid #475569;border-radius:6px;font-weight:700;" title="Toggle camera mirroring (Default is normal non-inverted orientation)">
+              🪞 Mirror: OFF
+            </button>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="btn btn-primary" onclick="snapCamera('front')" style="padding:6px 12px;font-size:0.8rem;border-radius:6px;">
+                📸 Snap Front *
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="snapCamera('back')" style="padding:6px 12px;font-size:0.8rem;background:#475569;color:#FFF;border:none;border-radius:6px;">
+                📸 Snap Back
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2:3 Ratio Preview Boxes -->
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:14px;">
+          <div style="border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center;width:120px;">
+            <div style="font-size:0.74rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">1️⃣ Front Cover *</div>
+            <div style="width:100px;height:150px;aspect-ratio:2/3;background:#F1F5F9;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:0 auto;">
+              <img id="camFrontPreview" style="width:100%;height:100%;object-fit:cover;display:none;">
+              <span id="camFrontPlaceholder" style="font-size:0.72rem;color:#94A3B8;">No Snap</span>
+            </div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center;width:120px;">
+            <div style="font-size:0.74rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">2️⃣ Back Cover</div>
+            <div style="width:100px;height:150px;aspect-ratio:2/3;background:#F1F5F9;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:0 auto;">
+              <img id="camBackPreview" style="width:100%;height:100%;object-fit:cover;display:none;">
+              <span id="camBackPlaceholder" style="font-size:0.72rem;color:#94A3B8;">No Snap</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Test Sample Loaders -->
+      <div style="margin-top:auto;border-top:1px solid var(--border);padding-top:14px;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-bottom:8px;">💡 Or Quick Test with Sample Covers:</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+          <button type="button" class="btn btn-secondary" onclick="loadSampleBook('cleancode')" style="padding:5px 10px;font-size:0.75rem;">
+            Clean Code
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="loadSampleBook('ncert_math')" style="padding:5px 10px;font-size:0.75rem;">
+            NCERT Mathematics
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="loadSampleBook('pragmatic')" style="padding:5px 10px;font-size:0.75rem;">
+            Pragmatic Programmer
+          </button>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="btnRunTest" onclick="runAnalyzerPipeline()" style="width:100%;justify-content:center;padding:12px;font-size:0.95rem;">
+          🚀 Run AI Analyzer &amp; Test Engine
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Multi-Stage Diagnostics & Form Preview -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>🔬 Pipeline Diagnostics &amp; Inspection</span>
+        <div id="runtimeTimer" class="badge badge-primary">Ready</div>
+      </div>
+
+      <!-- Diagnostic Metrics Strip -->
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-val" id="metricTime">0 ms</div>
+          <div class="metric-lbl">Total Time</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="metricChars">0</div>
+          <div class="metric-lbl">OCR Characters</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="metricConfidence">-</div>
+          <div class="metric-lbl">AI Confidence</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="metricEnriched">0</div>
+          <div class="metric-lbl">Fields Enriched</div>
+        </div>
+      </div>
+
+      <!-- Missing Fields Alert Banner (Amber Warning) -->
+      <div id="missingFieldsBanner" style="display:none;background:var(--amber-bg);border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+        <div style="font-weight:800;color:var(--amber);font-size:0.86rem;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+          ⚠️ Missing Information Detected
+        </div>
+        <div style="font-size:0.78rem;color:#78350F;margin-bottom:8px;" id="missingFieldsMessage">
+          Online search completed within 8s. Some fields could not be found online. Please fill them manually.
+        </div>
+        <div id="missingChipsContainer" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+
+      <!-- Stage Tabs Navigation -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchDiagTab('form')">📋 Catalog Record Form</button>
+        <button class="tab-btn" onclick="switchDiagTab('debugconsole')">📟 Debug Console [01-15]</button>
+        <button class="tab-btn" onclick="switchDiagTab('ocr')">👁️ Stage 1: OCR &amp; Regex</button>
+        <button class="tab-btn" onclick="switchDiagTab('groq')">🧠 Stage 2: Groq AI Agent</button>
+        <button class="tab-btn" onclick="switchDiagTab('crawler')">🌐 Stage 3: Online &amp; Crawl</button>
+        <button class="tab-btn" onclick="switchDiagTab('rawjson')">📦 Full JSON</button>
+      </div>
+
+      <!-- TAB 1: Live Catalog Form Preview -->
+      <div id="diagTab-form" class="tab-content active">
+        <form id="testCatalogForm" onsubmit="saveToInventory(event)">
+          <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;margin-bottom:14px;">
+            <div style="text-align:center;">
+              <div id="formCoverBox" style="width:120px;height:160px;background:#F1F5F9;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <span id="formCoverPlaceholder" style="font-size:0.75rem;color:var(--text-muted);">No Cover</span>
+                <img id="formCoverImg" style="display:none;width:100%;height:100%;object-fit:cover;">
+              </div>
+              <input type="hidden" id="formCoverUrl" name="cover_url">
+            </div>
+
+            <div>
+              <div class="form-group">
+                <label>Book Title *</label>
+                <input type="text" id="fTitle" name="title" required placeholder="Book Title">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="form-group">
+                  <label>Author(s) *</label>
+                  <input type="text" id="fAuthor" name="author" required placeholder="Author name(s)">
+                </div>
+                <div class="form-group">
+                  <label>Publisher</label>
+                  <input type="text" id="fPublisher" name="publisher" placeholder="Publisher">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div class="form-group">
+              <label>ISBN</label>
+              <input type="text" id="fIsbn" name="isbn" placeholder="ISBN-10 or 13">
+            </div>
+            <div class="form-group">
+              <label>Price (₹)</label>
+              <input type="text" id="fPrice" name="price" placeholder="MRP Price">
+            </div>
+            <div class="form-group">
+              <label>Year</label>
+              <input type="text" id="fYear" name="publication_year" placeholder="e.g. 2024">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div class="form-group">
+              <label>Edition</label>
+              <input type="text" id="fEdition" name="edition" placeholder="e.g. 2nd Edition">
+            </div>
+            <div class="form-group">
+              <label>Subject</label>
+              <input type="text" id="fSubject" name="subject" placeholder="e.g. Computer Science">
+            </div>
+            <div class="form-group">
+              <label>Language</label>
+              <input type="text" id="fLanguage" name="language" value="English">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Synopsis / Summary</label>
+            <textarea id="fSynopsis" name="description" rows="3" placeholder="Book synopsis..."></textarea>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
+            <span style="font-size:0.78rem;color:var(--text-muted);" id="formSaveStatus">Ready for catalog submission</span>
+            <button type="submit" class="btn btn-success" id="btnSaveInventory" style="padding:10px 20px;">
+              💾 Save Directly to Library Inventory
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 2: OCR Text & Preprocessing -->
+      <div id="diagTab-ocr" class="tab-content">
+        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;font-size:0.85rem;">Extracted Raw Text &amp; Regex Matches:</span>
+          <span class="badge badge-primary" id="ocrEngineUsed">PIL + Tesseract</span>
+        </div>
+        <div class="code-viewer" id="codeOcrView">// Awaiting analysis run...</div>
+      </div>
+
+      <!-- TAB 3: Groq AI Agent -->
+      <div id="diagTab-groq" class="tab-content">
+        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;font-size:0.85rem;">Groq Llama 3.3 70B Structured Output:</span>
+          <span class="badge badge-primary" id="groqProviderUsed">Groq AI</span>
+        </div>
+        <div class="code-viewer" id="codeGroqView">// Awaiting AI agent run...</div>
+      </div>
+
+      <!-- TAB 4: Crawler & Online Enrichment -->
+      <div id="diagTab-crawler" class="tab-content">
+        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;font-size:0.85rem;">Google Books, OpenLibrary &amp; Web Crawler Results:</span>
+          <span class="badge badge-green" id="crawlerTimeoutBadge">&lt; 8s Enforced</span>
+        </div>
+        <div class="code-viewer" id="codeCrawlerView">// Awaiting enrichment run...</div>
+      </div>
+
+      <!-- TAB 5: Raw Full JSON -->
+      <div id="diagTab-rawjson" class="tab-content">
+        <div class="code-viewer" id="codeFullJsonView">// Complete API response will be shown here</div>
+      </div>
+
+      <!-- TAB 6: Sequential Debug Console [01-15] -->
+      <div id="diagTab-debugconsole" class="tab-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:800;font-size:0.9rem;color:#0F172A;display:flex;align-items:center;gap:6px;">
+            📟 Sequential Trace [01] - [15]
+            <span class="badge badge-primary" id="testDebugBadge">Standby</span>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn btn-secondary" onclick="copyTestDebugLog()" style="padding:4px 10px;font-size:0.75rem;">
+              📋 Copy Debug Log
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="clearTestDebugLog()" style="padding:4px 10px;font-size:0.75rem;">
+              🧹 Clear
+            </button>
+          </div>
+        </div>
+        <pre id="testDebugConsole" class="code-viewer" style="min-height:360px;line-height:1.6;font-size:0.8rem;">[--] [System] Debug console ready. Awaiting camera scan or test run...</pre>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let currentFrontBase64 = null;
+    let currentBackBase64 = null;
+    let cameraStream = null;
+    let alwaysFlippedModel = false; // Default is normal orientation (NOT inverted) so book text reads properly left-to-right
+
+    function switchInputMode(mode) {
+      document.getElementById('inputTabUpload').classList.toggle('active', mode === 'upload');
+      document.getElementById('inputTabCamera').classList.toggle('active', mode === 'camera');
+      document.getElementById('modeUpload').style.display = mode === 'upload' ? 'block' : 'none';
+      document.getElementById('modeCamera').style.display = mode === 'camera' ? 'block' : 'none';
+
+      if (mode === 'camera' && !cameraStream) {
+        startCamera();
+      }
+    }
+
+    function handleFileSelect(e, slot) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const b64 = evt.target.result;
+        if (slot === 'front') {
+          currentFrontBase64 = b64;
+          const img = document.getElementById('frontPreviewImg');
+          img.src = b64;
+          img.style.display = 'block';
+          document.getElementById('frontDropText').style.display = 'none';
+          document.getElementById('frontFileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+        } else {
+          currentBackBase64 = b64;
+          const img = document.getElementById('backPreviewImg');
+          img.src = b64;
+          img.style.display = 'block';
+          document.getElementById('backDropText').style.display = 'none';
+          document.getElementById('backFileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Drag and Drop handlers
+    ['frontDropzone', 'backDropzone'].forEach(id => {
+      const el = document.getElementById(id);
+      ['dragenter', 'dragover'].forEach(name => {
+        el.addEventListener(name, (e) => { e.preventDefault(); el.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(name => {
+        el.addEventListener(name, (e) => { e.preventDefault(); el.classList.remove('dragover'); });
+      });
+      el.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+          const slot = id === 'frontDropzone' ? 'front' : 'back';
+          handleFileSelect({ target: { files: [files[0]] } }, slot);
+        }
+      });
+    });
+
+    function getTestDebugTimestamp() {
+      const d = new Date();
+      return d.toTimeString().split(' ')[0] + '.' + String(d.getMilliseconds()).padStart(3, '0');
+    }
+
+    function logTestDebugStep(stepNum, stepTitle, details = '', isError = false) {
+      const consoleEl = document.getElementById('testDebugConsole');
+      const badgeEl = document.getElementById('testDebugBadge');
+      if (!consoleEl) return;
+
+      const time = getTestDebugTimestamp();
+      const stepStr = `[${String(stepNum).padStart(2, '0')}]`;
+      const prefix = isError ? '❌' : (stepNum === '15' ? '✅' : '▶');
+      const logLine = `${stepStr} [${time}] ${prefix} ${stepTitle}${details ? ': ' + details : ''}\n`;
+
+      if (consoleEl.textContent.includes('Standby') || consoleEl.textContent.includes('ready. Awaiting')) {
+        consoleEl.textContent = '';
+      }
+
+      consoleEl.textContent += logLine;
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+
+      if (badgeEl) {
+        badgeEl.textContent = isError ? `Step [${stepNum}] Error` : (stepNum === '15' ? 'Completed' : `Step [${stepNum}]`);
+        badgeEl.className = isError ? 'badge badge-amber' : (stepNum === '15' ? 'badge badge-green' : 'badge badge-primary');
+      }
+    }
+
+    function copyTestDebugLog() {
+      const consoleEl = document.getElementById('testDebugConsole');
+      if (!consoleEl) return;
+      navigator.clipboard.writeText(consoleEl.textContent || '').then(() => {
+        alert('Debug Log copied to clipboard!');
+      });
+    }
+
+    function clearTestDebugLog() {
+      const consoleEl = document.getElementById('testDebugConsole');
+      const badgeEl = document.getElementById('testDebugBadge');
+      if (consoleEl) {
+        consoleEl.textContent = `[--] [${getTestDebugTimestamp()}] 🧹 Debug console cleared.\n`;
+      }
+      if (badgeEl) {
+        badgeEl.textContent = 'Standby';
+        badgeEl.className = 'badge badge-primary';
+      }
+    }
+
+    // Camera Handlers (2:3 Portrait Aspect Ratio Center Crop)
+    function toggleTestFlippedModel() {
+      alwaysFlippedModel = !alwaysFlippedModel;
+      const video = document.getElementById('liveVideo');
+      if (video) {
+        video.style.transform = alwaysFlippedModel ? 'scaleX(-1)' : 'none';
+      }
+      const btn = document.getElementById('btnTestFlippedToggle');
+      if (btn) {
+        btn.innerHTML = alwaysFlippedModel ? '🪞 Mirror: ON' : '🪞 Mirror: OFF';
+        btn.style.color = alwaysFlippedModel ? '#38BDF8' : '#94A3B8';
+        btn.style.background = alwaysFlippedModel ? 'rgba(56,189,248,0.2)' : '#334155';
+      }
+      logTestDebugStep('01', `Camera Mirror ${alwaysFlippedModel ? 'ACTIVE' : 'OFF'} (Google Lens AI automatically reads both normal and mirrored text)`, 'Orientation mode changed');
+    }
+
+    async function startCamera() {
+      try {
+        const video = document.getElementById('liveVideo');
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } },
+          audio: false
+        });
+        video.srcObject = cameraStream;
+        video.style.transform = alwaysFlippedModel ? 'scaleX(-1)' : 'none';
+        await video.play().catch(() => {});
+        logTestDebugStep('01', 'Camera initialized', `Video resolution: ${video.videoWidth}x${video.videoHeight} (2:3 portrait framing, Mirror: ${alwaysFlippedModel ? 'ON' : 'OFF'})`);
+      } catch (err) {
+        logTestDebugStep('01', 'Camera init failed', err.message, true);
+        alert('Could not access camera: ' + err.message);
+      }
+    }
+
+    function snapCamera(slot) {
+      const video = document.getElementById('liveVideo');
+      const canvas = document.getElementById('cameraCanvas');
+      if (!video || !video.videoWidth || !video.videoHeight) {
+        alert('Camera is not ready yet');
+        return;
+      }
+
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      const targetAspect = 2 / 3;
+
+      let cropW, cropH, cropX, cropY;
+      const currentAspect = vw / vh;
+      if (currentAspect > targetAspect) {
+        cropH = vh;
+        cropW = Math.round(vh * targetAspect);
+        cropX = Math.round((vw - cropW) / 2);
+        cropY = 0;
+      } else {
+        cropW = vw;
+        cropH = Math.round(vw / targetAspect);
+        cropX = 0;
+        cropY = Math.round((vh - cropH) / 2);
+      }
+
+      canvas.width = cropW;
+      canvas.height = cropH;
+      const ctx = canvas.getContext('2d');
+      if (alwaysFlippedModel) {
+        ctx.translate(cropW, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+      const b64 = canvas.toDataURL('image/jpeg', 0.92);
+      const sizeBytes = Math.round((b64.length * 3) / 4);
+      const sizeKb = Math.round((sizeBytes / 1024) * 10) / 10;
+
+      if (slot === 'front') {
+        currentFrontBase64 = b64;
+        const img = document.getElementById('camFrontPreview');
+        img.src = b64;
+        img.style.display = 'block';
+        document.getElementById('camFrontPlaceholder').style.display = 'none';
+
+        logTestDebugStep('02', 'Front image captured', 'Frame snapped from 2:3 camera viewfinder');
+        logTestDebugStep('03', 'Image dimensions', `${cropW}x${cropH} (Aspect ratio: 2:3)`);
+        logTestDebugStep('04', 'Image format/size', `JPEG / ${sizeKb} KB`);
+      } else {
+        currentBackBase64 = b64;
+        const img = document.getElementById('camBackPreview');
+        img.src = b64;
+        img.style.display = 'block';
+        document.getElementById('camBackPlaceholder').style.display = 'none';
+        logTestDebugStep('02', 'Back image captured', `Back cover attached (${sizeKb} KB)`);
+      }
+    }
+
+    // Quick Test Sample Books Loader
+    function loadSampleBook(type) {
+      if (type === 'cleancode') {
+        // Generate an SVG cover on the fly
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+          <rect width="600" height="800" fill="#1E293B"/>
+          <text x="300" y="240" font-family="sans-serif" font-size="44" font-weight="bold" fill="#38BDF8" text-anchor="middle">CLEAN CODE</text>
+          <text x="300" y="310" font-family="sans-serif" font-size="22" fill="#E2E8F0" text-anchor="middle">A Handbook of Agile Software Craftsmanship</text>
+          <text x="300" y="440" font-family="sans-serif" font-size="26" font-weight="600" fill="#F8FAFC" text-anchor="middle">Robert C. Martin</text>
+          <text x="300" y="680" font-family="sans-serif" font-size="20" fill="#94A3B8" text-anchor="middle">Prentice Hall • Pearson</text>
+        </svg>`;
+        currentFrontBase64 = 'data:image/svg+xml;base64,' + btoa(svg);
+        const img = document.getElementById('frontPreviewImg');
+        img.src = currentFrontBase64;
+        img.style.display = 'block';
+        document.getElementById('frontDropText').style.display = 'none';
+
+        // Sample Back Cover
+        const svgBack = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+          <rect width="600" height="800" fill="#F8FAFC"/>
+          <text x="40" y="100" font-family="sans-serif" font-size="22" font-weight="bold" fill="#0F172A">About The Book:</text>
+          <text x="40" y="150" font-family="sans-serif" font-size="18" fill="#334155">Even bad code can function. But if code isn't clean,</text>
+          <text x="40" y="180" font-family="sans-serif" font-size="18" fill="#334155">it can bring a development organization to its knees.</text>
+          <text x="40" y="450" font-family="monospace" font-size="22" fill="#0F172A">ISBN: 9780132350884</text>
+          <text x="40" y="520" font-family="monospace" font-size="24" font-weight="bold" fill="#0F172A">MRP: ₹ 699.00</text>
+          <text x="40" y="580" font-family="sans-serif" font-size="18" fill="#64748B">Year: 2008 • Edition: 1st Edition</text>
+        </svg>`;
+        currentBackBase64 = 'data:image/svg+xml;base64,' + btoa(svgBack);
+        const backImg = document.getElementById('backPreviewImg');
+        backImg.src = currentBackBase64;
+        backImg.style.display = 'block';
+        document.getElementById('backDropText').style.display = 'none';
+      } else if (type === 'ncert_math') {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+          <rect width="600" height="800" fill="#065F46"/>
+          <text x="300" y="240" font-family="sans-serif" font-size="42" font-weight="bold" fill="#A7F3D0" text-anchor="middle">MATHEMATICS</text>
+          <text x="300" y="310" font-family="sans-serif" font-size="26" fill="#FFF" text-anchor="middle">Textbook for Class X</text>
+          <text x="300" y="680" font-family="sans-serif" font-size="24" font-weight="bold" fill="#FFF" text-anchor="middle">NCERT</text>
+        </svg>`;
+        currentFrontBase64 = 'data:image/svg+xml;base64,' + btoa(svg);
+        const img = document.getElementById('frontPreviewImg');
+        img.src = currentFrontBase64;
+        img.style.display = 'block';
+        document.getElementById('frontDropText').style.display = 'none';
+
+        const svgBack = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+          <rect width="600" height="800" fill="#F8FAFC"/>
+          <text x="40" y="450" font-family="monospace" font-size="22" fill="#0F172A">ISBN: 9788174506344</text>
+          <text x="40" y="520" font-family="monospace" font-size="24" font-weight="bold" fill="#0F172A">Price: ₹ 160.00</text>
+          <text x="40" y="580" font-family="sans-serif" font-size="18" fill="#64748B">Year: 2023 • Class 10</text>
+        </svg>`;
+        currentBackBase64 = 'data:image/svg+xml;base64,' + btoa(svgBack);
+        const backImg = document.getElementById('backPreviewImg');
+        backImg.src = currentBackBase64;
+        backImg.style.display = 'block';
+        document.getElementById('backDropText').style.display = 'none';
+      } else {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+          <rect width="600" height="800" fill="#4338CA"/>
+          <text x="300" y="240" font-family="sans-serif" font-size="38" font-weight="bold" fill="#C7D2FE" text-anchor="middle">The Pragmatic</text>
+          <text x="300" y="290" font-family="sans-serif" font-size="38" font-weight="bold" fill="#C7D2FE" text-anchor="middle">Programmer</text>
+          <text x="300" y="420" font-family="sans-serif" font-size="22" fill="#FFF" text-anchor="middle">David Thomas, Andrew Hunt</text>
+          <text x="300" y="680" font-family="sans-serif" font-size="20" fill="#94A3B8" text-anchor="middle">Addison-Wesley</text>
+        </svg>`;
+        currentFrontBase64 = 'data:image/svg+xml;base64,' + btoa(svg);
+        const img = document.getElementById('frontPreviewImg');
+        img.src = currentFrontBase64;
+        img.style.display = 'block';
+        document.getElementById('frontDropText').style.display = 'none';
+        currentBackBase64 = null;
+      }
+    }
+
+    function switchDiagTab(name) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const activeEl = document.getElementById(`diagTab-${name}`);
+      if (activeEl) activeEl.classList.add('active');
+
+      document.querySelectorAll('.tabs-nav .tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(name)) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    // MAIN PIPELINE RUNNER
+    async function runAnalyzerPipeline() {
+      if (!currentFrontBase64) {
+        alert('Please select or snap a front cover first!');
+        return;
+      }
+
+      const btn = document.getElementById('btnRunTest');
+      const badge = document.getElementById('engineStatusBadge');
+      const timerBadge = document.getElementById('runtimeTimer');
+
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Running Hybrid OCR &amp; Groq AI Pipeline...';
+      badge.textContent = '● Processing...';
+      badge.className = 'badge badge-amber';
+
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        timerBadge.textContent = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
+      }, 100);
+
+      try {
+        const resp = await fetch('/admin/api/book-analyzer-test/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            frontImageBase64: currentFrontBase64,
+            backImageBase64: currentBackBase64
+          })
+        });
+
+        clearInterval(interval);
+        const totalDuration = Date.now() - startTime;
+        timerBadge.textContent = (totalDuration / 1000).toFixed(2) + 's';
+
+        const data = await resp.json();
+
+        // Populate Debug Console with sequential steps [05] to [15]
+        if (data.debugTrace && Array.isArray(data.debugTrace)) {
+          for (const item of data.debugTrace) {
+            logTestDebugStep(item.step, item.title, item.details, !!item.isError);
+          }
+        }
+
+        if (!data.success) {
+          logTestDebugStep('15', 'Pipeline FAILED', data.error || 'Test pipeline execution error', true);
+          alert('Pipeline error: ' + (data.error || 'Unknown error'));
+          badge.textContent = '● Error';
+          badge.className = 'badge badge-amber';
+          return;
+        }
+
+        // Fill Metrics
+        document.getElementById('metricTime').textContent = totalDuration + ' ms';
+        document.getElementById('metricChars').textContent = (data.ocr && data.ocr.diagnostics) ? (data.ocr.diagnostics.frontCharCount + data.ocr.diagnostics.backCharCount) : '-';
+        document.getElementById('metricConfidence').textContent = (data.aiAgent && data.aiAgent.confidence_score) ? (data.aiAgent.confidence_score + '%') : '85%';
+        document.getElementById('metricEnriched').textContent = (data.crawler && data.crawler.diagnostics && data.crawler.diagnostics.fieldsEnriched) ? data.crawler.diagnostics.fieldsEnriched.length : '0';
+
+        badge.textContent = '● Analysis Done';
+        badge.className = 'badge badge-green';
+
+        // Stage 1: OCR View
+        document.getElementById('codeOcrView').textContent = JSON.stringify(data.ocr, null, 2);
+        if (data.ocr && data.ocr.diagnostics) {
+          document.getElementById('ocrEngineUsed').textContent = data.ocr.diagnostics.pythonPreprocessorUsed ? 'PIL + Tesseract' : 'Tesseract.js';
+        }
+
+        // Stage 2: Groq AI View
+        document.getElementById('codeGroqView').textContent = JSON.stringify(data.aiAgent, null, 2);
+        if (data.aiAgent && data.aiAgent.provider_used) {
+          document.getElementById('groqProviderUsed').textContent = data.aiAgent.provider_used;
+        }
+
+        // Stage 3: Crawler View
+        document.getElementById('codeCrawlerView').textContent = JSON.stringify(data.crawler, null, 2);
+
+        // Stage 5: Full Raw JSON
+        document.getElementById('codeFullJsonView').textContent = JSON.stringify(data, null, 2);
+
+        // Populate Catalog Form Preview
+        const b = data.book || {};
+        document.getElementById('fTitle').value = b.title || '';
+        document.getElementById('fAuthor').value = b.author || '';
+        document.getElementById('fPublisher').value = b.publisher || '';
+        document.getElementById('fIsbn').value = b.isbn || '';
+        document.getElementById('fPrice').value = b.price || '';
+        document.getElementById('fYear').value = b.publication_year || '';
+        document.getElementById('fEdition').value = b.edition || '';
+        document.getElementById('fSubject').value = b.subject || 'General';
+        document.getElementById('fLanguage').value = b.language || 'English';
+        document.getElementById('fSynopsis').value = b.synopsis || b.description || '';
+
+        if (b.cover_url) {
+          const cImg = document.getElementById('formCoverImg');
+          cImg.src = b.cover_url;
+          cImg.style.display = 'block';
+          document.getElementById('formCoverPlaceholder').style.display = 'none';
+          document.getElementById('formCoverUrl').value = b.cover_url;
+        }
+
+        // Handle Missing Fields Alert
+        const missingFields = (data.crawler && data.crawler.diagnostics && data.crawler.diagnostics.missingFields) || [];
+        const banner = document.getElementById('missingFieldsBanner');
+        const chips = document.getElementById('missingChipsContainer');
+        chips.innerHTML = '';
+
+        // Reset input highlights
+        ['fTitle', 'fAuthor', 'fPublisher', 'fIsbn', 'fPrice', 'fYear', 'fSynopsis'].forEach(id => {
+          document.getElementById(id).classList.remove('missing');
+        });
+
+        if (missingFields.length > 0) {
+          banner.style.display = 'block';
+          missingFields.forEach(f => {
+            const chip = document.createElement('span');
+            chip.className = 'missing-field-chip';
+            chip.textContent = '✏️ ' + f.toUpperCase();
+            chips.appendChild(chip);
+
+            // Highlight form input in amber
+            const inputMap = {
+              'title': 'fTitle',
+              'author': 'fAuthor',
+              'publisher': 'fPublisher',
+              'isbn': 'fIsbn',
+              'price': 'fPrice',
+              'publication_year': 'fYear',
+              'synopsis': 'fSynopsis'
+            };
+            if (inputMap[f]) {
+              const el = document.getElementById(inputMap[f]);
+              if (el) el.classList.add('missing');
+            }
+          });
+        } else {
+          banner.style.display = 'none';
+        }
+
+        switchDiagTab('form');
+
+      } catch (err) {
+        clearInterval(interval);
+        alert('Network or processing error: ' + err.message);
+        badge.textContent = '● Error';
+        badge.className = 'badge badge-amber';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🚀 Run AI Analyzer &amp; Test Engine';
+      }
+    }
+
+    // Direct Save into Library Inventory
+    async function saveToInventory(e) {
+      e.preventDefault();
+      const statusEl = document.getElementById('formSaveStatus');
+      const btn = document.getElementById('btnSaveInventory');
+
+      btn.disabled = true;
+      statusEl.textContent = 'Saving to inventory...';
+
+      const formData = new FormData(document.getElementById('testCatalogForm'));
+      const payload = Object.fromEntries(formData.entries());
+      payload.total_copies = 1;
+      payload.rack = 'A';
+      payload.shelf = '1';
+      payload.book_condition = 'GOOD';
+
+      try {
+        const resp = await fetch('/admin/api/books/add-common', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const res = await resp.json();
+        if (res.success) {
+          statusEl.innerHTML = `<span style="color:#10B981;font-weight:700;">✅ Book saved successfully! Book ID: ${res.book_id || payload.isbn}</span>`;
+          alert('Book added to library inventory successfully!');
+        } else {
+          statusEl.innerHTML = `<span style="color:#DC2626;">❌ Failed: ${res.error || 'Unknown error'}</span>`;
+        }
+      } catch (err) {
+        statusEl.innerHTML = `<span style="color:#DC2626;">❌ Error: ${err.message}</span>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

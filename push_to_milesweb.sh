@@ -48,8 +48,9 @@ node db/migrateLoadingAndCleanDemo.js || true
 node db/migrateLibrikaProductFixes.js || true
 node db/migrateBookAdding3Modes.js || true
 node db/migrateSuperAdminRbacUserManagement.js || true
+node scripts/make_books_real_and_copies.js || true
 
-pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
+killall -9 node 2>/dev/null || pkill -9 node 2>/dev/null || pkill -9 -f "app.js" 2>/dev/null || true
 mkdir -p tmp
 touch tmp/restart.txt
 echo "MilesWeb server updated & restarted."
@@ -68,9 +69,9 @@ node db/migrateLoadingAndCleanDemo.js || true
 node db/migrateLibrikaProductFixes.js || true
 node db/migrateBookAdding3Modes.js || true
 node db/migrateSuperAdminRbacUserManagement.js || true
+node scripts/make_books_real_and_copies.js || true
 
-
-pkill -9 -f "node app.js" 2>/dev/null || killall -9 node 2>/dev/null || true
+killall -9 node 2>/dev/null || pkill -9 node 2>/dev/null || pkill -9 -f "app.js" 2>/dev/null || true
 mkdir -p tmp
 touch tmp/restart.txt
 echo "MilesWeb server updated & restarted."
