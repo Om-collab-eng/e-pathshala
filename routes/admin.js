@@ -985,20 +985,51 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
   const sCode = req.session.school_code || 'DEMO01';
   const librarianId = req.session.user_id || 0;
 
-  if (!member_id || (!book_id && !barcode)) {
-    return res.json({ status: 'error', message: 'Member and Book are required.' });
+  if (!member_id && !req.body.student_id && !req.body.admission_no && !req.body.phone) {
+    return res.json({ status: 'error', message: 'Please select a valid Student or Borrower.' });
+  }
+  if (!book_id && !barcode) {
+    return res.json({ status: 'error', message: 'Please select a Book or scan a Physical Copy Barcode.' });
   }
 
   try {
     const settings = await getCirculationSettings(sCode);
 
-    // 1. Verify Member
-    const mRes = await db.query(
-      'SELECT * FROM users WHERE id = $1 AND (LOWER(school_code) = LOWER($2) OR school_code = "GLOBAL" OR school_code IS NULL OR school_code = "")',
-      [member_id, sCode]
-    );
-    if (!mRes.rows || mRes.rows.length === 0) return res.json({ status: 'error', message: 'Member not found.' });
+    // 1. Verify Member (By primary ID or unique student/admission identifier)
+    let mRes = null;
+    if (member_id) {
+      mRes = await db.query(
+        `SELECT * FROM users 
+         WHERE (id = $1 OR CAST(id AS TEXT) = $1 OR student_id = $1 OR admission_no = $1)
+           AND (LOWER(school_code) = LOWER($2) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+         LIMIT 1`,
+        [String(member_id).trim(), sCode]
+      );
+    }
+
+    if ((!mRes || !mRes.rows || mRes.rows.length === 0) && (req.body.student_id || req.body.admission_no || req.body.phone)) {
+      const altId = req.body.student_id || req.body.admission_no || req.body.phone;
+      mRes = await db.query(
+        `SELECT * FROM users 
+         WHERE (student_id = $1 OR admission_no = $1 OR phone = $1)
+           AND (LOWER(school_code) = LOWER($2) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+         LIMIT 1`,
+        [String(altId).trim(), sCode]
+      );
+    }
+
+    if (!mRes || !mRes.rows || mRes.rows.length === 0) {
+      return res.json({ status: 'error', message: 'Selected member was not found in the library database.' });
+    }
     const member = mRes.rows[0];
+
+    // If user's id column was null or 0, persist an assigned ID now
+    if (!member.id || member.id === 'null' || member.id === '0') {
+      const maxRes = await db.query("SELECT MAX(CAST(id AS INTEGER)) as max_id FROM users WHERE id IS NOT NULL AND id != '' AND CAST(id AS INTEGER) < 5000");
+      const generatedId = String((maxRes.rows[0]?.max_id || 77) + 1);
+      await db.query("UPDATE users SET id = $1 WHERE (phone = $2 OR admission_no = $3) AND name = $4", [generatedId, member.phone, member.admission_no, member.name]).catch(() => {});
+      member.id = generatedId;
+    }
 
     if (member.is_banned && (member.is_banned === 1 || member.is_banned === '1' || member.is_banned === true)) {
       return res.json({ status: 'error', message: `Member ${member.name} is currently SUSPENDED. Circulation blocked.` });

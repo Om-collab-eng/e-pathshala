@@ -4271,6 +4271,14 @@
       const dd = document.getElementById('circBookDropdown');
       if (dd) dd.style.display = 'none';
 
+      // Automatically select the first AVAILABLE physical copy barcode by default
+      if (book.copies && book.copies.length > 0) {
+        const firstAvail = book.copies.find(c => (c.availability_status === 'AVAILABLE' || c.status === 'AVAILABLE'));
+        book.copy_barcode = firstAvail ? firstAvail.barcode : book.copies[0].barcode;
+      } else {
+        book.copy_barcode = book.barcode_id || '';
+      }
+
       const input = document.getElementById('circBookInput');
       if (input) input.value = book.title;
 
@@ -4415,7 +4423,14 @@
     }
 
     async function submitCirculationIssue() {
-      if (!activeCheckoutMember || !activeCheckoutBook) return;
+      if (!activeCheckoutMember) {
+        alert('❌ Please select a student or borrower first.');
+        return;
+      }
+      if (!activeCheckoutBook) {
+        alert('❌ Please select a book to issue.');
+        return;
+      }
       if (!activeCheckoutMember.can_borrow) {
         alert(`❌ Cannot issue book: Member ${activeCheckoutMember.name} has reached maximum quota (${activeCheckoutMember.borrowing_limit} books).`);
         return;
@@ -4425,8 +4440,10 @@
         return;
       }
 
-      const days = document.getElementById('circLoanDays').value;
-      const targetBarcode = activeCheckoutBook.copy_barcode || activeCheckoutBook.barcode_id;
+      const days = document.getElementById('circLoanDays')?.value || 14;
+      // Get selected copy barcode from select dropdown or cached book copy
+      const copyDropdown = document.getElementById('circSelectedCopyBarcode');
+      const targetBarcode = (copyDropdown && copyDropdown.value) ? copyDropdown.value : (activeCheckoutBook.copy_barcode || activeCheckoutBook.barcode_id);
 
       try {
         const res = await fetch('/admin/api/circulation/issue', {
@@ -4434,6 +4451,9 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             member_id: activeCheckoutMember.id,
+            student_id: activeCheckoutMember.student_id,
+            admission_no: activeCheckoutMember.admission_no,
+            phone: activeCheckoutMember.phone,
             book_id: activeCheckoutBook.id,
             barcode: targetBarcode,
             due_days: days
