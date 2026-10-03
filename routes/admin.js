@@ -73,16 +73,62 @@ function dueDate(days) {
   return d.toISOString().slice(0, 10);
 }
 
-function calculateFine(dueDateStr, finePerDay = 5, graceDays = 2) {
-  if (!dueDateStr) return { fine: 0, is_overdue: false, days_overdue: 0 };
-  const due = new Date(dueDateStr);
-  const today = new Date();
-  if (today > due) {
-    const diffDays = Math.floor((today - due) / (1000 * 60 * 60 * 24));
-    const chargeableDays = Math.max(0, diffDays - graceDays);
-    return { fine: chargeableDays * finePerDay, is_overdue: diffDays > 0, days_overdue: diffDays };
+async function getCirculationSettings(schoolCode = 'DEMO01') {
+  const sCode = schoolCode || 'DEMO01';
+  const defaults = {
+    loan_duration_days: 14,
+    student_max_books: 3,
+    teacher_max_books: 10,
+    staff_max_books: 5,
+    teacher_loan_days: 30,
+    fine_per_day: 5,
+    grace_period_days: 2,
+    lost_book_charge: 150,
+    max_renewals: 2
+  };
+  try {
+    const sRes = await db.query(
+      'SELECT setting_key, setting_value FROM library_settings WHERE school_code = $1',
+      [sCode]
+    );
+    (sRes.rows || []).forEach(r => {
+      if (r.setting_key && r.setting_value !== undefined && r.setting_value !== null && r.setting_value !== '') {
+        const num = Number(r.setting_value);
+        defaults[r.setting_key] = (!isNaN(num) && r.setting_key !== 'allow_digital_downloads') ? num : r.setting_value;
+      }
+    });
+  } catch (err) {
+    console.warn('[CIRCULATION] Failed to fetch settings for school ' + sCode + ':', err.message);
   }
-  return { fine: 0, is_overdue: false, days_overdue: 0 };
+  return defaults;
+}
+
+function calculateFine(dueDateStr, finePerDay = 5, graceDays = 2) {
+  if (!dueDateStr) return { fine: 0, is_overdue: false, days_overdue: 0, late_days: 0, chargeable_days: 0, grace_days: Number(graceDays) || 0, fine_rate: Number(finePerDay) || 0 };
+  const due = new Date(dueDateStr);
+  if (isNaN(due.getTime())) return { fine: 0, is_overdue: false, days_overdue: 0, late_days: 0, chargeable_days: 0, grace_days: Number(graceDays) || 0, fine_rate: Number(finePerDay) || 0 };
+  
+  const today = new Date();
+  const dueMidnight = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  const diffTime = todayMidnight.getTime() - dueMidnight.getTime();
+  if (diffTime > 0) {
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const gDays = Math.max(0, Number(graceDays) || 0);
+    const fRate = Math.max(0, Number(finePerDay) || 0);
+    const chargeableDays = Math.max(0, diffDays - gDays);
+    return {
+      fine: chargeableDays * fRate,
+      is_overdue: diffDays > 0,
+      days_overdue: diffDays,
+      late_days: diffDays,
+      chargeable_days: chargeableDays,
+      grace_days: gDays,
+      fine_rate: fRate
+    };
+  }
+  return { fine: 0, is_overdue: false, days_overdue: 0, late_days: 0, chargeable_days: 0, grace_days: Number(graceDays) || 0, fine_rate: Number(finePerDay) || 0 };
 }
 
 // Helper to fetch student learning progress across Books, Quizzes, and Courses
@@ -184,10 +230,15 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
   const targetTab = req.query.tab || 'default';
 
   try {
+    // 0. Fetch Settings early so they can be passed to fine calculation and UI
+    const settingsMap = await getCirculationSettings(sCode);
+    const finePerDay = Number(settingsMap.fine_per_day) || 5;
+    const graceDays = Number(settingsMap.grace_period_days) || 2;
+
     // 1. Fetch Transactions & Overdue
     let txQuery = `
       SELECT t.*, u.name as user_name, u.admission_no as user_admission, u.phone as user_phone, u.class as user_class, u.role as user_role,
-             b.title as book_title, b.author as book_author, b.barcode_id as book_barcode, b.cover_url as book_cover
+             b.title as book_title, b.author as book_author, COALESCE(t.barcode, b.barcode_id) as book_barcode, b.cover_url as book_cover
       FROM transactions t
       JOIN users u ON t.user_id = u.id
       JOIN books b ON t.book_id = b.id
@@ -204,7 +255,7 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     const todayStr = renderDate(new Date());
 
     allTransactions.forEach(tx => {
-      const fineData = calculateFine(tx.due_date);
+      const fineData = calculateFine(tx.due_date, finePerDay, graceDays);
       const enhanced = { ...tx, ...fineData };
       if (!tx.return_date) {
         activeLoans.push(enhanced);
@@ -340,10 +391,7 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     });
     const studioSessions = studioRes.rows || [];
 
-    // 7. Fetch Library Settings & Rules
-    const settingsRes = await db.query('SELECT * FROM library_settings WHERE school_code = $1', [sCode]).catch(() => ({ rows: [] }));
-    const settingsMap = {};
-    (settingsRes.rows || []).forEach(s => { settingsMap[s.setting_key] = s.setting_value; });
+    // 7. Library Settings & Rules already loaded in settingsMap above
 
     const schoolRes = await db.query('SELECT * FROM schools WHERE school_code = $1', [sCode]).catch(() => ({ rows: [] }));
     const school = (schoolRes.rows && schoolRes.rows[0]) || { name: 'Librika Digital Library', school_code: sCode, due_days: 14 };
@@ -477,27 +525,31 @@ router.get('/api/quotes/random', (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Fast Member Lookup for Scanner Desk
-router.post('/api/circulation/lookup-member', adminOnly, async (req, res) => {
-  const { query } = req.body;
+router.all('/api/circulation/lookup-member', adminOnly, async (req, res) => {
+  const query = req.body.query || req.query.query || req.query.q || '';
   const sCode = req.session.school_code || 'DEMO01';
   if (!query || !query.trim()) return res.json({ status: 'error', message: 'Enter Member ID, Admission No, or Phone' });
 
   try {
     const cleanQ = query.trim();
+    const settings = await getCirculationSettings(sCode);
+    const finePerDay = Number(settings.fine_per_day) || 5;
+    const graceDays = Number(settings.grace_period_days) || 2;
+
     const userRes = await db.query(`
-      SELECT u.id, u.name, u.admission_no, u.class, u.phone, u.role, u.is_banned, u.email
+      SELECT u.id, u.name, u.admission_no, u.student_id, u.class, u.section, u.phone, u.role, u.is_banned, u.email, u.avatar_id, u.profile_picture
       FROM users u
-      WHERE (u.admission_no = $1 OR u.phone = $1 OR CAST(u.id AS TEXT) = $1 OR u.email = $1)
-      AND u.school_code = $2
+      WHERE (u.admission_no = $1 OR u.phone = $1 OR u.student_id = $1 OR CAST(u.id AS TEXT) = $1 OR u.email = $1 OR LOWER(u.name) = LOWER($1))
+      AND (LOWER(u.school_code) = LOWER($2) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
       LIMIT 1
     `, [cleanQ, sCode]).catch(async () => {
       return await db.query(`
-        SELECT u.id, u.name, u.admission_no, u.class, u.phone, u.role, u.is_banned, u.email
+        SELECT u.id, u.name, u.admission_no, u.student_id, u.class, u.section, u.phone, u.role, u.is_banned, u.email, u.avatar_id, u.profile_picture
         FROM users u
-        WHERE (u.admission_no = ? OR u.phone = ? OR u.id = ? OR u.email = ?)
-        AND u.school_code = ?
+        WHERE (u.admission_no = ? OR u.phone = ? OR u.student_id = ? OR u.id = ? OR u.email = ? OR u.name = ?)
+        AND (LOWER(u.school_code) = LOWER(?) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
         LIMIT 1
-      `, [cleanQ, cleanQ, cleanQ, cleanQ, sCode]);
+      `, [cleanQ, cleanQ, cleanQ, cleanQ, cleanQ, cleanQ, sCode]);
     });
 
     if (!userRes.rows || userRes.rows.length === 0) {
@@ -505,13 +557,14 @@ router.post('/api/circulation/lookup-member', adminOnly, async (req, res) => {
     }
 
     const member = userRes.rows[0];
-    if (member.is_banned && (member.is_banned === 1 || member.is_banned === '1' || member.is_banned === true)) {
+    const isBanned = (member.is_banned === 1 || member.is_banned === '1' || member.is_banned === true);
+    if (isBanned) {
       return res.json({ status: 'error', message: `Member ${member.name} is currently SUSPENDED. Circulation blocked.` });
     }
 
     // Active loans count
     const loansRes = await db.query(`
-      SELECT t.*, b.title as book_title, b.barcode_id as book_barcode
+      SELECT t.*, b.title as book_title, COALESCE(t.barcode, b.barcode_id) as book_barcode
       FROM transactions t
       JOIN books b ON t.book_id = b.id
       WHERE t.user_id = $1 AND t.return_date IS NULL
@@ -519,11 +572,14 @@ router.post('/api/circulation/lookup-member', adminOnly, async (req, res) => {
 
     const activeLoans = (loansRes.rows || []).map(l => ({
       ...l,
-      ...calculateFine(l.due_date)
+      ...calculateFine(l.due_date, finePerDay, graceDays)
     }));
 
-    // Borrowing limit
-    const limit = member.role === 'teacher' ? 10 : (member.role === 'staff' ? 5 : 3);
+    const totalFines = activeLoans.reduce((sum, l) => sum + (l.fine || 0), 0);
+    const isTeacher = (member.role === 'teacher');
+    const isStaff = (member.role === 'staff');
+    const limit = isTeacher ? settings.teacher_max_books : (isStaff ? settings.staff_max_books : settings.student_max_books);
+    const canBorrow = activeLoans.length < limit && !isBanned;
 
     return res.json({
       status: 'success',
@@ -531,7 +587,9 @@ router.post('/api/circulation/lookup-member', adminOnly, async (req, res) => {
       activeLoans,
       activeCount: activeLoans.length,
       borrowingLimit: limit,
-      canBorrow: activeLoans.length < limit
+      canBorrow: canBorrow,
+      totalFines: totalFines,
+      quotaWarning: !canBorrow ? `Maximum borrowing limit reached (${limit} books). Cannot issue more.` : null
     });
   } catch (err) {
     console.error('Member lookup error:', err);
@@ -539,9 +597,108 @@ router.post('/api/circulation/lookup-member', adminOnly, async (req, res) => {
   }
 });
 
+// Reusable Multi-field Student Search API
+router.all('/api/circulation/search-students', adminOnly, async (req, res) => {
+  const q = (req.body.query || req.query.q || req.query.query || '').trim();
+  const sCode = req.session.school_code || 'DEMO01';
+
+  try {
+    const settings = await getCirculationSettings(sCode);
+    const finePerDay = Number(settings.fine_per_day) || 5;
+    const graceDays = Number(settings.grace_period_days) || 2;
+
+    let usersQuery = '';
+    let params = [];
+
+    if (!q) {
+      usersQuery = `
+        SELECT u.id, u.name, u.admission_no, u.student_id, u.class, u.section, u.phone, u.email, u.role, u.is_banned, u.profile_picture, u.avatar_id
+        FROM users u
+        WHERE (LOWER(u.school_code) = LOWER($1) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
+        ORDER BY u.name ASC
+        LIMIT 15
+      `;
+      params = [sCode];
+    } else {
+      const term = `%${q}%`;
+      usersQuery = `
+        SELECT u.id, u.name, u.admission_no, u.student_id, u.class, u.section, u.phone, u.email, u.role, u.is_banned, u.profile_picture, u.avatar_id
+        FROM users u
+        WHERE (LOWER(u.school_code) = LOWER($1) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
+          AND (
+            LOWER(u.name) LIKE LOWER($2) OR
+            LOWER(COALESCE(u.admission_no, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(u.student_id, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(u.class, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(u.section, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(u.phone, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(u.email, '')) LIKE LOWER($2) OR
+            CAST(u.id AS TEXT) LIKE $2
+          )
+        ORDER BY 
+          CASE WHEN LOWER(u.name) LIKE LOWER($3) THEN 1
+               WHEN LOWER(COALESCE(u.admission_no, '')) LIKE LOWER($3) THEN 2
+               ELSE 3 END,
+          u.name ASC
+        LIMIT 20
+      `;
+      params = [sCode, term, `${q}%`];
+    }
+
+    const uRes = await db.query(usersQuery, params);
+    const users = uRes.rows || [];
+
+    const studentList = await Promise.all(users.map(async (u) => {
+      const lRes = await db.query(`
+        SELECT t.id, t.book_id, t.issue_date, t.due_date, b.title as book_title, COALESCE(t.barcode, b.barcode_id) as book_barcode
+        FROM transactions t
+        JOIN books b ON t.book_id = b.id
+        WHERE t.user_id = $1 AND t.return_date IS NULL
+      `, [u.id]).catch(() => ({ rows: [] }));
+
+      const activeLoans = (lRes.rows || []).map(l => ({
+        ...l,
+        ...calculateFine(l.due_date, finePerDay, graceDays)
+      }));
+
+      const totalFines = activeLoans.reduce((sum, l) => sum + (l.fine || 0), 0);
+      const isTeacher = (u.role === 'teacher');
+      const isStaff = (u.role === 'staff');
+      const borrowingLimit = isTeacher ? settings.teacher_max_books : (isStaff ? settings.staff_max_books : settings.student_max_books);
+      const isBanned = (u.is_banned === 1 || u.is_banned === '1' || u.is_banned === true);
+      const canBorrow = activeLoans.length < borrowingLimit && !isBanned;
+
+      return {
+        id: u.id,
+        name: u.name,
+        role: u.role || 'student',
+        admission_no: u.admission_no || '',
+        student_id: u.student_id || u.admission_no || `STU-${u.id}`,
+        class: u.class || '',
+        section: u.section || '',
+        phone: u.phone || '',
+        email: u.email || '',
+        avatar_id: u.avatar_id || '',
+        profile_picture: u.profile_picture || '',
+        is_banned: isBanned,
+        active_count: activeLoans.length,
+        borrowing_limit: borrowingLimit,
+        can_borrow: canBorrow,
+        total_fines: totalFines,
+        active_loans: activeLoans
+      };
+    }));
+
+    return res.json({ status: 'success', students: studentList });
+  } catch (err) {
+    console.error('Search students error:', err);
+    return res.json({ status: 'error', message: 'Failed to search students: ' + err.message });
+  }
+});
+
 // Fast Book Lookup for Scanner Desk
-router.post('/api/circulation/lookup-book', adminOnly, async (req, res) => {
-  const { barcode } = req.body;
+router.all('/api/circulation/lookup-book', adminOnly, async (req, res) => {
+  const barcode = req.body.barcode || req.query.barcode || req.query.q || '';
   const sCode = req.session.school_code || 'DEMO01';
   if (!barcode || !barcode.trim()) return res.json({ status: 'error', message: 'Scan or enter Book Barcode/ISBN' });
 
@@ -549,11 +706,11 @@ router.post('/api/circulation/lookup-book', adminOnly, async (req, res) => {
     const cleanB = barcode.trim();
     // 1. Check book_copies first
     const copyRes = await db.query(`
-      SELECT bc.*, b.id as book_id, b.title, b.author, b.genre, b.isbn, b.available_copies, b.shelf_location, b.cover_url
+      SELECT bc.*, b.id as book_id, b.title, b.author, b.genre, b.isbn, b.available_copies, b.total_copies, b.shelf_location, b.cover_url
       FROM book_copies bc
       JOIN books b ON bc.book_id = b.id
       WHERE (bc.barcode = $1 OR b.barcode_id = $1 OR b.isbn = $1 OR CAST(b.id AS TEXT) = $1)
-      AND bc.school_code = $2
+      AND (LOWER(bc.school_code) = LOWER($2) OR bc.school_code = 'GLOBAL' OR bc.school_code IS NULL OR bc.school_code = '')
       LIMIT 1
     `, [cleanB, sCode]);
 
@@ -568,12 +725,13 @@ router.post('/api/circulation/lookup-book', adminOnly, async (req, res) => {
           genre: copy.genre,
           isbn: copy.isbn,
           available_copies: copy.available_copies,
+          total_copies: copy.total_copies,
           shelf_location: copy.shelf_location,
           cover_url: copy.cover_url,
           copy_barcode: copy.barcode,
           copy_id: copy.id,
           condition: copy.condition_status,
-          availability: copy.availability_status
+          availability: copy.availability_status || copy.status
         }
       });
     }
@@ -582,12 +740,13 @@ router.post('/api/circulation/lookup-book', adminOnly, async (req, res) => {
     const bookRes = await db.query(`
       SELECT * FROM books
       WHERE (barcode_id = $1 OR isbn = $1 OR CAST(id AS TEXT) = $1)
-      AND school_code = $2
+      AND (LOWER(school_code) = LOWER($2) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
       LIMIT 1
     `, [cleanB, sCode]);
 
     if (bookRes.rows && bookRes.rows.length > 0) {
       const b = bookRes.rows[0];
+      const availCount = parseInt(b.available_copies, 10);
       return res.json({
         status: 'success',
         book: {
@@ -597,12 +756,13 @@ router.post('/api/circulation/lookup-book', adminOnly, async (req, res) => {
           genre: b.genre,
           isbn: b.isbn,
           available_copies: b.available_copies,
+          total_copies: b.total_copies,
           shelf_location: b.shelf_location,
           cover_url: b.cover_url,
           copy_barcode: b.barcode_id || `LIB-BK${b.id}-C1`,
           copy_id: null,
           condition: 'GOOD',
-          availability: parseInt(b.available_copies, 10) > 0 ? 'AVAILABLE' : 'ISSUED'
+          availability: availCount > 0 ? 'AVAILABLE' : 'OUT_OF_STOCK'
         }
       });
     }
@@ -614,7 +774,210 @@ router.post('/api/circulation/lookup-book', adminOnly, async (req, res) => {
   }
 });
 
-// Issue Book Transaction
+// Reusable Multi-field Book Search API
+router.all('/api/circulation/search-books', adminOnly, async (req, res) => {
+  const q = (req.body.query || req.query.q || req.query.query || '').trim();
+  const sCode = req.session.school_code || 'DEMO01';
+
+  try {
+    let booksQuery = '';
+    let params = [];
+
+    if (!q) {
+      booksQuery = `
+        SELECT b.id, b.title, b.author, b.genre, b.category, b.subject, b.class, b.isbn, b.publisher, b.barcode_id,
+               b.available_copies, b.total_copies, b.shelf_location, b.rack, b.shelf, b.cover_url, b.price, b.edition, b.publication_year
+        FROM books b
+        WHERE (LOWER(b.school_code) = LOWER($1) OR b.school_code = 'GLOBAL' OR b.school_code IS NULL OR b.school_code = '')
+          AND (b.is_banned IS NULL OR (b.is_banned != 1 AND b.is_banned != '1'))
+        ORDER BY b.id DESC
+        LIMIT 15
+      `;
+      params = [sCode];
+    } else {
+      const term = `%${q}%`;
+      booksQuery = `
+        SELECT DISTINCT b.id, b.title, b.author, b.genre, b.category, b.subject, b.class, b.isbn, b.publisher, b.barcode_id,
+               b.available_copies, b.total_copies, b.shelf_location, b.rack, b.shelf, b.cover_url, b.price, b.edition, b.publication_year
+        FROM books b
+        LEFT JOIN book_copies bc ON bc.book_id = b.id
+        WHERE (LOWER(b.school_code) = LOWER($1) OR b.school_code = 'GLOBAL' OR b.school_code IS NULL OR b.school_code = '')
+          AND (b.is_banned IS NULL OR (b.is_banned != 1 AND b.is_banned != '1'))
+          AND (
+            LOWER(b.title) LIKE LOWER($2) OR
+            LOWER(COALESCE(b.author, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(b.isbn, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(b.barcode_id, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(bc.barcode, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(b.publisher, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(b.category, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(b.subject, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(b.class, '')) LIKE LOWER($2) OR
+            LOWER(COALESCE(b.shelf_location, '')) LIKE LOWER($2) OR
+            CAST(b.id AS TEXT) LIKE $2
+          )
+        ORDER BY 
+          CASE WHEN LOWER(b.title) LIKE LOWER($3) THEN 1
+               WHEN LOWER(COALESCE(b.barcode_id, '')) LIKE LOWER($3) THEN 2
+               ELSE 3 END,
+          b.title ASC
+        LIMIT 20
+      `;
+      params = [sCode, term, `${q}%`];
+    }
+
+    const bRes = await db.query(booksQuery, params);
+    const rawBooks = bRes.rows || [];
+
+    const bookList = await Promise.all(rawBooks.map(async (b) => {
+      const cRes = await db.query(`
+        SELECT id, barcode, copy_number, status, availability_status, condition_status, rack, shelf
+        FROM book_copies
+        WHERE book_id = $1
+        ORDER BY copy_number ASC
+      `, [b.id]).catch(() => ({ rows: [] }));
+
+      const copies = cRes.rows || [];
+      const availCopy = copies.find(c => c.availability_status === 'AVAILABLE' || c.status === 'AVAILABLE');
+      const availCount = parseInt(b.available_copies, 10);
+      const isAvailable = !isNaN(availCount) ? availCount > 0 : (copies.length === 0 || !!availCopy);
+
+      return {
+        id: b.id,
+        title: b.title,
+        author: b.author || 'Unknown Author',
+        isbn: b.isbn || '',
+        barcode_id: b.barcode_id || '',
+        category: b.category || b.genre || 'General',
+        subject: b.subject || '',
+        class: b.class || '',
+        publisher: b.publisher || '',
+        edition: b.edition || '',
+        publication_year: b.publication_year || '',
+        shelf_location: b.shelf_location || (b.rack ? `Rack ${b.rack} Shelf ${b.shelf}` : 'General Rack'),
+        cover_url: b.cover_url || '',
+        price: b.price || '',
+        available_copies: !isNaN(availCount) ? availCount : (availCopy ? 1 : 0),
+        total_copies: parseInt(b.total_copies, 10) || copies.length || 1,
+        is_available: isAvailable,
+        copy_barcode: availCopy ? availCopy.barcode : (b.barcode_id || `LIB-BK${b.id}-C1`),
+        copies: copies
+      };
+    }));
+
+    return res.json({ status: 'success', books: bookList });
+  } catch (err) {
+    console.error('Search books error:', err);
+    return res.json({ status: 'error', message: 'Failed to search books: ' + err.message });
+  }
+});
+
+// Fetch Active Loans for a Student (used by Return Books tab)
+router.all('/api/circulation/student-active-loans', adminOnly, async (req, res) => {
+  const userId = req.body.user_id || req.query.user_id;
+  const sCode = req.session.school_code || 'DEMO01';
+  if (!userId) return res.json({ status: 'error', message: 'User ID is required.' });
+
+  try {
+    const settings = await getCirculationSettings(sCode);
+    const finePerDay = Number(settings.fine_per_day) || 5;
+    const graceDays = Number(settings.grace_period_days) || 2;
+
+    const loansRes = await db.query(`
+      SELECT t.id as transaction_id, t.book_id, t.user_id, t.issue_date, t.due_date, t.status, t.allowed_days,
+             COALESCE(t.barcode, b.barcode_id) as barcode,
+             b.title as book_title, b.author as book_author, b.cover_url, b.shelf_location, b.rack, b.shelf,
+             u.name as user_name, u.admission_no, u.class as user_class
+      FROM transactions t
+      JOIN books b ON t.book_id = b.id
+      JOIN users u ON t.user_id = u.id
+      WHERE t.user_id = $1 AND t.return_date IS NULL
+      ORDER BY t.id DESC
+    `, [userId]);
+
+    let totalFines = 0;
+    const loans = (loansRes.rows || []).map(l => {
+      const fineData = calculateFine(l.due_date, finePerDay, graceDays);
+      totalFines += fineData.fine;
+      return {
+        ...l,
+        ...fineData
+      };
+    });
+
+    return res.json({
+      status: 'success',
+      loans,
+      total_count: loans.length,
+      total_fines: totalFines
+    });
+  } catch (err) {
+    console.error('Student active loans fetch error:', err);
+    return res.json({ status: 'error', message: err.message });
+  }
+});
+
+// Circulation Lending Rules API (GET & POST)
+router.get('/api/circulation/settings', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const settings = await getCirculationSettings(sCode);
+    return res.json({ status: 'success', settings });
+  } catch (err) {
+    return res.json({ status: 'error', message: err.message });
+  }
+});
+
+router.post('/api/circulation/settings', adminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  const {
+    student_max_books,
+    loan_duration_days,
+    teacher_max_books,
+    teacher_loan_days,
+    staff_max_books,
+    fine_per_day,
+    grace_period_days,
+    lost_book_charge
+  } = req.body;
+
+  try {
+    const toSave = {};
+    if (student_max_books !== undefined) toSave['student_max_books'] = Math.max(1, parseInt(student_max_books, 10) || 3);
+    if (loan_duration_days !== undefined) toSave['loan_duration_days'] = Math.max(1, parseInt(loan_duration_days, 10) || 14);
+    if (teacher_max_books !== undefined) toSave['teacher_max_books'] = Math.max(1, parseInt(teacher_max_books, 10) || 10);
+    if (teacher_loan_days !== undefined) toSave['teacher_loan_days'] = Math.max(1, parseInt(teacher_loan_days, 10) || 30);
+    if (staff_max_books !== undefined) toSave['staff_max_books'] = Math.max(1, parseInt(staff_max_books, 10) || 5);
+    if (fine_per_day !== undefined) toSave['fine_per_day'] = Math.max(0, parseInt(fine_per_day, 10) || 0);
+    if (grace_period_days !== undefined) toSave['grace_period_days'] = Math.max(0, parseInt(grace_period_days, 10) || 0);
+    if (lost_book_charge !== undefined) toSave['lost_book_charge'] = Math.max(0, parseInt(lost_book_charge, 10) || 0);
+
+    for (const [key, val] of Object.entries(toSave)) {
+      const ex = await db.query('SELECT id FROM library_settings WHERE school_code = $1 AND setting_key = $2', [sCode, key]);
+      if (ex.rows && ex.rows.length > 0) {
+        await db.query('UPDATE library_settings SET setting_value = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [String(val), ex.rows[0].id]);
+      } else {
+        const nextIdRes = await db.query('SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM library_settings').catch(() => ({ rows: [] }));
+        const nextId = (nextIdRes.rows && nextIdRes.rows[0] && nextIdRes.rows[0].next_id) ? Number(nextIdRes.rows[0].next_id) : Math.floor(Date.now() % 1000000);
+        await db.query('INSERT INTO library_settings (id, school_code, setting_key, setting_value) VALUES ($1, $2, $3, $4)', [nextId, sCode, key, String(val)]).catch(async () => {
+          await db.query('INSERT INTO library_settings (school_code, setting_key, setting_value) VALUES ($1, $2, $3)', [sCode, key, String(val)]);
+        });
+      }
+    }
+
+    const updatedSettings = await getCirculationSettings(sCode);
+    return res.json({
+      status: 'success',
+      message: 'Circulation lending rules saved and activated across the system!',
+      settings: updatedSettings
+    });
+  } catch (err) {
+    console.error('Circulation settings update error:', err);
+    return res.json({ status: 'error', message: 'Failed to update settings: ' + err.message });
+  }
+});
+
+// Issue Book Transaction (Strictly Enforces Rules & Records Barcode)
 router.post('/api/circulation/issue', adminOnly, async (req, res) => {
   const { member_id, book_id, barcode, due_days } = req.body;
   const sCode = req.session.school_code || 'DEMO01';
@@ -625,17 +988,32 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
   }
 
   try {
+    const settings = await getCirculationSettings(sCode);
+
     // 1. Verify Member
-    const mRes = await db.query('SELECT * FROM users WHERE id = $1 AND school_code = $2', [member_id, sCode]);
+    const mRes = await db.query(
+      'SELECT * FROM users WHERE id = $1 AND (LOWER(school_code) = LOWER($2) OR school_code = "GLOBAL" OR school_code IS NULL OR school_code = "")',
+      [member_id, sCode]
+    );
     if (!mRes.rows || mRes.rows.length === 0) return res.json({ status: 'error', message: 'Member not found.' });
     const member = mRes.rows[0];
 
-    // 2. Check Member Borrowing Limits
+    if (member.is_banned && (member.is_banned === 1 || member.is_banned === '1' || member.is_banned === true)) {
+      return res.json({ status: 'error', message: `Member ${member.name} is currently SUSPENDED. Circulation blocked.` });
+    }
+
+    // 2. Check Member Borrowing Limits strictly
     const activeLoansRes = await db.query('SELECT COUNT(*) as count FROM transactions WHERE user_id = $1 AND return_date IS NULL', [member_id]);
     const currentBorrowed = parseInt(activeLoansRes.rows[0].count, 10) || 0;
-    const maxLimit = member.role === 'teacher' ? 10 : (member.role === 'staff' ? 5 : 3);
+    const isTeacher = (member.role === 'teacher');
+    const isStaff = (member.role === 'staff');
+    const maxLimit = isTeacher ? settings.teacher_max_books : (isStaff ? settings.staff_max_books : settings.student_max_books);
+
     if (currentBorrowed >= maxLimit) {
-      return res.json({ status: 'error', message: `Member has reached maximum borrowing quota (${maxLimit} books).` });
+      return res.json({
+        status: 'error',
+        message: `Borrowing quota reached! ${member.name} (${member.role || 'student'}) currently has ${currentBorrowed} of ${maxLimit} allowed books issued. Return an existing book before issuing more.`
+      });
     }
 
     // 3. Find Book & Physical Copy
@@ -646,8 +1024,8 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
       const copyLookup = await bookCopyService.lookupPhysicalCopy(barcode.trim(), sCode);
       if (copyLookup) {
         if (copyLookup.type === 'PHYSICAL_COPY') {
-          if (copyLookup.copy.status !== 'AVAILABLE') {
-            return res.json({ status: 'error', message: `Physical Copy #${copyLookup.copy.copy_number} (${barcode}) is currently '${copyLookup.copy.status}'.` });
+          if (copyLookup.copy.status !== 'AVAILABLE' && copyLookup.copy.availability_status !== 'AVAILABLE') {
+            return res.json({ status: 'error', message: `Physical Copy #${copyLookup.copy.copy_number} (${barcode}) is currently '${copyLookup.copy.availability_status || copyLookup.copy.status}'.` });
           }
           book = copyLookup.book;
           targetCopy = copyLookup.copy;
@@ -670,28 +1048,38 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
       return res.json({ status: 'error', message: `'${book.title}' has 0 available copies in stock.` });
     }
 
-    // Determine borrowing days based on book_size
-    let bookSize = (book.book_size || 'MEDIUM').toUpperCase();
-    let defaultDays = 15;
-    if (bookSize === 'SMALL') defaultDays = 7;
-    else if (bookSize === 'BIG') defaultDays = 25;
-    else defaultDays = 15;
+    // If targetCopy not identified yet, find first available physical copy
+    if (!targetCopy) {
+      const availCopyRes = await db.query(`
+        SELECT * FROM book_copies 
+        WHERE book_id = $1 AND (availability_status = 'AVAILABLE' OR status = 'AVAILABLE')
+        ORDER BY copy_number ASC LIMIT 1
+      `, [book.id]).catch(() => ({ rows: [] }));
+      if (availCopyRes.rows && availCopyRes.rows.length > 0) {
+        targetCopy = availCopyRes.rows[0];
+      }
+    }
 
-    const loanDays = parseInt(due_days, 10) || parseInt(book.offline_borrowing_days, 10) || defaultDays;
+    const assignedBarcode = targetCopy ? targetCopy.barcode : (barcode || book.barcode_id || `LIB-BK${book.id}-C1`);
+
+    // Determine loan days
+    const defaultLoanDays = isTeacher ? (settings.teacher_loan_days || 30) : (settings.loan_duration_days || 14);
+    const requestedDays = parseInt(due_days, 10);
+    const loanDays = (requestedDays && requestedDays > 0) ? requestedDays : defaultLoanDays;
     const dDate = dueDate(loanDays);
     const iDate = renderDate(new Date());
+    const bookSize = (book.book_size || 'MEDIUM').toUpperCase();
 
     // 4. Execute Transaction
     const txRes = await db.query(`
-      INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code, book_size, allowed_days, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ISSUED')
-    `, [member_id, book.id, iDate, dDate, member.class || 'N/A', sCode, bookSize, loanDays]);
+      INSERT INTO transactions (user_id, book_id, issue_date, due_date, class, school_code, book_size, allowed_days, status, barcode)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ISSUED', $9)
+    `, [member_id, book.id, iDate, dDate, member.class || 'N/A', sCode, bookSize, loanDays, assignedBarcode]);
 
     let transactionId = null;
     if (txRes && txRes.rows && txRes.rows[0] && txRes.rows[0].id) {
       transactionId = txRes.rows[0].id;
     } else {
-      // Fallback: lookup the newly created transaction
       const lastTx = await db.query(
         'SELECT id FROM transactions WHERE user_id = $1 AND book_id = $2 ORDER BY id DESC LIMIT 1',
         [member_id, book.id]
@@ -708,19 +1096,19 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
     });
 
     // 5. Decrement Available Copies
-    await db.query('UPDATE books SET available_copies = available_copies - 1 WHERE id = $1', [book.id]);
+    await db.query('UPDATE books SET available_copies = MAX(0, CAST(COALESCE(available_copies, 1) AS INTEGER) - 1) WHERE id = $1', [book.id]);
 
     // 6. Update Physical Copy Status
     if (targetCopy) {
       await db.query("UPDATE book_copies SET availability_status = 'ISSUED', status = 'ISSUED' WHERE id = $1", [targetCopy.id]).catch(() => {});
-    } else if (barcode) {
-      await db.query("UPDATE book_copies SET availability_status = 'ISSUED', status = 'ISSUED' WHERE barcode = $1", [barcode]).catch(() => {});
+    } else if (assignedBarcode) {
+      await db.query("UPDATE book_copies SET availability_status = 'ISSUED', status = 'ISSUED' WHERE barcode = $1", [assignedBarcode]).catch(() => {});
     }
 
     // 7. Audit Log
     await logActivity(req, {
       userId: librarianId,
-      action: `Issued '${book.title}' to ${member.name} (${member.admission_no || member.phone}) - Due: ${dDate}`,
+      action: `Issued '${book.title}' (${assignedBarcode}) to ${member.name} (${member.admission_no || member.student_id || member.phone}) - Due: ${dDate}`,
       module: 'circulation',
       schoolCode: sCode
     }).catch(() => {});
@@ -730,7 +1118,8 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
       message: `Successfully issued '${book.title}' to ${member.name}! Due date: ${dDate}`,
       book_title: book.title,
       member_name: member.name,
-      due_date: dDate
+      due_date: dDate,
+      barcode: assignedBarcode
     });
   } catch (err) {
     console.error('Issue book error:', err);
@@ -738,41 +1127,45 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
   }
 });
 
-// Return Book Transaction
+// Return Book Transaction (Calculates Fines & Restores Inventory)
 router.post('/api/circulation/return', adminOnly, async (req, res) => {
   const { transaction_id, barcode } = req.body;
   const sCode = req.session.school_code || 'DEMO01';
   const librarianId = req.session.user_id || 0;
 
   try {
+    const settings = await getCirculationSettings(sCode);
+    const finePerDay = Number(settings.fine_per_day) || 5;
+    const graceDays = Number(settings.grace_period_days) || 2;
+
     let loan = null;
     if (transaction_id) {
       const lRes = await db.query(`
-        SELECT t.*, b.title as book_title, b.id as b_id, u.name as user_name
+        SELECT t.*, b.title as book_title, b.id as b_id, b.total_copies, u.name as user_name
         FROM transactions t
         JOIN books b ON t.book_id = b.id
         JOIN users u ON t.user_id = u.id
-        WHERE t.id = $1 AND t.return_date IS NULL AND t.school_code = $2
-      `, [transaction_id, sCode]);
+        WHERE t.id = $1 AND t.return_date IS NULL
+      `, [transaction_id]);
       loan = lRes.rows && lRes.rows[0];
     } else if (barcode) {
+      const cleanB = barcode.trim();
       const lRes = await db.query(`
-        SELECT t.*, b.title as book_title, b.id as b_id, u.name as user_name
+        SELECT t.*, b.title as book_title, b.id as b_id, b.total_copies, u.name as user_name
         FROM transactions t
         JOIN books b ON t.book_id = b.id
         JOIN users u ON t.user_id = u.id
-        WHERE (b.barcode_id = $1 OR b.isbn = $1) AND t.return_date IS NULL AND t.school_code = $2
+        WHERE (t.barcode = $1 OR b.barcode_id = $1 OR b.isbn = $1) AND t.return_date IS NULL
         ORDER BY t.id ASC LIMIT 1
-      `, [barcode.trim(), sCode]);
+      `, [cleanB]);
       loan = lRes.rows && lRes.rows[0];
     }
 
-    if (!loan) return res.json({ status: 'error', message: 'No active issue found for this book/transaction.' });
+    if (!loan) return res.json({ status: 'error', message: 'No active issue found for this book or transaction.' });
 
     const retDate = renderDate(new Date());
-    const fineData = calculateFine(loan.due_date);
+    const fineData = calculateFine(loan.due_date, finePerDay, graceDays);
 
-    // Calculate return status and late days
     const isLate = fineData.is_overdue || false;
     const lateDays = isLate ? (fineData.days_overdue || 0) : 0;
     const returnStatus = isLate ? 'RETURNED_LATE' : 'RETURNED_ON_TIME';
@@ -804,12 +1197,25 @@ router.post('/api/circulation/return', adminOnly, async (req, res) => {
       sCode
     ]).catch(() => {});
 
-    // 2. Increment Available Copies
-    await db.query('UPDATE books SET available_copies = available_copies + 1 WHERE id = $1', [loan.book_id]);
+    // 2. Increment Available Copies (capped at total_copies)
+    await db.query(`
+      UPDATE books 
+      SET available_copies = MIN(CAST(COALESCE(total_copies, '1') AS INTEGER), CAST(COALESCE(available_copies, '0') AS INTEGER) + 1)
+      WHERE id = $1
+    `, [loan.book_id]);
 
-    // 3. Mark Copy Available
-    if (barcode) {
-      await db.query("UPDATE book_copies SET availability_status = 'AVAILABLE' WHERE barcode = $1", [barcode.trim()]).catch(() => {});
+    // 3. Mark Copy Available in book_copies
+    const copyBarcodeToFree = loan.barcode || barcode;
+    if (copyBarcodeToFree) {
+      await db.query(
+        "UPDATE book_copies SET availability_status = 'AVAILABLE', status = 'AVAILABLE' WHERE barcode = $1",
+        [copyBarcodeToFree.trim()]
+      ).catch(() => {});
+    } else {
+      await db.query(
+        "UPDATE book_copies SET availability_status = 'AVAILABLE', status = 'AVAILABLE' WHERE book_id = $1 AND (availability_status = 'ISSUED' OR status = 'ISSUED') LIMIT 1",
+        [loan.book_id]
+      ).catch(() => {});
     }
 
     // 4. Auto-check Reservation Queue
@@ -844,6 +1250,7 @@ router.post('/api/circulation/return', adminOnly, async (req, res) => {
       message: `Book '${loan.book_title}' marked as RETURNED from ${loan.user_name}.`,
       fine: fineData.fine,
       days_overdue: fineData.days_overdue,
+      late_days: fineData.late_days,
       reservation_alert: reservedNotification
     });
   } catch (err) {

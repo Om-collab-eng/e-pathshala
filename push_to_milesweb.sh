@@ -49,6 +49,7 @@ node db/migrateLibrikaProductFixes.js || true
 node db/migrateBookAdding3Modes.js || true
 node db/migrateSuperAdminRbacUserManagement.js || true
 node scripts/make_books_real_and_copies.js || true
+node -e "const db=require('./db'); (async()=>{ await db.query('ALTER TABLE transactions ADD COLUMN barcode VARCHAR(100) NULL').catch(()=>{}); process.exit(0); })()" || true
 
 killall -9 node 2>/dev/null || pkill -9 node 2>/dev/null || pkill -9 -f "app.js" 2>/dev/null || true
 mkdir -p tmp
@@ -70,6 +71,7 @@ node db/migrateLibrikaProductFixes.js || true
 node db/migrateBookAdding3Modes.js || true
 node db/migrateSuperAdminRbacUserManagement.js || true
 node scripts/make_books_real_and_copies.js || true
+node -e "const db=require('./db'); (async()=>{ await db.query('ALTER TABLE transactions ADD COLUMN barcode VARCHAR(100) NULL').catch(()=>{}); process.exit(0); })()" || true
 
 killall -9 node 2>/dev/null || pkill -9 node 2>/dev/null || pkill -9 -f "app.js" 2>/dev/null || true
 mkdir -p tmp

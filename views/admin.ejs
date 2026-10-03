@@ -98,6 +98,228 @@
     .bp-copy-item:hover {
       background: #F8FAFC;
     }
+
+    /* Reusable Autocomplete & Search Components */
+    .lp-search-box-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    .lp-search-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #FFFFFF;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+      max-height: 380px;
+      overflow-y: auto;
+      z-index: 120;
+      margin-top: 6px;
+      display: none;
+    }
+    .lp-search-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #F1F5F9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: background 0.12s ease;
+    }
+    .lp-search-item:hover {
+      background: #F8FAFC;
+    }
+    .lp-search-item:last-child {
+      border-bottom: none;
+    }
+    .lp-search-item-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #EAF3FF;
+      color: #0B5ED7;
+      font-weight: 800;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .lp-search-item-thumb {
+      width: 40px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #E2E8F0;
+      flex-shrink: 0;
+      background: #F1F5F9;
+    }
+    .lp-search-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .lp-search-item-title {
+      font-weight: 700;
+      color: #111827;
+      font-size: 0.92rem;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lp-search-item-sub {
+      font-size: 0.78rem;
+      color: #64748B;
+      margin-top: 2px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .lp-search-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .lp-search-badge.eligible {
+      background: #ECFDF5;
+      color: #059669;
+    }
+    .lp-search-badge.quota-reached {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+    .lp-search-badge.fine-warning {
+      background: #FEF3C7;
+      color: #D97706;
+    }
+    .lp-search-badge.role {
+      background: #F1F5F9;
+      color: #475569;
+    }
+
+    /* Selected Preview Card */
+    .lp-selected-card {
+      background: #FFFFFF;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .lp-selected-card.ready {
+      border-color: #86EFAC;
+      background: #F0FDF4;
+    }
+    .lp-selected-card.warning-quota {
+      border-color: #FCA5A5;
+      background: #FFF5F5;
+    }
+    .lp-selected-card-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: #EAF3FF;
+      color: #0B5ED7;
+      font-size: 1.3rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .lp-selected-card-thumb {
+      width: 48px;
+      height: 68px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #CBD5E1;
+      flex-shrink: 0;
+      background: #F8FAFC;
+    }
+    .lp-selected-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .lp-change-btn {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      color: #475569;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .lp-change-btn:hover {
+      background: #F1F5F9;
+      color: #DC2626;
+      border-color: #FCA5A5;
+    }
+
+    /* Circulation Rules Form */
+    .lp-circ-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .lp-circ-field-label {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: #475569;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .lp-circ-field-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #111827;
+      background: #FFFFFF;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .lp-circ-field-input:focus {
+      border-color: #0B5ED7;
+      box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.12);
+    }
+
+    /* Return Books Issued Item Card */
+    .lp-return-book-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      transition: all 0.15s ease;
+    }
+    .lp-return-book-card:hover {
+      border-color: #94A3B8;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
   </style>
 </head>
 <body class="lp-body">
@@ -989,7 +1211,7 @@
               📤 Issue Desk
             </button>
             <button class="lp-tab-btn" id="circ-tab-btn-return" onclick="switchCirculationTab('return', this)">
-              📥 Return Station
+              📥 Return Books
             </button>
             <button class="lp-tab-btn" id="circ-tab-btn-renew" onclick="switchCirculationTab('renewals', this)">
               🔄 Active Loans & Renewals (<%= activeLoans.length %>)
@@ -1004,39 +1226,52 @@
               <div class="card">
                 <h3 class="lp-card-title" style="margin-bottom:16px;">🎯 Rapid Checkout & Issue Station</h3>
                 
-                <!-- 1. Scan Member -->
+                <!-- 1. Search / Scan Student Member -->
                 <div class="lp-scanner-box" style="margin-bottom:18px;">
-                  <label class="lp-scanner-label">
-                    <span>1. SCAN / ENTER MEMBER ID OR ADMISSION NO</span>
+                  <label class="lp-scanner-label" style="justify-content:space-between;">
+                    <span>1. SEARCH & SELECT STUDENT / BORROWER</span>
+                    <span style="font-size:0.75rem;font-weight:600;color:#64748B;">Multi-field partial match</span>
                   </label>
-                  <div style="display:flex;gap:8px;">
-                    <input type="text" id="circMemberInput" class="lp-scanner-input" placeholder="e.g. ADM101 or phone..." onkeydown="if(event.key==='Enter') lookupMemberForIssue()">
-                    <button class="btn-primary" onclick="lookupMemberForIssue()">Find</button>
+                  <div class="lp-search-box-wrapper">
+                    <div style="display:flex;gap:8px;">
+                      <input type="text" id="circMemberInput" class="lp-scanner-input" placeholder="Search by Name, Roll, Admission No, Class, Section, Phone, ID..." autocomplete="off" oninput="handleMemberSearchInput(this.value)" onkeydown="if(event.key==='Enter') searchMembersForIssue()">
+                      <button class="btn-primary" type="button" onclick="searchMembersForIssue()">Find</button>
+                    </div>
+                    <div id="circMemberDropdown" class="lp-search-dropdown"></div>
                   </div>
                   <div id="circMemberPreview" style="display:none;"></div>
                 </div>
 
-                <!-- 2. Scan Book -->
+                <!-- 2. Search / Scan Book -->
                 <div class="lp-scanner-box" style="margin-bottom:18px;">
-                  <label class="lp-scanner-label">
-                    <span>2. SCAN / ENTER BOOK BARCODE OR ISBN</span>
+                  <label class="lp-scanner-label" style="justify-content:space-between;">
+                    <span>2. SEARCH & SELECT BOOK / BARCODE</span>
+                    <span style="font-size:0.75rem;font-weight:600;color:#64748B;">Search by Title, Barcode, ISBN, Author...</span>
                   </label>
-                  <div style="display:flex;gap:8px;">
-                    <input type="text" id="circBookInput" class="lp-scanner-input" placeholder="e.g. LIB-BK1-C1 or ISBN..." onkeydown="if(event.key==='Enter') lookupBookForIssue()">
-                    <button class="btn-primary" onclick="lookupBookForIssue()">Scan</button>
+                  <div class="lp-search-box-wrapper">
+                    <div style="display:flex;gap:8px;">
+                      <input type="text" id="circBookInput" class="lp-scanner-input" placeholder="Search by Book Title, Barcode, ISBN, Author, Subject, Class..." autocomplete="off" oninput="handleBookSearchInput(this.value)" onkeydown="if(event.key==='Enter') searchBooksForIssue()">
+                      <button class="btn-primary" type="button" onclick="searchBooksForIssue()">Scan</button>
+                    </div>
+                    <div id="circBookDropdown" class="lp-search-dropdown"></div>
                   </div>
                   <div id="circBookPreview" style="display:none;"></div>
                 </div>
 
                 <!-- Loan Options -->
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                  <label style="font-size:0.85rem;font-weight:700;">Loan Duration:</label>
-                  <select id="circLoanDays" class="lp-search-input" style="width:140px;">
-                    <option value="7">7 Days</option>
-                    <option value="14" selected>14 Days</option>
-                    <option value="21">21 Days</option>
-                    <option value="30">30 Days</option>
-                  </select>
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <label style="font-size:0.85rem;font-weight:700;color:#334155;">Loan Duration:</label>
+                    <select id="circLoanDays" class="lp-search-input" style="width:140px;font-weight:700;">
+                      <option value="7" <%= (settings.loan_duration_days == 7) ? 'selected' : '' %>>7 Days</option>
+                      <option value="14" <%= (!settings.loan_duration_days || settings.loan_duration_days == 14) ? 'selected' : '' %>>14 Days (Default)</option>
+                      <option value="21" <%= (settings.loan_duration_days == 21) ? 'selected' : '' %>>21 Days</option>
+                      <option value="30" <%= (settings.loan_duration_days == 30) ? 'selected' : '' %>>30 Days</option>
+                    </select>
+                  </div>
+                  <div id="circIssueReadinessHint" style="font-size:0.8rem;font-weight:700;color:#64748B;">
+                    Select Student & Book to Issue
+                  </div>
                 </div>
 
                 <!-- Confirm Issue Button -->
@@ -1045,37 +1280,141 @@
                 </button>
               </div>
 
-              <!-- Right: Checkout Summary & Rules -->
+              <!-- Right: Checkout Summary & Real Editing Rules -->
               <div class="card">
-                <h3 class="lp-card-title">📋 Circulation Summary</h3>
-                <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:18px;margin-top:14px;">
-                  <div style="font-weight:700;color:#111827;margin-bottom:8px;">Active Lending Rules:</div>
-                  <ul style="padding-left:18px;font-size:0.85rem;color:#64748B;line-height:1.7;margin:0;">
-                    <li>Default Student limit: <strong>3 books</strong> (14 days)</li>
-                    <li>Default Teacher limit: <strong>10 books</strong> (30 days)</li>
-                    <li>Fine rate: <strong>₹<%= settings.fine_per_day || 5 %>/day</strong> after <%= settings.grace_period_days || 2 %> grace days</li>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                  <h3 class="lp-card-title" style="margin:0;">📋 Circulation Summary</h3>
+                  <button type="button" class="btn-secondary" id="circEditRulesBtn" onclick="toggleCirculationRulesEdit()" style="padding:5px 11px;font-size:0.8rem;display:inline-flex;align-items:center;gap:5px;">
+                    <span>✏️</span> <span>Edit Rules</span>
+                  </button>
+                </div>
+
+                <!-- View Mode: Active Lending Rules -->
+                <div id="circRulesViewBox" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:18px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="font-weight:800;color:#111827;font-size:0.92rem;">Active Lending Rules & Limits:</div>
+                    <span class="lp-status-pill available" style="font-size:0.7rem;padding:3px 8px;">Enforced</span>
+                  </div>
+                  <ul style="padding-left:18px;font-size:0.85rem;color:#475569;line-height:1.75;margin:0;">
+                    <li>Default Student limit: <strong id="dispStudentLimit" style="color:#0F172A;"><%= settings.student_max_books || 3 %> books</strong> (<span id="dispStudentDays"><%= settings.loan_duration_days || 14 %></span> days)</li>
+                    <li>Default Teacher limit: <strong id="dispTeacherLimit" style="color:#0F172A;"><%= settings.teacher_max_books || 10 %> books</strong> (<span id="dispTeacherDays"><%= settings.teacher_loan_days || 30 %></span> days)</li>
+                    <li>Default Staff limit: <strong id="dispStaffLimit" style="color:#0F172A;"><%= settings.staff_max_books || 5 %> books</strong></li>
+                    <li>Fine rate: <strong id="dispFineRate" style="color:#DC2626;">₹<%= settings.fine_per_day || 5 %>/day</strong> after <span id="dispGraceDays"><%= settings.grace_period_days || 2 %></span> grace days</li>
+                    <li>Lost book charge: <strong id="dispLostFee" style="color:#0F172A;">₹<%= settings.lost_book_charge || 150 %></strong></li>
                     <li>Automatic stock updates upon confirmed checkout</li>
                   </ul>
+                  <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #CBD5E1;font-size:0.78rem;color:#64748B;">
+                    🔒 All limits, overdue fines, and quota barriers are strictly calculated and enforced in real time.
+                  </div>
                 </div>
+
+                <!-- Edit Mode Form (Hidden by default) -->
+                <div id="circRulesEditBox" style="display:none;background:#FFFFFF;border:2px solid #0B5ED7;border-radius:14px;padding:18px;box-shadow:0 8px 24px rgba(11,94,215,0.08);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="font-weight:800;color:#0B5ED7;font-size:0.92rem;">✏️ Edit Circulation Rules & Charges</div>
+                    <span style="font-size:0.75rem;color:#64748B;">Saves directly to database</span>
+                  </div>
+
+                  <div class="lp-circ-form-grid">
+                    <div>
+                      <label class="lp-circ-field-label">Student Max Books</label>
+                      <input type="number" min="1" id="cfgStudentMaxBooks" class="lp-circ-field-input" value="<%= settings.student_max_books || 3 %>">
+                    </div>
+                    <div>
+                      <label class="lp-circ-field-label">Student Days</label>
+                      <input type="number" min="1" id="cfgStudentDays" class="lp-circ-field-input" value="<%= settings.loan_duration_days || 14 %>">
+                    </div>
+                    <div>
+                      <label class="lp-circ-field-label">Teacher Max Books</label>
+                      <input type="number" min="1" id="cfgTeacherMaxBooks" class="lp-circ-field-input" value="<%= settings.teacher_max_books || 10 %>">
+                    </div>
+                    <div>
+                      <label class="lp-circ-field-label">Teacher Days</label>
+                      <input type="number" min="1" id="cfgTeacherDays" class="lp-circ-field-input" value="<%= settings.teacher_loan_days || 30 %>">
+                    </div>
+                    <div>
+                      <label class="lp-circ-field-label">Staff Max Books</label>
+                      <input type="number" min="1" id="cfgStaffMaxBooks" class="lp-circ-field-input" value="<%= settings.staff_max_books || 5 %>">
+                    </div>
+                    <div>
+                      <label class="lp-circ-field-label">Fine (₹ / Day)</label>
+                      <input type="number" min="0" id="cfgFineRate" class="lp-circ-field-input" value="<%= settings.fine_per_day || 5 %>">
+                    </div>
+                    <div>
+                      <label class="lp-circ-field-label">Grace Days</label>
+                      <input type="number" min="0" id="cfgGraceDays" class="lp-circ-field-input" value="<%= settings.grace_period_days || 2 %>">
+                    </div>
+                    <div>
+                      <label class="lp-circ-field-label">Lost Fee (₹)</label>
+                      <input type="number" min="0" id="cfgLostFee" class="lp-circ-field-input" value="<%= settings.lost_book_charge || 150 %>">
+                    </div>
+                  </div>
+
+                  <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+                    <button type="button" class="btn-secondary" onclick="toggleCirculationRulesEdit(false)" style="padding:8px 14px;">Cancel</button>
+                    <button type="button" class="btn-primary" id="circSaveRulesBtn" onclick="saveCirculationRules()" style="padding:8px 16px;">💾 Save Rules</button>
+                  </div>
+                </div>
+
               </div>
 
             </div>
           </div>
 
-          <!-- Circulation Tab 2: Return Station -->
+          <!-- Circulation Tab 2: Return Books -->
           <div id="circ-pane-return" class="lp-tab-pane">
-            <div class="card" style="max-width:720px;margin:0 auto;">
-              <h3 class="lp-card-title" style="margin-bottom:16px;">📥 Book Check-In & Return Station</h3>
+            <div style="max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
               
-              <div class="lp-scanner-box" style="margin-bottom:20px;">
-                <label class="lp-scanner-label">SCAN BOOK BARCODE TO COMPLETE RETURN</label>
-                <div style="display:flex;gap:8px;">
-                  <input type="text" id="circReturnBarcode" class="lp-scanner-input" placeholder="Scan barcode..." onkeydown="if(event.key==='Enter') submitCirculationReturn()">
-                  <button class="btn-success" onclick="submitCirculationReturn()">COMPLETE RETURN</button>
+              <!-- Card A: Search Student to View & Return Their Issued Books -->
+              <div class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                  <div>
+                    <h3 class="lp-card-title" style="margin:0;">📥 Book Check-In & Return Books</h3>
+                    <div style="font-size:0.83rem;color:#64748B;margin-top:3px;">Select a student to view and return their borrowed books, or scan any copy barcode below.</div>
+                  </div>
+                  <span class="lp-status-pill available">Active Desk</span>
                 </div>
+
+                <!-- 1. Search Student -->
+                <div class="lp-scanner-box" style="margin-bottom:16px;">
+                  <label class="lp-scanner-label" style="justify-content:space-between;">
+                    <span>1. SEARCH STUDENT TO VIEW & RETURN THEIR BORROWED BOOKS</span>
+                    <span style="font-size:0.75rem;font-weight:600;color:#64748B;">Multi-field search</span>
+                  </label>
+                  <div class="lp-search-box-wrapper">
+                    <div style="display:flex;gap:8px;">
+                      <input type="text" id="circReturnMemberInput" class="lp-scanner-input" placeholder="Search student by Name, Admission No, Roll, Class, Section, Phone..." autocomplete="off" oninput="handleReturnMemberSearchInput(this.value)" onkeydown="if(event.key==='Enter') searchMembersForReturn()">
+                      <button class="btn-primary" type="button" onclick="searchMembersForReturn()">Find Student</button>
+                    </div>
+                    <div id="circReturnMemberDropdown" class="lp-search-dropdown"></div>
+                  </div>
+                  <div id="circReturnMemberCard" style="display:none;"></div>
+                </div>
+
+                <!-- Issued Books for Selected Student -->
+                <div id="circReturnStudentBooksSection" style="display:none;margin-top:16px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="font-weight:800;color:#111827;font-size:0.95rem;" id="circReturnBooksHeader">Currently Borrowed Books</div>
+                    <button class="btn-secondary" style="font-size:0.75rem;padding:4px 8px;" onclick="refreshReturnStudentLoans()">🔄 Refresh Loans</button>
+                  </div>
+                  <div id="circReturnIssuedList"></div>
+                </div>
+
               </div>
 
-              <div id="circReturnResult" style="display:none;background:#F0FDF4;border:1px solid #86EFAC;border-radius:14px;padding:18px;"></div>
+              <!-- Card B: Direct Barcode Scanner -->
+              <div class="card">
+                <h4 style="margin:0 0 12px 0;font-size:0.95rem;font-weight:800;color:#334155;">⚡ OR QUICK SCAN BOOK BARCODE DIRECTLY</h4>
+                <div class="lp-scanner-box">
+                  <label class="lp-scanner-label">SCAN PHYSICAL COPY BARCODE OR ISBN TO COMPLETE RETURN</label>
+                  <div style="display:flex;gap:8px;">
+                    <input type="text" id="circReturnBarcode" class="lp-scanner-input" placeholder="Scan barcode (e.g. VBPGZ... or LIB-BK...)" onkeydown="if(event.key==='Enter') submitCirculationReturn()">
+                    <button class="btn-success" onclick="submitCirculationReturn()" style="padding:10px 18px;font-weight:800;">COMPLETE RETURN</button>
+                  </div>
+                </div>
+                <div id="circReturnResult" style="display:none;background:#F0FDF4;border:1px solid #86EFAC;border-radius:14px;padding:18px;margin-top:14px;"></div>
+              </div>
+
             </div>
           </div>
 
@@ -3671,94 +4010,380 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // Circulation Desk Scanner Operations
+    // Circulation State & Reusable Components
     // ─────────────────────────────────────────────────────────────────
-    async function lookupMemberForIssue() {
-      const q = document.getElementById('circMemberInput').value.trim();
-      if (!q) return;
+    let activeCheckoutMember = null;
+    let activeCheckoutBook = null;
+    let activeReturnMember = null;
+    let memberSearchDebounceTimer = null;
+    let bookSearchDebounceTimer = null;
+    let returnMemberSearchDebounceTimer = null;
+    let activeCirculationRules = <%- JSON.stringify(settings || {}) %>;
+
+    // Close search dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('#circMemberInput') && !e.target.closest('#circMemberDropdown')) {
+        const dd = document.getElementById('circMemberDropdown');
+        if (dd) dd.style.display = 'none';
+      }
+      if (!e.target.closest('#circBookInput') && !e.target.closest('#circBookDropdown')) {
+        const dd = document.getElementById('circBookDropdown');
+        if (dd) dd.style.display = 'none';
+      }
+      if (!e.target.closest('#circReturnMemberInput') && !e.target.closest('#circReturnMemberDropdown')) {
+        const dd = document.getElementById('circReturnMemberDropdown');
+        if (dd) dd.style.display = 'none';
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────────────
+    // 1. REUSABLE STUDENT SEARCH (ISSUE DESK)
+    // ─────────────────────────────────────────────────────────────────
+    function handleMemberSearchInput(val) {
+      clearTimeout(memberSearchDebounceTimer);
+      memberSearchDebounceTimer = setTimeout(() => {
+        searchMembersForIssue(val);
+      }, 250);
+    }
+
+    async function searchMembersForIssue(queryOverride) {
+      const q = (queryOverride !== undefined ? queryOverride : (document.getElementById('circMemberInput')?.value || '')).trim();
+      const dd = document.getElementById('circMemberDropdown');
+      if (!dd) return;
+
       try {
-        const res = await fetch('/admin/api/circulation/lookup-member', {
+        const res = await fetch('/admin/api/circulation/search-students', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query: q })
         });
         const data = await res.json();
-        const prev = document.getElementById('circMemberPreview');
-        if (data.status === 'success') {
-          activeCheckoutMember = data.member;
-          prev.style.display = 'flex';
-          prev.className = 'lp-preview-card';
-          prev.innerHTML = `
-            <div class="lp-preview-avatar">${data.member.name[0]}</div>
-            <div style="flex:1;">
-              <div style="font-weight:800;color:#111827;">${data.member.name} (${data.member.role})</div>
-              <div style="font-size:0.8rem;color:#64748B;">Adm No: <strong>${data.member.admission_no || 'N/A'}</strong> &bull; Class: ${data.member.class || 'N/A'}</div>
-              <div style="font-size:0.8rem;color:#0B5ED7;font-weight:700;margin-top:2px;">Currently Borrowed: ${data.activeCount} / ${data.borrowingLimit} Books</div>
-            </div>
-            <span style="color:#198754;font-weight:800;">✓ Verified</span>
-          `;
-          checkIssueReadiness();
+
+        if (data.status === 'success' && data.students && data.students.length > 0) {
+          dd.style.display = 'block';
+          dd.innerHTML = data.students.map(s => {
+            const avatarChar = (s.name && s.name[0]) ? s.name[0].toUpperCase() : 'S';
+            const quotaBadge = s.can_borrow 
+              ? `<span class="lp-search-badge eligible">✓ ${s.active_count}/${s.borrowing_limit} Books</span>`
+              : `<span class="lp-search-badge quota-reached">⚠️ Quota Reached (${s.active_count}/${s.borrowing_limit})</span>`;
+            const fineBadge = s.total_fines > 0 
+              ? `<span class="lp-search-badge fine-warning">Fine: ₹${s.total_fines}</span>` 
+              : '';
+
+            return `
+              <div class="lp-search-item" onclick="selectMemberForIssue(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+                <div class="lp-search-item-avatar">${avatarChar}</div>
+                <div class="lp-search-item-info">
+                  <div class="lp-search-item-title">${escapeHtml(s.name)}</div>
+                  <div class="lp-search-item-sub">
+                    <span class="lp-search-badge role">${escapeHtml(s.role || 'student')}</span>
+                    ${s.admission_no ? `<span>Adm: <strong>${escapeHtml(s.admission_no)}</strong></span>` : ''}
+                    ${s.student_id ? `<span>ID: ${escapeHtml(s.student_id)}</span>` : ''}
+                    ${s.class ? `<span>Class: <strong>${escapeHtml(s.class)}${s.section ? ' (' + escapeHtml(s.section) + ')' : ''}</strong></span>` : ''}
+                    ${s.phone ? `<span>📞 ${escapeHtml(s.phone)}</span>` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                  ${quotaBadge}
+                  ${fineBadge}
+                </div>
+              </div>
+            `;
+          }).join('');
         } else {
-          activeCheckoutMember = null;
-          prev.style.display = 'block';
-          prev.className = 'lp-preview-card';
-          prev.innerHTML = `<span style="color:#DC3545;font-weight:700;">⚠️ ${data.message}</span>`;
-          checkIssueReadiness();
+          dd.style.display = 'block';
+          dd.innerHTML = `
+            <div style="padding:16px;text-align:center;color:#64748B;font-size:0.85rem;">
+              No students or members found matching "<strong>${escapeHtml(q)}</strong>".
+            </div>
+          `;
         }
       } catch (e) {
-        console.error(e);
+        console.error('Member search error:', e);
       }
     }
 
-    async function lookupBookForIssue() {
-      const barcode = document.getElementById('circBookInput').value.trim();
-      if (!barcode) return;
+    function selectMemberForIssue(student) {
+      activeCheckoutMember = student;
+      const dd = document.getElementById('circMemberDropdown');
+      if (dd) dd.style.display = 'none';
+
+      const input = document.getElementById('circMemberInput');
+      if (input) input.value = student.name;
+
+      const prev = document.getElementById('circMemberPreview');
+      if (prev) {
+        prev.style.display = 'flex';
+        prev.className = `lp-selected-card ${student.can_borrow ? 'ready' : 'warning-quota'}`;
+        const avatarChar = (student.name && student.name[0]) ? student.name[0].toUpperCase() : 'S';
+
+        prev.innerHTML = `
+          <div class="lp-selected-card-avatar">${avatarChar}</div>
+          <div class="lp-selected-card-info">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-weight:800;font-size:1.05rem;color:#111827;">${escapeHtml(student.name)}</span>
+              <span class="lp-search-badge role">${escapeHtml(student.role || 'student')}</span>
+              ${student.can_borrow 
+                ? `<span class="lp-search-badge eligible">✓ Quota: ${student.active_count} of ${student.borrowing_limit} Books (${student.borrowing_limit - student.active_count} Available)</span>` 
+                : `<span class="lp-search-badge quota-reached">⚠️ Max Quota Reached (${student.active_count}/${student.borrowing_limit} books)</span>`}
+            </div>
+            <div style="font-size:0.82rem;color:#64748B;margin-top:4px;display:flex;flex-wrap:wrap;gap:12px;">
+              <span>Adm No: <strong>${escapeHtml(student.admission_no || 'N/A')}</strong></span>
+              <span>Student ID: <strong>${escapeHtml(student.student_id || 'N/A')}</strong></span>
+              <span>Class: <strong>${escapeHtml(student.class || 'N/A')}${student.section ? ' (' + escapeHtml(student.section) + ')' : ''}</strong></span>
+              ${student.phone ? `<span>Phone: <strong>${escapeHtml(student.phone)}</strong></span>` : ''}
+              ${student.total_fines > 0 ? `<span style="color:#DC3545;font-weight:700;">⚠️ Outstanding Fines: ₹${student.total_fines}</span>` : ''}
+            </div>
+            ${!student.can_borrow ? `<div style="font-size:0.8rem;color:#DC3545;font-weight:800;margin-top:4px;">⚠️ Borrowing limit reached! Student cannot borrow another book until previously issued books are returned.</div>` : ''}
+          </div>
+          <button type="button" class="lp-change-btn" onclick="clearSelectedMemberForIssue()">✕ Change</button>
+        `;
+      }
+
+      checkIssueReadiness();
+    }
+
+    function clearSelectedMemberForIssue() {
+      activeCheckoutMember = null;
+      const input = document.getElementById('circMemberInput');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      const prev = document.getElementById('circMemberPreview');
+      if (prev) {
+        prev.style.display = 'none';
+        prev.innerHTML = '';
+      }
+      checkIssueReadiness();
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // 2. REUSABLE BOOK SEARCH (ISSUE DESK)
+    // ─────────────────────────────────────────────────────────────────
+    function handleBookSearchInput(val) {
+      clearTimeout(bookSearchDebounceTimer);
+      bookSearchDebounceTimer = setTimeout(() => {
+        searchBooksForIssue(val);
+      }, 250);
+    }
+
+    async function searchBooksForIssue(queryOverride) {
+      const q = (queryOverride !== undefined ? queryOverride : (document.getElementById('circBookInput')?.value || '')).trim();
+      const dd = document.getElementById('circBookDropdown');
+      if (!dd) return;
+
       try {
-        const res = await fetch('/admin/api/circulation/lookup-book', {
+        const res = await fetch('/admin/api/circulation/search-books', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ barcode })
+          body: JSON.stringify({ query: q })
         });
         const data = await res.json();
-        const prev = document.getElementById('circBookPreview');
-        if (data.status === 'success') {
-          activeCheckoutBook = data.book;
-          prev.style.display = 'flex';
-          prev.className = 'lp-preview-card';
-          prev.innerHTML = `
-            <div class="lp-preview-avatar" style="background:#E8F5E9;color:#198754;">📖</div>
-            <div style="flex:1;">
-              <div style="font-weight:800;color:#111827;">${data.book.title}</div>
-              <div style="font-size:0.8rem;color:#64748B;">Author: ${data.book.author} &bull; Shelf: <strong>${data.book.shelf_location || 'A-1'}</strong></div>
-              <div style="font-size:0.8rem;color:#198754;font-weight:700;">Available Stock: ${data.book.available_copies} Copies</div>
-            </div>
-            <span style="color:#198754;font-weight:800;">✓ Ready</span>
-          `;
-          checkIssueReadiness();
+
+        if (data.status === 'success' && data.books && data.books.length > 0) {
+          dd.style.display = 'block';
+          dd.innerHTML = data.books.map(b => {
+            const coverImg = b.cover_url || '/placeholder-book.png';
+            const stockBadge = b.is_available 
+              ? `<span class="lp-search-badge eligible">✓ ${b.available_copies} of ${b.total_copies} Available</span>`
+              : `<span class="lp-search-badge quota-reached">⚠️ 0 Stock (Issued)</span>`;
+
+            return `
+              <div class="lp-search-item" onclick="selectBookForIssue(${JSON.stringify(b).replace(/"/g, '&quot;')})">
+                <img src="${escapeHtml(coverImg)}" class="lp-search-item-thumb" onerror="this.src='/placeholder-book.png'">
+                <div class="lp-search-item-info">
+                  <div class="lp-search-item-title">${escapeHtml(b.title)}</div>
+                  <div class="lp-search-item-sub">
+                    <span>By <strong>${escapeHtml(b.author)}</strong></span>
+                    ${b.barcode_id ? `<span>Barcode: <strong>${escapeHtml(b.barcode_id)}</strong></span>` : ''}
+                    ${b.isbn ? `<span>ISBN: ${escapeHtml(b.isbn)}</span>` : ''}
+                    <span>Category: <strong>${escapeHtml(b.category)}</strong></span>
+                    <span>Shelf: <strong>${escapeHtml(b.shelf_location)}</strong></span>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                  ${stockBadge}
+                  ${b.price ? `<span style="font-size:0.75rem;font-weight:700;color:#0B5ED7;">₹${escapeHtml(b.price)}</span>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
         } else {
-          activeCheckoutBook = null;
-          prev.style.display = 'block';
-          prev.className = 'lp-preview-card';
-          prev.innerHTML = `<span style="color:#DC3545;font-weight:700;">⚠️ ${data.message}</span>`;
-          checkIssueReadiness();
+          dd.style.display = 'block';
+          dd.innerHTML = `
+            <div style="padding:16px;text-align:center;color:#64748B;font-size:0.85rem;">
+              No books found matching "<strong>${escapeHtml(q)}</strong>".
+            </div>
+          `;
         }
       } catch (e) {
-        console.error(e);
+        console.error('Book search error:', e);
       }
     }
 
+    function selectBookForIssue(book) {
+      activeCheckoutBook = book;
+      const dd = document.getElementById('circBookDropdown');
+      if (dd) dd.style.display = 'none';
+
+      const input = document.getElementById('circBookInput');
+      if (input) input.value = book.title;
+
+      const prev = document.getElementById('circBookPreview');
+      if (prev) {
+        prev.style.display = 'flex';
+        prev.className = `lp-selected-card ${book.is_available ? 'ready' : 'warning-quota'}`;
+        const coverImg = book.cover_url || '/placeholder-book.png';
+
+        // Physical copies selection dropdown if multiple copies exist
+        let copySelectorHtml = '';
+        if (book.copies && book.copies.length > 0) {
+          copySelectorHtml = `
+            <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+              <label style="font-size:0.75rem;font-weight:700;color:#334155;">Copy Barcode:</label>
+              <select id="circSelectedCopyBarcode" class="lp-search-input" style="padding:4px 8px;font-size:0.8rem;font-weight:700;width:auto;" onchange="updateSelectedCopyBarcode(this.value)">
+                ${book.copies.map(c => {
+                  const isAvail = (c.availability_status === 'AVAILABLE' || c.status === 'AVAILABLE');
+                  const selectedAttr = (c.barcode === book.copy_barcode) ? 'selected' : '';
+                  return `<option value="${escapeHtml(c.barcode)}" ${selectedAttr} ${!isAvail ? 'disabled' : ''}>
+                    Copy #${c.copy_number}: ${escapeHtml(c.barcode)} (${isAvail ? 'Available' : 'Issued'})
+                  </option>`;
+                }).join('')}
+              </select>
+            </div>
+          `;
+        }
+
+        prev.innerHTML = `
+          <img src="${escapeHtml(coverImg)}" class="lp-selected-card-thumb" onerror="this.src='/placeholder-book.png'">
+          <div class="lp-selected-card-info">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-weight:800;font-size:1.05rem;color:#111827;">${escapeHtml(book.title)}</span>
+              ${book.is_available 
+                ? `<span class="lp-search-badge eligible">✓ In Stock (${book.available_copies} of ${book.total_copies} Copies)</span>` 
+                : `<span class="lp-search-badge quota-reached">⚠️ Out of Stock (0 Copies Available)</span>`}
+            </div>
+            <div style="font-size:0.82rem;color:#64748B;margin-top:4px;display:flex;flex-wrap:wrap;gap:12px;">
+              <span>Author: <strong>${escapeHtml(book.author)}</strong></span>
+              <span>Shelf: <strong>${escapeHtml(book.shelf_location)}</strong></span>
+              ${book.isbn ? `<span>ISBN: <strong>${escapeHtml(book.isbn)}</strong></span>` : ''}
+              ${book.category ? `<span>Category: <strong>${escapeHtml(book.category)}</strong></span>` : ''}
+            </div>
+            ${copySelectorHtml}
+            ${!book.is_available ? `<div style="font-size:0.8rem;color:#DC3545;font-weight:800;margin-top:4px;">⚠️ Book is out of stock and cannot be issued right now.</div>` : ''}
+          </div>
+          <button type="button" class="lp-change-btn" onclick="clearSelectedBookForIssue()">✕ Change</button>
+        `;
+      }
+
+      checkIssueReadiness();
+    }
+
+    function updateSelectedCopyBarcode(barcodeVal) {
+      if (activeCheckoutBook) {
+        activeCheckoutBook.copy_barcode = barcodeVal;
+      }
+    }
+
+    function clearSelectedBookForIssue() {
+      activeCheckoutBook = null;
+      const input = document.getElementById('circBookInput');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      const prev = document.getElementById('circBookPreview');
+      if (prev) {
+        prev.style.display = 'none';
+        prev.innerHTML = '';
+      }
+      checkIssueReadiness();
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // 3. ISSUE DESK READINESS CHECK & SUBMIT
+    // ─────────────────────────────────────────────────────────────────
     function checkIssueReadiness() {
       const btn = document.getElementById('circConfirmIssueBtn');
-      if (activeCheckoutMember && activeCheckoutBook) {
-        btn.disabled = false;
-      } else {
+      const hint = document.getElementById('circIssueReadinessHint');
+      if (!btn) return;
+
+      if (!activeCheckoutMember && !activeCheckoutBook) {
         btn.disabled = true;
+        btn.innerText = 'CONFIRM ISSUE';
+        if (hint) {
+          hint.innerText = 'Select Student & Book to Issue';
+          hint.style.color = '#64748B';
+        }
+        return;
+      }
+
+      if (!activeCheckoutMember) {
+        btn.disabled = true;
+        btn.innerText = 'SELECT STUDENT FIRST';
+        if (hint) {
+          hint.innerText = 'Please search and select a borrower student';
+          hint.style.color = '#0B5ED7';
+        }
+        return;
+      }
+
+      if (!activeCheckoutBook) {
+        btn.disabled = true;
+        btn.innerText = 'SELECT BOOK FIRST';
+        if (hint) {
+          hint.innerText = 'Please search and select a book to issue';
+          hint.style.color = '#0B5ED7';
+        }
+        return;
+      }
+
+      // Check member quota
+      if (!activeCheckoutMember.can_borrow) {
+        btn.disabled = true;
+        btn.innerText = `QUOTA REACHED (MAX ${activeCheckoutMember.borrowing_limit} BOOKS)`;
+        if (hint) {
+          hint.innerText = `⚠️ ${activeCheckoutMember.name} has reached maximum quota of ${activeCheckoutMember.borrowing_limit} books`;
+          hint.style.color = '#DC3545';
+        }
+        return;
+      }
+
+      // Check book stock
+      if (!activeCheckoutBook.is_available) {
+        btn.disabled = true;
+        btn.innerText = 'BOOK OUT OF STOCK';
+        if (hint) {
+          hint.innerText = `⚠️ '${activeCheckoutBook.title}' has 0 available copies in stock`;
+          hint.style.color = '#DC3545';
+        }
+        return;
+      }
+
+      // All good!
+      btn.disabled = false;
+      btn.innerText = `CONFIRM ISSUE TO ${activeCheckoutMember.name.toUpperCase()}`;
+      if (hint) {
+        hint.innerText = `✓ Ready! ${activeCheckoutMember.borrowing_limit - activeCheckoutMember.active_count} loan spot(s) remaining for this member.`;
+        hint.style.color = '#059669';
       }
     }
 
     async function submitCirculationIssue() {
       if (!activeCheckoutMember || !activeCheckoutBook) return;
+      if (!activeCheckoutMember.can_borrow) {
+        alert(`❌ Cannot issue book: Member ${activeCheckoutMember.name} has reached maximum quota (${activeCheckoutMember.borrowing_limit} books).`);
+        return;
+      }
+      if (!activeCheckoutBook.is_available) {
+        alert(`❌ Cannot issue book: '${activeCheckoutBook.title}' has 0 copies available in stock.`);
+        return;
+      }
+
       const days = document.getElementById('circLoanDays').value;
+      const targetBarcode = activeCheckoutBook.copy_barcode || activeCheckoutBook.barcode_id;
+
       try {
         const res = await fetch('/admin/api/circulation/issue', {
           method: 'POST',
@@ -3766,7 +4391,7 @@
           body: JSON.stringify({
             member_id: activeCheckoutMember.id,
             book_id: activeCheckoutBook.id,
-            barcode: activeCheckoutBook.copy_barcode,
+            barcode: targetBarcode,
             due_days: days
           })
         });
@@ -3782,6 +4407,345 @@
       }
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    // 4. CIRCULATION RULES REAL EDITING
+    // ─────────────────────────────────────────────────────────────────
+    function toggleCirculationRulesEdit(show) {
+      const viewBox = document.getElementById('circRulesViewBox');
+      const editBox = document.getElementById('circRulesEditBox');
+      const editBtn = document.getElementById('circEditRulesBtn');
+      if (!viewBox || !editBox) return;
+
+      const shouldShow = (show !== undefined) ? show : (editBox.style.display === 'none');
+      if (shouldShow) {
+        viewBox.style.display = 'none';
+        editBox.style.display = 'block';
+        if (editBtn) editBtn.style.display = 'none';
+      } else {
+        viewBox.style.display = 'block';
+        editBox.style.display = 'none';
+        if (editBtn) editBtn.style.display = 'inline-flex';
+      }
+    }
+
+    async function saveCirculationRules() {
+      const stuLimit = parseInt(document.getElementById('cfgStudentMaxBooks').value, 10);
+      const stuDays = parseInt(document.getElementById('cfgStudentDays').value, 10);
+      const teaLimit = parseInt(document.getElementById('cfgTeacherMaxBooks').value, 10);
+      const teaDays = parseInt(document.getElementById('cfgTeacherDays').value, 10);
+      const staLimit = parseInt(document.getElementById('cfgStaffMaxBooks').value, 10);
+      const fineRate = parseInt(document.getElementById('cfgFineRate').value, 10);
+      const graceDays = parseInt(document.getElementById('cfgGraceDays').value, 10);
+      const lostFee = parseInt(document.getElementById('cfgLostFee').value, 10);
+
+      if (isNaN(stuLimit) || stuLimit < 1) return alert('Student limit must be at least 1 book.');
+      if (isNaN(stuDays) || stuDays < 1) return alert('Student loan duration must be at least 1 day.');
+      if (isNaN(teaLimit) || teaLimit < 1) return alert('Teacher limit must be at least 1 book.');
+      if (isNaN(teaDays) || teaDays < 1) return alert('Teacher loan duration must be at least 1 day.');
+      if (isNaN(fineRate) || fineRate < 0) return alert('Fine rate cannot be negative.');
+      if (isNaN(graceDays) || graceDays < 0) return alert('Grace period cannot be negative.');
+
+      const saveBtn = document.getElementById('circSaveRulesBtn');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerText = 'Saving...';
+      }
+
+      try {
+        const res = await fetch('/admin/api/circulation/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_max_books: stuLimit,
+            loan_duration_days: stuDays,
+            teacher_max_books: teaLimit,
+            teacher_loan_days: teaDays,
+            staff_max_books: staLimit,
+            fine_per_day: fineRate,
+            grace_period_days: graceDays,
+            lost_book_charge: lostFee
+          })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          activeCirculationRules = data.settings;
+
+          // Update View Displays live
+          document.getElementById('dispStudentLimit').innerText = `${stuLimit} books`;
+          document.getElementById('dispStudentDays').innerText = stuDays;
+          document.getElementById('dispTeacherLimit').innerText = `${teaLimit} books`;
+          document.getElementById('dispTeacherDays').innerText = teaDays;
+          if (document.getElementById('dispStaffLimit')) document.getElementById('dispStaffLimit').innerText = `${staLimit} books`;
+          document.getElementById('dispFineRate').innerText = `₹${fineRate}/day`;
+          document.getElementById('dispGraceDays').innerText = graceDays;
+          if (document.getElementById('dispLostFee')) document.getElementById('dispLostFee').innerText = `₹${lostFee}`;
+
+          // Close edit mode
+          toggleCirculationRulesEdit(false);
+
+          // Update loan duration select default
+          const loanSelect = document.getElementById('circLoanDays');
+          if (loanSelect) {
+            loanSelect.value = String(stuDays);
+          }
+
+          alert('✅ ' + data.message);
+        } else {
+          alert('❌ ' + data.message);
+        }
+      } catch (e) {
+        alert('Failed to save settings: ' + e.message);
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerText = '💾 Save Rules';
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // 5. RETURN BOOKS — REUSABLE STUDENT SEARCH & BORROWER RETURNS
+    // ─────────────────────────────────────────────────────────────────
+    function handleReturnMemberSearchInput(val) {
+      clearTimeout(returnMemberSearchDebounceTimer);
+      returnMemberSearchDebounceTimer = setTimeout(() => {
+        searchMembersForReturn(val);
+      }, 250);
+    }
+
+    async function searchMembersForReturn(queryOverride) {
+      const q = (queryOverride !== undefined ? queryOverride : (document.getElementById('circReturnMemberInput')?.value || '')).trim();
+      const dd = document.getElementById('circReturnMemberDropdown');
+      if (!dd) return;
+
+      try {
+        const res = await fetch('/admin/api/circulation/search-students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success' && data.students && data.students.length > 0) {
+          dd.style.display = 'block';
+          dd.innerHTML = data.students.map(s => {
+            const avatarChar = (s.name && s.name[0]) ? s.name[0].toUpperCase() : 'S';
+            const borrowedBadge = s.active_count > 0 
+              ? `<span class="lp-search-badge" style="background:#EFF6FF;color:#0B5ED7;font-weight:800;">${s.active_count} Borrowed Books</span>`
+              : `<span class="lp-search-badge" style="background:#F1F5F9;color:#64748B;">0 Books Borrowed</span>`;
+            const fineBadge = s.total_fines > 0 
+              ? `<span class="lp-search-badge fine-warning">Fine: ₹${s.total_fines}</span>` 
+              : '';
+
+            return `
+              <div class="lp-search-item" onclick="selectMemberForReturn(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+                <div class="lp-search-item-avatar">${avatarChar}</div>
+                <div class="lp-search-item-info">
+                  <div class="lp-search-item-title">${escapeHtml(s.name)}</div>
+                  <div class="lp-search-item-sub">
+                    <span class="lp-search-badge role">${escapeHtml(s.role || 'student')}</span>
+                    ${s.admission_no ? `<span>Adm: <strong>${escapeHtml(s.admission_no)}</strong></span>` : ''}
+                    ${s.class ? `<span>Class: <strong>${escapeHtml(s.class)}${s.section ? ' (' + escapeHtml(s.section) + ')' : ''}</strong></span>` : ''}
+                    ${s.phone ? `<span>📞 ${escapeHtml(s.phone)}</span>` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                  ${borrowedBadge}
+                  ${fineBadge}
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          dd.style.display = 'block';
+          dd.innerHTML = `
+            <div style="padding:16px;text-align:center;color:#64748B;font-size:0.85rem;">
+              No students found matching "<strong>${escapeHtml(q)}</strong>".
+            </div>
+          `;
+        }
+      } catch (e) {
+        console.error('Return member search error:', e);
+      }
+    }
+
+    function selectMemberForReturn(student) {
+      activeReturnMember = student;
+      const dd = document.getElementById('circReturnMemberDropdown');
+      if (dd) dd.style.display = 'none';
+
+      const input = document.getElementById('circReturnMemberInput');
+      if (input) input.value = student.name;
+
+      const card = document.getElementById('circReturnMemberCard');
+      if (card) {
+        card.style.display = 'flex';
+        card.className = 'lp-selected-card ready';
+        const avatarChar = (student.name && student.name[0]) ? student.name[0].toUpperCase() : 'S';
+
+        card.innerHTML = `
+          <div class="lp-selected-card-avatar">${avatarChar}</div>
+          <div class="lp-selected-card-info">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-weight:800;font-size:1.05rem;color:#111827;">${escapeHtml(student.name)}</span>
+              <span class="lp-search-badge role">${escapeHtml(student.role || 'student')}</span>
+              <span class="lp-search-badge eligible" id="retBadgeBorrowedCount">${student.active_count} Active Loans</span>
+            </div>
+            <div style="font-size:0.82rem;color:#64748B;margin-top:4px;display:flex;flex-wrap:wrap;gap:12px;">
+              <span>Adm No: <strong>${escapeHtml(student.admission_no || 'N/A')}</strong></span>
+              <span>Class: <strong>${escapeHtml(student.class || 'N/A')}${student.section ? ' (' + escapeHtml(student.section) + ')' : ''}</strong></span>
+              ${student.phone ? `<span>Phone: <strong>${escapeHtml(student.phone)}</strong></span>` : ''}
+              ${student.total_fines > 0 ? `<span style="color:#DC3545;font-weight:700;">⚠️ Outstanding Fines: ₹${student.total_fines}</span>` : ''}
+            </div>
+          </div>
+          <button type="button" class="lp-change-btn" onclick="clearSelectedMemberForReturn()">✕ Switch Student</button>
+        `;
+      }
+
+      document.getElementById('circReturnStudentBooksSection').style.display = 'block';
+      loadStudentIssuedBooks(student.id);
+    }
+
+    function clearSelectedMemberForReturn() {
+      activeReturnMember = null;
+      const input = document.getElementById('circReturnMemberInput');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      const card = document.getElementById('circReturnMemberCard');
+      if (card) {
+        card.style.display = 'none';
+        card.innerHTML = '';
+      }
+      document.getElementById('circReturnStudentBooksSection').style.display = 'none';
+      document.getElementById('circReturnIssuedList').innerHTML = '';
+    }
+
+    function refreshReturnStudentLoans() {
+      if (activeReturnMember) {
+        loadStudentIssuedBooks(activeReturnMember.id);
+      }
+    }
+
+    async function loadStudentIssuedBooks(userId) {
+      const list = document.getElementById('circReturnIssuedList');
+      if (!list) return;
+
+      list.innerHTML = `
+        <div style="padding:24px;text-align:center;color:#64748B;">
+          <span>⏳ Loading issued books...</span>
+        </div>
+      `;
+
+      try {
+        const res = await fetch('/admin/api/circulation/student-active-loans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          const header = document.getElementById('circReturnBooksHeader');
+          if (header) {
+            header.innerHTML = `Currently Borrowed Books (${data.total_count} Books) ${data.total_fines > 0 ? '<span style="color:#DC3545;font-weight:800;font-size:0.85rem;margin-left:8px;">• Total Late Fines: ₹' + data.total_fines + '</span>' : ''}`;
+          }
+
+          const badgeCount = document.getElementById('retBadgeBorrowedCount');
+          if (badgeCount) badgeCount.innerText = `${data.total_count} Active Loans`;
+
+          if (data.loans.length === 0) {
+            list.innerHTML = `
+              <div style="background:#ECFDF5;border:1.5px solid #86EFAC;border-radius:12px;padding:24px;text-align:center;color:#065F46;">
+                <div style="font-size:1.5rem;margin-bottom:6px;">🎉</div>
+                <div style="font-weight:800;font-size:1.05rem;">All Clear! No Books Currently Issued</div>
+                <div style="font-size:0.85rem;color:#047857;margin-top:4px;">This student has returned all borrowed books and has zero active loans.</div>
+              </div>
+            `;
+          } else {
+            list.innerHTML = data.loans.map(l => {
+              const coverImg = l.cover_url || '/placeholder-book.png';
+              const isOverdue = l.is_overdue;
+              const statusPill = isOverdue
+                ? `<span class="lp-status-pill overdue" style="font-size:0.75rem;">⚠️ ${l.days_overdue} days late (Fine: ₹${l.fine})</span>`
+                : `<span class="lp-status-pill available" style="font-size:0.75rem;">✓ On Time</span>`;
+
+              return `
+                <div class="lp-return-book-card">
+                  <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;">
+                    <img src="${escapeHtml(coverImg)}" style="width:44px;height:62px;object-fit:cover;border-radius:6px;border:1px solid #CBD5E1;background:#F8FAFC;" onerror="this.src='/placeholder-book.png'">
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-weight:800;color:#111827;font-size:0.95rem;line-height:1.3;">${escapeHtml(l.book_title)}</div>
+                      <div style="font-size:0.8rem;color:#64748B;margin-top:2px;">By ${escapeHtml(l.book_author || 'Unknown')}</div>
+                      <div style="font-size:0.78rem;color:#334155;margin-top:4px;display:flex;flex-wrap:wrap;gap:10px;">
+                        <span>Barcode: <strong style="color:#0B5ED7;">${escapeHtml(l.barcode || 'N/A')}</strong></span>
+                        <span>Shelf: <strong>${escapeHtml(l.shelf_location || 'A-1')}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:140px;">
+                    <div style="font-size:0.78rem;color:#64748B;">Issued: <strong>${escapeHtml(l.issue_date || 'N/A')}</strong></div>
+                    <div style="font-size:0.78rem;color:#334155;">Due: <strong>${escapeHtml(l.due_date || 'N/A')}</strong></div>
+                    ${statusPill}
+                  </div>
+
+                  <div style="flex-shrink:0;">
+                    <button type="button" class="btn-success" style="padding:10px 16px;font-weight:800;font-size:0.88rem;display:inline-flex;align-items:center;gap:6px;" onclick="returnStudentBookPrompt(${l.transaction_id}, '${escapeHtml(l.book_title)}', ${l.fine || 0})">
+                      <span>📥</span> <span>Return Book</span>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        } else {
+          list.innerHTML = `<div style="color:#DC3545;padding:16px;">Error loading loans: ${escapeHtml(data.message)}</div>`;
+        }
+      } catch (e) {
+        list.innerHTML = `<div style="color:#DC3545;padding:16px;">Failed to load loans: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function returnStudentBookPrompt(txId, bookTitle, fineAmount) {
+      let msg = `Confirm return for '${bookTitle}'?`;
+      if (fineAmount > 0) {
+        msg = `⚠️ OVERDUE FINE CALCULATED: ₹${fineAmount}\n\nBook '${bookTitle}' is overdue. Confirm book check-in and apply fine?`;
+      }
+
+      if (!confirm(msg)) return;
+
+      try {
+        const res = await fetch('/admin/api/circulation/return', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transaction_id: txId })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          let alertMsg = `✅ ${data.message}`;
+          if (data.fine > 0) alertMsg += `\nOverdue Fine Recorded: ₹${data.fine}`;
+          if (data.reservation_alert) alertMsg += `\n📢 ${data.reservation_alert}`;
+          alert(alertMsg);
+
+          // Refresh the student's loans immediately without page reload
+          if (activeReturnMember) {
+            loadStudentIssuedBooks(activeReturnMember.id);
+          }
+        } else {
+          alert(`❌ ${data.message}`);
+        }
+      } catch (e) {
+        alert('Return error: ' + e.message);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // 6. DIRECT BARCODE RETURN (SCANNER STATION)
+    // ─────────────────────────────────────────────────────────────────
     async function submitCirculationReturn() {
       const barcode = document.getElementById('circReturnBarcode').value.trim();
       if (!barcode) return;
@@ -3798,10 +4762,15 @@
           resDiv.innerHTML = `
             <div style="color:#146C43;font-weight:800;font-size:1.05rem;">✅ Check-in Successful!</div>
             <div style="font-size:0.9rem;color:#111827;margin-top:4px;">${data.message}</div>
-            ${data.fine > 0 ? `<div style="color:#DC3545;font-weight:700;margin-top:4px;">Overdue Fine Calculated: ₹${data.fine}</div>` : ''}
+            ${data.fine > 0 ? `<div style="color:#DC3545;font-weight:700;margin-top:4px;">Overdue Fine Calculated: ₹${data.fine} (${data.days_overdue} days late)</div>` : '<div style="color:#198754;font-size:0.8rem;margin-top:2px;">Returned on time with ₹0 fine.</div>'}
             ${data.reservation_alert ? `<div style="color:#0B5ED7;font-weight:700;margin-top:4px;">${data.reservation_alert}</div>` : ''}
           `;
           document.getElementById('circReturnBarcode').value = '';
+
+          // If a student is currently selected in Return Books, refresh their list
+          if (activeReturnMember) {
+            loadStudentIssuedBooks(activeReturnMember.id);
+          }
         } else {
           resDiv.innerHTML = `<span style="color:#DC3545;font-weight:700;">❌ ${data.message}</span>`;
         }
@@ -3839,6 +4808,17 @@
       } catch (e) {
         alert(e.message);
       }
+    }
+
+    // Helper to safely escape strings in HTML templates
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     // ─────────────────────────────────────────────────────────────────
