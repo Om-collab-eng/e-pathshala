@@ -1249,11 +1249,11 @@ table.lp-table tbody tr:hover {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 540px;
+  width: 560px;
   max-width: 95vw;
   background: #FFFFFF;
-  box-shadow: var(--shadow-drawer);
-  z-index: 1000;
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.25);
+  z-index: 10006;
   display: flex;
   flex-direction: column;
   transform: translateX(105%);

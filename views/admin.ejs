@@ -14,6 +14,27 @@
   <link rel="stylesheet" href="/librarian-pro.css">
   <link rel="stylesheet" href="/mobile-first.css">
   <style>
+    /* Ensure Member Drawer is always crystal clear on top of blurry backdrop */
+    .lp-drawer-overlay {
+      position: fixed !important;
+      inset: 0 !important;
+      background: rgba(15, 23, 42, 0.6) !important;
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
+      z-index: 10005 !important;
+    }
+    .lp-member-drawer {
+      position: fixed !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 560px !important;
+      max-width: 95vw !important;
+      background: #FFFFFF !important;
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.35) !important;
+      z-index: 10006 !important;
+    }
+
     .lp-logout-btn {
       display: inline-flex;
       align-items: center;
@@ -4876,73 +4897,237 @@
 
         const isSuspended = m.is_banned == 1 || m.status === 'suspended';
 
+        // Cache loaded member for editing
+        window.currentDossierMember = m;
+        window.currentDossierData = data;
+
+        renderMemberDossierView(false);
+      } catch (e) {
+        console.error('Member drawer load error:', e);
         body.innerHTML = `
-          <!-- Digital Library Pass Card -->
-          <div class="lp-digital-pass">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-              <div>
-                <span style="font-size:0.75rem;letter-spacing:0.08em;opacity:0.8;">LIBRIKA DIGITAL PASS</span>
-                <h2 style="font-size:1.35rem;font-weight:800;margin:4px 0 0 0;">${m.name}</h2>
-                <div style="font-size:0.8rem;opacity:0.9;">${m.role.toUpperCase()} &bull; ${m.class || 'General'}</div>
-              </div>
-              <div style="font-size:1.8rem;">🎓</div>
-            </div>
-            <div class="lp-pass-barcode">
-              <div style="font-family:monospace;font-weight:800;color:#0B5ED7;font-size:1.1rem;letter-spacing:2px;">${m.admission_no || `MEM-${m.id}`}</div>
-            </div>
-          </div>
-
-          <!-- Account Status & Suspension Control -->
-          <div style="display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;padding:12px 14px;border-radius:10px;margin-bottom:16px;border:1px solid #E2E8F0;">
-            <div>
-              <div style="font-size:0.72rem;color:#64748B;font-weight:700;letter-spacing:0.04em;">ACCOUNT STATUS</div>
-              <div style="font-weight:800;font-size:0.9rem;color:${isSuspended ? '#DC2626' : '#16A34A'};display:flex;align-items:center;gap:6px;margin-top:2px;">
-                <span>${isSuspended ? '● Suspended / Restricted' : '● Active & Authorized'}</span>
-              </div>
-            </div>
-            <button class="btn-${isSuspended ? 'success' : 'danger'}" style="padding:6px 12px;font-size:0.78rem;font-weight:700;" onclick="toggleMemberStatus('${m.id}', ${!isSuspended})">
-              ${isSuspended ? 'Unsuspend Account' : 'Suspend Account'}
-            </button>
-          </div>
-
-          <!-- Overview Stats -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-            <div style="background:#F8FAFC;padding:12px;border-radius:12px;border:1px solid #E2E8F0;">
-              <span style="font-size:0.75rem;color:#64748B;">Active Books</span>
-              <div style="font-size:1.25rem;font-weight:800;color:#0B5ED7;">${data.activeLoans.length}</div>
-            </div>
-            <div style="background:#F8FAFC;padding:12px;border-radius:12px;border:1px solid #E2E8F0;">
-              <span style="font-size:0.75rem;color:#64748B;">Pending Fines</span>
-              <div style="font-size:1.25rem;font-weight:800;color:#DC3545;">₹${data.totalFines}</div>
-            </div>
-          </div>
-
-          <!-- Currently Borrowed -->
-          <h4 style="font-weight:800;margin:0 0 10px 0;font-size:0.95rem;">📖 Currently Borrowed Books (${data.activeLoans.length})</h4>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
-            ${data.activeLoans.length === 0 ? '<p style="color:#94A3B8;font-size:0.85rem;">No active borrowed books.</p>' : data.activeLoans.map(l => `
-              <div style="padding:10px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                  <div style="font-weight:700;font-size:0.85rem;">${l.book_title}</div>
-                  <div style="font-size:0.72rem;color:#64748B;">Due: ${new Date(l.due_date).toLocaleDateString()}</div>
-                </div>
-                ${l.is_overdue ? `<span class="lp-status-pill overdue">${l.days_overdue}d late</span>` : '<span class="lp-status-pill available">Active</span>'}
-              </div>
-            `).join('')}
-          </div>
-
-          <!-- History -->
-          <h4 style="font-weight:800;margin:0 0 10px 0;font-size:0.95rem;">📜 Reading & Loan History (${data.historyLoans.length})</h4>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            ${data.historyLoans.slice(0, 5).map(h => `
-              <div style="font-size:0.8rem;color:#64748B;padding:6px 0;border-bottom:1px solid #F1F5F9;">
-                ✓ Returned <strong>${h.book_title}</strong> on ${new Date(h.return_date).toLocaleDateString()}
-              </div>
-            `).join('')}
+          <div style="padding:24px;text-align:center;color:#DC2626;background:#FEF2F2;border-radius:12px;border:1px solid #FECACA;">
+            <div style="font-size:1.5rem;margin-bottom:6px;">⚠️</div>
+            <div style="font-weight:800;font-size:0.95rem;">Failed to load member profile</div>
+            <div style="font-size:0.8rem;color:#991B1B;margin-top:4px;">${escapeHtml(e.message || 'Server error')}</div>
+            <button class="btn-secondary" style="margin-top:12px;padding:6px 12px;font-size:0.8rem;" onclick="openMemberDrawer('${userId}')">🔄 Retry</button>
           </div>
         `;
-      } catch (e) {
-        body.innerHTML = '<p style="color:#DC3545;">Failed to load member profile.</p>';
+      }
+    }
+
+    function renderMemberDossierView(isEditMode = false) {
+      const m = window.currentDossierMember;
+      const data = window.currentDossierData;
+      const body = document.getElementById('lpMemberDrawerBody');
+      if (!m || !body) return;
+
+      const isSuspended = m.is_banned == 1 || m.status === 'suspended';
+
+      if (isEditMode) {
+        body.innerHTML = `
+          <div style="background:#F8FAFC;border:1.5px solid #CBD5E1;border-radius:14px;padding:18px;margin-bottom:18px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <h4 style="margin:0;font-size:1rem;font-weight:800;color:#0F172A;display:flex;align-items:center;gap:6px;">
+                <span>✏️</span> Edit Member Information
+              </h4>
+              <button type="button" class="btn-secondary" style="padding:4px 10px;font-size:0.78rem;" onclick="renderMemberDossierView(false)">
+                ✕ Cancel
+              </button>
+            </div>
+
+            <form id="editMemberForm" onsubmit="saveMemberProfile(event, '${m.id}')" style="display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <label style="display:block;font-size:0.75rem;font-weight:700;color:#475569;margin-bottom:4px;">Full Name *</label>
+                <input type="text" id="editMemName" class="lp-scanner-input" value="${escapeHtml(m.name || '')}" required style="width:100%;font-size:0.88rem;padding:8px 12px;">
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <label style="display:block;font-size:0.75rem;font-weight:700;color:#475569;margin-bottom:4px;">Role</label>
+                  <select id="editMemRole" class="lp-scanner-input" style="width:100%;font-size:0.88rem;padding:8px 12px;">
+                    <option value="student" ${m.role === 'student' ? 'selected' : ''}>Student</option>
+                    <option value="teacher" ${m.role === 'teacher' ? 'selected' : ''}>Teacher</option>
+                    <option value="staff" ${m.role === 'staff' ? 'selected' : ''}>Staff</option>
+                    <option value="librarian" ${m.role === 'librarian' ? 'selected' : ''}>Librarian</option>
+                    <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>Admin</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;font-weight:700;color:#475569;margin-bottom:4px;">Admission No / Roll</label>
+                  <input type="text" id="editMemAdmission" class="lp-scanner-input" value="${escapeHtml(m.admission_no || '')}" style="width:100%;font-size:0.88rem;padding:8px 12px;">
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <label style="display:block;font-size:0.75rem;font-weight:700;color:#475569;margin-bottom:4px;">Class / Grade</label>
+                  <input type="text" id="editMemClass" class="lp-scanner-input" value="${escapeHtml(m.class || '')}" placeholder="e.g. 10" style="width:100%;font-size:0.88rem;padding:8px 12px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;font-weight:700;color:#475569;margin-bottom:4px;">Section</label>
+                  <input type="text" id="editMemSection" class="lp-scanner-input" value="${escapeHtml(m.section || '')}" placeholder="e.g. A" style="width:100%;font-size:0.88rem;padding:8px 12px;">
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <label style="display:block;font-size:0.75rem;font-weight:700;color:#475569;margin-bottom:4px;">Phone Number</label>
+                  <input type="text" id="editMemPhone" class="lp-scanner-input" value="${escapeHtml(m.phone || '')}" style="width:100%;font-size:0.88rem;padding:8px 12px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;font-weight:700;color:#475569;margin-bottom:4px;">Student / Member ID</label>
+                  <input type="text" id="editMemStudentId" class="lp-scanner-input" value="${escapeHtml(m.student_id || '')}" style="width:100%;font-size:0.88rem;padding:8px 12px;">
+                </div>
+              </div>
+
+              <div>
+                <label style="display:block;font-size:0.75rem;font-weight:700;color:#475569;margin-bottom:4px;">Email Address</label>
+                <input type="email" id="editMemEmail" class="lp-scanner-input" value="${escapeHtml(m.email || '')}" style="width:100%;font-size:0.88rem;padding:8px 12px;">
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:8px;">
+                <button type="submit" class="btn-primary" style="flex:1;padding:10px;font-weight:800;">
+                  💾 Save Changes
+                </button>
+                <button type="button" class="btn-secondary" style="padding:10px 16px;" onclick="renderMemberDossierView(false)">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        `;
+        return;
+      }
+
+      body.innerHTML = `
+        <!-- Digital Library Pass Card -->
+        <div class="lp-digital-pass">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <span style="font-size:0.75rem;letter-spacing:0.08em;opacity:0.8;">LIBRIKA DIGITAL PASS</span>
+              <h2 style="font-size:1.35rem;font-weight:800;margin:4px 0 0 0;">${escapeHtml(m.name)}</h2>
+              <div style="font-size:0.8rem;opacity:0.9;">${escapeHtml(String(m.role || 'STUDENT').toUpperCase())} &bull; ${escapeHtml(m.class ? 'Class ' + m.class + (m.section ? ' (' + m.section + ')' : '') : 'General')}</div>
+            </div>
+            <div style="font-size:1.8rem;">🎓</div>
+          </div>
+          <div class="lp-pass-barcode">
+            <div style="font-family:monospace;font-weight:800;color:#0B5ED7;font-size:1.1rem;letter-spacing:2px;">${escapeHtml(m.admission_no || m.student_id || `MEM-${m.id}`)}</div>
+          </div>
+        </div>
+
+        <!-- Action Bar: Edit Profile & Suspension Control -->
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;padding:12px 14px;border-radius:10px;margin-bottom:16px;border:1px solid #E2E8F0;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:0.72rem;color:#64748B;font-weight:700;letter-spacing:0.04em;">ACCOUNT STATUS</div>
+            <div style="font-weight:800;font-size:0.9rem;color:${isSuspended ? '#DC2626' : '#16A34A'};display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span>${isSuspended ? '● Suspended / Restricted' : '● Active & Authorized'}</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" class="btn-primary" style="padding:6px 14px;font-size:0.78rem;font-weight:800;display:inline-flex;align-items:center;gap:5px;" onclick="renderMemberDossierView(true)">
+              <span>✏️</span> Edit Profile
+            </button>
+            <button class="btn-${isSuspended ? 'success' : 'danger'}" style="padding:6px 12px;font-size:0.78rem;font-weight:700;" onclick="toggleMemberStatus('${m.id}', ${!isSuspended})">
+              ${isSuspended ? 'Unsuspend' : 'Suspend'}
+            </button>
+          </div>
+        </div>
+
+        <!-- Member Key Details Grid -->
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;margin-bottom:16px;">
+          <div style="font-size:0.75rem;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:10px;">MEMBER CONTACT & ACADEMIC INFO</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.83rem;">
+            <div>
+              <div style="color:#64748B;font-size:0.72rem;">Admission No:</div>
+              <div style="font-weight:700;color:#0F172A;">${escapeHtml(m.admission_no || 'N/A')}</div>
+            </div>
+            <div>
+              <div style="color:#64748B;font-size:0.72rem;">Student ID:</div>
+              <div style="font-weight:700;color:#0F172A;">${escapeHtml(m.student_id || 'N/A')}</div>
+            </div>
+            <div>
+              <div style="color:#64748B;font-size:0.72rem;">Class & Section:</div>
+              <div style="font-weight:700;color:#0F172A;">${escapeHtml(m.class ? m.class + (m.section ? ' (' + m.section + ')' : '') : 'N/A')}</div>
+            </div>
+            <div>
+              <div style="color:#64748B;font-size:0.72rem;">Phone:</div>
+              <div style="font-weight:700;color:#0F172A;">${escapeHtml(m.phone || 'N/A')}</div>
+            </div>
+            <div style="grid-column:span 2;">
+              <div style="color:#64748B;font-size:0.72rem;">Email:</div>
+              <div style="font-weight:700;color:#0F172A;">${escapeHtml(m.email || 'N/A')}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overview Stats -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div style="background:#F8FAFC;padding:12px;border-radius:12px;border:1px solid #E2E8F0;">
+            <span style="font-size:0.75rem;color:#64748B;">Active Books</span>
+            <div style="font-size:1.25rem;font-weight:800;color:#0B5ED7;">${data.activeLoans.length} of ${data.borrowingLimit || 3} Limit</div>
+          </div>
+          <div style="background:#F8FAFC;padding:12px;border-radius:12px;border:1px solid #E2E8F0;">
+            <span style="font-size:0.75rem;color:#64748B;">Pending Fines</span>
+            <div style="font-size:1.25rem;font-weight:800;color:#DC3545;">₹${data.totalFines}</div>
+          </div>
+        </div>
+
+        <!-- Currently Borrowed -->
+        <h4 style="font-weight:800;margin:0 0 10px 0;font-size:0.95rem;">📖 Currently Borrowed Books (${data.activeLoans.length})</h4>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          ${data.activeLoans.length === 0 ? '<p style="color:#94A3B8;font-size:0.85rem;padding:10px;background:#F8FAFC;border-radius:8px;">No active borrowed books.</p>' : data.activeLoans.map(l => `
+            <div style="padding:10px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-weight:700;font-size:0.85rem;">${escapeHtml(l.book_title)}</div>
+                <div style="font-size:0.72rem;color:#64748B;">Due: ${escapeHtml(new Date(l.due_date).toLocaleDateString())} &bull; Barcode: ${escapeHtml(l.book_barcode || 'N/A')}</div>
+              </div>
+              ${l.is_overdue ? `<span class="lp-status-pill overdue">${l.days_overdue}d late (₹${l.fine})</span>` : '<span class="lp-status-pill available">Active</span>'}
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- History -->
+        <h4 style="font-weight:800;margin:0 0 10px 0;font-size:0.95rem;">📜 Reading & Loan History (${data.historyLoans.length})</h4>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${data.historyLoans.length === 0 ? '<p style="color:#94A3B8;font-size:0.85rem;">No past return history recorded.</p>' : data.historyLoans.slice(0, 5).map(h => `
+            <div style="font-size:0.8rem;color:#64748B;padding:6px 0;border-bottom:1px solid #F1F5F9;">
+              ✓ Returned <strong>${escapeHtml(h.book_title)}</strong> on ${escapeHtml(new Date(h.return_date).toLocaleDateString())}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    async function saveMemberProfile(e, userId) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('editMemName')?.value || '',
+        role: document.getElementById('editMemRole')?.value || 'student',
+        admission_no: document.getElementById('editMemAdmission')?.value || '',
+        class: document.getElementById('editMemClass')?.value || '',
+        section: document.getElementById('editMemSection')?.value || '',
+        phone: document.getElementById('editMemPhone')?.value || '',
+        student_id: document.getElementById('editMemStudentId')?.value || '',
+        email: document.getElementById('editMemEmail')?.value || ''
+      };
+
+      try {
+        const res = await fetch(`/admin/api/member/${userId}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const d = await res.json();
+        if (d.success) {
+          alert('Member profile updated successfully!');
+          // Re-fetch and re-render drawer
+          await openMemberDrawer(userId);
+          // Also optionally reload or update table row if visible
+        } else {
+          alert(d.error || 'Failed to update member profile');
+        }
+      } catch (err) {
+        alert('Error saving member profile: ' + err.message);
       }
     }
 

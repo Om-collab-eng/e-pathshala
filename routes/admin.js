@@ -1461,24 +1461,31 @@ router.get('/api/member/:id', adminOnly, async (req, res) => {
   const sCode = req.session.school_code || 'DEMO01';
 
   try {
-    const userRes = await db.query('SELECT * FROM users WHERE id = $1 AND school_code = $2', [id, sCode]);
+    const settings = await getCirculationSettings(sCode);
+    const finePerDay = Number(settings.fine_per_day) || 5;
+    const graceDays = Number(settings.grace_period_days) || 2;
+
+    const userRes = await db.query(`
+      SELECT * FROM users 
+      WHERE id = $1 AND (LOWER(school_code) = LOWER($2) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+    `, [id, sCode]);
     if (!userRes.rows || userRes.rows.length === 0) return res.status(404).json({ error: 'Member not found' });
     const member = userRes.rows[0];
 
     const loansRes = await db.query(`
-      SELECT t.*, b.title as book_title, b.author as book_author, b.barcode_id as book_barcode, b.cover_url as book_cover
+      SELECT t.*, b.title as book_title, b.author as book_author, COALESCE(t.barcode, b.barcode_id) as book_barcode, b.cover_url as book_cover
       FROM transactions t
       JOIN books b ON t.book_id = b.id
-      WHERE t.user_id = $1 AND t.school_code = $2
+      WHERE t.user_id = $1
       ORDER BY t.id DESC
-    `, [id, sCode]);
+    `, [id]);
 
     const activeLoans = [];
     const historyLoans = [];
     let totalFines = 0;
 
     (loansRes.rows || []).forEach(l => {
-      const fineData = calculateFine(l.due_date);
+      const fineData = calculateFine(l.due_date, finePerDay, graceDays);
       const enhanced = { ...l, ...fineData };
       if (!l.return_date) {
         activeLoans.push(enhanced);
@@ -1499,10 +1506,69 @@ router.get('/api/member/:id', adminOnly, async (req, res) => {
       activeLoans,
       historyLoans,
       reservations: resvRes.rows || [],
-      totalFines
+      totalFines,
+      borrowingLimit: (member.role === 'teacher') ? (settings.teacher_max_books || 10) : ((member.role === 'staff') ? (settings.staff_max_books || 5) : (settings.student_max_books || 3))
     });
   } catch (err) {
+    console.error('Member profile API error:', err);
     return res.status(500).json({ error: err.message });
+  }
+});
+
+// Member Profile Update API (Allows Librarians/Admins to edit member info)
+router.post('/api/member/:id/update', adminOnly, async (req, res) => {
+  const { id } = req.params;
+  const sCode = req.session.school_code || 'DEMO01';
+  const { name, phone, email, admission_no, student_id, class: studentClass, section, role } = req.body;
+
+  try {
+    const userRes = await db.query(`
+      SELECT * FROM users 
+      WHERE id = $1 AND (LOWER(school_code) = LOWER($2) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+    `, [id, sCode]);
+
+    if (!userRes.rows || userRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found or unauthorized' });
+    }
+
+    const cur = userRes.rows[0];
+    const newName = name !== undefined ? name.trim() : cur.name;
+    const newPhone = phone !== undefined ? phone.trim() : cur.phone;
+    const newEmail = email !== undefined ? email.trim() : cur.email;
+    const newAdm = admission_no !== undefined ? admission_no.trim() : cur.admission_no;
+    const newStuId = student_id !== undefined ? student_id.trim() : cur.student_id;
+    const newClass = studentClass !== undefined ? studentClass.trim() : cur.class;
+    const newSection = section !== undefined ? section.trim() : cur.section;
+    const newRole = role !== undefined ? role.trim() : cur.role;
+
+    if (!newName) {
+      return res.status(400).json({ error: 'Member name is required' });
+    }
+
+    await db.query(`
+      UPDATE users 
+      SET name = $1, phone = $2, email = $3, admission_no = $4, student_id = $5, class = $6, section = $7, role = $8
+      WHERE id = $9
+    `, [newName, newPhone, newEmail, newAdm, newStuId, newClass, newSection, newRole, id]);
+
+    return res.json({
+      success: true,
+      message: 'Member profile updated successfully!',
+      member: {
+        id,
+        name: newName,
+        phone: newPhone,
+        email: newEmail,
+        admission_no: newAdm,
+        student_id: newStuId,
+        class: newClass,
+        section: newSection,
+        role: newRole
+      }
+    });
+  } catch (err) {
+    console.error('Member profile update error:', err);
+    return res.status(500).json({ error: 'Failed to update member: ' + err.message });
   }
 });
 
@@ -2401,7 +2467,11 @@ router.post('/api/member/:id/toggle-status', adminOnly, async (req, res) => {
   const { id } = req.params;
   const sCode = req.session.school_code || 'DEMO01';
   try {
-    const userRes = await db.query('SELECT id, name, is_banned, status FROM users WHERE id = $1 AND (school_code = $2 OR $2 = "DEMO01" OR $2 = "DPS123")', [id, sCode]);
+    const userRes = await db.query(`
+      SELECT id, name, is_banned, status 
+      FROM users 
+      WHERE id = $1 AND (LOWER(school_code) = LOWER($2) OR school_code = 'GLOBAL' OR school_code IS NULL OR school_code = '')
+    `, [id, sCode]);
     if (!userRes.rows || userRes.rows.length === 0) return res.status(404).json({ error: 'Member not found' });
     const member = userRes.rows[0];
     const isSuspended = (member.is_banned == 1 || member.is_banned === '1' || member.is_banned === true || String(member.status || '').toLowerCase() === 'suspended');
