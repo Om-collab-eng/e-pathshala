@@ -615,6 +615,7 @@ router.all('/api/circulation/search-students', adminOnly, async (req, res) => {
         SELECT u.id, u.name, u.admission_no, u.student_id, u.class, u.section, u.phone, u.email, u.role, u.is_banned, u.profile_picture, u.avatar_id
         FROM users u
         WHERE (LOWER(u.school_code) = LOWER($1) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
+          AND LOWER(COALESCE(u.role, 'student')) NOT IN ('super_admin', 'superadmin', 'admin')
         ORDER BY u.name ASC
         LIMIT 15
       `;
@@ -625,6 +626,7 @@ router.all('/api/circulation/search-students', adminOnly, async (req, res) => {
         SELECT u.id, u.name, u.admission_no, u.student_id, u.class, u.section, u.phone, u.email, u.role, u.is_banned, u.profile_picture, u.avatar_id
         FROM users u
         WHERE (LOWER(u.school_code) = LOWER($1) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
+          AND LOWER(COALESCE(u.role, 'student')) NOT IN ('super_admin', 'superadmin', 'admin')
           AND (
             LOWER(u.name) LIKE LOWER($2) OR
             LOWER(COALESCE(u.role, '')) LIKE LOWER($2) OR
