@@ -61,6 +61,7 @@ function adminOnly(req, res, next) {
   req.flash('error', 'Access denied. Admin or Librarian login required.');
   return res.redirect('/login');
 }
+const schoolAdminOnly = adminOnly;
 
 function hasPerm(req, perm) {
   if (req.session && (req.session.role === 'admin' || req.session.role === 'super_admin' || req.session.role === 'superadmin' || req.session.role === 'owner')) return true;
