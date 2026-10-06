@@ -31,5 +31,8 @@ router.get('/quizzes/:id/results/:attemptId', requireLogin, quizCtrl.getQuizResu
 router.get('/admin/api/quizzes/list', requireAdmin, quizCtrl.getAdminQuizzesList);
 router.post('/admin/api/quizzes/save', requireAdmin, quizCtrl.postSaveQuiz);
 router.post('/admin/api/quizzes/generate-ai', requireAdmin, quizCtrl.postGenerateAiQuiz);
+router.post('/admin/api/quizzes/:id/override', requireAdmin, quizCtrl.postLibrarianQuizOverride);
+router.get('/admin/api/quiz-settings', requireAdmin, quizCtrl.getAdminQuizSettings);
+router.post('/admin/api/quiz-settings', requireAdmin, quizCtrl.postAdminQuizSettings);
 
 module.exports = router;

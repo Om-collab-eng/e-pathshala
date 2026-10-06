@@ -2132,13 +2132,30 @@
           <div id="learn-tab-quizzes" class="learn-tab-pane">
             
             <!-- Sub-tabs: Offline vs Digital Quizzes -->
-            <div style="display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;">
-              <button id="subtab-btn-offline" class="sp-tab-btn active" style="padding:8px 16px;font-size:0.88rem;" onclick="switchQuizSubTab('offline', this)">
-                📚 Offline Book Quizzes
-              </button>
-              <button id="subtab-btn-digital" class="sp-tab-btn" style="padding:8px 16px;font-size:0.88rem;" onclick="switchQuizSubTab('digital', this)">
-                📱 Digital Library Quizzes
-              </button>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">
+              <div style="display:flex;gap:10px;">
+                <button id="subtab-btn-offline" class="sp-tab-btn active" style="padding:8px 16px;font-size:0.88rem;" onclick="switchQuizSubTab('offline', this)">
+                  📚 Offline Book Quizzes
+                </button>
+                <button id="subtab-btn-digital" class="sp-tab-btn" style="padding:8px 16px;font-size:0.88rem;" onclick="switchQuizSubTab('digital', this)">
+                  📱 Digital Library Quizzes
+                </button>
+              </div>
+
+              <!-- Status Filters: ALL, UNLOCKED, LOCKED, TRASHED, COMPLETED -->
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-right:2px;">Filter:</span>
+                <button class="sp-tab-btn active" id="quizFilterAll" style="padding:4px 10px;font-size:0.75rem;border-radius:100px;" onclick="filterStudentQuizCards('ALL', this)">All</button>
+                <button class="sp-tab-btn" id="quizFilterUnlocked" style="padding:4px 10px;font-size:0.75rem;border-radius:100px;" onclick="filterStudentQuizCards('UNLOCKED', this)">🔓 Unlocked</button>
+                <button class="sp-tab-btn" id="quizFilterLocked" style="padding:4px 10px;font-size:0.75rem;border-radius:100px;" onclick="filterStudentQuizCards('LOCKED', this)">🔒 Locked</button>
+                <button class="sp-tab-btn" id="quizFilterTrashed" style="padding:4px 10px;font-size:0.75rem;border-radius:100px;" onclick="filterStudentQuizCards('TRASHED', this)">⏳ Trashed / Expired</button>
+                <button class="sp-tab-btn" id="quizFilterCompleted" style="padding:4px 10px;font-size:0.75rem;border-radius:100px;" onclick="filterStudentQuizCards('COMPLETED', this)">✅ Completed</button>
+              </div>
+            </div>
+
+            <!-- Trashed / Expired Quizzes Educational Banner -->
+            <div id="trashedQuizInfoBanner" style="display:none;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:0.84rem;line-height:1.4;">
+              <strong>ℹ️ About Trashed / Expired Quizzes:</strong> Quizzes are "trashed" (expired) when the 10-day point-earning deadline passes. Trashed quizzes are <strong>never deleted</strong> — you can still take them to practice reading comprehension and test your knowledge, but you will not earn Leaderboard reader points.
             </div>
 
             <!-- Offline Quizzes Pane -->
@@ -3127,31 +3144,47 @@
         const data = await res.json();
         if (data.status !== 'success') throw new Error(data.message || 'Failed to fetch quizzes');
 
+        window.cachedStudentOfflineQuizzes = data.offlineQuizzes || [];
+        window.cachedStudentDigitalQuizzes = data.digitalQuizzes || [];
+        window.currentStudentQuizFilter = 'ALL';
+
         const renderQuizCards = (list, isOffline) => {
-          if (!list || list.length === 0) {
+          const filter = window.currentStudentQuizFilter || 'ALL';
+          const filtered = list.filter(q => {
+            if (filter === 'ALL') return true;
+            return q.filter_status === filter;
+          });
+
+          if (!filtered || filtered.length === 0) {
             return `
               <div class="sp-card" style="grid-column: 1 / -1;text-align:center;padding:48px 20px;">
                 <span style="font-size:2.5rem;display:block;margin-bottom:8px;">${isOffline ? '📚' : '📱'}</span>
-                <h4 style="margin:0 0 6px 0;font-size:1.1rem;font-weight:800;">No Quizzes Available</h4>
+                <h4 style="margin:0 0 6px 0;font-size:1.1rem;font-weight:800;">No ${filter !== 'ALL' ? filter : ''} Quizzes Found</h4>
                 <p style="margin:0;font-size:0.88rem;color:var(--text-secondary);">
-                  ${isOffline ? 'Borrow physical books from the library to unlock comprehension quizzes!' : 'Read e-books and PDFs in the E-Library to unlock digital quizzes!'}
+                  ${filter === 'TRASHED' ? 'No expired quizzes. Quizzes transition here once their 10-day point deadline ends.' : (isOffline ? 'Borrow physical books from the library to unlock comprehension quizzes!' : 'Read e-books and PDFs in the E-Library to unlock digital quizzes!')}
                 </p>
               </div>
             `;
           }
 
-          return list.map(q => {
+          return filtered.map(q => {
             let statusPill = '';
             let actionBtn = '';
 
             if (q.card_status === 'PASSED') {
-              statusPill = `<span class="sp-pill green" style="margin-bottom:8px;">🎉 Passed (${q.best_score}%)</span>`;
-              actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;display:block;">Review / Retake</a>`;
+              statusPill = `<span class="sp-pill green" style="margin-bottom:8px;">✅ Verified (+${q.points_available || 50} pts) · ${q.best_score}%</span>`;
+              actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;display:block;">Review Attempt</a>`;
+            } else if (q.card_status === 'COMPLETED_NO_POINTS') {
+              statusPill = `<span class="sp-pill yellow" style="margin-bottom:8px;">📝 Completed (No Points)</span>`;
+              actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;display:block;">Review Attempt</a>`;
             } else if (q.card_status === 'IN_PROGRESS') {
               statusPill = `<span class="sp-pill yellow" style="margin-bottom:8px;">⏳ In Progress</span>`;
               actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-primary" style="width:100%;text-align:center;text-decoration:none;display:block;">Resume Quiz &rarr;</a>`;
+            } else if (q.card_status === 'EXPIRED_AVAILABLE') {
+              statusPill = `<span class="sp-pill red" style="margin-bottom:8px;background:#fee2e2;color:#991b1b;">⏳ Trashed / Expired (0 Pts)</span>`;
+              actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;display:block;">Take for Practice (0 Pts)</a>`;
             } else if (q.card_status === 'AVAILABLE') {
-              statusPill = `<span class="sp-pill indigo" style="margin-bottom:8px;">✨ Available</span>`;
+              statusPill = `<span class="sp-pill indigo" style="margin-bottom:8px;">🔓 Unlocked (+${q.points_available || 50} pts)</span>`;
               actionBtn = `<a href="/quizzes/${q.id}/take" class="btn-primary" style="width:100%;text-align:center;text-decoration:none;display:block;">Start Quiz &rarr;</a>`;
             } else if (q.card_status === 'MAX_ATTEMPTS_REACHED') {
               statusPill = `<span class="sp-pill red" style="margin-bottom:8px;">⛔ Max Attempts Used</span>`;
@@ -3162,20 +3195,22 @@
             }
 
             return `
-              <div class="sp-card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
+              <div class="sp-card" data-filter-status="${q.filter_status}" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;border-radius:18px;">
                 <div>
                   ${statusPill}
                   <h4 style="margin:0 0 6px 0;font-size:1.05rem;font-weight:800;line-height:1.3;">${q.title}</h4>
                   <div style="font-size:0.82rem;color:var(--text-secondary);font-weight:600;margin-bottom:8px;">
-                    📖 ${q.book_title || q.subject || 'Curriculum Quiz'}
+                    📖 ${q.book_title || q.digital_title || 'Reading Verification'}
                   </div>
                   ${q.card_status === 'LOCKED' ? `
-                    <div style="font-size:0.75rem;color:#b91c1c;background:#fee2e2;padding:6px 10px;border-radius:8px;margin-bottom:12px;line-height:1.4;">
+                    <div style="font-size:0.75rem;color:#b91c1c;background:#fee2e2;padding:8px 12px;border-radius:10px;margin-bottom:12px;line-height:1.4;">
                       ℹ️ ${q.lock_reason}
                     </div>
                   ` : `
-                    <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:14px;">
-                      ⏱️ ${q.time_limit || 15} Mins · 🏆 Pass: ${q.passing_percentage || 60}% · 🔄 ${q.attempts_remaining ?? 2} attempts left
+                    <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:10px;line-height:1.5;">
+                      ⏱️ ${q.time_limit || 20} Mins · 🏆 Pass: <b>${q.passing_percentage || 80}%</b> · 🔄 ${q.attempts_remaining ?? 3} attempts
+                      ${q.days_remaining_for_points > 0 ? `<br><span style="color:#d97706;font-weight:700;">⏳ Points Deadline: in ${q.days_remaining_for_points} days</span>` : ''}
+                      ${q.is_expired_for_points ? `<br><span style="color:#dc2626;font-weight:700;">⚠️ Trashed (Deadline passed): reading practice only</span>` : ''}
                     </div>
                   `}
                 </div>
@@ -3187,8 +3222,12 @@
           }).join('');
         };
 
-        if (offGrid) offGrid.innerHTML = renderQuizCards(data.offlineQuizzes, true);
-        if (digGrid) digGrid.innerHTML = renderQuizCards(data.digitalQuizzes, false);
+        window.renderAllStudentQuizCards = () => {
+          if (offGrid) offGrid.innerHTML = renderQuizCards(window.cachedStudentOfflineQuizzes || [], true);
+          if (digGrid) digGrid.innerHTML = renderQuizCards(window.cachedStudentDigitalQuizzes || [], false);
+        };
+
+        window.renderAllStudentQuizCards();
       } catch (err) {
         console.warn('Load quizzes error:', err);
         const errHtml = `
@@ -3201,6 +3240,21 @@
         `;
         if (offGrid) offGrid.innerHTML = errHtml;
         if (digGrid) digGrid.innerHTML = errHtml;
+      }
+    }
+
+    function filterStudentQuizCards(filterStatus, btn) {
+      window.currentStudentQuizFilter = filterStatus;
+      document.querySelectorAll('#learn-tab-quizzes button[id^="quizFilter"]').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const banner = document.getElementById('trashedQuizInfoBanner');
+      if (banner) {
+        banner.style.display = (filterStatus === 'TRASHED') ? 'block' : 'none';
+      }
+
+      if (typeof window.renderAllStudentQuizCards === 'function') {
+        window.renderAllStudentQuizCards();
       }
     }
 

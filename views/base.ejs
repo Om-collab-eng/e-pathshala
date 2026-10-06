@@ -658,7 +658,7 @@
             
             const titleHtml = titleText ? `<div style="font-weight: 800; font-size: 0.78rem; text-transform: uppercase; color: #64748b; margin-bottom: 2px;">${titleText}</div>` : '';
 
-            toast.innerHTML = `
+                toast.innerHTML = `
                 <span style="font-size: 1.2rem; flex-shrink: 0;">${icon}</span>
                 <div style="flex: 1; min-width: 0;">
                     ${titleHtml}
@@ -671,16 +671,6 @@
                 toast.style.animation = 'toastExit 0.35s ease forwards';
                 setTimeout(() => toast.remove(), 350);
             }, 4500);
-        }`;
-            let icon = 'ℹ️';
-            if(type === 'success') icon = '✅';
-            if(type === 'error') icon = '❌';
-            toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'toastExit 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
         }
 
         <% if (typeof messages !== 'undefined' && messages.length) { %>
@@ -845,7 +835,7 @@ For searching books: {"type": "search_book", "query": "..."}
                     throw new Error(errData.error || "Failed to fetch from chat API");
                 }
                 const chatData = await chatRes.json();
-                let reply = chatData.reply || '';
+                let reply = chatData.reply || chatData.response || '';
                 document.getElementById(typingId).remove();
                 try {
                     let jsonStart = reply.indexOf('{');
@@ -954,9 +944,17 @@ For searching books: {"type": "search_book", "query": "..."}
         const CURRENT_USER_ID = <%= (session && (session.user_id || session.id)) ? (session.user_id || session.id) : 0 %>;
         const SCHOOL_CODE = '<%= (session && session.school_code) ? session.school_code : "GLOBAL" %>';
 
-        // 1. Synthetic Web Audio API Chime (Pleasant 2-tone chime)
+        // 1. Synthetic Web Audio API Chime (Plays strictly one time)
+        let _lastChimeTime = 0;
         function playNotificationChime() {
             try {
+                const currentTimeMs = Date.now();
+                // Enforce strict throttle: sound plays strictly ONCE within 3 seconds
+                if (currentTimeMs - _lastChimeTime < 3000) {
+                    return;
+                }
+                _lastChimeTime = currentTimeMs;
+
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
                 const ctx = new AudioContext();
@@ -1216,12 +1214,17 @@ For searching books: {"type": "search_book", "query": "..."}
 
                     // Handle first load vs live updates
                     if (data.newNotifications && data.newNotifications.length > 0) {
+                        let hasNewUnseen = false;
                         data.newNotifications.forEach(n => {
                             if (lastNotifId > 0 && n.id > lastNotifId) {
-                                playNotificationChime();
+                                hasNewUnseen = true;
                                 showToast(n.message, n.type || 'notif', '🔔 Notification');
                             }
                         });
+                        // Play sound strictly once for the entire batch of notifications
+                        if (hasNewUnseen) {
+                            playNotificationChime();
+                        }
                     }
                     if (data.maxId && data.maxId > lastNotifId) {
                         lastNotifId = data.maxId;

@@ -275,9 +275,15 @@
       </span>
       <div class="res-score-number"><%= Math.round(attempt.percentage || 0) %>%</div>
       <p class="res-subtitle">
-        <%= attempt.passed 
-            ? 'Awesome work! You mastered this comprehension quiz and earned 50 Leaderboard Points!' 
-            : 'Keep reviewing the book and try again to improve your score!' %>
+        <% if (attempt.passed && attempt.points_awarded > 0) { %>
+          ✅ <strong>Reading Verified!</strong> You scored <%= Math.round(attempt.percentage || 0) %>% and earned <strong>+<%= attempt.points_awarded %> Reader Points</strong>!
+        <% } else if (attempt.passed && attempt.is_expired_points) { %>
+          ⚠️ <strong>Reading Completed:</strong> You scored <%= Math.round(attempt.percentage || 0) %>%, but the points deadline expired. No points awarded.
+        <% } else if (attempt.passed) { %>
+          ✅ <strong>Quiz Passed (<%= Math.round(attempt.percentage || 0) %>%)</strong>: Great reading! Points were previously awarded for this book.
+        <% } else { %>
+          ❌ <strong>Quiz Failed (<%= Math.round(attempt.percentage || 0) %>%)</strong>: Minimum passing score is <%= attempt.passing_percentage || 80 %>%. Please reread the book to prepare for your next attempt!
+        <% } %>
       </p>
 
       <div class="res-stats-row">

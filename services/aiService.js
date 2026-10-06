@@ -21,7 +21,7 @@ async function callNvidiaAI(prompt, options = {}) {
   if (!nvidiaKey) throw new Error("NVIDIA API key not configured");
 
   const isVision = !!options.imageBase64;
-  const model = options.model || (isVision ? "meta/llama-3.2-11b-vision-instruct" : "meta/llama-3.1-70b-instruct");
+  const model = options.model || (isVision ? "meta/llama-3.2-11b-vision-instruct" : "meta/llama-3.2-11b-vision-instruct");
 
   let content;
   if (isVision) {

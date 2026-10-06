@@ -500,9 +500,10 @@
         <div class="lp-topbar-left">
           <button class="lp-menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">☰</button>
           
-          <div class="lp-search-bar">
+          <div class="lp-search-bar" style="position:relative;width:340px;">
             <span class="lp-search-icon">🔍</span>
-            <input type="text" class="lp-search-input" id="globalSearchInput" placeholder="Quick search books, members, barcodes..." onkeyup="handleGlobalSearch(this.value)">
+            <input type="text" class="lp-search-input" id="globalSearchInput" placeholder="Search tabs, books, barcode, members, AI, settings..." onkeyup="handleGlobalSearch(this.value)" onfocus="handleGlobalSearch(this.value)" autocomplete="off">
+            <div id="globalSearchDropdown" class="lp-search-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:#FFFFFF;border:1.5px solid #CBD5E1;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.18);max-height:480px;overflow-y:auto;z-index:9999;width:380px;"></div>
           </div>
         </div>
 
@@ -737,7 +738,7 @@
                       </div>
                       <div style="text-align:right;">
                         <div style="font-weight:800;color:#DC3545;font-size:0.9rem;">₹<%= o.fine %></div>
-                        <button onclick="rapidReturnPrompt('<%= o.id %>')" class="btn-danger" style="padding:2px 8px;font-size:0.72rem;margin-top:2px;">Return</button>
+                        <button onclick="rapidReturnPrompt('<%= o.id %>', this)" class="btn-danger" style="padding:2px 8px;font-size:0.72rem;margin-top:2px;">Return</button>
                       </div>
                     </div>
                   <% }) %>
@@ -1085,39 +1086,328 @@
 
           <!-- Catalog Tab 3: Acquisitions & Vendors -->
           <div id="catalog-tab-acquisitions" class="lp-tab-pane">
-            <div class="card" style="margin-bottom:20px;">
-              <div class="lp-card-header">
+            <style>
+              .acq-container {
+                width: 100%;
+                margin: 0 auto;
+                padding: 0;
+                color: var(--text-high, #1a1a1a);
+                font-family: inherit;
+              }
+              .acq-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                flex-wrap: wrap;
+                gap: 1rem;
+              }
+              .acq-header h1 {
+                font-size: 1.7rem;
+                font-weight: 800;
+                margin: 0;
+                background: linear-gradient(135deg, #2563eb, #4f46e5);
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+              }
+              .acq-stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+                gap: 1.25rem;
+                margin-bottom: 2rem;
+              }
+              .acq-stat-card {
+                background: var(--bg-card, #ffffff);
+                border: 1px solid var(--border-color, #e2e8f0);
+                border-radius: 16px;
+                padding: 1.25rem 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                color: var(--text-high, #1a1a1a);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+              }
+              .acq-stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+              }
+              .acq-stat-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: rgba(99, 102, 241, 0.12);
+                color: #6366f1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+              }
+              .acq-stat-value {
+                font-size: 1.45rem;
+                font-weight: 800;
+                color: #0F172A;
+              }
+              .acq-stat-label {
+                font-size: 0.75rem;
+                color: var(--text-low, #64748B);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 700;
+              }
+              .acq-panel {
+                background: var(--bg-card, #ffffff);
+                border: 1px solid var(--border-color, #e2e8f0);
+                border-radius: 16px;
+                padding: 1.5rem 1.75rem;
+                margin-bottom: 2rem;
+                color: var(--text-high, #1a1a1a);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+              }
+              .acq-panel-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.25rem;
+                border-bottom: 1px solid var(--border-color, #e2e8f0);
+                padding-bottom: 0.85rem;
+              }
+              .acq-panel-title {
+                font-size: 1.15rem;
+                font-weight: 800;
+                color: #1E293B;
+              }
+              .acq-btn {
+                background: var(--accent-primary, #5c3cf3);
+                color: white !important;
+                border: none;
+                padding: 9px 20px;
+                border-radius: 10px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.88rem;
+              }
+              .acq-btn:hover {
+                opacity: 0.92;
+                transform: translateY(-1px);
+              }
+              .acq-btn-alt {
+                background: #FFFFFF;
+                color: var(--text-high, #1E293B);
+                border: 1.5px solid var(--border-color, #CBD5E1);
+                padding: 9px 18px;
+                border-radius: 10px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-size: 0.88rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+              }
+              .acq-btn-alt:hover {
+                background: #F8FAFC;
+                border-color: #94A3B8;
+              }
+              .acq-table-container {
+                overflow-x: auto;
+                margin-top: 0.5rem;
+              }
+              .acq-table {
+                width: 100%;
+                border-collapse: collapse;
+                text-align: left;
+                font-size: 0.88rem;
+              }
+              .acq-table th {
+                background: #F8FAFC;
+                padding: 12px 14px;
+                color: #475569;
+                font-weight: 700;
+                border-bottom: 2px solid #E2E8F0;
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+              }
+              .acq-table td {
+                padding: 12px 14px;
+                border-bottom: 1px solid #E2E8F0;
+              }
+              .acq-badge {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 0.72rem;
+                font-weight: 800;
+                text-transform: uppercase;
+              }
+              .acq-badge-completed { background: rgba(16, 185, 129, 0.15); color: #059669; }
+              .acq-badge-pending { background: rgba(245, 158, 11, 0.15); color: #D97706; }
+              .editor-grid {
+                width: 100%;
+                overflow-x: auto;
+                background: #F8FAFC;
+                border-radius: 12px;
+                border: 1px solid #E2E8F0;
+                padding: 1rem;
+                margin-top: 1rem;
+              }
+              .grid-row {
+                display: grid;
+                grid-template-columns: 140px 180px 140px 80px 90px 100px 100px 120px 80px;
+                gap: 8px;
+                margin-bottom: 8px;
+                align-items: center;
+              }
+              .grid-header {
+                font-weight: bold;
+                color: #475569;
+                border-bottom: 1px solid #E2E8F0;
+                padding-bottom: 6px;
+                margin-bottom: 12px;
+                font-size: 0.8rem;
+              }
+              .grid-cell input {
+                width: 100%;
+                background: #FFFFFF;
+                border: 1px solid #CBD5E1;
+                color: #1E293B;
+                padding: 6px 10px;
+                border-radius: 6px;
+                font-size: 0.82rem;
+              }
+              .barcode-sheet {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+                margin-top: 1.5rem;
+              }
+              .spine-label {
+                background: white;
+                color: black;
+                border: 1px solid #ccc;
+                padding: 10px;
+                border-radius: 4px;
+                text-align: center;
+                font-family: monospace;
+                font-size: 0.75rem;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+            </style>
+
+            <div class="acq-container">
+              <!-- Header -->
+              <div class="acq-header">
                 <div>
-                  <h3 class="lp-card-title">🛒 Book Procurement &amp; Inventory Reconciliation</h3>
-                  <p class="lp-card-sub">Manage supplier invoices, purchase orders, and reconcile registered copies vs invoice totals</p>
+                  <h1 style="display:flex;align-items:center;gap:10px;">
+                    🛒 Book Acquisition
+                  </h1>
+                  <p style="color: #64748B; font-size: 0.88rem; margin: 4px 0 0 0;">
+                    Manage procurement invoices, vendor orders, AI bill scanning, and accession cataloging workflows.
+                  </p>
                 </div>
-                <div style="display:flex;gap:8px;">
-                  <a href="/admin/acquisitions" class="btn-primary">Open Acquisitions Dashboard &rarr;</a>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <button type="button" class="acq-btn-alt" onclick="openNonAcqBooksModal()">📚 Non-Acquisition Books</button>
+                  <button type="button" class="acq-btn-alt" onclick="openModal('addVendorModal')">👤 Add Vendor</button>
+                  <button type="button" class="acq-btn" onclick="openNewAcquisitionModal()">⚡ New Acquisition</button>
                 </div>
               </div>
-              <p style="color:#64748B;font-size:0.9rem;margin-bottom:16px;">
-                Track every purchase order, scan physical invoices with AI OCR, and match incoming shipments directly to library accession numbers.
-              </p>
-              
-              <!-- Quick Overview Stats -->
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin-top:16px;">
-                <div style="background:#F8FAFC;padding:16px;border-radius:12px;border:1px solid #E2E8F0;">
-                  <span style="font-size:0.75rem;color:#64748B;font-weight:700;">TOTAL PHYSICAL STOCK</span>
-                  <div style="font-size:1.4rem;font-weight:800;color:var(--brand-primary);margin:6px 0;"><%= stats.total_copies %> Copies</div>
-                  <div style="font-size:0.75rem;color:#10B981;font-weight:700;">● Active in Physical Catalog</div>
-                </div>
-                <div style="background:#F8FAFC;padding:16px;border-radius:12px;border:1px solid #E2E8F0;">
-                  <span style="font-size:0.75rem;color:#64748B;font-weight:700;">UNIQUE CATALOG TITLES</span>
-                  <div style="font-size:1.4rem;font-weight:800;color:#0F172A;margin:6px 0;"><%= books.length %> Titles</div>
-                  <div style="font-size:0.75rem;color:#64748B;">Reconciled across racks &amp; shelves</div>
-                </div>
-                <div style="background:#F8FAFC;padding:16px;border-radius:12px;border:1px solid #E2E8F0;">
-                  <span style="font-size:0.75rem;color:#64748B;font-weight:700;">INVOICE MANAGEMENT</span>
-                  <div style="margin-top:10px;">
-                    <a href="/admin/acquisitions" class="btn-secondary" style="padding:6px 12px;font-size:0.82rem;font-weight:700;display:inline-flex;">
-                      📄 View Invoices &amp; Vendor Orders &rarr;
-                    </a>
+
+              <!-- Stats Cards -->
+              <div class="acq-stats">
+                <div class="acq-stat-card">
+                  <div class="acq-stat-icon">📁</div>
+                  <div>
+                    <div class="acq-stat-value"><%= (typeof acqStats !== 'undefined' && acqStats ? acqStats.total_acquisitions : 0) %></div>
+                    <div class="acq-stat-label">Invoices</div>
                   </div>
+                </div>
+                <div class="acq-stat-card">
+                  <div class="acq-stat-icon">📚</div>
+                  <div>
+                    <div class="acq-stat-value"><%= (typeof acqStats !== 'undefined' && acqStats ? acqStats.total_books : 0) %></div>
+                    <div class="acq-stat-label">Titles Cataloged</div>
+                  </div>
+                </div>
+                <div class="acq-stat-card">
+                  <div class="acq-stat-icon">📖</div>
+                  <div>
+                    <div class="acq-stat-value"><%= (typeof acqStats !== 'undefined' && acqStats ? acqStats.total_copies : 0) %></div>
+                    <div class="acq-stat-label">Copies Added</div>
+                  </div>
+                </div>
+                <div class="acq-stat-card">
+                  <div class="acq-stat-icon">₹</div>
+                  <div>
+                    <div class="acq-stat-value">₹<%= Number((typeof acqStats !== 'undefined' && acqStats && acqStats.total_value) || 0).toFixed(2) %></div>
+                    <div class="acq-stat-label">Total Spend</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Main Acquisition History Table Panel -->
+              <div class="acq-panel">
+                <div class="acq-panel-header">
+                  <span class="acq-panel-title">Acquisition Invoice History</span>
+                  <span style="font-size:0.8rem;color:#64748B;">Total Records: <%= (typeof acquisitions !== 'undefined' && acquisitions ? acquisitions.length : 0) %></span>
+                </div>
+
+                <div class="acq-table-container">
+                  <% if (typeof acquisitions !== 'undefined' && acquisitions && acquisitions.length > 0) { %>
+                  <table class="acq-table">
+                    <thead>
+                      <tr>
+                        <th>Bill No.</th>
+                        <th>Bill Date</th>
+                        <th>Vendor</th>
+                        <th>Total Titles</th>
+                        <th>Total Copies</th>
+                        <th>Total Amount</th>
+                        <th>Processed By</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% for (const a of acquisitions) { %>
+                        <tr id="acq-row-<%= a.id %>">
+                          <td>
+                            <% if (a.invoice_image) { %>
+                              <a href="<%= a.invoice_image %>" target="_blank" title="View Invoice File" style="color: var(--accent-primary, #5c3cf3); text-decoration: underline; font-weight: 700;"><%= a.bill_number %> 📄</a>
+                            <% } else { %>
+                              <strong><%= a.bill_number %></strong>
+                            <% } %>
+                          </td>
+                          <td><%= a.bill_date %></td>
+                          <td><%= a.vendor_name || 'N/A' %></td>
+                          <td><%= a.total_books %></td>
+                          <td><%= a.total_copies %></td>
+                          <td>₹<%= Number(a.total_amount || 0).toFixed(2) %></td>
+                          <td><%= a.user_name || 'System' %></td>
+                          <td><span class="acq-badge acq-badge-completed"><%= a.status || 'Completed' %></span></td>
+                          <td>
+                            <button onclick="openEditAcquisition(<%= a.id %>)" style="background: none; border: none; color: var(--accent-primary, #5c3cf3); cursor: pointer; font-size: 0.8rem; font-weight: 700; margin-right: 8px;">✏️ Edit</button>
+                            <% if (typeof session !== 'undefined' && session && ('manage_students' in (session.permissions || []))) { %>
+                              <button onclick="deleteAcquisition(<%= a.id %>)" style="background: none; border: none; color: #f87171; cursor: pointer; font-size: 0.8rem; font-weight: 700;">🗑️ Delete</button>
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% } %>
+                    </tbody>
+                  </table>
+                  <% } else { %>
+                  <div style="text-align: center; padding: 3rem 0; color: #94A3B8;">
+                    <div style="font-size: 3rem; margin-bottom: 0.8rem;">📁</div>
+                    <h3 style="color:#475569;margin-bottom:6px;">No acquisitions logged yet</h3>
+                    <p style="font-size: 0.85rem; margin: 0 0 16px 0;">Click "New Acquisition" to upload supplier invoices and catalog book shipments directly into your inventory.</p>
+                    <button type="button" class="acq-btn" onclick="openNewAcquisitionModal()">⚡ New Acquisition</button>
+                  </div>
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -1147,6 +1437,15 @@
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
               <input type="text" id="memberSearchInput" class="lp-search-input" style="max-width:380px;" placeholder="Search member by name, admission no, phone..." onkeyup="filterMemberTable(this.value)">
               <button class="btn-primary" onclick="openModal('addMemberModal')">+ Register New Member</button>
+                <button class="btn-secondary" onclick="openExportMembersModal()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;" title="Export current members to CSV">
+                  <span>↓</span> Export CSV
+                </button>
+                <button class="btn-secondary" onclick="openImportMembersModal()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;" title="Import and safe upsert members from CSV">
+                  <span>↑</span> Import CSV
+                </button>
+                <button class="btn-secondary" onclick="downloadMemberCsvTemplate()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;" title="Download clean CSV template with instructions">
+                  <span>📄</span> Download Template
+                </button>
             </div>
           </div>
 
@@ -1283,11 +1582,17 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;">
                   <div style="display:flex;align-items:center;gap:10px;">
                     <label style="font-size:0.85rem;font-weight:700;color:#334155;">Loan Duration:</label>
-                    <select id="circLoanDays" class="lp-search-input" style="width:140px;font-weight:700;">
-                      <option value="7" <%= (settings.loan_duration_days == 7) ? 'selected' : '' %>>7 Days</option>
-                      <option value="14" <%= (!settings.loan_duration_days || settings.loan_duration_days == 14) ? 'selected' : '' %>>14 Days (Default)</option>
-                      <option value="21" <%= (settings.loan_duration_days == 21) ? 'selected' : '' %>>21 Days</option>
-                      <option value="30" <%= (settings.loan_duration_days == 30) ? 'selected' : '' %>>30 Days</option>
+                    <select id="circLoanDays" class="lp-search-input" style="width:150px;font-weight:700;">
+                      <% const customDays = settings.loan_duration_days || 14; %>
+                      <% if (![7, 10, 12, 14, 21, 30].includes(Number(customDays))) { %>
+                        <option value="<%= customDays %>" selected><%= customDays %> Days (Active Rule)</option>
+                      <% } %>
+                      <option value="7" <%= (customDays == 7) ? 'selected' : '' %>>7 Days</option>
+                      <option value="10" <%= (customDays == 10) ? 'selected' : '' %>>10 Days</option>
+                      <option value="12" <%= (customDays == 12) ? 'selected' : '' %>>12 Days <%= (customDays == 12) ? '(Active Rule)' : '' %></option>
+                      <option value="14" <%= (customDays == 14) ? 'selected' : '' %>>14 Days <%= (customDays == 14) ? '(Active Rule)' : '' %></option>
+                      <option value="21" <%= (customDays == 21) ? 'selected' : '' %>>21 Days</option>
+                      <option value="30" <%= (customDays == 30) ? 'selected' : '' %>>30 Days</option>
                     </select>
                   </div>
                   <div id="circIssueReadinessHint" style="font-size:0.8rem;font-weight:700;color:#64748B;">
@@ -1479,7 +1784,7 @@
                         <td>
                           <div style="display:flex;gap:6px;">
                             <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="renewLoan('<%= l.id %>')">Extend +14d</button>
-                            <button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="rapidReturnPrompt('<%= l.id %>')">Return</button>
+                            <button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="rapidReturnPrompt('<%= l.id %>', this)">Return</button>
                           </div>
                         </td>
                       </tr>
@@ -1499,9 +1804,6 @@
           <div class="lp-tabs-bar">
             <button class="lp-tab-btn active" onclick="switchRequestTab('reservations', this)">
               📖 Book Reservations Queue (<%= reservations.length %>)
-            </button>
-            <button class="lp-tab-btn" onclick="switchRequestTab('acquisitions', this)">
-              🛒 Acquisition Requests
             </button>
           </div>
 
@@ -1640,7 +1942,7 @@
               </div>
 
               <!-- View Switcher (Table vs Student Grouped Cards) -->
-              <div style="display:flex;align-items:center;gap:6px;background:var(--bg-main, #F1F5F9);padding:4px;border-radius:8px;border:1px solid var(--border-color, #E2E8F0);">
+              <div id="spViewSwitcher" style="display:flex;align-items:center;gap:6px;background:var(--bg-main, #F1F5F9);padding:4px;border-radius:8px;border:1px solid var(--border-color, #E2E8F0);">
                 <button type="button" id="spViewTableBtn" class="btn-primary" style="padding:5px 12px;font-size:0.75rem;border-radius:6px;" onclick="switchStudentProgressView('table')">
                   📋 Table View
                 </button>
@@ -1663,7 +1965,8 @@
                   <option value="ALL">All Statuses</option>
                   <option value="ACTIVE">Issued / Reading</option>
                   <option value="OVERDUE">Overdue Only</option>
-                  <option value="PASSED">Passed / Completed</option>
+                  <option value="RETURNED">Returned / Completed</option>
+                  <option value="PASSED">Passed (Quizzes)</option>
                   <option value="ENROLLED">Enrolled</option>
                 </select>
               </div>
@@ -1809,6 +2112,30 @@
           <div id="spGroupedView" style="display:none;margin-top:10px;">
             <div id="spGroupedContainer" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(360px, 1fr));gap:16px;">
               <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+
+          <!-- QUIZ OVERRIDES & MANAGEMENT VIEW (UNDER QUIZZES CATEGORY TAB) -->
+          <div id="spQuizzesView" style="display:none;margin-top:10px;">
+            <div class="card" style="padding:18px 20px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-surface);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                <div>
+                  <h3 class="lp-card-title" style="margin:0;font-size:1rem;display:flex;align-items:center;gap:6px;">
+                    <span>🎯</span> Student Quiz Management
+                  </h3>
+                  <p style="font-size:0.78rem;color:#64748B;margin:3px 0 0 0;">
+                    Monitor student AI verification quizzes. Quizzes unlock automatically per book reading schedules; librarians can lock attempts or extend deadlines.
+                  </p>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn-secondary" style="padding:6px 12px;font-size:0.75rem;" onclick="loadAdminQuizzesList()">🔄 Refresh</button>
+                  <button class="btn-primary" style="padding:6px 12px;font-size:0.75rem;" onclick="openModal('createQuizModal')">+ New AI Quiz</button>
+                </div>
+              </div>
+
+              <div id="adminQuizzesOverrideContainer" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:12px;">
+                <div style="text-align:center;padding:36px;color:#94a3b8;font-size:0.85rem;grid-column:1/-1;">Loading quizzes...</div>
+              </div>
             </div>
           </div>
         </section>
@@ -2191,8 +2518,114 @@
           
           <div class="lp-tabs-bar">
             <button class="lp-tab-btn <%= currentTab === 'profile' ? '' : 'active' %>" id="btn-tab-settings-rules" onclick="switchSettingsTab('rules', this)">⚙️ Lending &amp; Policy Rules</button>
+            <button class="lp-tab-btn" id="btn-tab-settings-quiz" onclick="switchSettingsTab('quiz', this)">🎯 AI Quiz Verification Rules</button>
             <button class="lp-tab-btn <%= currentTab === 'profile' ? 'active' : '' %>" id="btn-tab-settings-profile" onclick="switchSettingsTab('profile', this)">👤 Profile &amp; ID Avatar</button>
             <button class="lp-tab-btn" id="btn-tab-settings-audit" onclick="switchSettingsTab('audit', this)">🔒 Audit Trail (<%= auditLogs.length %>)</button>
+          </div>
+
+          <!-- Settings Tab: Quiz & Reading Verification Configuration -->
+          <div id="settings-pane-quiz" class="lp-tab-pane">
+            <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px;max-width:1150px;">
+              <div class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                  <h3 class="lp-card-title" style="margin:0;">🎯 AI Reading Verification &amp; Quiz Engine Rules</h3>
+                  <span class="lp-hero-pill" style="margin:0;">Live Config</span>
+                </div>
+                <p style="font-size:0.82rem;color:#64748B;margin-bottom:16px;">
+                  Configure book classification thresholds, automatic quiz unlock schedules, question-to-page ratios, and passing marks.
+                </p>
+
+                <form id="quizSettingsForm" onsubmit="saveQuizVerificationSettings(event)">
+                  <!-- 1. Book Length Classification & Unlock Schedule -->
+                  <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:16px;">
+                    <div style="font-size:0.85rem;font-weight:800;color:#1E293B;margin-bottom:10px;">📚 Book Length &amp; Auto-Unlock Schedules</div>
+                    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;">
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Short Book Max Pages</label>
+                        <input type="number" id="cfg_quiz_short_max_pages" class="lp-search-input" style="width:100%;" value="150">
+                        <span style="font-size:0.7rem;color:#64748B;">Default: 0–150 pages</span>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Medium Book Max Pages</label>
+                        <input type="number" id="cfg_quiz_medium_max_pages" class="lp-search-input" style="width:100%;" value="300">
+                        <span style="font-size:0.7rem;color:#64748B;">Default: 151–300 pages</span>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Long Book Min Pages</label>
+                        <input type="text" class="lp-search-input" style="width:100%;background:#F1F5F9;" value="301+ pages" disabled>
+                        <span style="font-size:0.7rem;color:#64748B;">Calculated above Medium</span>
+                      </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-top:12px;">
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Short Unlock Days</label>
+                        <input type="number" id="cfg_quiz_short_unlock_days" class="lp-search-input" style="width:100%;" value="7">
+                        <span style="font-size:0.7rem;color:#64748B;">Unlocks after 7 days</span>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Medium Unlock Days</label>
+                        <input type="number" id="cfg_quiz_medium_unlock_days" class="lp-search-input" style="width:100%;" value="10">
+                        <span style="font-size:0.7rem;color:#64748B;">Unlocks after 10 days</span>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Long Unlock Days</label>
+                        <input type="number" id="cfg_quiz_long_unlock_days" class="lp-search-input" style="width:100%;" value="14">
+                        <span style="font-size:0.7rem;color:#64748B;">Unlocks after 14 days</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 2. Question Generation Ratios & Guardrails -->
+                  <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:16px;">
+                    <div style="font-size:0.85rem;font-weight:800;color:#1E293B;margin-bottom:10px;">📐 Question Count Formula &amp; Guardrails</div>
+                    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;">
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Pages per Question</label>
+                        <input type="number" id="cfg_quiz_pages_per_question" class="lp-search-input" style="width:100%;" value="10">
+                        <span style="font-size:0.7rem;color:#64748B;">Formula: Pages ÷ Ratio</span>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Minimum Questions</label>
+                        <input type="number" id="cfg_quiz_min_questions" class="lp-search-input" style="width:100%;" value="5">
+                        <span style="font-size:0.7rem;color:#64748B;">Guardrail Floor</span>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Maximum Questions</label>
+                        <input type="number" id="cfg_quiz_max_questions" class="lp-search-input" style="width:100%;" value="50">
+                        <span style="font-size:0.7rem;color:#64748B;">Guardrail Ceiling</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 3. Passing Percentage, Points & Deadlines -->
+                  <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:18px;">
+                    <div style="font-size:0.85rem;font-weight:800;color:#1E293B;margin-bottom:10px;">🏆 Passing Score, Points &amp; Deadline Expiry</div>
+                    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;">
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Passing Score (%)</label>
+                        <input type="number" id="cfg_quiz_passing_percentage" class="lp-search-input" style="width:100%;" value="80">
+                        <span style="font-size:0.7rem;color:#64748B;">Default: 80% pass mark</span>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Points Deadline (Days)</label>
+                        <input type="number" id="cfg_quiz_points_deadline_days" class="lp-search-input" style="width:100%;" value="10">
+                        <span style="font-size:0.7rem;color:#64748B;">After unlock date</span>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Leaderboard Points Awarded</label>
+                        <input type="number" id="cfg_quiz_points_awarded" class="lp-search-input" style="width:100%;" value="50">
+                        <span style="font-size:0.7rem;color:#64748B;">Single verification reward</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:0.95rem;">
+                    💾 Save AI Quiz &amp; Verification Rules
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
 
           <!-- Settings Tab 1: Rules -->
@@ -2205,29 +2638,43 @@
                 <form action="/admin/api/settings" method="POST">
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
                     <div>
-                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Loan Duration (Days)</label>
-                      <input type="number" name="loan_duration_days" class="lp-search-input" style="width:100%;" value="<%= settings.loan_duration_days || 14 %>">
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Student Loan Duration (Days)</label>
+                      <input type="number" min="1" name="loan_duration_days" class="lp-search-input" style="width:100%;" value="<%= settings.loan_duration_days || 14 %>">
                     </div>
                     <div>
-                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Grace Period (Days)</label>
-                      <input type="number" name="grace_period_days" class="lp-search-input" style="width:100%;" value="<%= settings.grace_period_days || 2 %>">
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Teacher Loan Duration (Days)</label>
+                      <input type="number" min="1" name="teacher_loan_days" class="lp-search-input" style="width:100%;" value="<%= settings.teacher_loan_days || 30 %>">
                     </div>
                   </div>
 
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;margin-bottom:14px;">
                     <div>
                       <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Student Max Books</label>
-                      <input type="number" name="student_max_books" class="lp-search-input" style="width:100%;" value="<%= settings.student_max_books || 3 %>">
+                      <input type="number" min="1" name="student_max_books" class="lp-search-input" style="width:100%;" value="<%= settings.student_max_books || 3 %>">
                     </div>
                     <div>
                       <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Teacher Max Books</label>
-                      <input type="number" name="teacher_max_books" class="lp-search-input" style="width:100%;" value="<%= settings.teacher_max_books || 10 %>">
+                      <input type="number" min="1" name="teacher_max_books" class="lp-search-input" style="width:100%;" value="<%= settings.teacher_max_books || 10 %>">
+                    </div>
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Staff Max Books</label>
+                      <input type="number" min="1" name="staff_max_books" class="lp-search-input" style="width:100%;" value="<%= settings.staff_max_books || 5 %>">
                     </div>
                   </div>
 
-                  <div style="margin-bottom:18px;">
-                    <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Overdue Fine Rate per Day (₹)</label>
-                    <input type="number" name="fine_per_day" class="lp-search-input" style="width:100%;" value="<%= settings.fine_per_day || 5 %>">
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;margin-bottom:18px;">
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Fine Rate per Day (₹)</label>
+                      <input type="number" min="0" name="fine_per_day" class="lp-search-input" style="width:100%;" value="<%= settings.fine_per_day || 5 %>">
+                    </div>
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Grace Period (Days)</label>
+                      <input type="number" min="0" name="grace_period_days" class="lp-search-input" style="width:100%;" value="<%= settings.grace_period_days || 2 %>">
+                    </div>
+                    <div>
+                      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Lost Book Charge (₹)</label>
+                      <input type="number" min="0" name="lost_book_charge" class="lp-search-input" style="width:100%;" value="<%= settings.lost_book_charge || 150 %>">
+                    </div>
                   </div>
 
                   <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Save Policy Rules</button>
@@ -3505,7 +3952,315 @@
     </div>
   </div>
 
-  <!-- Schedule Live Studio Meeting Modal -->
+  <!-- Export Members Modal -->
+  <div id="exportMembersModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;z-index:10007;">
+    <div class="card" style="width:92%;max-width:540px;border-radius:18px;box-shadow:0 20px 45px rgba(15,23,42,0.25);padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;font-size:1.2rem;font-weight:800;color:#0F172A;display:flex;align-items:center;gap:8px;">
+          <span>↓</span> Export Members to CSV
+        </h3>
+        <button type="button" onclick="closeModal('exportMembersModal')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;color:#64748B;">✕</button>
+      </div>
+      <p style="font-size:0.83rem;color:#64748B;margin:0 0 16px 0;line-height:1.45;">
+        Export members belonging to your institution with complete canonical details. 
+        <strong style="color:#0F172A;">Passwords and authentication secrets are strictly excluded</strong> for security.
+      </p>
+
+      <form id="exportMembersForm" onsubmit="submitExportMembers(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;color:#334155;">Role Filter</label>
+            <select id="exportRole" class="lp-search-input" style="width:100%;height:38px;">
+              <option value="">All Roles (Students, Teachers, Staff)</option>
+              <option value="student">Students Only</option>
+              <option value="teacher">Teachers Only</option>
+              <option value="staff">Staff Only</option>
+              <option value="librarian">Librarians Only</option>
+              <option value="parent">Parents Only</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;color:#334155;">Account Status</label>
+            <select id="exportStatus" class="lp-search-input" style="width:100%;height:38px;">
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;color:#334155;">Class (Optional)</label>
+            <input type="text" id="exportClass" class="lp-search-input" style="width:100%;height:38px;" placeholder="e.g. 10th or Grade 10">
+          </div>
+          <div>
+            <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;color:#334155;">Section (Optional)</label>
+            <input type="text" id="exportSection" class="lp-search-input" style="width:100%;height:38px;" placeholder="e.g. A or B">
+          </div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;color:#334155;">Search Keyword (Optional)</label>
+          <input type="text" id="exportSearch" class="lp-search-input" style="width:100%;height:38px;" placeholder="Filter by name, mobile, admission no...">
+        </div>
+
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:18px;font-size:0.8rem;color:#475569;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.3rem;">🛡️</span>
+          <div>
+            <strong>School Boundary Isolation:</strong> The CSV export contains only members enrolled in your active school/campus.
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeModal('exportMembersModal')">Cancel</button>
+          <button type="submit" class="btn-primary" style="font-weight:800;display:inline-flex;align-items:center;gap:6px;">
+            <span>↓</span> Download CSV
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Import Members Modal (Multi-step Safe Upsert Flow) -->
+  <div id="importMembersModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;z-index:10007;overflow-y:auto;padding:20px;">
+    <div class="card" style="width:96%;max-width:920px;max-height:90vh;display:flex;flex-direction:column;border-radius:20px;box-shadow:0 25px 60px rgba(15,23,42,0.3);padding:0;overflow:hidden;">
+      
+      <!-- Modal Header -->
+      <div style="padding:18px 24px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;background:#F8FAFC;">
+        <div>
+          <h3 style="margin:0;font-size:1.2rem;font-weight:800;color:#0F172A;display:flex;align-items:center;gap:8px;">
+            <span>📥</span> Member CSV Import & Safe Upsert
+          </h3>
+          <p style="margin:3px 0 0 0;font-size:0.8rem;color:#64748B;">
+            Additive upsert engine • Zero data loss • Intelligent duplicate detection
+          </p>
+        </div>
+        <button type="button" onclick="closeModal('importMembersModal')" style="background:transparent;border:none;font-size:1.3rem;cursor:pointer;color:#64748B;">✕</button>
+      </div>
+
+      <!-- Step Indicator -->
+      <div style="display:flex;border-bottom:1px solid #E2E8F0;background:#FFFFFF;">
+        <div id="importStepPill1" style="flex:1;padding:12px;text-align:center;font-size:0.82rem;font-weight:700;color:#2563EB;border-bottom:3px solid #2563EB;">
+          1. Upload & Analyze
+        </div>
+        <div id="importStepPill2" style="flex:1;padding:12px;text-align:center;font-size:0.82rem;font-weight:600;color:#94A3B8;border-bottom:3px solid transparent;">
+          2. Preview & Validation Diff
+        </div>
+        <div id="importStepPill3" style="flex:1;padding:12px;text-align:center;font-size:0.82rem;font-weight:600;color:#94A3B8;border-bottom:3px solid transparent;">
+          3. Commit Report
+        </div>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div style="padding:22px 24px;overflow-y:auto;flex:1;" id="importModalContent">
+        
+        <!-- STEP 1: UPLOAD & ANALYZE -->
+        <div id="importStep1">
+          <!-- Zero Data Loss Guarantee Banner -->
+          <div style="background:linear-gradient(135deg, #EFF6FF, #F0FDF4);border:1px solid #BFDBFE;border-radius:12px;padding:16px;margin-bottom:20px;">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+              <span style="font-size:1.6rem;line-height:1;">🛡️</span>
+              <div>
+                <strong style="color:#1E3A8A;font-size:0.92rem;display:block;margin-bottom:4px;">Zero Data Loss & Safe Upsert Engine</strong>
+                <p style="margin:0;font-size:0.82rem;color:#334155;line-height:1.45;">
+                  • <strong>Existing members missing from the CSV will NEVER be deleted.</strong><br>
+                  • Existing members are matched by <code>Member ID</code>, <code>Admission No</code>, <code>Employee ID</code>, <code>Username</code>, or <code>Mobile</code>.<br>
+                  • <strong>Blank CSV values will NOT overwrite valid existing database data.</strong><br>
+                  • You will see a complete live preview with side-by-side diffs before committing anything.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dropzone -->
+          <div id="csvDropzone" style="border:2px dashed #93C5FD;border-radius:16px;background:#F8FAFC;padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.2s ease;"
+               onclick="document.getElementById('csvFileInput').click()"
+               ondragover="event.preventDefault();this.style.borderColor='#2563EB';this.style.background='#EFF6FF';"
+               ondragleave="this.style.borderColor='#93C5FD';this.style.background='#F8FAFC';"
+               ondrop="handleCsvFileDrop(event)">
+            <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;" onchange="handleCsvFilePicked(event)">
+            <div style="font-size:2.4rem;margin-bottom:10px;">📄</div>
+            <div style="font-size:1rem;font-weight:800;color:#0F172A;margin-bottom:4px;">Drag & Drop your CSV file here</div>
+            <div style="font-size:0.82rem;color:#64748B;margin-bottom:14px;">or click to browse from your computer (.csv format, UTF-8 recommended)</div>
+            <div id="selectedFileInfo" style="display:none;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;padding:8px 14px;max-width:400px;margin:0 auto;text-align:left;">
+              <div style="font-weight:700;font-size:0.85rem;color:#0F172A;" id="fileNameDisplay">-</div>
+              <div style="font-size:0.75rem;color:#64748B;" id="fileSizeDisplay">-</div>
+            </div>
+          </div>
+
+          <!-- Template Download & Guidelines Strip -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;flex-wrap:wrap;gap:12px;">
+            <div style="font-size:0.8rem;color:#64748B;">
+              Need the exact columns? Download our pre-formatted official CSV template.
+            </div>
+            <button type="button" class="btn-secondary" onclick="downloadMemberCsvTemplate()" style="font-size:0.82rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+              <span>📄</span> Download CSV Template
+            </button>
+          </div>
+
+          <!-- Analyzing Spinner (Hidden by default) -->
+          <div id="importAnalyzingSpinner" style="display:none;margin-top:24px;text-align:center;padding:20px;">
+            <div style="font-size:1.8rem;margin-bottom:8px;">⏳</div>
+            <div style="font-weight:700;color:#0F172A;font-size:0.95rem;">Parsing CSV & Performing Database Match...</div>
+            <div style="font-size:0.8rem;color:#64748B;margin-top:4px;">Checking identifiers, role constraints, and calculating diffs...</div>
+          </div>
+        </div>
+
+        <!-- STEP 2: PREVIEW & VALIDATION DASHBOARD -->
+        <div id="importStep2" style="display:none;">
+          <!-- Top Stat Badges -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-bottom:18px;">
+            <div style="background:#F1F5F9;border:1px solid #CBD5E1;border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:800;color:#0F172A;" id="statTotalRows">0</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#64748B;text-transform:uppercase;">Total Rows</div>
+            </div>
+            <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:800;color:#16A34A;" id="statToCreate">0</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#15803D;text-transform:uppercase;">✨ To Create</div>
+            </div>
+            <div style="background:#FEFCE8;border:1px solid #FEF08A;border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:800;color:#CA8A04;" id="statToUpdate">0</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#A16207;text-transform:uppercase;">🔄 To Update</div>
+            </div>
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:800;color:#64748B;" id="statUnchanged">0</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#64748B;text-transform:uppercase;">⏸️ Unchanged</div>
+            </div>
+            <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:800;color:#DC2626;" id="statErrors">0</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#B91C1C;text-transform:uppercase;">❌ Errors</div>
+            </div>
+          </div>
+
+          <!-- Error/Warning Summary Box (if errors exist) -->
+          <div id="importErrorsBanner" style="display:none;background:#FFF1F2;border:1px solid #FDA4AF;border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div style="font-size:0.83rem;color:#9F1239;font-weight:600;">
+                <span id="importErrorsCount">0</span> rows have validation errors and will be skipped during commit.
+              </div>
+              <button type="button" class="btn-secondary" onclick="downloadCurrentImportErrorReport()" style="font-size:0.78rem;padding:4px 10px;background:#FFFFFF;">
+                <span>📄</span> Download Error Report CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab Bar for Preview Filtering -->
+          <div style="display:flex;gap:8px;border-bottom:1px solid #E2E8F0;padding-bottom:8px;margin-bottom:12px;overflow-x:auto;">
+            <button type="button" class="lp-tab-btn active" id="tabFilterAll" onclick="filterPreviewRows('all', this)" style="padding:6px 14px;font-size:0.78rem;">
+              All Rows (<span id="tabCountAll">0</span>)
+            </button>
+            <button type="button" class="lp-tab-btn" id="tabFilterCreate" onclick="filterPreviewRows('create', this)" style="padding:6px 14px;font-size:0.78rem;">
+              ✨ To Create (<span id="tabCountCreate">0</span>)
+            </button>
+            <button type="button" class="lp-tab-btn" id="tabFilterUpdate" onclick="filterPreviewRows('update', this)" style="padding:6px 14px;font-size:0.78rem;">
+              🔄 To Update (<span id="tabCountUpdate">0</span>)
+            </button>
+            <button type="button" class="lp-tab-btn" id="tabFilterUnchanged" onclick="filterPreviewRows('unchanged', this)" style="padding:6px 14px;font-size:0.78rem;">
+              ⏸️ Unchanged (<span id="tabCountUnchanged">0</span>)
+            </button>
+            <button type="button" class="lp-tab-btn" id="tabFilterErrors" onclick="filterPreviewRows('error', this)" style="padding:6px 14px;font-size:0.78rem;">
+              ❌ Errors (<span id="tabCountErrors">0</span>)
+            </button>
+          </div>
+
+          <!-- Preview Table Container -->
+          <div style="max-height:360px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:12px;">
+            <table class="table" style="width:100%;font-size:0.8rem;border-collapse:collapse;margin:0;">
+              <thead style="background:#F8FAFC;position:sticky;top:0;z-index:2;border-bottom:1px solid #E2E8F0;">
+                <tr>
+                  <th style="padding:8px 12px;text-align:left;">Row #</th>
+                  <th style="padding:8px 12px;text-align:left;">Action Status</th>
+                  <th style="padding:8px 12px;text-align:left;">Name</th>
+                  <th style="padding:8px 12px;text-align:left;">Role</th>
+                  <th style="padding:8px 12px;text-align:left;">Key Identifier</th>
+                  <th style="padding:8px 12px;text-align:left;">Changes / Details</th>
+                </tr>
+              </thead>
+              <tbody id="importPreviewTableBody">
+                <!-- Dynamically rendered rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Commit Safety Options -->
+          <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px 16px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;font-weight:600;color:#334155;cursor:pointer;">
+              <input type="checkbox" id="chkSkipErrors" checked>
+              <span>Skip rows with errors and safely import valid records</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;font-weight:600;color:#334155;cursor:pointer;">
+              <input type="checkbox" id="chkUpdateExisting" checked>
+              <span>Apply updates to matched existing members</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- STEP 3: COMMIT REPORT -->
+        <div id="importStep3" style="display:none;text-align:center;padding:24px 10px;">
+          <div id="commitReportIcon" style="font-size:3rem;margin-bottom:12px;">🎉</div>
+          <h4 id="commitReportTitle" style="margin:0 0 8px 0;font-size:1.3rem;font-weight:800;color:#0F172A;">Import Committed Successfully</h4>
+          <p id="commitReportSub" style="margin:0 0 20px 0;font-size:0.85rem;color:#64748B;">
+            All valid records have been saved in an atomic database transaction.
+          </p>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px;max-width:560px;margin:0 auto 24px auto;">
+            <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:14px;text-align:center;">
+              <div style="font-size:1.6rem;font-weight:800;color:#16A34A;" id="reportCreated">0</div>
+              <div style="font-size:0.75rem;font-weight:700;color:#15803D;">Created</div>
+            </div>
+            <div style="background:#FEFCE8;border:1px solid #FEF08A;border-radius:12px;padding:14px;text-align:center;">
+              <div style="font-size:1.6rem;font-weight:800;color:#CA8A04;" id="reportUpdated">0</div>
+              <div style="font-size:0.75rem;font-weight:700;color:#A16207;">Updated</div>
+            </div>
+            <div style="background:#F8FAFC;border:1px solid #CBD5E1;border-radius:12px;padding:14px;text-align:center;">
+              <div style="font-size:1.6rem;font-weight:800;color:#64748B;" id="reportUnchanged">0</div>
+              <div style="font-size:0.75rem;font-weight:700;color:#64748B;">Unchanged</div>
+            </div>
+            <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px;text-align:center;">
+              <div style="font-size:1.6rem;font-weight:800;color:#DC2626;" id="reportErrors">0</div>
+              <div style="font-size:0.75rem;font-weight:700;color:#B91C1C;">Errors</div>
+            </div>
+          </div>
+
+          <div id="commitBatchBadge" style="font-size:0.8rem;color:#64748B;margin-bottom:20px;">
+            Audit Batch ID: <code id="reportBatchId" style="background:#F1F5F9;padding:2px 8px;border-radius:4px;color:#0F172A;font-weight:700;">-</code>
+          </div>
+
+          <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+            <button type="button" id="btnDownloadErrorsPost" class="btn-secondary" onclick="downloadCurrentImportErrorReport()" style="display:none;font-weight:700;">
+              <span>📄</span> Download Error Report CSV
+            </button>
+            <button type="button" class="btn-primary" onclick="window.location.reload()" style="font-weight:800;padding:10px 24px;">
+              <span>✓</span> Done & Refresh Members List
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer (Actions) -->
+      <div style="padding:16px 24px;border-top:1px solid #E2E8F0;background:#F8FAFC;display:flex;justify-content:space-between;align-items:center;" id="importModalFooter">
+        <button type="button" class="btn-secondary" onclick="closeModal('importMembersModal')">Cancel</button>
+        <div style="display:flex;gap:10px;">
+          <button type="button" id="btnBackToUpload" class="btn-secondary" style="display:none;" onclick="showImportStep(1)">
+            ← Back to Upload
+          </button>
+          <button type="button" id="btnProcessCsv" class="btn-primary" style="font-weight:800;display:inline-flex;align-items:center;gap:6px;" onclick="submitParseCsvPreview()">
+            <span>🔍</span> Validate & Preview →
+          </button>
+          <button type="button" id="btnConfirmCommit" class="btn-primary" style="display:none;font-weight:800;background:#16A34A;border-color:#16A34A;display:none;align-items:center;gap:6px;" onclick="submitCommitImport()">
+            <span>✓</span> Confirm & Apply Import
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  
+<!-- Schedule Live Studio Meeting Modal -->
   <div id="scheduleStudioModal" class="lp-drawer-overlay" style="display:none;align-items:center;justify-content:center;">
     <div class="card" style="width:90%;max-width:540px;position:relative;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -3552,6 +4307,182 @@
           <button type="submit" class="btn-primary" style="justify-content:center;">🚀 Schedule & Create Room</button>
         </div>
       </form>
+    </div>
+  <!-- ================= NEW ACQUISITION MODAL ================= -->
+  <div id="newAcquisitionModal" class="lp-drawer-overlay" style="display: none; align-items: center; justify-content: center; z-index: 10000; padding: 1.5rem;">
+    <div class="card" style="width: 96%; max-width: 1050px; max-height: 90vh; overflow-y: auto; padding: 2rem; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.35rem; font-weight: 800; margin: 0; color: #0F172A;">Create Book Acquisition</h2>
+        <button onclick="closeModal('newAcquisitionModal')" style="background: none; border: none; color: #64748B; font-size: 1.3rem; cursor: pointer; padding: 4px;">✕</button>
+      </div>
+
+      <input type="hidden" id="editAcquisitionId" value="">
+      <input type="hidden" id="uploadedInvoiceUrl" value="">
+
+      <!-- 1. Invoice upload / metadata form -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;" id="acqFormSection">
+        <div class="form-group">
+          <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Bill / Invoice Number *</label>
+          <input type="text" class="lp-search-input" id="billNo" placeholder="e.g. BILL-99201" style="width:100%;">
+        </div>
+        <div class="form-group">
+          <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Bill Date *</label>
+          <input type="date" class="lp-search-input" id="billDate" style="width:100%;">
+        </div>
+        <div class="form-group">
+          <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Vendor</label>
+          <select class="lp-search-input" id="vendorSelect" style="width:100%;">
+            <option value="">-- Select Vendor --</option>
+            <% if (typeof acqVendors !== 'undefined' && acqVendors) { %>
+              <% for (const v of acqVendors) { %>
+                <option value="<%= v.id %>"><%= v.name %></option>
+              <% } %>
+            <% } %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Total Amount (₹)</label>
+          <input type="number" class="lp-search-input" id="billAmount" placeholder="0.00" style="width:100%;">
+        </div>
+      </div>
+
+      <div style="border: 2px dashed #CBD5E1; padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1.5rem 0; background: #F8FAFC; transition: all 0.2s ease;" 
+           id="ocrUploadContainer"
+           ondragover="handleAcqDragOver(event)"
+           ondragleave="handleAcqDragLeave(event)"
+           ondrop="handleAcqDrop(event)">
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📄</span>
+        <span style="font-weight: 800; font-size: 0.95rem; color: #1E293B;">Scan/Upload Invoice Bill</span>
+        <p style="font-size: 0.8rem; color: #64748B; margin-top: 4px; margin-bottom: 12px;">Supports invoice image or PDF bill format</p>
+        <input type="file" id="invoiceFile" accept="image/*,application/pdf" style="display: none;" onchange="handleInvoiceScan()">
+        <button type="button" class="acq-btn-alt" onclick="document.getElementById('invoiceFile').click()">Choose File &amp; Scan with AI ✨</button>
+        <div id="ocrLoading" style="display: none; margin-top: 1rem; color: #4F46E5; font-weight: bold; font-size: 0.85rem;">
+          <span class="ld-spinner" style="display: inline-block; vertical-align: middle; margin-right: 8px; width: 18px; height: 18px;"></span>
+          AI is parsing invoice bill parameters...
+        </div>
+      </div>
+
+      <!-- Invoice file attachment preview -->
+      <div id="uploadedInvoicePreview" style="display: none; margin: 1rem 0; align-items: center; justify-content: center; gap: 12px; padding: 1rem; border: 1px solid #E2E8F0; border-radius: 12px; background: #F1F5F9;">
+        <span style="font-size: 1.5rem;">📄</span>
+        <div style="text-align: left; flex-grow: 1;">
+          <span style="font-weight: bold; font-size: 0.85rem; display: block; color: #1E293B;">Invoice File Attached</span>
+          <a id="invoicePreviewLink" href="" target="_blank" style="color: #4F46E5; font-weight: bold; text-decoration: underline; font-size: 0.8rem;">View Original Invoice</a>
+        </div>
+        <button type="button" class="acq-btn-alt" onclick="clearInvoiceImage()" style="padding: 6px 12px; font-size: 0.75rem; border-color: #EF4444; color: #EF4444; background: transparent;">Remove File</button>
+      </div>
+
+      <!-- 2. Interactive grid spreadsheet list -->
+      <h3 style="font-size: 1rem; font-weight: 800; margin-top: 1.5rem; color:#1E293B;">Review &amp; Edit Catalog Items</h3>
+      <p style="font-size: 0.78rem; color: #64748B; margin-bottom: 10px;">Review details extracted. Click "+ Add Line" to add custom rows manually.</p>
+
+      <div class="editor-grid">
+        <div class="grid-row grid-header">
+          <div>ISBN</div>
+          <div>Book Title</div>
+          <div>Author</div>
+          <div>Qty</div>
+          <div>Price (₹)</div>
+          <div>Shelf</div>
+          <div>Rack</div>
+          <div>Category / Subject</div>
+          <div>Actions</div>
+        </div>
+        <div id="gridBody">
+          <!-- Rows will be injected here -->
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem; display: flex; gap: 10px;">
+        <button type="button" class="acq-btn-alt" onclick="addGridRow()">➕ Add Line</button>
+      </div>
+
+      <!-- Print Barcodes segment (displays after success) -->
+      <div id="successSegment" style="display: none; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 1.25rem; border-radius: 12px; margin-top: 1.5rem;">
+        <span style="font-size: 1.2rem; margin-right: 6px;">🎉</span>
+        <strong style="color: #059669;">Acquisition Saved Successfully!</strong>
+        <p style="font-size: 0.8rem; color: #475569; margin-top: 4px; margin-bottom: 12px;">Generated physical accession spine tags for this purchase:</p>
+        <div class="barcode-sheet" id="accessionTagsContainer">
+          <!-- Spine labels show up here -->
+        </div>
+        <button type="button" class="acq-btn" style="margin-top: 1rem;" onclick="window.print()">🖨️ Print Labels</button>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #E2E8F0; padding-top: 1rem; margin-top: 2rem;" id="modalActions">
+        <button type="button" class="acq-btn-alt" onclick="closeModal('newAcquisitionModal')">Cancel</button>
+        <button type="button" class="acq-btn" onclick="saveAcquisition()">Save &amp; Catalog Complete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ADD VENDOR MODAL ================= -->
+  <div id="addVendorModal" class="lp-drawer-overlay" style="display: none; align-items: center; justify-content: center; z-index: 10000; padding: 1.5rem;">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 2rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.2rem; font-weight: 800; margin: 0; color: #0F172A;">Register New Vendor</h2>
+        <button onclick="closeModal('addVendorModal')" style="background: none; border: none; color: #64748B; font-size: 1.3rem; cursor: pointer;">✕</button>
+      </div>
+
+      <form action="/admin/vendors/create" method="POST">
+        <div style="margin-bottom: 1rem;">
+          <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Vendor Name *</label>
+          <input type="text" class="lp-search-input" name="name" required placeholder="e.g. Pearson India" style="width:100%;">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Email Address</label>
+          <input type="email" class="lp-search-input" name="email" placeholder="vendor@example.com" style="width:100%;">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Phone Number</label>
+          <input type="text" class="lp-search-input" name="phone" placeholder="999-888-777" style="width:100%;">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Physical Address</label>
+          <input type="text" class="lp-search-input" name="address" placeholder="Delhi, India" style="width:100%;">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #E2E8F0; padding-top: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="acq-btn-alt" onclick="closeModal('addVendorModal')">Cancel</button>
+          <button type="submit" class="acq-btn">Create Vendor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= NON-ACQUISITION BOOKS MODAL ================= -->
+  <div id="nonAcqBooksModal" class="lp-drawer-overlay" style="display: none; align-items: center; justify-content: center; z-index: 10000; padding: 1.5rem;">
+    <div class="card" style="width: 100%; max-width: 900px; padding: 2rem; border-radius: 20px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 1rem; margin-bottom: 1.25rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 8px; margin: 0; color: #0F172A;">
+          📚 Non-Acquisition Books <span style="font-size: 0.75rem; background: rgba(99,102,241,0.12); color: #4F46E5; padding: 4px 8px; border-radius: 6px; font-weight: 700;" id="nonAcqCount">0</span>
+        </h2>
+        <button onclick="closeModal('nonAcqBooksModal')" style="background: none; border: none; color: #64748B; font-size: 1.3rem; cursor: pointer;">✕</button>
+      </div>
+      
+      <p style="font-size: 0.82rem; color: #64748B; margin-bottom: 1rem;">These are cataloged books added directly via general/manual scanning without purchase invoices or purchase orders.</p>
+
+      <div style="overflow-x: auto; border: 1px solid #E2E8F0; border-radius: 12px; max-height: 50vh;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.82rem;">
+          <thead style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="padding: 12px; font-weight: bold; color: #475569;">Book ID</th>
+              <th style="padding: 12px; font-weight: bold; color: #475569;">Title</th>
+              <th style="padding: 12px; font-weight: bold; color: #475569;">Author</th>
+              <th style="padding: 12px; font-weight: bold; color: #475569;">ISBN</th>
+              <th style="padding: 12px; font-weight: bold; color: #475569;">Publisher</th>
+              <th style="padding: 12px; font-weight: bold; text-align: center; color: #475569;">Copies</th>
+            </tr>
+          </thead>
+          <tbody id="nonAcqTableBody">
+            <tr>
+              <td colspan="6" style="padding: 2rem; text-align: center; color: #64748B;">Loading books...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+        <button type="button" class="acq-btn" onclick="closeModal('nonAcqBooksModal')">Done</button>
+      </div>
     </div>
   </div>
 
@@ -3750,6 +4681,148 @@
       if (btn) btn.classList.add('active');
       const pane = document.getElementById(`settings-pane-${tabName}`);
       if (pane) pane.classList.add('active');
+      if (tabName === 'quiz') {
+        loadAdminQuizSettings();
+        loadAdminQuizzesList();
+      }
+    }
+
+    async function loadAdminQuizSettings() {
+      try {
+        const res = await fetch('/admin/api/quiz-settings');
+        const data = await res.json();
+        if (data.status === 'success' && data.settings) {
+          const s = data.settings;
+          if (document.getElementById('cfg_quiz_short_max_pages')) document.getElementById('cfg_quiz_short_max_pages').value = s.short_max_pages || 150;
+          if (document.getElementById('cfg_quiz_medium_max_pages')) document.getElementById('cfg_quiz_medium_max_pages').value = s.medium_max_pages || 300;
+          if (document.getElementById('cfg_quiz_short_unlock_days')) document.getElementById('cfg_quiz_short_unlock_days').value = s.short_unlock_days || 7;
+          if (document.getElementById('cfg_quiz_medium_unlock_days')) document.getElementById('cfg_quiz_medium_unlock_days').value = s.medium_unlock_days || 10;
+          if (document.getElementById('cfg_quiz_long_unlock_days')) document.getElementById('cfg_quiz_long_unlock_days').value = s.long_unlock_days || 14;
+          if (document.getElementById('cfg_quiz_pages_per_question')) document.getElementById('cfg_quiz_pages_per_question').value = s.pages_per_question || 10;
+          if (document.getElementById('cfg_quiz_min_questions')) document.getElementById('cfg_quiz_min_questions').value = s.min_questions || 5;
+          if (document.getElementById('cfg_quiz_max_questions')) document.getElementById('cfg_quiz_max_questions').value = s.max_questions || 50;
+          if (document.getElementById('cfg_quiz_passing_percentage')) document.getElementById('cfg_quiz_passing_percentage').value = s.passing_percentage || 80;
+          if (document.getElementById('cfg_quiz_points_deadline_days')) document.getElementById('cfg_quiz_points_deadline_days').value = s.points_deadline_days || 10;
+          if (document.getElementById('cfg_quiz_points_awarded')) document.getElementById('cfg_quiz_points_awarded').value = s.points_awarded || 50;
+        }
+      } catch (e) {
+        console.warn('Failed to load quiz settings:', e);
+      }
+    }
+
+    async function saveQuizVerificationSettings(e) {
+      if (e) e.preventDefault();
+      const payload = {
+        quiz_short_max_pages: parseInt(document.getElementById('cfg_quiz_short_max_pages').value, 10),
+        quiz_medium_max_pages: parseInt(document.getElementById('cfg_quiz_medium_max_pages').value, 10),
+        quiz_short_unlock_days: parseInt(document.getElementById('cfg_quiz_short_unlock_days').value, 10),
+        quiz_medium_unlock_days: parseInt(document.getElementById('cfg_quiz_medium_unlock_days').value, 10),
+        quiz_long_unlock_days: parseInt(document.getElementById('cfg_quiz_long_unlock_days').value, 10),
+        quiz_pages_per_question: parseInt(document.getElementById('cfg_quiz_pages_per_question').value, 10),
+        quiz_min_questions: parseInt(document.getElementById('cfg_quiz_min_questions').value, 10),
+        quiz_max_questions: parseInt(document.getElementById('cfg_quiz_max_questions').value, 10),
+        quiz_passing_percentage: parseInt(document.getElementById('cfg_quiz_passing_percentage').value, 10),
+        quiz_points_deadline_days: parseInt(document.getElementById('cfg_quiz_points_deadline_days').value, 10),
+        quiz_points_awarded: parseInt(document.getElementById('cfg_quiz_points_awarded').value, 10)
+      };
+
+      try {
+        const res = await fetch('/admin/api/quiz-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          alert('✅ AI Quiz & Reading Verification rules saved successfully!');
+        } else {
+          alert('❌ ' + (data.message || 'Failed to save settings'));
+        }
+      } catch (err) {
+        alert('Network error saving settings: ' + err.message);
+      }
+    }
+
+    async function loadAdminQuizzesList() {
+      const container = document.getElementById('adminQuizzesOverrideContainer');
+      if (!container) return;
+      container.innerHTML = '<div style="text-align:center;padding:24px;color:#94a3b8;font-size:0.85rem;"><span class="lp-spinner" style="margin-right:6px;"></span> Fetching student quizzes and reading loans...</div>';
+
+      try {
+        const res = await fetch('/admin/api/quizzes/list');
+        const data = await res.json();
+        if (!data.quizzes || data.quizzes.length === 0) {
+          container.innerHTML = '<div style="text-align:center;padding:36px;color:#94a3b8;font-size:0.88rem;grid-column:1/-1;">No active or issued student quizzes found. Quizzes appear automatically when books are issued to students!</div>';
+          return;
+        }
+
+        container.innerHTML = data.quizzes.map(q => {
+          const isUnlocked = q.quiz_status === 'UNLOCKED' || q.librarian_override === 1;
+          const isPassed = q.quiz_status === 'PASSED' || q.student_passed > 0;
+          const studentShortName = (q.student_name || 'Student').split(' ')[0];
+
+          let statusBadge = '<span class="sp-pill orange" style="font-size:0.7rem;padding:2px 8px;font-weight:700;">🔒 LOCKED</span>';
+          if (isPassed) {
+            statusBadge = '<span class="sp-pill green" style="font-size:0.7rem;padding:2px 8px;font-weight:700;">✅ PASSED</span>';
+          } else if (isUnlocked) {
+            statusBadge = '<span class="sp-pill blue" style="font-size:0.7rem;padding:2px 8px;font-weight:700;">🔓 UNLOCKED</span>';
+          }
+
+          return `
+            <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+                <div style="min-width:0;flex:1;">
+                  <strong style="font-size:0.9rem;color:#1E293B;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.student_name || 'Student'}</strong>
+                  <span style="font-size:0.72rem;color:#64748B;">${q.student_class || 'Class 10'}${q.student_phone ? ' · ' + q.student_phone : ''}</span>
+                </div>
+                ${statusBadge}
+              </div>
+
+              <div style="font-size:0.82rem;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:2px;">
+                📖 <b>${q.book_title || q.quiz_title || 'Issued Book'}</b> <span style="font-size:0.72rem;color:#64748B;">(${q.book_pages || 0}p)</span>
+              </div>
+
+              <div style="display:flex;gap:6px;margin-top:4px;padding-top:6px;border-top:1px solid #F1F5F9;align-items:center;">
+                ${isUnlocked ? `
+                  <button class="btn-secondary" style="padding:4px 10px;font-size:0.72rem;color:#DC2626;border-color:#FCA5A5;background:#FEF2F2;flex:1;justify-content:center;" onclick="performQuizOverride(${q.reading_id || q.quiz_id}, 'LOCK', 0, '${q.student_name || 'student'}')">
+                    🔒 Lock Quiz
+                  </button>
+                ` : `
+                  <div style="font-size:0.73rem;color:#64748B;flex:1;display:flex;align-items:center;gap:4px;">
+                    <span>⏳ Auto-unlock on schedule</span>
+                  </div>
+                `}
+                <button class="btn-secondary" style="padding:4px 8px;font-size:0.72rem;" title="Extend points deadline" onclick="performQuizOverride(${q.reading_id || q.quiz_id}, 'EXTEND_DEADLINE', 7, '${q.student_name || 'student'}')">
+                  +7d Deadline
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = '<div style="color:#dc2626;padding:16px;font-size:0.82rem;">Failed to load quizzes list: ' + err.message + '</div>';
+      }
+    }
+
+    async function performQuizOverride(targetId, action, extendDays = 7, studentName = '') {
+      const studentLabel = studentName ? ` for ${studentName}` : '';
+      if (!confirm(`Are you sure you want to perform '${action}'${studentLabel}?`)) return;
+      try {
+        const res = await fetch(`/admin/api/quizzes/${targetId}/override`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, reading_id: targetId, extend_days: extendDays })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          alert('✅ ' + data.message);
+          loadAdminQuizzesList();
+        } else {
+          alert('❌ ' + (data.message || 'Action failed'));
+        }
+      } catch (e) {
+        alert('Network error: ' + e.message);
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -3762,7 +4835,32 @@
       currentSpCategory = cat;
       document.querySelectorAll('#spCategoryTabs .lp-tab-btn').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
-      filterStudentProgress();
+
+      const tableView = document.getElementById('spTableView');
+      const groupedView = document.getElementById('spGroupedView');
+      const quizzesView = document.getElementById('spQuizzesView');
+      const viewSwitcher = document.getElementById('spViewSwitcher');
+
+      if (cat === 'QUIZ') {
+        // Show Quiz Management view directly under Quizzes tab
+        if (tableView) tableView.style.display = 'none';
+        if (groupedView) groupedView.style.display = 'none';
+        if (quizzesView) quizzesView.style.display = 'block';
+        if (viewSwitcher) viewSwitcher.style.display = 'none';
+        loadAdminQuizzesList();
+      } else {
+        if (quizzesView) quizzesView.style.display = 'none';
+        if (viewSwitcher) viewSwitcher.style.display = 'flex';
+        if (currentSpView === 'grouped') {
+          if (tableView) tableView.style.display = 'none';
+          if (groupedView) groupedView.style.display = 'block';
+          renderGroupedStudentView();
+        } else {
+          if (tableView) tableView.style.display = 'block';
+          if (groupedView) groupedView.style.display = 'none';
+          filterStudentProgress();
+        }
+      }
     }
 
     function setStudentProgressFilter(type, value) {
@@ -3777,8 +4875,11 @@
       currentSpView = view;
       const tableView = document.getElementById('spTableView');
       const groupedView = document.getElementById('spGroupedView');
+      const quizzesView = document.getElementById('spQuizzesView');
       const tableBtn = document.getElementById('spViewTableBtn');
       const groupedBtn = document.getElementById('spViewGroupedBtn');
+
+      if (quizzesView) quizzesView.style.display = 'none';
 
       if (view === 'grouped') {
         if (tableView) tableView.style.display = 'none';
@@ -3791,6 +4892,7 @@
         if (groupedView) groupedView.style.display = 'none';
         if (tableBtn) { tableBtn.className = 'btn-primary'; tableBtn.style.background = ''; tableBtn.style.border = ''; }
         if (groupedBtn) { groupedBtn.className = 'btn-secondary'; groupedBtn.style.background = 'transparent'; groupedBtn.style.border = 'none'; }
+        filterStudentProgress();
       }
     }
 
@@ -3824,6 +4926,8 @@
           matchStatus = (status === 'OVERDUE');
         } else if (statusFilter === 'ACTIVE') {
           matchStatus = (status === 'ISSUED' || status === 'READING');
+        } else if (statusFilter === 'RETURNED') {
+          matchStatus = (status === 'RETURNED' || status === 'COMPLETED');
         } else if (statusFilter === 'PASSED') {
           matchStatus = (status === 'PASSED' || status === 'COMPLETED');
         } else if (statusFilter === 'ENROLLED') {
@@ -3970,19 +5074,148 @@
       document.body.removeChild(link);
     }
 
-    async function refreshStudentProgressData() {
+    async function refreshStudentProgressData(silent = false) {
       try {
         const res = await fetch('/admin/api/student-progress');
         const data = await res.json();
         if (data.success) {
-          window.location.reload();
-        } else {
+          updateStudentProgressDOM(data);
+          if (!silent && typeof showToast === 'function') {
+            showToast('Student learning progress updated from database!', 'success', '🔄 Data Refreshed');
+          }
+        } else if (!silent) {
           alert('Could not refresh progress data: ' + (data.error || 'Server error'));
         }
       } catch (err) {
-        window.location.reload();
+        if (!silent) {
+          window.location.reload();
+        }
       }
     }
+
+    function updateStudentProgressDOM(data) {
+      if (!data || !data.counts) return;
+
+      // Update Top KPI Counters
+      const bEl = document.getElementById('spMetricBooks');
+      const qEl = document.getElementById('spMetricQuizzes');
+      const cEl = document.getElementById('spMetricCourses');
+      const sEl = document.getElementById('spMetricStudents');
+      if (bEl) bEl.innerText = data.counts.books || 0;
+      if (qEl) qEl.innerText = data.counts.quizzes || 0;
+      if (cEl) cEl.innerText = data.counts.courses || 0;
+      if (sEl) sEl.innerText = data.counts.students || 0;
+
+      // Update Tab Badges
+      const caAll = document.getElementById('spCountAll');
+      const caB = document.getElementById('spCountBooks');
+      const caQ = document.getElementById('spCountQuizzes');
+      const caC = document.getElementById('spCountCourses');
+      if (caAll) caAll.innerText = data.items ? data.items.length : 0;
+      if (caB) caB.innerText = data.counts.books || 0;
+      if (caQ) caQ.innerText = data.counts.quizzes || 0;
+      if (caC) caC.innerText = data.counts.courses || 0;
+
+      // Update Table Rows
+      const tbody = document.getElementById('spTableBody');
+      if (!tbody) return;
+
+      if (!data.items || data.items.length === 0) {
+        tbody.innerHTML = `
+          <tr class="sp-empty-row">
+            <td colspan="6" style="text-align:center;padding:48px 20px;color:#94A3B8;">
+              <div style="font-size:2.5rem;margin-bottom:8px;">🎓</div>
+              <div style="font-weight:700;font-size:1rem;color:#475569;">No ongoing activities found</div>
+              <div style="font-size:0.85rem;margin-top:4px;">Students with active book loans, quizzes, or courses will appear here.</div>
+            </td>
+          </tr>
+        `;
+        const vCount = document.getElementById('spVisibleCount');
+        if (vCount) vCount.innerText = '0';
+        return;
+      }
+
+      tbody.innerHTML = data.items.map(item => {
+        const isOverdue = (item.status === 'OVERDUE' || (item.due_date && new Date(item.due_date) < new Date() && item.category === 'BOOK'));
+        let badgeStyle = '';
+        if (isOverdue) {
+          badgeStyle = 'background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;';
+        } else if (item.status === 'RETURNED' || item.status === 'PASSED' || item.status === 'COMPLETED') {
+          badgeStyle = 'background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;';
+        } else if (item.status === 'ENROLLED') {
+          badgeStyle = 'background:#F5F3FF;color:#6D28D9;border:1px solid #DDD6FE;';
+        } else {
+          badgeStyle = 'background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;';
+        }
+
+        let icon = '📚';
+        if (item.category === 'QUIZ') icon = '🎯';
+        else if (item.category === 'COURSE') icon = '🎓';
+        else if (item.item_type === 'Digital E-Book') icon = '🌐';
+
+        return `
+          <tr class="sp-row"
+              data-category="${item.category}"
+              data-status="${item.status}"
+              data-student="${(item.student_name || '').toLowerCase()}"
+              data-phone="${(item.student_phone || '').toLowerCase()}"
+              data-class="${(item.student_class || '').toLowerCase()}"
+              data-item="${(item.item_name || '').toLowerCase()}"
+              data-raw-student="${escapeHtml(item.student_name)}"
+              data-raw-class="${escapeHtml(item.student_class)}"
+              data-raw-phone="${escapeHtml(item.student_phone || '')}"
+              data-raw-item="${escapeHtml(item.item_name)}"
+              data-raw-type="${escapeHtml(item.item_type)}"
+              data-raw-progress="${escapeHtml(item.progress || 'In Progress')}"
+              data-raw-assigned="${escapeHtml(item.assigned_date || 'N/A')}"
+              data-raw-due="${escapeHtml(item.due_date || '-')}">
+            <td>
+              <div style="font-weight:700;color:#1E293B;">${escapeHtml(item.student_name)}</div>
+              <div style="font-size:0.75rem;color:#64748B;">
+                <span>${escapeHtml(item.student_class)}</span>
+                ${item.student_phone ? `<span> &bull; ${escapeHtml(item.student_phone)}</span>` : ''}
+              </div>
+            </td>
+            <td>
+              <div style="font-weight:600;color:#334155;display:flex;align-items:center;gap:6px;">
+                <span>${icon}</span>
+                <span>${escapeHtml(item.item_name)}</span>
+              </div>
+            </td>
+            <td>
+              <span class="lp-tag" style="background:#F1F5F9;color:#475569;font-size:0.75rem;">
+                ${escapeHtml(item.item_type)}
+              </span>
+            </td>
+            <td>
+              <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:700;${badgeStyle}">
+                ${escapeHtml(item.status)}
+              </span>
+            </td>
+            <td>
+              <span style="font-size:0.8rem;font-weight:600;color:#334155;">
+                ${escapeHtml(item.progress || 'In Progress')}
+              </span>
+            </td>
+            <td>
+              <div style="font-size:0.78rem;color:#64748B;">
+                <div>Assigned: ${escapeHtml(item.assigned_date || 'N/A')}</div>
+                ${item.due_date ? `<div style="font-weight:700;color:${isOverdue ? '#DC2626' : '#475569'};">Due: ${escapeHtml(item.due_date)}</div>` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      filterStudentProgress();
+    }
+
+    // Auto-refresh progress data every 10 seconds silently
+    setInterval(() => {
+      if (document.getElementById('spTableBody')) {
+        refreshStudentProgressData(true);
+      }
+    }, 10000);
 
     function escapeHtml(str) {
       if (!str) return '';
@@ -4461,13 +5694,34 @@
         });
         const data = await res.json();
         if (data.status === 'success') {
-          alert(`✅ ${data.message}`);
-          window.location.reload();
+          // 1. Show immediate success popup to librarian
+          if (typeof showToast === 'function') {
+            showToast(`Book '${data.book_title}' successfully issued to ${data.member_name}! Due: ${data.due_date}`, 'success', '✅ Book Issued');
+          } else {
+            alert(`✅ ${data.message}`);
+          }
+
+          // 2. Clear selections & reset Issue Station smoothly without hard reload
+          clearSelectedBookForIssue();
+          clearSelectedMemberForIssue();
+
+          // 3. Play chime sound once
+          if (typeof playNotificationChime === 'function') {
+            playNotificationChime();
+          }
         } else {
-          alert(`❌ ${data.message}`);
+          if (typeof showToast === 'function') {
+            showToast(data.message, 'error', '❌ Issue Failed');
+          } else {
+            alert(`❌ ${data.message}`);
+          }
         }
       } catch (e) {
-        alert('Circulation issue error: ' + e.message);
+        if (typeof showToast === 'function') {
+          showToast('Circulation issue error: ' + e.message, 'error', '⚠️ Network Error');
+        } else {
+          alert('Circulation issue error: ' + e.message);
+        }
       }
     }
 
@@ -4856,7 +6110,7 @@
       }
     }
 
-    async function rapidReturnPrompt(txId) {
+    async function rapidReturnPrompt(txId, btnElement) {
       if (!confirm('Confirm return for this issued book?')) return;
       try {
         const res = await fetch('/admin/api/circulation/return', {
@@ -4865,10 +6119,34 @@
           body: JSON.stringify({ transaction_id: txId })
         });
         const data = await res.json();
-        alert(data.message);
-        window.location.reload();
+        if (data.status === 'success') {
+          if (typeof showToast === 'function') {
+            showToast(data.message, 'success', '📥 Book Returned');
+          } else {
+            alert(data.message);
+          }
+          if (btnElement && btnElement.closest('tr')) {
+            const tr = btnElement.closest('tr');
+            tr.style.opacity = '0.4';
+            tr.style.pointerEvents = 'none';
+            setTimeout(() => tr.remove(), 600);
+          }
+          if (typeof playNotificationChime === 'function') {
+            playNotificationChime();
+          }
+        } else {
+          if (typeof showToast === 'function') {
+            showToast(data.message, 'error', '❌ Return Failed');
+          } else {
+            alert(data.message);
+          }
+        }
       } catch (e) {
-        alert(e.message);
+        if (typeof showToast === 'function') {
+          showToast(e.message, 'error', '⚠️ Network Error');
+        } else {
+          alert(e.message);
+        }
       }
     }
 
@@ -5185,6 +6463,368 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
+    let currentImportFile = null;
+    let currentImportBatchId = null;
+    let currentImportPreviewData = null;
+    let currentPreviewFilter = 'all';
+
+    function downloadMemberCsvTemplate() {
+      window.location.href = '/admin/api/members/template';
+    }
+
+    function openExportMembersModal() {
+      openModal('exportMembersModal');
+    }
+
+    function submitExportMembers(e) {
+      e.preventDefault();
+      const role = document.getElementById('exportRole').value;
+      const status = document.getElementById('exportStatus').value;
+      const className = document.getElementById('exportClass').value.trim();
+      const section = document.getElementById('exportSection').value.trim();
+      const search = document.getElementById('exportSearch').value.trim();
+
+      const params = new URLSearchParams();
+      if (role) params.set('role', role);
+      if (status) params.set('status', status);
+      if (className) params.set('class', className);
+      if (section) params.set('section', section);
+      if (search) params.set('search', search);
+
+      closeModal('exportMembersModal');
+      window.location.href = '/admin/api/members/export?' + params.toString();
+    }
+
+    function openImportMembersModal() {
+      currentImportFile = null;
+      currentImportBatchId = null;
+      currentImportPreviewData = null;
+      currentPreviewFilter = 'all';
+
+      // Reset file input and display
+      const fileInput = document.getElementById('csvFileInput');
+      if (fileInput) fileInput.value = '';
+      const infoBox = document.getElementById('selectedFileInfo');
+      if (infoBox) infoBox.style.display = 'none';
+
+      showImportStep(1);
+      openModal('importMembersModal');
+    }
+
+    function handleCsvFileDrop(e) {
+      e.preventDefault();
+      const dropzone = document.getElementById('csvDropzone');
+      if (dropzone) {
+        dropzone.style.borderColor = '#93C5FD';
+        dropzone.style.background = '#F8FAFC';
+      }
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processPickedCsvFile(e.dataTransfer.files[0]);
+      }
+    }
+
+    function handleCsvFilePicked(e) {
+      if (e.target && e.target.files && e.target.files.length > 0) {
+        processPickedCsvFile(e.target.files[0]);
+      }
+    }
+
+    function processPickedCsvFile(file) {
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        alert('Please select a valid CSV (.csv) file.');
+        return;
+      }
+      currentImportFile = file;
+
+      const infoBox = document.getElementById('selectedFileInfo');
+      const nameDisp = document.getElementById('fileNameDisplay');
+      const sizeDisp = document.getElementById('fileSizeDisplay');
+
+      if (nameDisp) nameDisp.textContent = file.name;
+      if (sizeDisp) {
+        const kb = (file.size / 1024).toFixed(1);
+        sizeDisp.textContent = `${kb} KB • Ready for preview`;
+      }
+      if (infoBox) infoBox.style.display = 'block';
+    }
+
+    function showImportStep(step) {
+      const s1 = document.getElementById('importStep1');
+      const s2 = document.getElementById('importStep2');
+      const s3 = document.getElementById('importStep3');
+
+      const pill1 = document.getElementById('importStepPill1');
+      const pill2 = document.getElementById('importStepPill2');
+      const pill3 = document.getElementById('importStepPill3');
+
+      const btnBack = document.getElementById('btnBackToUpload');
+      const btnValidate = document.getElementById('btnProcessCsv');
+      const btnCommit = document.getElementById('btnConfirmCommit');
+
+      if (s1) s1.style.display = (step === 1) ? 'block' : 'none';
+      if (s2) s2.style.display = (step === 2) ? 'block' : 'none';
+      if (s3) s3.style.display = (step === 3) ? 'block' : 'none';
+
+      // Update pills
+      [pill1, pill2, pill3].forEach((p, idx) => {
+        if (!p) return;
+        if (idx + 1 === step) {
+          p.style.color = '#2563EB';
+          p.style.fontWeight = '700';
+          p.style.borderBottomColor = '#2563EB';
+        } else if (idx + 1 < step) {
+          p.style.color = '#16A34A';
+          p.style.fontWeight = '600';
+          p.style.borderBottomColor = '#16A34A';
+        } else {
+          p.style.color = '#94A3B8';
+          p.style.fontWeight = '600';
+          p.style.borderBottomColor = 'transparent';
+        }
+      });
+
+      // Update footer buttons
+      if (btnBack) btnBack.style.display = (step === 2) ? 'inline-flex' : 'none';
+      if (btnValidate) btnValidate.style.display = (step === 1) ? 'inline-flex' : 'none';
+      if (btnCommit) btnCommit.style.display = (step === 2) ? 'inline-flex' : 'none';
+    }
+
+    async function submitParseCsvPreview() {
+      if (!currentImportFile) {
+        alert('Please choose or drop a CSV file to continue.');
+        return;
+      }
+
+      const spinner = document.getElementById('importAnalyzingSpinner');
+      const btnValidate = document.getElementById('btnProcessCsv');
+
+      if (spinner) spinner.style.display = 'block';
+      if (btnValidate) btnValidate.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('file', currentImportFile);
+
+        const res = await fetch('/admin/api/members/import/preview', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (spinner) spinner.style.display = 'none';
+        if (btnValidate) btnValidate.disabled = false;
+
+        if (!data.success) {
+          alert('CSV Validation Failed: ' + (data.message || 'Unknown error'));
+          return;
+        }
+
+        currentImportPreviewData = data;
+        currentImportBatchId = data.batchId;
+
+        // Populate Summary Stats
+        const stats = data.summary || {};
+        document.getElementById('statTotalRows').textContent = stats.totalRows || 0;
+        document.getElementById('statToCreate').textContent = stats.toCreate || 0;
+        document.getElementById('statToUpdate').textContent = stats.toUpdate || 0;
+        document.getElementById('statUnchanged').textContent = stats.unchanged || 0;
+        document.getElementById('statErrors').textContent = stats.errors || 0;
+
+        document.getElementById('tabCountAll').textContent = stats.totalRows || 0;
+        document.getElementById('tabCountCreate').textContent = stats.toCreate || 0;
+        document.getElementById('tabCountUpdate').textContent = stats.toUpdate || 0;
+        document.getElementById('tabCountUnchanged').textContent = stats.unchanged || 0;
+        document.getElementById('tabCountErrors').textContent = stats.errors || 0;
+
+        // Errors banner
+        const errBanner = document.getElementById('importErrorsBanner');
+        const errCount = document.getElementById('importErrorsCount');
+        if (errBanner && errCount) {
+          if (stats.errors > 0) {
+            errBanner.style.display = 'block';
+            errCount.textContent = stats.errors;
+          } else {
+            errBanner.style.display = 'none';
+          }
+        }
+
+        // Render Rows
+        filterPreviewRows('all');
+        showImportStep(2);
+
+      } catch (err) {
+        if (spinner) spinner.style.display = 'none';
+        if (btnValidate) btnValidate.disabled = false;
+        alert('Network or processing error during CSV validation: ' + err.message);
+      }
+    }
+
+    function filterPreviewRows(filter, btnElement) {
+      currentPreviewFilter = filter;
+      if (btnElement) {
+        document.querySelectorAll('#importStep2 .lp-tab-btn').forEach(b => b.classList.remove('active'));
+        btnElement.classList.add('active');
+      }
+
+      if (!currentImportPreviewData || !currentImportPreviewData.rows) return;
+
+      const rows = currentImportPreviewData.rows.filter(r => {
+        if (filter === 'all') return true;
+        if (filter === 'create') return r.action === 'create';
+        if (filter === 'update') return r.action === 'update';
+        if (filter === 'unchanged') return r.action === 'unchanged';
+        if (filter === 'error') return r.action === 'error';
+        return true;
+      });
+
+      renderPreviewRowsTable(rows);
+    }
+
+    function renderPreviewRowsTable(rows) {
+      const tbody = document.getElementById('importPreviewTableBody');
+      if (!tbody) return;
+
+      if (!rows || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#94A3B8;">No records in this category.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => {
+        let badgeHtml = '';
+        if (r.action === 'create') {
+          badgeHtml = '<span style="background:#DCFCE7;color:#15803D;font-weight:800;font-size:0.72rem;padding:3px 8px;border-radius:12px;display:inline-block;">✨ NEW</span>';
+        } else if (r.action === 'update') {
+          badgeHtml = '<span style="background:#FEF3C7;color:#B45309;font-weight:800;font-size:0.72rem;padding:3px 8px;border-radius:12px;display:inline-block;">🔄 UPDATE</span>';
+        } else if (r.action === 'unchanged') {
+          badgeHtml = '<span style="background:#F1F5F9;color:#64748B;font-weight:700;font-size:0.72rem;padding:3px 8px;border-radius:12px;display:inline-block;">⏸️ UNCHANGED</span>';
+        } else if (r.action === 'error') {
+          badgeHtml = '<span style="background:#FEE2E2;color:#B91C1C;font-weight:800;font-size:0.72rem;padding:3px 8px;border-radius:12px;display:inline-block;">❌ ERROR</span>';
+        }
+
+        // Details column
+        let detailsHtml = '';
+        if (r.action === 'error') {
+          detailsHtml = `<span style="color:#DC2626;font-weight:600;">${(r.errors || []).join('; ') || 'Invalid record'}</span>`;
+        } else if (r.action === 'update') {
+          const diffs = r.diffs || [];
+          if (diffs.length > 0) {
+            detailsHtml = diffs.map(d => 
+              `<span style="background:#EFF6FF;border:1px solid #BFDBFE;color:#1E40AF;padding:2px 6px;border-radius:4px;font-size:0.72rem;margin-right:4px;display:inline-block;">` +
+              `<strong>${d.field}:</strong> ${d.oldValue || '(blank)'} ➔ ${d.newValue}</span>`
+            ).join(' ');
+          } else {
+            detailsHtml = '<span style="color:#64748B;font-style:italic;">No changes detected</span>';
+          }
+        } else if (r.action === 'create') {
+          detailsHtml = `<span style="color:#16A34A;">Ready to create new user profile</span>`;
+        } else if (r.action === 'unchanged') {
+          detailsHtml = `<span style="color:#64748B;font-style:italic;">Existing profile identical to CSV</span>`;
+        }
+
+        // Warnings badge if any
+        if (r.warnings && r.warnings.length > 0) {
+          detailsHtml += ` <span style="background:#FEF9C3;color:#854D0E;padding:2px 6px;border-radius:4px;font-size:0.7rem;display:inline-block;" title="${r.warnings.join('; ')}">⚠️ ${r.warnings.length} warning(s)</span>`;
+        }
+
+        const idInfo = r.raw ? (r.raw['Admission Number'] || r.raw['Employee ID'] || r.raw['Username'] || r.raw['Mobile'] || '-') : '-';
+
+        return `
+          <tr style="border-bottom:1px solid #F1F5F9;">
+            <td style="padding:8px 12px;font-weight:700;color:#64748B;">#${r.rowNumber}</td>
+            <td style="padding:8px 12px;">${badgeHtml}</td>
+            <td style="padding:8px 12px;font-weight:700;color:#0F172A;">${(r.parsed && r.parsed.name) || (r.raw && r.raw['Full Name']) || '-'}</td>
+            <td style="padding:8px 12px;text-transform:capitalize;color:#475569;">${(r.parsed && r.parsed.role) || (r.raw && r.raw['Role']) || '-'}</td>
+            <td style="padding:8px 12px;color:#334155;font-family:monospace;font-size:0.75rem;">${idInfo}</td>
+            <td style="padding:8px 12px;max-width:320px;">${detailsHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function submitCommitImport() {
+      if (!currentImportBatchId) {
+        alert('No staged import batch found. Please re-upload your CSV.');
+        return;
+      }
+
+      const chkSkip = document.getElementById('chkSkipErrors');
+      const chkUpdate = document.getElementById('chkUpdateExisting');
+      const btnCommit = document.getElementById('btnConfirmCommit');
+
+      if (!confirm('Are you ready to commit this import? Valid changes will be applied to the database.')) {
+        return;
+      }
+
+      if (btnCommit) {
+        btnCommit.disabled = true;
+        btnCommit.textContent = 'Applying Changes...';
+      }
+
+      try {
+        const res = await fetch('/admin/api/members/import/commit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            batchId: currentImportBatchId,
+            options: {
+              skipErrors: chkSkip ? chkSkip.checked : true,
+              updateExisting: chkUpdate ? chkUpdate.checked : true
+            }
+          })
+        });
+
+        const data = await res.json();
+        if (btnCommit) {
+          btnCommit.disabled = false;
+          btnCommit.textContent = '✓ Confirm & Apply Import';
+        }
+
+        if (!data.success) {
+          alert('Import Commit Failed: ' + (data.message || 'Unknown error'));
+          return;
+        }
+
+        // Render Step 3 Report
+        const resStats = data.results || {};
+        document.getElementById('reportCreated').textContent = resStats.created || 0;
+        document.getElementById('reportUpdated').textContent = resStats.updated || 0;
+        document.getElementById('reportUnchanged').textContent = resStats.unchanged || 0;
+        document.getElementById('reportErrors').textContent = resStats.errors || 0;
+        document.getElementById('reportBatchId').textContent = currentImportBatchId;
+
+        const btnErrPost = document.getElementById('btnDownloadErrorsPost');
+        if (btnErrPost) {
+          btnErrPost.style.display = (resStats.errors > 0) ? 'inline-flex' : 'none';
+        }
+
+        // Hide back and commit buttons in footer on completion
+        const btnBack = document.getElementById('btnBackToUpload');
+        if (btnBack) btnBack.style.display = 'none';
+        if (btnCommit) btnCommit.style.display = 'none';
+
+        showImportStep(3);
+
+      } catch (err) {
+        if (btnCommit) {
+          btnCommit.disabled = false;
+          btnCommit.textContent = '✓ Confirm & Apply Import';
+        }
+        alert('Network or server error committing import: ' + err.message);
+      }
+    }
+
+    function downloadCurrentImportErrorReport() {
+      if (!currentImportBatchId) {
+        alert('No active batch ID for error reporting.');
+        return;
+      }
+      window.location.href = `/admin/api/members/import/${currentImportBatchId}/error-report`;
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    
     // AI Copilot Interactive Chat
     // ─────────────────────────────────────────────────────────────────
     function sendAiPrompt(promptText) {
@@ -5217,10 +6857,11 @@
           body: JSON.stringify({ message: msg })
         });
         const data = await res.json();
-        botBubble.innerHTML = data.reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        const replyText = data.reply || data.response || (data.status === 'error' ? (data.message || 'Error occurred.') : 'I am here to help you manage your library.');
+        botBubble.innerHTML = replyText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         body.scrollTop = body.scrollHeight;
       } catch (e) {
-        botBubble.textContent = 'Sorry, could not process request right now.';
+        botBubble.textContent = 'Sorry, could not process request right now. Please try again.';
       }
     }
 
@@ -7249,12 +8890,215 @@
       });
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // UNIVERSAL OMNISEARCH ENGINE (Tabs, Books, Barcodes, Members, Roles, AI, Settings)
+    // ═══════════════════════════════════════════════════════════════
+    const OMNI_SITE_ACTIONS = [
+      // Navigation Modules & Subtabs
+      { type: 'TAB', title: 'Dashboard', desc: 'Main library pulse & overview', icon: '📊', action: () => navigateToModule('dashboard') },
+      { type: 'TAB', title: 'Catalog: Books', desc: 'Manage all titles in library catalog', icon: '📚', action: () => { navigateToModule('catalog'); switchCatalogTab('books', document.querySelector('#module-catalog .lp-tab-btn:nth-child(1)')); } },
+      { type: 'TAB', title: 'Catalog: Inventory & Copies', desc: 'Manage individual physical barcodes & copies', icon: '📦', action: () => { navigateToModule('catalog'); switchCatalogTab('inventory', document.querySelector('#module-catalog .lp-tab-btn:nth-child(2)')); } },
+      { type: 'TAB', title: 'Catalog: Acquisitions & Invoices', desc: 'Book procurement, vendors & supplier bills', icon: '🛒', action: () => { navigateToModule('catalog'); switchCatalogTab('acquisitions', document.querySelector('#module-catalog .lp-tab-btn:nth-child(3)')); } },
+      { type: 'TAB', title: 'Members: Students', desc: 'View and manage student readers', icon: '🎓', action: () => { navigateToModule('members'); switchMemberTab('students', document.querySelector('#module-members .lp-tab-btn:nth-child(1)')); } },
+      { type: 'TAB', title: 'Members: Teachers', desc: 'Faculty borrowing privileges', icon: '👨‍🏫', action: () => { navigateToModule('members'); switchMemberTab('teachers', document.querySelector('#module-members .lp-tab-btn:nth-child(2)')); } },
+      { type: 'TAB', title: 'Members: Staff & Librarians', desc: 'Staff members and roles', icon: '👔', action: () => { navigateToModule('members'); switchMemberTab('staff', document.querySelector('#module-members .lp-tab-btn:nth-child(3)')); } },
+      { type: 'TAB', title: 'Circulation Desk: Issue Book', desc: 'Issue physical books to students/teachers', icon: '🔄', action: () => { navigateToModule('circulation'); switchCirculationTab('issue', document.querySelector('#module-circulation .lp-tab-btn:nth-child(1)')); } },
+      { type: 'TAB', title: 'Circulation Desk: Return Book', desc: 'Rapid return scanner & check-in', icon: '📥', action: () => { navigateToModule('circulation'); switchCirculationTab('return', document.querySelector('#module-circulation .lp-tab-btn:nth-child(2)')); } },
+      { type: 'TAB', title: 'Circulation Desk: Loan History', desc: 'Active & completed circulation logs', icon: '📜', action: () => { navigateToModule('circulation'); switchCirculationTab('history', document.querySelector('#module-circulation .lp-tab-btn:nth-child(3)')); } },
+      { type: 'TAB', title: 'Student Progress: Books & Quizzes', desc: 'Reading tracking, verification quizzes & leaderboard', icon: '📈', action: () => navigateToModule('student-progress') },
+      { type: 'TAB', title: 'Quiz Management & Verification', desc: 'AI Reading Quizzes, unlock overrides & scoring', icon: '📝', action: () => { navigateToModule('student-progress'); setStudentProgressFilter('category', 'QUIZ'); } },
+      { type: 'TAB', title: 'Requests: Book Reservations Queue', desc: 'Student reservation requests', icon: '📖', action: () => navigateToModule('requests') },
+      { type: 'TAB', title: 'E-Library & Digital Media', desc: 'E-books, PDFs, digital audiobooks', icon: '📱', action: () => navigateToModule('e-library') },
+      { type: 'TAB', title: 'Live Studio', desc: 'Online classes, sessions and video meetings', icon: '🎥', action: () => navigateToModule('studio') },
+      { type: 'TAB', title: 'Analytics & Reporting', desc: 'Borrowing trends, reading stats & charts', icon: '📊', action: () => navigateToModule('analytics') },
+      { type: 'TAB', title: 'Settings: General & Fine Rules', desc: 'Loan periods, fines, borrowing quotas', icon: '⚙️', action: () => { navigateToModule('settings'); switchSettingsTab('general', document.querySelector('#module-settings .lp-tab-btn:nth-child(1)')); } },
+      { type: 'TAB', title: 'Settings: Barcode Configuration', desc: 'Custom library barcode rules & formats', icon: '🏷️', action: () => openBarcodeConfigModal() },
+      { type: 'TAB', title: 'Settings: Profile & Passcodes', desc: 'Admin account, avatar & security', icon: '🔐', action: () => { navigateToModule('settings'); switchSettingsTab('profile', document.querySelector('#module-settings .lp-tab-btn:nth-child(2)')); } },
+      { type: 'TAB', title: 'Settings: Backups & System Audit', desc: 'Database exports, audits & logs', icon: '💾', action: () => { navigateToModule('settings'); switchSettingsTab('backup', document.querySelector('#module-settings .lp-tab-btn:nth-child(3)')); } },
+
+      // AI & Quick Actions
+      { type: 'AI', title: 'Ask Library AI Copilot', desc: 'Open interactive library AI assistant', icon: '✨', action: () => toggleAiCopilot() },
+      { type: 'AI', title: 'Google Lens Book Scanner & Analyzer', desc: 'Scan book front & back covers with AI', icon: '📸', action: () => openModal('addBookModal') },
+      { type: 'AI', title: 'Test Book Analyzer Playground', desc: 'Test and benchmark AI book vision', icon: '🧪', action: () => { window.location.href = '/admin/book-analyzer-test'; } },
+      { type: 'ACTION', title: '+ Add New Book', desc: 'Add new physical or digital book', icon: '➕', action: () => openModal('addBookModal') },
+      { type: 'ACTION', title: '+ Register Member', desc: 'Add student, teacher or staff member', icon: '👤', action: () => openModal('addMemberModal') },
+      { type: 'ACTION', title: '+ New Book Acquisition', desc: 'Add invoice & purchase order', icon: '⚡', action: () => openNewAcquisitionModal() },
+      { type: 'ACTION', title: 'Print Barcode Labels', desc: 'Generate and print spine barcodes', icon: '🖨️', action: () => openBarcodePrintWindow() }
+    ];
+
+    let globalSearchDebounceTimer = null;
+
     function handleGlobalSearch(val) {
-      if (!val) return;
-      if (val.length >= 3) {
-        // Automatically switch to Catalog or Members if search matches
+      const dd = document.getElementById('globalSearchDropdown');
+      if (!dd) return;
+      const q = (val || '').trim().toLowerCase();
+
+      if (!q) {
+        dd.style.display = 'none';
+        return;
       }
+
+      clearTimeout(globalSearchDebounceTimer);
+      globalSearchDebounceTimer = setTimeout(async () => {
+        dd.innerHTML = '<div style="padding:14px;text-align:center;color:#64748B;font-size:0.85rem;"><span class="ld-spinner" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:6px;"></span> Searching library...</div>';
+        dd.style.display = 'block';
+
+        const results = [];
+
+        // 1. Match Navigation Tabs, AI, Actions, and Settings
+        OMNI_SITE_ACTIONS.forEach(item => {
+          if (item.title.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q) || item.type.toLowerCase().includes(q)) {
+            results.push({
+              category: item.type === 'TAB' ? '📌 Navigation & Tabs' : (item.type === 'AI' ? '✨ AI Intelligence' : '⚡ Quick Actions'),
+              title: item.title,
+              subtitle: item.desc,
+              icon: item.icon,
+              onClick: item.action
+            });
+          }
+        });
+
+        // 2. Match Client-Side Catalog Books & Barcodes
+        const localBooks = window.CATALOG_BOOKS_DATA || [];
+        let bookMatchCount = 0;
+        for (const b of localBooks) {
+          if (bookMatchCount >= 8) break;
+          const matchTitle = (b.title || '').toLowerCase().includes(q);
+          const matchAuthor = (b.author || '').toLowerCase().includes(q);
+          const matchIsbn = (b.isbn || '').toLowerCase().includes(q);
+          const matchBarcode = (b.barcode_id || '').toLowerCase().includes(q);
+          const matchCategory = (b.category || '').toLowerCase().includes(q);
+
+          // Check copy barcodes if available
+          let matchedCopyBarcode = '';
+          if (b.copies && Array.isArray(b.copies)) {
+            const cp = b.copies.find(c => (c.barcode || '').toLowerCase().includes(q));
+            if (cp) matchedCopyBarcode = cp.barcode;
+          }
+
+          if (matchTitle || matchAuthor || matchIsbn || matchBarcode || matchCategory || matchedCopyBarcode) {
+            bookMatchCount++;
+            results.push({
+              category: '📖 Books & Barcodes',
+              title: b.title || 'Untitled Book',
+              subtitle: `Author: ${b.author || 'N/A'} • Barcode: ${matchedCopyBarcode || b.barcode_id || 'N/A'} • ISBN: ${b.isbn || 'N/A'}`,
+              icon: '📚',
+              onClick: () => {
+                if (typeof openUnifiedBookModal === 'function') {
+                  openUnifiedBookModal(b.id);
+                } else {
+                  navigateToModule('catalog');
+                }
+              }
+            });
+          }
+        }
+
+        // 3. Search Server API for Members & Additional Books/Barcodes
+        try {
+          // Member search via existing fast circulation endpoint
+          const memberRes = await fetch('/admin/api/circulation/search-students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: q })
+          });
+          const memberData = await memberRes.json();
+          if (memberData && memberData.students && memberData.students.length > 0) {
+            memberData.students.slice(0, 6).forEach(m => {
+              results.push({
+                category: '👤 Members & Readers',
+                title: m.name || 'Member',
+                subtitle: `Role: ${(m.role || 'Student').toUpperCase()} • Adm/ID: ${m.admission_no || m.student_id || m.id} • Phone: ${m.phone || 'N/A'}`,
+                icon: m.role === 'teacher' ? '👨‍🏫' : (m.role === 'staff' ? '👔' : '🎓'),
+                onClick: () => {
+                  if (typeof openMemberDrawer === 'function') {
+                    openMemberDrawer(m.id);
+                  } else {
+                    navigateToModule('members');
+                  }
+                }
+              });
+            });
+          }
+        } catch (e) {
+          console.warn('Omnisearch member lookup failed:', e);
+        }
+
+        // Render Dropdown Results
+        if (results.length === 0) {
+          dd.innerHTML = `
+            <div style="padding:24px;text-align:center;color:#64748B;">
+              <div style="font-size:1.8rem;margin-bottom:6px;">🔍</div>
+              <div style="font-weight:700;color:#1E293B;font-size:0.9rem;">No results found for "${escapeHtml(q)}"</div>
+              <p style="font-size:0.78rem;margin:4px 0 0 0;">Try searching for tabs, books, barcode IDs, member names, roles, or AI tools.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Group results by category
+        const groups = {};
+        results.forEach(r => {
+          if (!groups[r.category]) groups[r.category] = [];
+          groups[r.category].push(r);
+        });
+
+        let html = '';
+        for (const [catName, items] of Object.entries(groups)) {
+          html += `<div style="padding:6px 14px 4px 14px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;font-size:0.72rem;font-weight:800;color:#64748B;letter-spacing:0.5px;text-transform:uppercase;">${catName}</div>`;
+          items.forEach((it, idx) => {
+            html += `
+              <div class="lp-search-item" data-omni-idx="${results.indexOf(it)}" style="padding:10px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #F1F5F9;cursor:pointer;transition:background 0.12s;">
+                <div style="width:34px;height:34px;border-radius:8px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+                  ${it.icon}
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-weight:700;font-size:0.86rem;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(it.title)}</div>
+                  <div style="font-size:0.75rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(it.subtitle)}</div>
+                </div>
+                <div style="color:#94A3B8;font-size:0.8rem;">&rarr;</div>
+              </div>
+            `;
+          });
+        }
+
+        dd.innerHTML = html;
+
+        // Attach Click Handlers
+        dd.querySelectorAll('.lp-search-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const idx = parseInt(el.getAttribute('data-omni-idx'), 10);
+            const target = results[idx];
+            if (target && target.onClick) {
+              dd.style.display = 'none';
+              document.getElementById('globalSearchInput').value = '';
+              target.onClick();
+            }
+          });
+        });
+      }, 150);
     }
+
+    // Close global search dropdown on click outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.lp-search-bar')) {
+        const dd = document.getElementById('globalSearchDropdown');
+        if (dd) dd.style.display = 'none';
+      }
+    });
+
+    // Support keyboard Enter on top search
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'globalSearchInput') {
+        const dd = document.getElementById('globalSearchDropdown');
+        if (dd && dd.style.display !== 'none') {
+          const firstItem = dd.querySelector('.lp-search-item');
+          if (firstItem) {
+            firstItem.click();
+          }
+        }
+      }
+    });
 
     // Theme Toggle
     function toggleTheme() {
@@ -7516,6 +9360,336 @@
       }
       fb.textContent = msg;
       setTimeout(() => { fb.style.display = 'none'; }, 4000);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // BOOK ACQUISITIONS & INVOICE MANAGEMENT JAVASCRIPT
+    // ═══════════════════════════════════════════════════════════════
+    async function openNonAcqBooksModal() {
+      openModal('nonAcqBooksModal');
+      const body = document.getElementById('nonAcqTableBody');
+      if (!body) return;
+      body.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #64748B;"><span class="ld-spinner" style="display:inline-block; width:20px; height:20px; vertical-align:middle; margin-right:8px;"></span> Loading non-acquisition books...</td></tr>';
+      
+      try {
+        const r = await fetch('/admin/api/non-acquisition-books');
+        const res = await r.json();
+        if (res.status === 'success') {
+          const cntEl = document.getElementById('nonAcqCount');
+          if (cntEl) cntEl.innerText = res.books.length;
+          if (res.books.length === 0) {
+            body.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #64748B;">🎉 All cataloged books belong to purchase acquisitions!</td></tr>';
+          } else {
+            body.innerHTML = '';
+            res.books.forEach(b => {
+              const tr = document.createElement('tr');
+              tr.style.borderBottom = '1px solid #E2E8F0';
+              tr.innerHTML = `
+                <td style="padding: 12px; font-weight: bold; color: #4F46E5;">${escapeHtml(b.barcode_id || '')}</td>
+                <td style="padding: 12px; font-weight: bold; color: #0F172A;">${escapeHtml(b.title || '')}</td>
+                <td style="padding: 12px; color: #475569;">${escapeHtml(b.author || '')}</td>
+                <td style="padding: 12px; color: #64748B;">${escapeHtml(b.isbn || 'None')}</td>
+                <td style="padding: 12px; color: #64748B;">${escapeHtml(b.publisher || 'None')}</td>
+                <td style="padding: 12px; text-align: center; font-weight: bold; color: #0F172A;">${b.total_copies || 1}</td>
+              `;
+              body.appendChild(tr);
+            });
+          }
+        } else {
+          body.innerHTML = `<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #EF4444;">Failed to load: ${escapeHtml(res.message || 'Unknown error')}</td></tr>`;
+        }
+      } catch(e) {
+        body.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #EF4444;">Error fetching non-acquisition books.</td></tr>';
+      }
+    }
+
+    function openNewAcquisitionModal() {
+      const editIdEl = document.getElementById('editAcquisitionId');
+      if (editIdEl) editIdEl.value = '';
+      const upInvEl = document.getElementById('uploadedInvoiceUrl');
+      if (upInvEl) upInvEl.value = '';
+      const previewEl = document.getElementById('uploadedInvoicePreview');
+      if (previewEl) previewEl.style.display = 'none';
+
+      const modal = document.getElementById('newAcquisitionModal');
+      if (modal) {
+        const titleEl = modal.querySelector('h2');
+        if (titleEl) titleEl.innerText = 'Create Book Acquisition';
+      }
+      
+      const billNo = document.getElementById('billNo');
+      if (billNo) billNo.value = '';
+      const billDate = document.getElementById('billDate');
+      if (billDate) billDate.value = '';
+      const vendorSelect = document.getElementById('vendorSelect');
+      if (vendorSelect) vendorSelect.value = '';
+      const billAmount = document.getElementById('billAmount');
+      if (billAmount) billAmount.value = '';
+      const gridBody = document.getElementById('gridBody');
+      if (gridBody) gridBody.innerHTML = '';
+      
+      const successSeg = document.getElementById('successSegment');
+      if (successSeg) successSeg.style.display = 'none';
+      const modalActs = document.getElementById('modalActions');
+      if (modalActs) modalActs.style.display = 'flex';
+      
+      addGridRow();
+      openModal('newAcquisitionModal');
+    }
+
+    async function openEditAcquisition(acqId) {
+      try {
+        const r = await fetch(`/admin/acquisitions/get/${acqId}`);
+        const res = await r.json();
+        if (res.status === 'success' && res.acquisition) {
+          const acq = res.acquisition;
+          
+          document.getElementById('editAcquisitionId').value = acqId;
+          document.getElementById('newAcquisitionModal').querySelector('h2').innerText = 'Edit Book Acquisition';
+          
+          document.getElementById('billNo').value = acq.bill_number || '';
+          document.getElementById('billDate').value = acq.bill_date || '';
+          document.getElementById('vendorSelect').value = acq.vendor_id || '';
+          document.getElementById('billAmount').value = acq.total_amount || '0.00';
+          
+          if (acq.invoice_image) {
+            document.getElementById('uploadedInvoiceUrl').value = acq.invoice_image;
+            document.getElementById('invoicePreviewLink').href = acq.invoice_image;
+            document.getElementById('uploadedInvoicePreview').style.display = 'flex';
+          } else {
+            document.getElementById('uploadedInvoiceUrl').value = '';
+            document.getElementById('uploadedInvoicePreview').style.display = 'none';
+          }
+          
+          document.getElementById('gridBody').innerHTML = '';
+          if (res.items && res.items.length) {
+            res.items.forEach(item => {
+              addGridRow(item);
+            });
+          } else {
+            addGridRow();
+          }
+          
+          document.getElementById('successSegment').style.display = 'none';
+          document.getElementById('modalActions').style.display = 'flex';
+          
+          openModal('newAcquisitionModal');
+        } else {
+          alert("Failed to load acquisition: " + (res.message || 'Unknown error'));
+        }
+      } catch(e) {
+        alert("Error loading acquisition details.");
+      }
+    }
+
+    function clearInvoiceImage() {
+      document.getElementById('uploadedInvoiceUrl').value = '';
+      document.getElementById('uploadedInvoicePreview').style.display = 'none';
+      document.getElementById('invoiceFile').value = '';
+    }
+
+    function addGridRow(data = {}) {
+      const body = document.getElementById('gridBody');
+      if (!body) return;
+      const rowId = 'row-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+      
+      const row = document.createElement('div');
+      row.className = 'grid-row';
+      row.id = rowId;
+      row.innerHTML = `
+        <div class="grid-cell"><input type="text" class="row-isbn" value="${escapeHtml(data.isbn || '')}" placeholder="ISBN" onchange="lookupAcqIsbn('${rowId}')"></div>
+        <div class="grid-cell"><input type="text" class="row-title" value="${escapeHtml(data.title || '')}" placeholder="Title" required></div>
+        <div class="grid-cell"><input type="text" class="row-author" value="${escapeHtml(data.author || '')}" placeholder="Author"></div>
+        <div class="grid-cell"><input type="number" class="row-qty" value="${data.quantity || 1}" min="1"></div>
+        <div class="grid-cell"><input type="number" class="row-price" value="${data.unit_price || 0.0}" step="0.01"></div>
+        <div class="grid-cell"><input type="text" class="row-shelf" value="${escapeHtml(data.shelf || 'A1')}" placeholder="Shelf"></div>
+        <div class="grid-cell"><input type="text" class="row-rack" value="${escapeHtml(data.rack || 'R1')}" placeholder="Rack"></div>
+        <div class="grid-cell"><input type="text" class="row-category" value="${escapeHtml(data.category || 'General')}" placeholder="Category"></div>
+        <div class="grid-cell"><button type="button" onclick="document.getElementById('${rowId}').remove()" style="background:none; border:none; color:#EF4444; cursor:pointer; font-weight:bold; font-size:1.1rem;">✕</button></div>
+      `;
+      body.appendChild(row);
+    }
+
+    async function lookupAcqIsbn(rowId) {
+      const row = document.getElementById(rowId);
+      if (!row) return;
+      const isbn = row.querySelector('.row-isbn').value.trim();
+      if (!isbn) return;
+      
+      try {
+        const r = await fetch(`/admin/acquisitions/isbn-lookup?isbn=${isbn}`);
+        const res = await r.json();
+        if (res.success) {
+          row.querySelector('.row-title').value = res.title || '';
+          row.querySelector('.row-author').value = res.author || '';
+          row.querySelector('.row-category').value = res.category || '';
+        }
+      } catch(e) {
+        console.error("ISBN lookup failed:", e);
+      }
+    }
+
+    function handleAcqDragOver(e) {
+      e.preventDefault();
+      const container = document.getElementById('ocrUploadContainer');
+      if (container) {
+        container.style.borderColor = '#4F46E5';
+        container.style.backgroundColor = 'rgba(79, 70, 229, 0.05)';
+      }
+    }
+
+    function handleAcqDragLeave(e) {
+      e.preventDefault();
+      const container = document.getElementById('ocrUploadContainer');
+      if (container) {
+        container.style.borderColor = '#CBD5E1';
+        container.style.backgroundColor = '#F8FAFC';
+      }
+    }
+
+    function handleAcqDrop(e) {
+      e.preventDefault();
+      const container = document.getElementById('ocrUploadContainer');
+      if (container) {
+        container.style.borderColor = '#CBD5E1';
+        container.style.backgroundColor = '#F8FAFC';
+      }
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        handleInvoiceScan(e.dataTransfer.files[0]);
+      }
+    }
+
+    async function handleInvoiceScan(droppedFile = null) {
+      const fileInput = document.getElementById('invoiceFile');
+      const file = droppedFile || (fileInput && fileInput.files.length ? fileInput.files[0] : null);
+      if (!file) return;
+      
+      const loader = document.getElementById('ocrLoading');
+      if (loader) loader.style.display = 'block';
+      
+      const fd = new FormData();
+      fd.append('bill_file', file);
+      
+      try {
+        const r = await fetch('/admin/acquisitions/ocr', {
+          method: 'POST',
+          body: fd
+        });
+        const res = await r.json();
+        if (res.status === 'success' && res.data) {
+          if (res.data.bill_number) document.getElementById('billNo').value = res.data.bill_number;
+          if (res.data.bill_date) document.getElementById('billDate').value = res.data.bill_date;
+          if (res.data.total_amount) document.getElementById('billAmount').value = res.data.total_amount;
+          
+          document.getElementById('gridBody').innerHTML = '';
+          if (res.data.items && res.data.items.length) {
+            res.data.items.forEach(item => {
+              addGridRow(item);
+            });
+          }
+        } else {
+          alert("AI Scan failed: " + (res.message || 'Unknown error'));
+        }
+      } catch(e) {
+        alert("Error running AI OCR scan.");
+      } finally {
+        if (loader) loader.style.display = 'none';
+      }
+    }
+
+    async function saveAcquisition() {
+      const billNo = document.getElementById('billNo').value.trim();
+      const billDate = document.getElementById('billDate').value;
+      const vendorId = document.getElementById('vendorSelect').value;
+      const billAmount = document.getElementById('billAmount').value;
+      
+      if (!billNo || !billDate) {
+        alert("Please fill in the Bill Number & Bill Date.");
+        return;
+      }
+      
+      const rows = document.querySelectorAll('#gridBody .grid-row');
+      const items = [];
+      rows.forEach(row => {
+        items.push({
+          isbn: row.querySelector('.row-isbn').value.trim(),
+          title: row.querySelector('.row-title').value.trim(),
+          author: row.querySelector('.row-author').value.trim(),
+          quantity: parseInt(row.querySelector('.row-qty').value || 1),
+          unit_price: parseFloat(row.querySelector('.row-price').value || 0.0),
+          shelf: row.querySelector('.row-shelf').value.trim(),
+          rack: row.querySelector('.row-rack').value.trim(),
+          category: row.querySelector('.row-category').value.trim()
+        });
+      });
+      
+      if (!items.length) {
+        alert("Please add at least one item to catalog.");
+        return;
+      }
+      
+      const acquisitionId = document.getElementById('editAcquisitionId').value;
+      const invoiceImage = document.getElementById('uploadedInvoiceUrl').value;
+
+      const data = {
+        acquisition_id: acquisitionId || null,
+        invoice_image: invoiceImage || '',
+        bill_number: billNo,
+        bill_date: billDate,
+        vendor_id: vendorId,
+        total_amount: billAmount,
+        items: items
+      };
+      
+      try {
+        const r = await fetch('/admin/acquisitions/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const res = await r.json();
+        if (res.status === 'success') {
+          document.getElementById('successSegment').style.display = 'block';
+          document.getElementById('modalActions').style.display = 'none';
+          
+          const tagsBox = document.getElementById('accessionTagsContainer');
+          tagsBox.innerHTML = '';
+          if (res.accessions && res.accessions.length) {
+            res.accessions.forEach(t => {
+              const label = document.createElement('div');
+              label.className = 'spine-label';
+              label.innerHTML = `
+                <strong>${escapeHtml(t.accession)}</strong><br>
+                ${escapeHtml((t.title || '').substring(0, 18))}...<br>
+                Loc: ${escapeHtml(t.shelf)}/${escapeHtml(t.rack)}
+              `;
+              tagsBox.appendChild(label);
+            });
+          }
+        } else {
+          alert("Save failed: " + (res.message || 'Unknown error'));
+        }
+      } catch(e) {
+        alert("Network error saving acquisition.");
+      }
+    }
+
+    async function deleteAcquisition(acqId) {
+      if (!confirm("Are you sure you want to delete this acquisition? This will remove all generated copies from your database and adjust book counts.")) return;
+      
+      try {
+        const r = await fetch(`/admin/acquisitions/delete/${acqId}`, { method: 'POST' });
+        const res = await r.json();
+        if (res.status === 'success') {
+          const row = document.getElementById('acq-row-' + acqId);
+          if (row) row.remove();
+          alert(res.message);
+        } else {
+          alert("Delete failed: " + res.message);
+        }
+      } catch(e) {
+        alert("Error sending request to delete acquisition.");
+      }
     }
 
     (function initTheme() {

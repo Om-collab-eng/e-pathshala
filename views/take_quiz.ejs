@@ -281,9 +281,24 @@
         </span>
         <span class="qz-pill blue"><%= quiz.difficulty || 'MEDIUM' %></span>
         <span style="font-size:0.85rem;color:var(--text-secondary);">
-          Passing: <strong><%= quiz.passing_percentage || 60 %>%</strong> · Time Limit: <strong><%= quiz.time_limit || 15 %> mins</strong>
+          Passing: <strong><%= typeof passingPercentage !== 'undefined' ? passingPercentage : (quiz.passing_percentage || 80) %>%</strong> · Questions: <strong><%= questions.length %></strong> · Time: <strong><%= timeLimitMinutes %> mins</strong>
         </span>
       </div>
+      <% if (typeof isPointsExpired !== 'undefined' && isPointsExpired) { %>
+        <div style="background:#fee2e2;border:1px solid #f87171;color:#991b1b;padding:12px 16px;border-radius:12px;font-size:0.88rem;display:flex;align-items:center;gap:10px;margin-top:6px;">
+          <span style="font-size:1.3rem;">⚠️</span>
+          <div>
+            <strong>Points Deadline Expired:</strong> The window to earn Reader Leaderboard points for this book has passed. You may still complete this quiz for reading practice and comprehension review.
+          </div>
+        </div>
+      <% } else { %>
+        <div style="background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;padding:10px 16px;border-radius:12px;font-size:0.85rem;display:flex;align-items:center;gap:10px;margin-top:6px;">
+          <span style="font-size:1.2rem;">🎯</span>
+          <div>
+            <strong>AI Reading Verification:</strong> Score at least <strong><%= typeof passingPercentage !== 'undefined' ? passingPercentage : 80 %>%</strong> to verify your reading and earn <strong>+50 Leaderboard Points</strong>!
+          </div>
+        </div>
+      <% } %>
       <h1 class="qz-title"><%= quiz.title %></h1>
       <% if (quiz.book_title || quiz.digital_title) { %>
         <div style="font-size:0.95rem;color:var(--text-secondary);font-weight:600;">

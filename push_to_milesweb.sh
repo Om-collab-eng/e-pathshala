@@ -58,6 +58,9 @@ killall -9 node 2>/dev/null || pkill -9 node 2>/dev/null || pkill -9 -f "app.js"
 mkdir -p tmp
 touch tmp/restart.txt
 echo "MilesWeb server updated & restarted."
+
+# Trigger caps broadcast notification to all devices & in-app users
+node scripts/broadcast_push_alert.js || true
 REMOTE_SCRIPT
 else
   ssh -p "$PORT" -o StrictHostKeyChecking=no -o PubkeyAuthentication=no "$SERVER_USER@$SERVER_IP" << 'REMOTE_SCRIPT'
@@ -80,6 +83,9 @@ killall -9 node 2>/dev/null || pkill -9 node 2>/dev/null || pkill -9 -f "app.js"
 mkdir -p tmp
 touch tmp/restart.txt
 echo "MilesWeb server updated & restarted."
+
+# Trigger caps broadcast notification to all devices & in-app users
+node scripts/broadcast_push_alert.js || true
 REMOTE_SCRIPT
 fi
 

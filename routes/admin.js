@@ -8,13 +8,23 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const bwipjs = require('bwip-js');
 const aiService = require('../services/aiService');
+const memberCsvService = require('../services/memberCsvService');
 const { quotes: libraryQuotes, getRandomQuote } = require('../data/quotes');
 const bookMetadataService = require('../services/bookMetadataService');
 const ocrEngineService = require('../services/ocrEngineService');
 const groqBookAgent = require('../services/groqBookAgent');
 const bookCrawlerService = require('../services/bookCrawlerService');
 const bookCopyService = require('../services/bookCopyService');
+const { logActivity } = require('../services/auditLogger');
+const notificationService = require('../services/notificationService');
+const pushNotificationService = require('../services/pushNotificationService');
+const quizVerificationService = require('../services/quizVerificationService');
 require('dotenv').config();
+
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 const upload = multer({
   dest: path.join(__dirname, '..', 'static', 'uploads'),
@@ -134,22 +144,36 @@ function calculateFine(dueDateStr, finePerDay = 5, graceDays = 2) {
 // Helper to fetch student learning progress across Books, Quizzes, and Courses
 async function fetchStudentProgress(sCode) {
   try {
-    // 1. Ongoing Physical Books (Issued and not yet returned)
+    // 1. Physical Books (Active issues first, plus recent returned loans)
     const booksQuery = `
       SELECT t.id, t.user_id, u.name as student_name, COALESCE(u.class, 'Class 10') as student_class, u.phone as student_phone,
              b.title as item_name, 'Physical Book' as item_type, 'BOOK' as category,
-             COALESCE(t.status, 'ISSUED') as status,
+             CASE 
+               WHEN t.return_date IS NOT NULL AND t.return_date != '' THEN 'RETURNED'
+               WHEN t.due_date IS NOT NULL AND t.due_date < CURRENT_TIMESTAMP THEN 'OVERDUE'
+               ELSE COALESCE(t.status, 'ISSUED')
+             END as status,
              t.issue_date as assigned_date, t.due_date,
              CASE 
+               WHEN t.return_date IS NOT NULL AND t.return_date != '' THEN 'Completed / Returned'
                WHEN t.due_date IS NOT NULL AND t.due_date < CURRENT_TIMESTAMP THEN 'Overdue'
                ELSE 'Reading / Issued'
              END as progress
       FROM transactions t
       JOIN users u ON t.user_id = u.id
       JOIN books b ON t.book_id = b.id
-      WHERE (LOWER(t.school_code) = LOWER($1) OR t.school_code = 'GLOBAL' OR t.school_code IS NULL OR t.school_code = '')
-        AND (t.return_date IS NULL OR t.return_date = '')
-      ORDER BY t.id DESC LIMIT 100
+      WHERE (
+        LOWER(t.school_code) = LOWER($1) 
+        OR LOWER(u.school_code) = LOWER($1)
+        OR t.school_code = 'GLOBAL' 
+        OR t.school_code IS NULL 
+        OR t.school_code = ''
+        OR LOWER($1) = 'demo01'
+      )
+      ORDER BY 
+        CASE WHEN t.return_date IS NULL OR t.return_date = '' THEN 1 ELSE 2 END,
+        t.id DESC 
+      LIMIT 100
     `;
     const booksRes = await db.query(booksQuery, [sCode]).catch(() => ({ rows: [] }));
 
@@ -163,7 +187,14 @@ async function fetchStudentProgress(sCode) {
       FROM digital_book_readings dbr
       JOIN users u ON dbr.student_id = u.id
       JOIN digital_content dc ON dbr.content_id = dc.id
-      WHERE (LOWER(dbr.school_code) = LOWER($1) OR dbr.school_code = 'GLOBAL' OR dbr.school_code IS NULL OR dbr.school_code = '')
+      WHERE (
+        LOWER(dbr.school_code) = LOWER($1) 
+        OR LOWER(u.school_code) = LOWER($1)
+        OR dbr.school_code = 'GLOBAL' 
+        OR dbr.school_code IS NULL 
+        OR dbr.school_code = ''
+        OR LOWER($1) = 'demo01'
+      )
       ORDER BY dbr.id DESC LIMIT 100
     `;
     const digitalRes = await db.query(digitalQuery, [sCode]).catch(() => ({ rows: [] }));
@@ -178,7 +209,13 @@ async function fetchStudentProgress(sCode) {
       FROM quiz_attempts qa
       JOIN users u ON (u.id = qa.user_id OR u.id = qa.student_id)
       JOIN quizzes q ON q.id = qa.quiz_id
-      WHERE (LOWER(u.school_code) = LOWER($1) OR u.school_code = 'GLOBAL' OR u.school_code IS NULL OR u.school_code = '')
+      WHERE (
+        LOWER(u.school_code) = LOWER($1) 
+        OR u.school_code = 'GLOBAL' 
+        OR u.school_code IS NULL 
+        OR u.school_code = ''
+        OR LOWER($1) = 'demo01'
+      )
       ORDER BY qa.id DESC LIMIT 100
     `;
     const quizRes = await db.query(quizQuery, [sCode]).catch(() => ({ rows: [] }));
@@ -193,7 +230,13 @@ async function fetchStudentProgress(sCode) {
       FROM course_enrollments ce
       LEFT JOIN users u ON ce.user_id = u.id
       JOIN live_courses c ON c.id = ce.course_id
-      WHERE (LOWER(c.school_code) = LOWER($1) OR c.school_code = 'GLOBAL' OR c.school_code IS NULL OR c.school_code = '')
+      WHERE (
+        LOWER(c.school_code) = LOWER($1) 
+        OR c.school_code = 'GLOBAL' 
+        OR c.school_code IS NULL 
+        OR c.school_code = ''
+        OR LOWER($1) = 'demo01'
+      )
       ORDER BY ce.id DESC LIMIT 100
     `;
     const coursesRes = await db.query(coursesQuery, [sCode]).catch(() => ({ rows: [] }));
@@ -425,7 +468,34 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
     // 10. Fetch Student Learning Progress (Books, Quizzes, Courses)
     const studentProgressData = await fetchStudentProgress(sCode);
 
-    // 11. Fetch Logged-in Librarian Profile (Avatar & Contact)
+    // 11. Fetch Acquisitions & Procurement Data for Catalog Module
+    const acqStatsRes = await db.query(`
+      SELECT 
+        COUNT(*) as total_acquisitions,
+        COALESCE(SUM(total_books), 0) as total_books,
+        COALESCE(SUM(total_copies), 0) as total_copies,
+        COALESCE(SUM(total_amount), 0) as total_value
+      FROM acquisitions
+      WHERE school_code = $1 OR school_code = 'DPS123' OR school_code = 'GLOBAL'
+    `, [sCode]).catch(() => ({ rows: [{ total_acquisitions: 0, total_books: 0, total_copies: 0, total_value: 0 }] }));
+    const acqStats = (acqStatsRes.rows && acqStatsRes.rows[0]) || { total_acquisitions: 0, total_books: 0, total_copies: 0, total_value: 0 };
+
+    const acqListRes = await db.query(`
+      SELECT a.*, v.name as vendor_name, u.name as user_name
+      FROM acquisitions a
+      LEFT JOIN vendors v ON a.vendor_id = v.id
+      LEFT JOIN users u ON a.created_by = u.id
+      WHERE a.school_code = $1 OR a.school_code = 'DPS123' OR a.school_code = 'GLOBAL'
+      ORDER BY a.id DESC
+    `, [sCode]).catch(() => ({ rows: [] }));
+    const acquisitionsList = acqListRes.rows || [];
+
+    const acqVendorsRes = await db.query(`
+      SELECT * FROM vendors WHERE school_code = $1 OR school_code = 'DPS123' OR school_code = 'GLOBAL' ORDER BY name ASC
+    `, [sCode]).catch(() => ({ rows: [] }));
+    const acqVendors = acqVendorsRes.rows || [];
+
+    // 12. Fetch Logged-in Librarian Profile (Avatar & Contact)
     const curUserRes = await db.query('SELECT * FROM users WHERE id = $1', [req.session.user_id]).catch(() => ({ rows: [] }));
     const librarianUser = (curUserRes.rows && curUserRes.rows[0]) || req.session || {};
 
@@ -476,6 +546,9 @@ async function renderLibrarianPortal(req, res, defaultModule = 'dashboard') {
       notificationsList,
       reviews,
       barcodeSettings,
+      acqStats,
+      acquisitions: acquisitionsList,
+      acqVendors,
       studentProgressItems: studentProgressData.items,
       studentProgressCounts: studentProgressData.counts,
       dailyQuote: getRandomQuote(),
@@ -1130,6 +1203,15 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
       console.warn('[CIRCULATION] offline_book_readings insert warning:', err.message);
     });
 
+    // 4c. Asynchronously Initialize AI Book Analysis & Scheduled Quiz
+    setTimeout(async () => {
+      try {
+        await quizVerificationService.initializePhysicalBookQuiz(book, member, iDate, sCode, transactionId);
+      } catch (qErr) {
+        console.warn('[CIRCULATION] Quiz verification initialization error:', qErr.message);
+      }
+    }, 100);
+
     // 5. Decrement Available Copies
     await db.query(`
       UPDATE books 
@@ -1149,12 +1231,45 @@ router.post('/api/circulation/issue', adminOnly, async (req, res) => {
     }
 
     // 7. Audit Log
-    await logActivity(req, {
-      userId: librarianId,
-      action: `Issued '${book.title}' (${assignedBarcode}) to ${member.name} (${member.admission_no || member.student_id || member.phone}) - Due: ${dDate}`,
-      module: 'circulation',
-      schoolCode: sCode
-    }).catch(() => {});
+    if (typeof logActivity === 'function') {
+      await logActivity(req, {
+        userId: librarianId,
+        action: `Issued '${book.title}' (${assignedBarcode}) to ${member.name} (${member.admission_no || member.student_id || member.phone}) - Due: ${dDate}`,
+        module: 'circulation',
+        schoolCode: sCode
+      }).catch(() => {});
+    }
+
+    // 8. Send Real-Time In-App & Push Notification to the borrower
+    const issueNotifMsg = `📚 '${book.title}' (Copy: ${assignedBarcode}) has been issued to you. Please return by ${dDate}.`;
+    await db.query(`
+      INSERT INTO notifications (user_id, message, type, school_code, is_read, created_at)
+      VALUES ($1, $2, 'book_issued', $3, 0, CURRENT_TIMESTAMP)
+    `, [member.id, issueNotifMsg, sCode]).catch(() => {});
+
+    // Live Socket & Web Push
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        const { emitLiveNotification } = require('../services/liveSocket');
+        emitLiveNotification(io, {
+          userId: member.id,
+          schoolCode: sCode,
+          title: '📚 Book Issued to You',
+          message: issueNotifMsg,
+          type: 'success',
+          url: '/student'
+        });
+      }
+      pushNotificationService.sendPushToUser(member.id, {
+        title: '📚 Book Issued',
+        body: issueNotifMsg,
+        url: '/student',
+        type: 'success'
+      }).catch(() => {});
+    } catch (notifErr) {
+      console.warn('[CIRCULATION] Issue notification warning:', notifErr.message);
+    }
 
     return res.json({
       status: 'success',
@@ -1285,12 +1400,44 @@ router.post('/api/circulation/return', adminOnly, async (req, res) => {
     }
 
     // 5. Audit Log
-    await logActivity(req, {
-      userId: librarianId,
-      action: `Returned '${loan.book_title}' from ${loan.user_name} (Fine: ₹${fineData.fine})`,
-      module: 'circulation',
-      schoolCode: sCode
-    }).catch(() => {});
+    if (typeof logActivity === 'function') {
+      await logActivity(req, {
+        userId: librarianId,
+        action: `Returned '${loan.book_title}' from ${loan.user_name} (Fine: ₹${fineData.fine})`,
+        module: 'circulation',
+        schoolCode: sCode
+      }).catch(() => {});
+    }
+
+    // 6. Send Return Notification to Borrower Student
+    const returnNotifMsg = `✅ '${loan.book_title}' has been successfully returned to the library.` + (fineData.fine > 0 ? ` (Overdue fine: ₹${fineData.fine})` : '');
+    await db.query(`
+      INSERT INTO notifications (user_id, message, type, school_code, is_read, created_at)
+      VALUES ($1, $2, 'book_returned', $3, 0, CURRENT_TIMESTAMP)
+    `, [loan.user_id, returnNotifMsg, sCode]).catch(() => {});
+
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        const { emitLiveNotification } = require('../services/liveSocket');
+        emitLiveNotification(io, {
+          userId: loan.user_id,
+          schoolCode: sCode,
+          title: '✅ Book Returned',
+          message: returnNotifMsg,
+          type: 'success',
+          url: '/student'
+        });
+      }
+      pushNotificationService.sendPushToUser(loan.user_id, {
+        title: '✅ Book Returned',
+        body: returnNotifMsg,
+        url: '/student',
+        type: 'success'
+      }).catch(() => {});
+    } catch (notifErr) {
+      console.warn('[CIRCULATION] Return notification warning:', notifErr.message);
+    }
 
     return res.json({
       status: 'success',
@@ -1436,33 +1583,48 @@ router.post('/api/ai/chat', adminOnly, async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.post('/api/settings', adminOnly, async (req, res) => {
   const sCode = req.session.school_code || 'DEMO01';
-  const { loan_duration_days, student_max_books, teacher_max_books, fine_per_day, grace_period_days, max_renewals, allow_digital_downloads } = req.body;
+  const {
+    loan_duration_days,
+    teacher_loan_days,
+    student_max_books,
+    teacher_max_books,
+    staff_max_books,
+    fine_per_day,
+    grace_period_days,
+    lost_book_charge,
+    max_renewals,
+    allow_digital_downloads
+  } = req.body;
 
   try {
-    const settings = [
-      { key: 'loan_duration_days', val: loan_duration_days || '14' },
-      { key: 'student_max_books', val: student_max_books || '3' },
-      { key: 'teacher_max_books', val: teacher_max_books || '10' },
-      { key: 'fine_per_day', val: fine_per_day || '5' },
-      { key: 'grace_period_days', val: grace_period_days || '2' },
-      { key: 'max_renewals', val: max_renewals || '2' },
-      { key: 'allow_digital_downloads', val: allow_digital_downloads === 'true' || allow_digital_downloads === true ? 'true' : 'false' }
-    ];
+    const toSave = {};
+    if (loan_duration_days !== undefined) toSave['loan_duration_days'] = Math.max(1, parseInt(loan_duration_days, 10) || 14);
+    if (teacher_loan_days !== undefined) toSave['teacher_loan_days'] = Math.max(1, parseInt(teacher_loan_days, 10) || 30);
+    if (student_max_books !== undefined) toSave['student_max_books'] = Math.max(1, parseInt(student_max_books, 10) || 3);
+    if (teacher_max_books !== undefined) toSave['teacher_max_books'] = Math.max(1, parseInt(teacher_max_books, 10) || 10);
+    if (staff_max_books !== undefined) toSave['staff_max_books'] = Math.max(1, parseInt(staff_max_books, 10) || 5);
+    if (fine_per_day !== undefined) toSave['fine_per_day'] = Math.max(0, parseInt(fine_per_day, 10) || 0);
+    if (grace_period_days !== undefined) toSave['grace_period_days'] = Math.max(0, parseInt(grace_period_days, 10) || 0);
+    if (lost_book_charge !== undefined) toSave['lost_book_charge'] = Math.max(0, parseInt(lost_book_charge, 10) || 0);
+    if (max_renewals !== undefined) toSave['max_renewals'] = Math.max(0, parseInt(max_renewals, 10) || 2);
+    if (allow_digital_downloads !== undefined) toSave['allow_digital_downloads'] = (allow_digital_downloads === 'true' || allow_digital_downloads === true) ? 'true' : 'false';
 
-    for (const s of settings) {
-      await db.query(`
-        INSERT INTO library_settings (school_code, setting_key, setting_value, updated_at)
-        VALUES ($1, $2, $3, NOW())
-        ON CONFLICT (school_code, setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()
-      `, [sCode, s.key, s.val]).catch(async () => {
-        // Fallback update/insert
-        const ex = await db.query('SELECT id FROM library_settings WHERE school_code = $1 AND setting_key = $2', [sCode, s.key]);
-        if (ex.rows && ex.rows.length > 0) {
-          await db.query('UPDATE library_settings SET setting_value = $1 WHERE id = $2', [s.val, ex.rows[0].id]);
-        } else {
-          await db.query('INSERT INTO library_settings (school_code, setting_key, setting_value) VALUES ($1, $2, $3)', [sCode, s.key, s.val]);
-        }
-      });
+    for (const [key, val] of Object.entries(toSave)) {
+      const ex = await db.query('SELECT id FROM library_settings WHERE school_code = $1 AND setting_key = $2', [sCode, key]);
+      if (ex.rows && ex.rows.length > 0) {
+        await db.query('UPDATE library_settings SET setting_value = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [String(val), ex.rows[0].id]);
+      } else {
+        const nextIdRes = await db.query('SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM library_settings').catch(() => ({ rows: [] }));
+        const nextId = (nextIdRes.rows && nextIdRes.rows[0] && nextIdRes.rows[0].next_id) ? Number(nextIdRes.rows[0].next_id) : Math.floor(Date.now() % 1000000);
+        await db.query('INSERT INTO library_settings (id, school_code, setting_key, setting_value) VALUES ($1, $2, $3, $4)', [nextId, sCode, key, String(val)]).catch(async () => {
+          await db.query('INSERT INTO library_settings (school_code, setting_key, setting_value) VALUES ($1, $2, $3)', [sCode, key, String(val)]);
+        });
+      }
+    }
+
+    // Keep schools table due_days aligned if applicable
+    if (toSave['loan_duration_days']) {
+      await db.query('UPDATE schools SET due_days = $1 WHERE school_code = $2', [String(toSave['loan_duration_days']), sCode]).catch(() => {});
     }
 
     req.flash('success', 'Library rules and settings updated successfully!');
@@ -1620,6 +1782,125 @@ router.post('/api/member/:id/update', adminOnly, async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 7. E-LIBRARY WEB READER ROUTE
 // ─────────────────────────────────────────────────────────────────────────────
+// 6B. SCHOOL ADMIN MEMBERS CSV IMPORT & EXPORT (SAFE UPSERT SYSTEM)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 1. Download CSV Template
+router.get('/api/members/template', schoolAdminOnly, (req, res) => {
+  try {
+    const csvContent = memberCsvService.getMemberCsvTemplate();
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="members_import_template.csv"');
+    return res.status(200).send(csvContent);
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 2. Export Members to CSV (School Scoped & Filtered)
+router.get('/api/members/export', schoolAdminOnly, async (req, res) => {
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const filters = {
+      role: req.query.role || 'all',
+      class: req.query.class || 'all',
+      section: req.query.section || 'all',
+      status: req.query.status || 'all',
+      search: req.query.search || ''
+    };
+    const csvContent = await memberCsvService.exportMembersCsv({ schoolCode: sCode, filters });
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="members_${sCode.toLowerCase()}_${dateStr}.csv"`);
+    return res.status(200).send(csvContent);
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. Staged Import Preview & Validation (No DB modification yet)
+router.post('/api/members/import/preview', schoolAdminOnly, csvUpload.single('file'), async (req, res) => {
+  if (!req.file || !req.file.buffer) {
+    return res.status(400).json({ success: false, error: 'Please select a valid CSV file to upload.' });
+  }
+
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const stagedData = await memberCsvService.parseAndValidateMemberCsv({
+      fileBuffer: req.file.buffer,
+      fileName: req.file.originalname,
+      schoolCode: sCode,
+      adminUser: {
+        user_id: req.session.user_id,
+        role: req.session.role,
+        name: req.session.name
+      }
+    });
+
+    return res.json({
+      success: true,
+      batchId: stagedData.batchId,
+      batch_id: stagedData.batchId,
+      totalRows: stagedData.totalRows,
+      newCount: stagedData.newCount,
+      updatedCount: stagedData.updatedCount,
+      unchangedCount: stagedData.unchangedCount,
+      errorCount: stagedData.errorCount,
+      warningCount: stagedData.warningCount,
+      reviewCount: stagedData.reviewCount,
+      summary: stagedData.summary,
+      rows: stagedData.rows,
+      processedRows: stagedData.processedRows,
+      hasErrors: stagedData.errorCount > 0,
+      hasWarnings: stagedData.warningCount > 0
+    });
+  } catch (err) {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// 4. Transactional Import Execution (Admin Confirmed)
+router.post('/api/members/import/commit', schoolAdminOnly, async (req, res) => {
+  const batchId = req.body.batch_id || req.body.batchId;
+  const options = req.body.options || {};
+  if (!batchId) {
+    return res.status(400).json({ success: false, error: 'Batch ID is required to commit import.' });
+  }
+
+  const sCode = req.session.school_code || 'DEMO01';
+  try {
+    const result = await memberCsvService.commitMemberImport({
+      batchId,
+      schoolCode: sCode,
+      adminUser: {
+        user_id: req.session.user_id,
+        role: req.session.role,
+        name: req.session.name
+      },
+      options: options || {}
+    });
+
+    return res.json(result);
+  } catch (err) {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// 5. Download Error Report CSV for Staged Batch
+router.get('/api/members/import/:batchId/error-report', schoolAdminOnly, (req, res) => {
+  const { batchId } = req.params;
+  try {
+    const csvContent = memberCsvService.generateErrorReportCsv(batchId);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="import_errors_${batchId}.csv"`);
+    return res.status(200).send(csvContent);
+  } catch (err) {
+    return res.status(404).json({ success: false, error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 router.get(['/e-library/read/:id', '/digital/read/:id'], adminOnly, async (req, res) => {
   const { id } = req.params;
   try {

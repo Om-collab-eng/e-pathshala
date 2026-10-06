@@ -35,9 +35,9 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: data.icon || '/logo.png',
     badge: data.badge || '/favicon-32x32.png',
-    vibrate: [200, 100, 200],
+    vibrate: [200],
     tag: data.tag || 'librika-alert',
-    renotify: true,
+    renotify: false,
     requireInteraction: false,
     data: {
       url: data.url || '/student',
