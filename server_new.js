@@ -447,7 +447,11 @@ app.use('/catalog', (req, res) => res.redirect('/admin/catalog'));
 app.use('/members', (req, res) => res.redirect('/admin/members'));
 app.use('/circulation', (req, res) => res.redirect('/admin/circulation'));
 app.use('/requests', (req, res) => res.redirect('/admin/requests'));
-app.use('/e-library', (req, res) => res.redirect('/admin/e-library'));
+app.get('/e-library', (req, res) => {
+  if (req.session && req.session.role === 'student') return res.redirect('/student?module=elibrary');
+  if (req.session && req.session.role === 'personal') return res.redirect('/personal/elibrary');
+  return res.redirect('/admin/e-library');
+});
 app.use('/analytics', (req, res) => res.redirect('/admin/analytics'));
 app.use('/settings', (req, res) => res.redirect('/admin/settings'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
@@ -470,7 +474,9 @@ app.use('/super-admin', require('./routes/superAdmin'));
 
 // Digital library routes
 const digitalRoutes = require('./routes/digital');
+app.use('/', digitalRoutes);
 app.use('/digital-library', digitalRoutes);
+app.use('/e-library', digitalRoutes);
 app.use('/author', digitalRoutes);
 app.use('/leaderboard', digitalRoutes);
 
